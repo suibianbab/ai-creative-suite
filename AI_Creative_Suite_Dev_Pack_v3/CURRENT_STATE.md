@@ -33,6 +33,7 @@ Current phase: Phase 0 Foundation plus early Image Studio editing and quality sp
 - 身份与授权开发基线：第三个迁移已应用到开发数据库，建立用户、签发者/subject 映射、组织及工作区成员关系；内部 JWT AuthProvider 验证签名、签发者、API 受众和时效，AccessContextResolver 每次从当前数据库成员关系推导 TenantScope。随机 schema 与自签测试令牌的对抗测试覆盖伪造角色声明、无权跨组织访问、只读限制和即时撤销。正式浏览器登录与素材/项目 HTTP 路由尚未接入；对外启用前需要独立安全复核。见根目录 `docs/AUTH_BOUNDARY.md`。
 - 本地项目导入开发基线：第四个迁移已应用到开发数据库，内部导入服务为 IndexedDB ImageDocument 引用的原图和蒙版创建服务端 Asset ID 映射，并保存新项目版本。随机 schema 与真实 RustFS 对象的集成测试模拟上传后项目保存失败，重试未重复建素材；跨组织导入隔离及映射不可变也通过。浏览器端尚未连接此服务。见根目录 `docs/LOCAL_IMAGE_IMPORT.md`。
 - 开发 OIDC 联调：恢复 `info.txt` 后，在虚拟机独立 `acs-auth` Compose 项目启动 Keycloak 26.8.0，端口仅绑定虚拟机回环 8180；工作站 SSH 隧道已转发。官方 Quay 下载层在虚拟机超时，改由工作站导出官方镜像并流式加载到 VM；镜像代理与官方 manifest 比较一致。`acs-dev` realm 的真实访问令牌已通过远程 JWKS 验签、数据库工作区授权和成员撤销验证。凭据在本地 Git 忽略文件及 VM 受限文件中。仍是仅供开发的密码授权测试，没有浏览器正式登录或 HTTP 素材接口。见根目录 `docs/VM_INFRASTRUCTURE.md` 与 `docs/AUTH_BOUNDARY.md`。
+- Image Studio 文字指令 MVP：本地规则规划器支持中文画布尺寸、背景颜色、商品位置和标题操作，先预览，再作为一个可撤销的 ImageDocument 事务应用；未知要求整体拒绝，保留原始商品 Asset。尚未接入语言模型、生成式局部修图或任意自然语言理解，见根目录 `docs/IMAGE_INSTRUCTION_MVP.md`。
 
 已完成产品与架构方向：
 - AI Image Studio 一级产品

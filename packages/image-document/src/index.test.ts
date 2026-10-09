@@ -3,10 +3,12 @@ import test from "node:test";
 import {
   applyImageOperation,
   commitImageOperation,
+  commitImageOperations,
   createImageDocument,
   createImageHistory,
   frameFromSubjectBounds,
   type ImageLayer,
+  planImageInstruction,
   redoImageOperation,
   undoImageOperation,
 } from "./index.js";
@@ -48,6 +50,59 @@ test("composition edits retain the original asset reference and undo/redo accura
   assert.equal(history.present.layers[0]!.x, 100);
   history = redoImageOperation(history);
   assert.equal(history.present.layers[0]!.x, 240);
+});
+
+test("a text instruction previews safe document edits and commits as one undo step", () => {
+  const original = applyImageOperation(createImageDocument("prompt-doc"), {
+    type: "addImage",
+    layer: product,
+  });
+  const plan = planImageInstruction(
+    original,
+    product.id,
+    "改成竖图；背景改成浅灰色；把商品移到右边；添加标题：新品上市",
+    () => "title-1",
+  );
+  assert.equal(plan.operations.length, 4);
+  assert.equal(original.canvas.width, 1080);
+  const history = commitImageOperations(
+    createImageHistory(original),
+    plan.operations,
+  );
+  assert.equal(history.past.length, 1);
+  assert.equal(history.present.canvas.height, 1350);
+  assert.equal(history.present.canvas.background, "#f2f2f2");
+  assert.equal(history.present.layers[1]?.kind, "text");
+  assert.equal(
+    (history.present.layers[0] as ImageLayer).assetId,
+    product.assetId,
+  );
+  assert.deepEqual(undoImageOperation(history).present, original);
+});
+
+test("unsupported or invalid instructions never partially change the document", () => {
+  const original = applyImageOperation(createImageDocument("prompt-reject"), {
+    type: "addImage",
+    layer: product,
+  });
+  assert.throws(() =>
+    planImageInstruction(
+      original,
+      product.id,
+      "改成竖图；把商品换成另一款",
+      () => "unused",
+    ),
+  );
+  assert.equal(original.canvas.height, 1080);
+  const history = createImageHistory(original);
+  assert.throws(() =>
+    commitImageOperations(history, [
+      { type: "resizeCanvas", width: 1080, height: 1350 },
+      { type: "transform", layerId: product.id, patch: { opacity: 2 } },
+    ]),
+  );
+  assert.equal(history.present.canvas.height, 1080);
+  assert.equal(history.past.length, 0);
 });
 
 test("invalid transforms and duplicate layer IDs are rejected", () => {

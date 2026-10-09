@@ -4,12 +4,16 @@ import {
   applyImageOperation,
   type CropRect,
   commitImageOperation,
+  commitImageOperations,
   createImageDocument,
   createImageHistory,
+  type ImageDocument,
   type ImageDocumentLayer,
+  type ImageInstructionPlan,
   type ImageLayer,
   type ImageOperation,
   type MaskStroke,
+  planImageInstruction,
   redoImageOperation,
   undoImageOperation,
 } from "@acs/image-document";
@@ -41,6 +45,11 @@ type DragState = {
   y: number;
 };
 
+type PendingInstruction = ImageInstructionPlan & {
+  base: ImageDocument;
+  preview: ImageDocument;
+};
+
 export default function ImageStudioPage() {
   const [history, setHistory] = useState(() =>
     createImageHistory(createImageDocument(crypto.randomUUID())),
@@ -55,6 +64,9 @@ export default function ImageStudioPage() {
   const [projectToOpen, setProjectToOpen] = useState("");
   const [projectBusy, setProjectBusy] = useState(false);
   const [maskBusy, setMaskBusy] = useState(false);
+  const [instruction, setInstruction] = useState("");
+  const [pendingInstruction, setPendingInstruction] =
+    useState<PendingInstruction | null>(null);
   const [maskEditorLayerId, setMaskEditorLayerId] = useState<string | null>(
     null,
   );
@@ -128,6 +140,7 @@ export default function ImageStudioPage() {
       setHistory(next);
       savedSnapshot.current = JSON.stringify(loaded.document);
       setSelectedId(null);
+      setPendingInstruction(null);
       setMaskEditorLayerId(null);
       setMessage("本地项目和原图已恢复。此前会话的撤销记录不会保存。");
     } catch (error) {
@@ -139,6 +152,7 @@ export default function ImageStudioPage() {
 
   const commit = useCallback((operation: ImageOperation) => {
     try {
+      setPendingInstruction(null);
       const next = commitImageOperation(historyRef.current, operation);
       historyRef.current = next;
       setHistory(next);
@@ -149,16 +163,20 @@ export default function ImageStudioPage() {
   }, []);
 
   function changeHistory(direction: "undo" | "redo") {
+    setPendingInstruction(null);
     const next =
       direction === "undo"
         ? undoImageOperation(historyRef.current)
         : redoImageOperation(historyRef.current);
     historyRef.current = next;
     setHistory(next);
+    setMessage(
+      direction === "undo" ? "已撤销上一步编辑。" : "已重做上一步编辑。",
+    );
   }
 
-  let preview = document;
-  if (drag) {
+  let preview = pendingInstruction?.preview ?? document;
+  if (drag && !pendingInstruction) {
     const layer = document.layers.find((item) => item.id === drag.layerId);
     if (layer) {
       preview = applyImageOperation(document, {
@@ -169,6 +187,46 @@ export default function ImageStudioPage() {
           y: layer.y + drag.y - drag.startY,
         },
       });
+    }
+  }
+
+  function prepareInstruction() {
+    try {
+      const base = historyRef.current.present;
+      const plan = planImageInstruction(base, selectedId, instruction, () =>
+        crypto.randomUUID(),
+      );
+      const next = plan.operations.reduce(applyImageOperation, base);
+      setDrag(null);
+      setPendingInstruction({ ...plan, base, preview: next });
+      setMessage("已生成预览；检查画布和操作列表后再应用。");
+    } catch (error) {
+      setPendingInstruction(null);
+      setMessage(error instanceof Error ? error.message : "无法理解编辑要求。");
+    }
+  }
+
+  function applyInstruction() {
+    const plan = pendingInstruction;
+    if (!plan) return;
+    if (historyRef.current.present !== plan.base) {
+      setPendingInstruction(null);
+      setMessage("项目已变化，请重新预览这条编辑要求。");
+      return;
+    }
+    try {
+      const next = commitImageOperations(historyRef.current, plan.operations);
+      historyRef.current = next;
+      setHistory(next);
+      const addedTitle = [...plan.operations]
+        .reverse()
+        .find((operation) => operation.type === "addText");
+      if (addedTitle?.type === "addText") setSelectedId(addedTitle.layer.id);
+      setPendingInstruction(null);
+      setMessage(`已应用：${plan.summary.join("；")}。可用撤销一步恢复。`);
+    } catch (error) {
+      setPendingInstruction(null);
+      setMessage(error instanceof Error ? error.message : "编辑要求应用失败。");
     }
   }
 
@@ -362,6 +420,7 @@ export default function ImageStudioPage() {
   }
 
   function pointerDown(event: React.PointerEvent<HTMLCanvasElement>) {
+    if (pendingInstruction) return;
     const point = canvasPoint(event);
     const hit = [...document.layers]
       .reverse()
@@ -526,7 +585,7 @@ export default function ImageStudioPage() {
           type="button"
           className="project-action"
           onClick={() => void saveProject()}
-          disabled={projectBusy}
+          disabled={projectBusy || !!pendingInstruction}
         >
           保存项目
         </button>
@@ -534,6 +593,7 @@ export default function ImageStudioPage() {
           type="button"
           className="project-action"
           onClick={() => void exportPng(true)}
+          disabled={!!pendingInstruction}
         >
           导出透明 PNG
         </button>
@@ -541,6 +601,7 @@ export default function ImageStudioPage() {
           type="button"
           className="export-button"
           onClick={() => void exportPng()}
+          disabled={!!pendingInstruction}
         >
           导出 PNG
         </button>
@@ -637,7 +698,7 @@ export default function ImageStudioPage() {
               ref={canvasRef}
               className="studio-canvas"
               style={{
-                aspectRatio: `${document.canvas.width} / ${document.canvas.height}`,
+                aspectRatio: `${preview.canvas.width} / ${preview.canvas.height}`,
               }}
               onPointerDown={pointerDown}
               onPointerMove={pointerMove}
@@ -648,13 +709,58 @@ export default function ImageStudioPage() {
           </div>
           <div className="studio-status">
             <span>
-              {document.canvas.width} × {document.canvas.height} px
+              {preview.canvas.width} × {preview.canvas.height} px
+              {pendingInstruction ? " · 预览" : ""}
             </span>
             <span>{message}</span>
           </div>
         </section>
 
         <aside className="studio-panel studio-right">
+          <section className="instruction-panel" aria-label="文字编辑要求">
+            <h2>用文字编辑画面</h2>
+            <p>
+              本地指令预览：画布尺寸、背景色、商品位置和标题。涉及生成或重绘商品的要求会提示暂不支持。
+            </p>
+            <textarea
+              aria-label="编辑要求"
+              value={instruction}
+              onChange={(event) => {
+                setInstruction(event.target.value);
+                setPendingInstruction(null);
+              }}
+              placeholder="例如：改成竖图；背景改成白色；把商品移到右边；添加标题：秋日新品"
+              maxLength={240}
+            />
+            <button
+              type="button"
+              onClick={prepareInstruction}
+              disabled={!instruction.trim()}
+            >
+              预览编辑
+            </button>
+            {pendingInstruction && (
+              <div className="instruction-preview">
+                <strong>待应用的操作</strong>
+                <ol>
+                  {pendingInstruction.summary.map((item, index) => (
+                    <li key={`${index}-${item}`}>{item}</li>
+                  ))}
+                </ol>
+                <div className="instruction-actions">
+                  <button type="button" onClick={applyInstruction}>
+                    应用编辑
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPendingInstruction(null)}
+                  >
+                    取消
+                  </button>
+                </div>
+              </div>
+            )}
+          </section>
           <div className="panel-heading">
             <span>属性</span>
             <span>{selected ? "图层" : "画布"}</span>

@@ -553,6 +553,21 @@ export function commitImageOperation(
   };
 }
 
+/** Apply a proposed edit as one undo step, or leave the history untouched on failure. */
+export function commitImageOperations(
+  history: ImageHistory,
+  operations: readonly ImageOperation[],
+): ImageHistory {
+  if (operations.length === 0) throw new Error("An edit needs an operation");
+  const next = operations.reduce(applyImageOperation, history.present);
+  if (next === history.present) return history;
+  return {
+    past: [...history.past, history.present].slice(-100),
+    present: next,
+    future: [],
+  };
+}
+
 export function undoImageOperation(history: ImageHistory): ImageHistory {
   if (history.past.length === 0) return history;
   return {
@@ -570,3 +585,6 @@ export function redoImageOperation(history: ImageHistory): ImageHistory {
     future: history.future.slice(1),
   };
 }
+
+export type { ImageInstructionPlan } from "./instruction-planner.js";
+export { planImageInstruction } from "./instruction-planner.js";

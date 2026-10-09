@@ -59,6 +59,10 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+.export-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 .export-button {
   margin-left: auto;
   border: 0;
@@ -83,6 +87,66 @@
 }
 .studio-right {
   border-left: 1px solid #dce5df;
+}
+.instruction-panel {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 28px;
+  padding: 15px;
+  border: 1px solid #cfe1d4;
+  border-radius: 12px;
+  background: #f4faf5;
+}
+.instruction-panel h2 {
+  margin: 0;
+  color: #1b4b36;
+  font-size: 14px;
+}
+.instruction-panel p {
+  margin: 0;
+  color: #5c7566;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.instruction-panel textarea {
+  width: 100%;
+  min-height: 88px;
+  resize: vertical;
+  border: 1px solid #c9dacf;
+  border-radius: 8px;
+  padding: 9px;
+  color: #233c2e;
+  font: inherit;
+  font-size: 12px;
+}
+.instruction-panel button {
+  border: 1px solid #b8d3bd;
+  border-radius: 8px;
+  padding: 9px 10px;
+  background: #e5f2e8;
+  color: #1d5b37;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.instruction-panel button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.instruction-preview {
+  padding-top: 10px;
+  border-top: 1px solid #d5e5d8;
+  color: #365944;
+  font-size: 11px;
+}
+.instruction-preview ol {
+  margin: 8px 0;
+  padding-left: 18px;
+  line-height: 1.6;
+}
+.instruction-actions {
+  display: flex;
+  gap: 7px;
 }
 .panel-heading {
   display: flex;
