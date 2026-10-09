@@ -1,0 +1,22 @@
+node_modules/
+.tools/
+.next/
+dist/
+coverage/
+.env
+.env.*.local
+!.env.example
+*.tsbuildinfo
+*.log
+__pycache__/
+*.pyc
+*.blend1
+packages/remotion-engine/public/form01/
+# Keep lightweight QA reports while leaving generated media and downloaded samples local.
+artifacts/**
+!artifacts/**/
+!artifacts/**/*.md
+!artifacts/**/*.json
+.DS_Store
+AI_Creative_Suite_Dev_Pack_v3/info.txt
+AI_Creative_Suite_Dev_Pack_v3.zip

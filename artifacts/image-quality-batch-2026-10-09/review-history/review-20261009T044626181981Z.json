@@ -1,0 +1,453 @@
+{
+  "schema_version": 2,
+  "dataset_kind": "proxy",
+  "manifest_sha256": "eaf608e6c88bbb94a5483a24183fd62da57e67287162ea6f090c7cd2503cc58b",
+  "created_at": "2026-10-09T04:36:43+00:00",
+  "cases": [
+    {
+      "key": "matte-porcelain-198685",
+      "source_sha256": "3f33a38f604c55b4d180a8e1605a3c7d49b581b4d36b2a1af2c6935c03a17ede",
+      "category": null,
+      "triage": "correction",
+      "checks": {
+        "silhouette_edges": "not_checked",
+        "interior_holes": "not_checked",
+        "transparency": "not_checked",
+        "shape_color": "not_checked",
+        "logo_text": "not_checked",
+        "export_pixels": "not_checked",
+        "layouts": "not_checked",
+        "branded_scene": "not_checked"
+      },
+      "issues": [
+        "uncut_hole"
+      ],
+      "manual_correction_seconds": null,
+      "notes": "Upper rim slits retain gray background.",
+      "reviewer": "Codex sheet-scale visual review",
+      "reviewed_at": "2026-10-09T04:38:32.522Z"
+    },
+    {
+      "key": "reflective-silver-200114",
+      "source_sha256": "22041fc8c3a55989ab990a7eae3e5e7779471c3220f8e42f7ba6d7a10cd416cf",
+      "category": null,
+      "triage": "preview_pass",
+      "checks": {
+        "silhouette_edges": "not_checked",
+        "interior_holes": "not_checked",
+        "transparency": "not_checked",
+        "shape_color": "not_checked",
+        "logo_text": "not_checked",
+        "export_pixels": "not_checked",
+        "layouts": "not_checked",
+        "branded_scene": "not_checked"
+      },
+      "issues": [],
+      "manual_correction_seconds": null,
+      "notes": "Small metal openings still need full-size review.",
+      "reviewer": "Codex sheet-scale visual review",
+      "reviewed_at": "2026-10-09T04:37:00+00:00"
+    },
+    {
+      "key": "fabric-detail-69983",
+      "source_sha256": "d035ff8401a5fb6256677dfccb9aa35b37122164ec84ee734a31f940d26b2891",
+      "category": null,
+      "triage": "fail",
+      "checks": {
+        "silhouette_edges": "not_checked",
+        "interior_holes": "not_checked",
+        "transparency": "not_checked",
+        "shape_color": "not_checked",
+        "logo_text": "not_checked",
+        "export_pixels": "not_checked",
+        "layouts": "not_checked",
+        "branded_scene": "not_checked"
+      },
+      "issues": [
+        "support_or_shadow"
+      ],
+      "manual_correction_seconds": null,
+      "notes": "Display stand remains attached to shoe.",
+      "reviewer": "Codex sheet-scale visual review",
+      "reviewed_at": "2026-10-09T04:37:00+00:00"
+    },
+    {
+      "key": "translucent-glass-239782",
+      "source_sha256": "6dd04663d2ce0747602f9858f5365082c523933862085014ecfb60b9d7ee76c2",
+      "category": null,
+      "triage": "fail",
+      "checks": {
+        "silhouette_edges": "not_checked",
+        "interior_holes": "not_checked",
+        "transparency": "not_checked",
+        "shape_color": "not_checked",
+        "logo_text": "not_checked",
+        "export_pixels": "not_checked",
+        "layouts": "not_checked",
+        "branded_scene": "not_checked"
+      },
+      "issues": [
+        "transmission_wrong",
+        "uncut_hole"
+      ],
+      "manual_correction_seconds": null,
+      "notes": "Glass and loop spaces are opaque.",
+      "reviewer": "Codex sheet-scale visual review",
+      "reviewed_at": "2026-10-09T04:37:00+00:00"
+    },
+    {
+      "key": "dense-pattern-202457",
+      "source_sha256": "dbca6ce73bab17eea7003a3e193de62c157c9f1fbfbb0cefa974c5b8e97ccf20",
+      "category": null,
+      "triage": "fail",
+      "checks": {
+        "silhouette_edges": "not_checked",
+        "interior_holes": "not_checked",
+        "transparency": "not_checked",
+        "shape_color": "not_checked",
+        "logo_text": "not_checked",
+        "export_pixels": "not_checked",
+        "layouts": "not_checked",
+        "branded_scene": "not_checked"
+      },
+      "issues": [
+        "uncut_hole"
+      ],
+      "manual_correction_seconds": null,
+      "notes": "Lattice openings retain source background.",
+      "reviewer": "Codex sheet-scale visual review",
+      "reviewed_at": "2026-10-09T04:37:00+00:00"
+    },
+    {
+      "key": "wood-chair-229",
+      "source_sha256": "1953c82ff9c93f73e91656cbab6653d456d9a458bb39cf471c6a29e31f097725",
+      "category": null,
+      "triage": "correction",
+      "checks": {
+        "silhouette_edges": "not_checked",
+        "interior_holes": "not_checked",
+        "transparency": "not_checked",
+        "shape_color": "not_checked",
+        "logo_text": "not_checked",
+        "export_pixels": "not_checked",
+        "layouts": "not_checked",
+        "branded_scene": "not_checked"
+      },
+      "issues": [
+        "support_or_shadow"
+      ],
+      "manual_correction_seconds": null,
+      "notes": "Floor and shadow remain around thin legs.",
+      "reviewer": "Codex sheet-scale visual review",
+      "reviewed_at": "2026-10-09T04:37:00+00:00"
+    },
+    {
+      "key": "jewelled-brooch-1025",
+      "source_sha256": "132f7cf2ed6870e06d5845f64e2143391420bac292f373b460b94c2f19a8955f",
+      "category": null,
+      "triage": "preview_pass",
+      "checks": {
+        "silhouette_edges": "not_checked",
+        "interior_holes": "not_checked",
+        "transparency": "not_checked",
+        "shape_color": "not_checked",
+        "logo_text": "not_checked",
+        "export_pixels": "not_checked",
+        "layouts": "not_checked",
+        "branded_scene": "not_checked"
+      },
+      "issues": [],
+      "manual_correction_seconds": null,
+      "notes": "No conspicuous sheet-scale defect.",
+      "reviewer": "Codex sheet-scale visual review",
+      "reviewed_at": "2026-10-09T04:37:00+00:00"
+    },
+    {
+      "key": "brass-clock-1454",
+      "source_sha256": "321155d77fb85d6cbf3aaa78fc14aa6a5033145f3d6c2ce72ef07bc5336d74af",
+      "category": null,
+      "triage": "preview_pass",
+      "checks": {
+        "silhouette_edges": "not_checked",
+        "interior_holes": "not_checked",
+        "transparency": "not_checked",
+        "shape_color": "not_checked",
+        "logo_text": "not_checked",
+        "export_pixels": "not_checked",
+        "layouts": "not_checked",
+        "branded_scene": "not_checked"
+      },
+      "issues": [],
+      "manual_correction_seconds": null,
+      "notes": "No conspicuous sheet-scale defect.",
+      "reviewer": "Codex sheet-scale visual review",
+      "reviewed_at": "2026-10-09T04:37:00+00:00"
+    },
+    {
+      "key": "frosted-glass-lamp-4706",
+      "source_sha256": "7cdbb4be1f1a2e1b5bd11cfaea704fe37c7b6337d1b4e27a842438b7291d3a73",
+      "category": null,
+      "triage": "fail",
+      "checks": {
+        "silhouette_edges": "not_checked",
+        "interior_holes": "not_checked",
+        "transparency": "not_checked",
+        "shape_color": "not_checked",
+        "logo_text": "not_checked",
+        "export_pixels": "not_checked",
+        "layouts": "not_checked",
+        "branded_scene": "not_checked"
+      },
+      "issues": [
+        "transmission_wrong"
+      ],
+      "manual_correction_seconds": null,
+      "notes": "Frosted body remains photographed white.",
+      "reviewer": "Codex sheet-scale visual review",
+      "reviewed_at": "2026-10-09T04:37:00+00:00"
+    },
+    {
+      "key": "painted-metal-lamp-4699",
+      "source_sha256": "263497b12016d9cbb3d14f2595690c05d705e7bbf97cc4fb06e6dfff9ef24ece",
+      "category": null,
+      "triage": "preview_pass",
+      "checks": {
+        "silhouette_edges": "not_checked",
+        "interior_holes": "not_checked",
+        "transparency": "not_checked",
+        "shape_color": "not_checked",
+        "logo_text": "not_checked",
+        "export_pixels": "not_checked",
+        "layouts": "not_checked",
+        "branded_scene": "not_checked"
+      },
+      "issues": [],
+      "manual_correction_seconds": null,
+      "notes": "No conspicuous sheet-scale defect.",
+      "reviewer": "Codex sheet-scale visual review",
+      "reviewed_at": "2026-10-09T04:37:00+00:00"
+    },
+    {
+      "key": "pressed-glass-lamp-4722",
+      "source_sha256": "6eb018866168cfc35c02ac1851cb3b6f1addcb88d55d855f8dda699f665921fe",
+      "category": null,
+      "triage": "fail",
+      "checks": {
+        "silhouette_edges": "not_checked",
+        "interior_holes": "not_checked",
+        "transparency": "not_checked",
+        "shape_color": "not_checked",
+        "logo_text": "not_checked",
+        "export_pixels": "not_checked",
+        "layouts": "not_checked",
+        "branded_scene": "not_checked"
+      },
+      "issues": [
+        "transmission_wrong"
+      ],
+      "manual_correction_seconds": null,
+      "notes": "Glass remains photographed white.",
+      "reviewer": "Codex sheet-scale visual review",
+      "reviewed_at": "2026-10-09T04:37:00+00:00"
+    },
+    {
+      "key": "figured-glass-bottle-3692",
+      "source_sha256": "2ec872cd897985df4ca79a27e936d1604ee7602ac99c36a975aff5434c5f26e2",
+      "category": null,
+      "triage": "fail",
+      "checks": {
+        "silhouette_edges": "not_checked",
+        "interior_holes": "not_checked",
+        "transparency": "not_checked",
+        "shape_color": "not_checked",
+        "logo_text": "not_checked",
+        "export_pixels": "not_checked",
+        "layouts": "not_checked",
+        "branded_scene": "not_checked"
+      },
+      "issues": [
+        "transmission_wrong"
+      ],
+      "manual_correction_seconds": null,
+      "notes": "Bottle interior retains white source background.",
+      "reviewer": "Codex sheet-scale visual review",
+      "reviewed_at": "2026-10-09T04:37:00+00:00"
+    },
+    {
+      "key": "ceramic-bottle-646",
+      "source_sha256": "55bbb1a8d9223245626016c8fb6fd25c4c2cd146c25f83257767d5cfcfba7f9d",
+      "category": null,
+      "triage": "preview_pass",
+      "checks": {
+        "silhouette_edges": "not_checked",
+        "interior_holes": "not_checked",
+        "transparency": "not_checked",
+        "shape_color": "not_checked",
+        "logo_text": "not_checked",
+        "export_pixels": "not_checked",
+        "layouts": "not_checked",
+        "branded_scene": "not_checked"
+      },
+      "issues": [],
+      "manual_correction_seconds": null,
+      "notes": "No conspicuous sheet-scale defect.",
+      "reviewer": "Codex sheet-scale visual review",
+      "reviewed_at": "2026-10-09T04:37:00+00:00"
+    },
+    {
+      "key": "gold-necklace-446753",
+      "source_sha256": "6af5c87f2643a6b36b29d6a125e00765341c439fd1bca894c35c5b25a5d49100",
+      "category": null,
+      "triage": "correction",
+      "checks": {
+        "silhouette_edges": "not_checked",
+        "interior_holes": "not_checked",
+        "transparency": "not_checked",
+        "shape_color": "not_checked",
+        "logo_text": "not_checked",
+        "export_pixels": "not_checked",
+        "layouts": "not_checked",
+        "branded_scene": "not_checked"
+      },
+      "issues": [
+        "background_remnant"
+      ],
+      "manual_correction_seconds": null,
+      "notes": "Bright remnant near the cord.",
+      "reviewer": "Codex sheet-scale visual review",
+      "reviewed_at": "2026-10-09T04:37:00+00:00"
+    },
+    {
+      "key": "woven-handbag-62209",
+      "source_sha256": "ba8767be88deea30b864d1d4f513243a394361df93cd282cc9fecbf95bdae4dc",
+      "category": null,
+      "triage": "correction",
+      "checks": {
+        "silhouette_edges": "not_checked",
+        "interior_holes": "not_checked",
+        "transparency": "not_checked",
+        "shape_color": "not_checked",
+        "logo_text": "not_checked",
+        "export_pixels": "not_checked",
+        "layouts": "not_checked",
+        "branded_scene": "not_checked"
+      },
+      "issues": [
+        "low_resolution"
+      ],
+      "manual_correction_seconds": null,
+      "notes": "Source is 925x551; delivery edges not verified.",
+      "reviewer": "Codex sheet-scale visual review",
+      "reviewed_at": "2026-10-09T04:37:00+00:00"
+    },
+    {
+      "key": "steel-helmet-34339",
+      "source_sha256": "1a890e20bd10dba64abfa1a37c3bd9bd21da4d0168c8adbbe2802aae2c61fde8",
+      "category": null,
+      "triage": "preview_pass",
+      "checks": {
+        "silhouette_edges": "not_checked",
+        "interior_holes": "not_checked",
+        "transparency": "not_checked",
+        "shape_color": "not_checked",
+        "logo_text": "not_checked",
+        "export_pixels": "not_checked",
+        "layouts": "not_checked",
+        "branded_scene": "not_checked"
+      },
+      "issues": [],
+      "manual_correction_seconds": null,
+      "notes": "No conspicuous sheet-scale defect.",
+      "reviewer": "Codex sheet-scale visual review",
+      "reviewed_at": "2026-10-09T04:37:00+00:00"
+    },
+    {
+      "key": "ceramic-plate-326385",
+      "source_sha256": "f1dee8865e80681f4dcf7eba4134129e8727f63e467068c77033c1357c7c211f",
+      "category": null,
+      "triage": "correction",
+      "checks": {
+        "silhouette_edges": "not_checked",
+        "interior_holes": "not_checked",
+        "transparency": "not_checked",
+        "shape_color": "not_checked",
+        "logo_text": "not_checked",
+        "export_pixels": "not_checked",
+        "layouts": "not_checked",
+        "branded_scene": "not_checked"
+      },
+      "issues": [
+        "low_resolution"
+      ],
+      "manual_correction_seconds": null,
+      "notes": "Source is 800x589; delivery edges not verified.",
+      "reviewer": "Codex sheet-scale visual review",
+      "reviewed_at": "2026-10-09T04:37:00+00:00"
+    },
+    {
+      "key": "earthenware-plate-468520",
+      "source_sha256": "d3190765662878dbc26e4e40995fe2013f209a1b3a33a164079fecf07074d874",
+      "category": null,
+      "triage": "preview_pass",
+      "checks": {
+        "silhouette_edges": "not_checked",
+        "interior_holes": "not_checked",
+        "transparency": "not_checked",
+        "shape_color": "not_checked",
+        "logo_text": "not_checked",
+        "export_pixels": "not_checked",
+        "layouts": "not_checked",
+        "branded_scene": "not_checked"
+      },
+      "issues": [],
+      "manual_correction_seconds": null,
+      "notes": "No conspicuous sheet-scale defect.",
+      "reviewer": "Codex sheet-scale visual review",
+      "reviewed_at": "2026-10-09T04:37:00+00:00"
+    },
+    {
+      "key": "silk-textile-450741",
+      "source_sha256": "b01c051df3bb0c21b83e1e1dd3f9ae4eb1d97891f3fa7fc7148b7290909ba64d",
+      "category": null,
+      "triage": "correction",
+      "checks": {
+        "silhouette_edges": "not_checked",
+        "interior_holes": "not_checked",
+        "transparency": "not_checked",
+        "shape_color": "not_checked",
+        "logo_text": "not_checked",
+        "export_pixels": "not_checked",
+        "layouts": "not_checked",
+        "branded_scene": "not_checked"
+      },
+      "issues": [
+        "edge_halo"
+      ],
+      "manual_correction_seconds": null,
+      "notes": "Irregular edge needs full-size review.",
+      "reviewer": "Codex sheet-scale visual review",
+      "reviewed_at": "2026-10-09T04:37:00+00:00"
+    },
+    {
+      "key": "garnet-brooch-20519",
+      "source_sha256": "dff38f0a94ff23da91d6255bbb651654af6fdf98839cdd8b2bc7e8addb34adc3",
+      "category": null,
+      "triage": "preview_pass",
+      "checks": {
+        "silhouette_edges": "not_checked",
+        "interior_holes": "not_checked",
+        "transparency": "not_checked",
+        "shape_color": "not_checked",
+        "logo_text": "not_checked",
+        "export_pixels": "not_checked",
+        "layouts": "not_checked",
+        "branded_scene": "not_checked"
+      },
+      "issues": [],
+      "manual_correction_seconds": null,
+      "notes": "No conspicuous sheet-scale defect.",
+      "reviewer": "Codex sheet-scale visual review",
+      "reviewed_at": "2026-10-09T04:37:00+00:00"
+    }
+  ]
+}

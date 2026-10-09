@@ -1,0 +1,935 @@
+"use client";
+
+import {
+  applyImageOperation,
+  type CropRect,
+  commitImageOperation,
+  createImageDocument,
+  createImageHistory,
+  type ImageDocumentLayer,
+  type ImageLayer,
+  type ImageOperation,
+  type MaskStroke,
+  redoImageOperation,
+  undoImageOperation,
+} from "@acs/image-document";
+import Link from "next/link";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { removeBackground } from "./capabilities";
+import {
+  type LocalProjectSummary,
+  listLocalProjects,
+  loadLocalProject,
+  saveLocalProject,
+} from "./local-projects";
+import { frameFromMask } from "./mask-framing";
+import { MaskReview } from "./mask-review";
+import { drawImageDocument, hitTestLayer, type ImageAssetMap } from "./render";
+import "./studio.css";
+
+const presets = [
+  { label: "方图 1:1", width: 1080, height: 1080 },
+  { label: "竖图 4:5", width: 1080, height: 1350 },
+  { label: "横图 16:9", width: 1920, height: 1080 },
+] as const;
+
+type DragState = {
+  layerId: string;
+  startX: number;
+  startY: number;
+  x: number;
+  y: number;
+};
+
+export default function ImageStudioPage() {
+  const [history, setHistory] = useState(() =>
+    createImageHistory(createImageDocument(crypto.randomUUID())),
+  );
+  const historyRef = useRef(history);
+  const [assets, setAssets] = useState<ImageAssetMap>({});
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [cropDraft, setCropDraft] = useState<CropRect | null>(null);
+  const [drag, setDrag] = useState<DragState | null>(null);
+  const [message, setMessage] = useState("导入一张商品图，开始制作广告画面。");
+  const [projects, setProjects] = useState<LocalProjectSummary[]>([]);
+  const [projectToOpen, setProjectToOpen] = useState("");
+  const [projectBusy, setProjectBusy] = useState(false);
+  const [maskBusy, setMaskBusy] = useState(false);
+  const [maskEditorLayerId, setMaskEditorLayerId] = useState<string | null>(
+    null,
+  );
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const originalFiles = useRef(new Map<string, File>());
+  const savedSnapshot = useRef<string | null>(null);
+  const document = history.present;
+  const selected = document.layers.find((layer) => layer.id === selectedId);
+  const maskEditorLayer = document.layers.find(
+    (layer) => layer.id === maskEditorLayerId && layer.kind === "image",
+  );
+
+  useEffect(() => {
+    if (selected?.kind === "image") {
+      setCropDraft(
+        selected.crop ?? {
+          x: 0,
+          y: 0,
+          width: selected.sourceWidth,
+          height: selected.sourceHeight,
+        },
+      );
+    } else {
+      setCropDraft(null);
+    }
+  }, [selected]);
+
+  useEffect(() => {
+    void listLocalProjects()
+      .then(setProjects)
+      .catch(() => setMessage("浏览器本地存储不可用，当前仍可编辑和导出。"));
+  }, []);
+
+  async function saveProject() {
+    setProjectBusy(true);
+    try {
+      const current = historyRef.current.present;
+      await saveLocalProject(current, originalFiles.current);
+      savedSnapshot.current = JSON.stringify(current);
+      const next = await listLocalProjects();
+      setProjects(next);
+      setProjectToOpen(current.id);
+      setMessage("项目和原图已保存到此浏览器，可在刷新后重新打开。");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "项目保存失败");
+    } finally {
+      setProjectBusy(false);
+    }
+  }
+
+  async function openProject() {
+    if (!projectToOpen) return;
+    if (
+      historyRef.current.present.layers.length > 0 &&
+      JSON.stringify(historyRef.current.present) !== savedSnapshot.current &&
+      !window.confirm("当前项目有未保存的修改。仍要打开其他项目吗？")
+    ) {
+      return;
+    }
+    setProjectBusy(true);
+    try {
+      const loaded = await loadLocalProject(projectToOpen);
+      const bitmaps: ImageAssetMap = {};
+      for (const [assetId, file] of loaded.originals) {
+        bitmaps[assetId] = await createImageBitmap(file);
+      }
+      originalFiles.current = loaded.originals;
+      setAssets(bitmaps);
+      const next = createImageHistory(loaded.document);
+      historyRef.current = next;
+      setHistory(next);
+      savedSnapshot.current = JSON.stringify(loaded.document);
+      setSelectedId(null);
+      setMaskEditorLayerId(null);
+      setMessage("本地项目和原图已恢复。此前会话的撤销记录不会保存。");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "项目打开失败");
+    } finally {
+      setProjectBusy(false);
+    }
+  }
+
+  const commit = useCallback((operation: ImageOperation) => {
+    try {
+      const next = commitImageOperation(historyRef.current, operation);
+      historyRef.current = next;
+      setHistory(next);
+      setMessage("");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "操作失败");
+    }
+  }, []);
+
+  function changeHistory(direction: "undo" | "redo") {
+    const next =
+      direction === "undo"
+        ? undoImageOperation(historyRef.current)
+        : redoImageOperation(historyRef.current);
+    historyRef.current = next;
+    setHistory(next);
+  }
+
+  let preview = document;
+  if (drag) {
+    const layer = document.layers.find((item) => item.id === drag.layerId);
+    if (layer) {
+      preview = applyImageOperation(document, {
+        type: "transform",
+        layerId: layer.id,
+        patch: {
+          x: layer.x + drag.x - drag.startX,
+          y: layer.y + drag.y - drag.startY,
+        },
+      });
+    }
+  }
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const context = canvas?.getContext("2d");
+    if (!canvas || !context) return;
+    canvas.width = preview.canvas.width;
+    canvas.height = preview.canvas.height;
+    drawImageDocument(context, preview, assets, selectedId ?? undefined);
+  }, [preview, assets, selectedId]);
+
+  async function importImage(file?: File) {
+    if (!file) return;
+    if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
+      setMessage("请使用 PNG、JPEG 或 WebP 图片。");
+      return;
+    }
+    if (file.size > 25 * 1024 * 1024) {
+      setMessage("当前原型支持不超过 25 MB 的图片。");
+      return;
+    }
+    try {
+      const bitmap = await createImageBitmap(file);
+      if (bitmap.width * bitmap.height > 25_000_000) {
+        bitmap.close();
+        setMessage("当前原型支持不超过 2500 万像素的图片。");
+        return;
+      }
+      const assetId = crypto.randomUUID();
+      const layerId = crypto.randomUUID();
+      const scale = Math.min(
+        (document.canvas.width * 0.72) / bitmap.width,
+        (document.canvas.height * 0.72) / bitmap.height,
+      );
+      const width = Math.round(bitmap.width * scale);
+      const height = Math.round(bitmap.height * scale);
+      originalFiles.current.set(assetId, file);
+      setAssets((current) => ({ ...current, [assetId]: bitmap }));
+      commit({
+        type: "addImage",
+        layer: {
+          id: layerId,
+          kind: "image",
+          name: file.name,
+          assetId,
+          sourceWidth: bitmap.width,
+          sourceHeight: bitmap.height,
+          x: Math.round((document.canvas.width - width) / 2),
+          y: Math.round((document.canvas.height - height) / 2),
+          width,
+          height,
+          rotation: 0,
+          opacity: 1,
+        },
+      });
+      setSelectedId(layerId);
+      setMessage("已导入原图。当前编辑只改变图层构图，不改写原图像素。");
+    } catch {
+      setMessage("图片解码失败，请换一张图片重试。");
+    }
+  }
+
+  async function attachMask(file: File, layer: ImageLayer) {
+    if (file.type !== "image/png" || file.size > 25 * 1024 * 1024) {
+      setMessage("请导入不超过 25 MB 的 PNG 灰度或透明蒙版。");
+      return false;
+    }
+    try {
+      const bitmap = await createImageBitmap(file);
+      if (bitmap.width * bitmap.height > 25_000_000) {
+        bitmap.close();
+        setMessage("当前原型支持不超过 2500 万像素的蒙版。");
+        return false;
+      }
+      if (
+        bitmap.width !== layer.sourceWidth ||
+        bitmap.height !== layer.sourceHeight
+      ) {
+        bitmap.close();
+        setMessage("蒙版像素尺寸必须与原图完全一致。");
+        return false;
+      }
+      if (
+        !historyRef.current.present.layers.some((item) => item.id === layer.id)
+      ) {
+        bitmap.close();
+        setMessage("目标图片图层已移除，蒙版未附加。");
+        return false;
+      }
+      const assetId = crypto.randomUUID();
+      const frame = frameFromMask(bitmap, historyRef.current.present.canvas);
+      originalFiles.current.set(assetId, file);
+      setAssets((current) => ({ ...current, [assetId]: bitmap }));
+      commit({
+        type: "setMask",
+        layerId: layer.id,
+        assetId,
+        frame: frame ?? undefined,
+      });
+      setMaskEditorLayerId(layer.id);
+      setMessage(
+        frame
+          ? "蒙版已附加，并按主体自动取景；原图仍单独保存。"
+          : "蒙版已附加；未识别到主体，请检查蒙版。原图仍单独保存。",
+      );
+      return true;
+    } catch {
+      setMessage("蒙版解码失败，请导入 PNG 文件。");
+      return false;
+    }
+  }
+
+  async function importMask(file?: File) {
+    if (!file || selected?.kind !== "image") return;
+    await attachMask(file, selected);
+  }
+
+  function frameSelectedMask() {
+    if (selected?.kind !== "image" || !selected.mask) return;
+    const bitmap = assets[selected.mask.assetId];
+    if (!bitmap) {
+      setMessage("蒙版素材缺失，无法按主体取景。");
+      return;
+    }
+    const frame = frameFromMask(bitmap, document.canvas);
+    if (!frame) {
+      setMessage("蒙版中未识别到主体，无法自动取景。");
+      return;
+    }
+    commit({ type: "frameImage", layerId: selected.id, frame });
+    setMessage("已按蒙版主体取景。可撤销，或继续手动调整裁切和位置。");
+  }
+
+  async function generateMask() {
+    if (selected?.kind !== "image" || maskBusy) return;
+    const original = originalFiles.current.get(selected.assetId);
+    if (!original) {
+      setMessage("原图素材缺失，无法自动抠图。");
+      return;
+    }
+    setMaskBusy(true);
+    setMessage("正在本机生成蒙版，请稍候…");
+    try {
+      const mask = await removeBackground(original);
+      if (await attachMask(mask, selected)) {
+        setMessage(
+          "本机蒙版已生成。请检查镂空、反光和透明材质，再决定是否导出。",
+        );
+      }
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "自动抠图失败");
+    } finally {
+      setMaskBusy(false);
+    }
+  }
+
+  function addText() {
+    const layerId = crypto.randomUUID();
+    const fontSize = Math.round(
+      Math.min(document.canvas.width * 0.055, document.canvas.height * 0.07),
+    );
+    commit({
+      type: "addText",
+      layer: {
+        id: layerId,
+        kind: "text",
+        name: "标题文字",
+        text: "让产品成为焦点",
+        fontSize,
+        color: "#173f3b",
+        fontFamily: "Arial, sans-serif",
+        x: Math.round(document.canvas.width * 0.06),
+        y: Math.round(document.canvas.height * 0.03),
+        width: Math.round(document.canvas.width * 0.88),
+        height: Math.round(fontSize * 1.5),
+        rotation: 0,
+        opacity: 1,
+      },
+    });
+    setSelectedId(layerId);
+  }
+
+  function canvasPoint(event: React.PointerEvent<HTMLCanvasElement>) {
+    const bounds = event.currentTarget.getBoundingClientRect();
+    return {
+      x: ((event.clientX - bounds.left) / bounds.width) * document.canvas.width,
+      y:
+        ((event.clientY - bounds.top) / bounds.height) * document.canvas.height,
+    };
+  }
+
+  function pointerDown(event: React.PointerEvent<HTMLCanvasElement>) {
+    const point = canvasPoint(event);
+    const hit = [...document.layers]
+      .reverse()
+      .find((layer) => hitTestLayer(layer, point.x, point.y));
+    setSelectedId(hit?.id ?? null);
+    if (hit) {
+      event.currentTarget.setPointerCapture(event.pointerId);
+      setDrag({
+        layerId: hit.id,
+        startX: point.x,
+        startY: point.y,
+        x: point.x,
+        y: point.y,
+      });
+    }
+  }
+
+  function pointerMove(event: React.PointerEvent<HTMLCanvasElement>) {
+    if (!drag) return;
+    const point = canvasPoint(event);
+    setDrag({ ...drag, x: point.x, y: point.y });
+  }
+
+  function pointerUp(event: React.PointerEvent<HTMLCanvasElement>) {
+    if (!drag) return;
+    const point = canvasPoint(event);
+    const layer = document.layers.find((item) => item.id === drag.layerId);
+    if (layer) {
+      const dx = Math.round(point.x - drag.startX);
+      const dy = Math.round(point.y - drag.startY);
+      if (dx !== 0 || dy !== 0)
+        commit({
+          type: "transform",
+          layerId: layer.id,
+          patch: { x: layer.x + dx, y: layer.y + dy },
+        });
+    }
+    setDrag(null);
+  }
+
+  function setLayerNumber(
+    key: "x" | "y" | "width" | "height" | "rotation" | "opacity",
+    value: number,
+  ) {
+    if (!selected || !Number.isFinite(value)) return;
+    commit({
+      type: "transform",
+      layerId: selected.id,
+      patch: { [key]: value },
+    });
+  }
+
+  function cropToAspect(ratio: number) {
+    if (selected?.kind !== "image") return;
+    let width = selected.sourceWidth;
+    let height = selected.sourceHeight;
+    if (width / height > ratio) width = Math.max(1, Math.round(height * ratio));
+    else height = Math.max(1, Math.round(width / ratio));
+    commit({
+      type: "setCrop",
+      layerId: selected.id,
+      crop: {
+        x: Math.floor((selected.sourceWidth - width) / 2),
+        y: Math.floor((selected.sourceHeight - height) / 2),
+        width,
+        height,
+      },
+    });
+  }
+
+  async function exportPng(transparentBackground = false) {
+    const missing = document.layers.find(
+      (layer) =>
+        layer.kind === "image" &&
+        (!assets[layer.assetId] || (layer.mask && !assets[layer.mask.assetId])),
+    );
+    if (missing) {
+      setMessage(`图片原图或蒙版缺失，无法导出：${missing.name}`);
+      return;
+    }
+    const canvas = window.document.createElement("canvas");
+    canvas.width = document.canvas.width;
+    canvas.height = document.canvas.height;
+    const context = canvas.getContext("2d");
+    if (!context) {
+      setMessage("当前浏览器无法导出画布。");
+      return;
+    }
+    try {
+      drawImageDocument(
+        context,
+        document,
+        assets,
+        undefined,
+        transparentBackground,
+      );
+    } catch {
+      setMessage("画布渲染失败，请检查图片图层后重试。");
+      return;
+    }
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, "image/png"),
+    );
+    if (!blob || blob.size === 0) {
+      setMessage("PNG 导出失败。");
+      return;
+    }
+    try {
+      const bitmap = await createImageBitmap(blob);
+      const valid =
+        bitmap.width === document.canvas.width &&
+        bitmap.height === document.canvas.height;
+      bitmap.close();
+      if (!valid) throw new Error("PNG 尺寸与画布不一致");
+    } catch {
+      setMessage("PNG 导出校验失败，请重试。");
+      return;
+    }
+    const url = URL.createObjectURL(blob);
+    const link = window.document.createElement("a");
+    link.href = url;
+    link.download = `creative-image-${document.canvas.width}x${document.canvas.height}${transparentBackground ? "-transparent" : ""}.png`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    setMessage(
+      `已导出 ${document.canvas.width} × ${document.canvas.height}${transparentBackground ? " 透明" : ""} PNG。`,
+    );
+  }
+
+  return (
+    <main className="studio-shell">
+      <header className="studio-topbar">
+        <Link href="/" className="studio-brand">
+          ✦ AI Creative Suite
+        </Link>
+        <span className="studio-divider" />
+        <span className="studio-title">Image Studio</span>
+        <span className="studio-badge">本地编辑原型</span>
+        <select
+          className="project-picker"
+          aria-label="已保存的本地项目"
+          value={projectToOpen}
+          onChange={(event) => setProjectToOpen(event.target.value)}
+          disabled={projectBusy}
+        >
+          <option value="">选择本地项目</option>
+          {projects.map((project) => (
+            <option key={project.id} value={project.id}>
+              {project.title} · {new Date(project.updatedAt).toLocaleString()}
+            </option>
+          ))}
+        </select>
+        <button
+          type="button"
+          className="project-action"
+          onClick={() => void openProject()}
+          disabled={!projectToOpen || projectBusy}
+        >
+          打开
+        </button>
+        <button
+          type="button"
+          className="project-action"
+          onClick={() => void saveProject()}
+          disabled={projectBusy}
+        >
+          保存项目
+        </button>
+        <button
+          type="button"
+          className="project-action"
+          onClick={() => void exportPng(true)}
+        >
+          导出透明 PNG
+        </button>
+        <button
+          type="button"
+          className="export-button"
+          onClick={() => void exportPng()}
+        >
+          导出 PNG
+        </button>
+      </header>
+
+      <div className="studio-workspace">
+        <aside className="studio-panel studio-left">
+          <div className="panel-heading">
+            <span>素材与图层</span>
+            <span>{document.layers.length}</span>
+          </div>
+          <label className="upload-button">
+            ＋ 导入图片
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              onChange={(event) => void importImage(event.target.files?.[0])}
+            />
+          </label>
+          <button type="button" className="panel-button" onClick={addText}>
+            ＋ 添加文字
+          </button>
+          <p className="panel-caption">
+            点击“保存项目”会把原图与编辑文档保存在此浏览器；图片按原始比例缩放。
+          </p>
+          <div className="layer-list">
+            {[...document.layers].reverse().map((layer) => (
+              <button
+                type="button"
+                key={layer.id}
+                className={`layer-row ${selectedId === layer.id ? "is-selected" : ""}`}
+                onClick={() => setSelectedId(layer.id)}
+              >
+                <span className="layer-icon">
+                  {layer.kind === "image" ? "▧" : "T"}
+                </span>
+                <span className="layer-name">{layer.name}</span>
+                <span className="layer-kind">
+                  {layer.kind === "image" ? "图片" : "文字"}
+                </span>
+              </button>
+            ))}
+          </div>
+          <div className="identity-note">
+            <strong>产品外观保护</strong>
+            <span>开启 · 本原型不生成或重绘商品细节</span>
+          </div>
+        </aside>
+
+        <section className="studio-center" aria-label="图片画布">
+          <div className="canvas-toolbar">
+            <div className="preset-group">
+              {presets.map((preset) => (
+                <button
+                  type="button"
+                  key={preset.label}
+                  className={
+                    document.canvas.width === preset.width &&
+                    document.canvas.height === preset.height
+                      ? "active"
+                      : ""
+                  }
+                  onClick={() =>
+                    commit({
+                      type: "resizeCanvas",
+                      width: preset.width,
+                      height: preset.height,
+                    })
+                  }
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+            <div className="history-group">
+              <button
+                type="button"
+                disabled={history.past.length === 0}
+                onClick={() => changeHistory("undo")}
+              >
+                ↶ 撤销
+              </button>
+              <button
+                type="button"
+                disabled={history.future.length === 0}
+                onClick={() => changeHistory("redo")}
+              >
+                ↷ 重做
+              </button>
+            </div>
+          </div>
+          <div className="canvas-stage">
+            <canvas
+              ref={canvasRef}
+              className="studio-canvas"
+              style={{
+                aspectRatio: `${document.canvas.width} / ${document.canvas.height}`,
+              }}
+              onPointerDown={pointerDown}
+              onPointerMove={pointerMove}
+              onPointerUp={pointerUp}
+              onPointerCancel={() => setDrag(null)}
+              aria-label="可拖动图层的编辑画布"
+            />
+          </div>
+          <div className="studio-status">
+            <span>
+              {document.canvas.width} × {document.canvas.height} px
+            </span>
+            <span>{message}</span>
+          </div>
+        </section>
+
+        <aside className="studio-panel studio-right">
+          <div className="panel-heading">
+            <span>属性</span>
+            <span>{selected ? "图层" : "画布"}</span>
+          </div>
+          {selected ? (
+            <>
+              <h2 className="inspector-title">{selected.name}</h2>
+              <div className="inspector-grid">
+                {(
+                  ["x", "y", "width", "height", "rotation", "opacity"] as const
+                ).map((key) => (
+                  <label key={key}>
+                    {
+                      {
+                        x: "X",
+                        y: "Y",
+                        width: "宽度",
+                        height: "高度",
+                        rotation: "旋转°",
+                        opacity: "透明度",
+                      }[key]
+                    }
+                    <input
+                      type="number"
+                      step={key === "opacity" ? "0.1" : "1"}
+                      min={key === "opacity" ? "0" : undefined}
+                      max={key === "opacity" ? "1" : undefined}
+                      value={Math.round(selected[key] * 100) / 100}
+                      onChange={(event) =>
+                        setLayerNumber(key, Number(event.target.value))
+                      }
+                    />
+                  </label>
+                ))}
+              </div>
+              {selected.kind === "image" && cropDraft && (
+                <div className="crop-inspector">
+                  <h3>非破坏裁切</h3>
+                  <p>取景区域按原图像素记录，原图不会改写。</p>
+                  <div className="crop-presets">
+                    <button type="button" onClick={() => cropToAspect(1)}>
+                      1:1
+                    </button>
+                    <button type="button" onClick={() => cropToAspect(4 / 5)}>
+                      4:5
+                    </button>
+                    <button type="button" onClick={() => cropToAspect(16 / 9)}>
+                      16:9
+                    </button>
+                  </div>
+                  <div className="inspector-grid">
+                    {(["x", "y", "width", "height"] as const).map((key) => (
+                      <label key={key}>
+                        {{ x: "左", y: "上", width: "宽", height: "高" }[key]}
+                        <input
+                          type="number"
+                          step="1"
+                          min={key === "width" || key === "height" ? 1 : 0}
+                          value={cropDraft[key]}
+                          onChange={(event) =>
+                            setCropDraft({
+                              ...cropDraft,
+                              [key]: Number(event.target.value),
+                            })
+                          }
+                        />
+                      </label>
+                    ))}
+                  </div>
+                  <div className="crop-presets">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        commit({
+                          type: "setCrop",
+                          layerId: selected.id,
+                          crop: cropDraft,
+                        })
+                      }
+                    >
+                      应用裁切
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        commit({
+                          type: "setCrop",
+                          layerId: selected.id,
+                          crop: null,
+                        })
+                      }
+                    >
+                      恢复原图
+                    </button>
+                  </div>
+                </div>
+              )}
+              {selected.kind === "image" && (
+                <div className="crop-inspector">
+                  <h3>抠图蒙版</h3>
+                  <p>
+                    本机自动生成或导入同尺寸 PNG
+                    蒙版。白色保留，黑色透明；请人工检查并修正复杂边缘。
+                  </p>
+                  <button
+                    type="button"
+                    className="panel-button"
+                    onClick={() => void generateMask()}
+                    disabled={maskBusy}
+                  >
+                    {maskBusy ? "正在生成蒙版…" : "自动抠图（本机）"}
+                  </button>
+                  <label className="upload-button">
+                    {selected.mask ? "更换蒙版" : "导入蒙版"}
+                    <input
+                      type="file"
+                      accept="image/png"
+                      onChange={(event) => {
+                        void importMask(event.target.files?.[0]);
+                        event.target.value = "";
+                      }}
+                    />
+                  </label>
+                  {selected.mask && (
+                    <div className="crop-presets">
+                      <button type="button" onClick={frameSelectedMask}>
+                        按主体取景
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setMaskEditorLayerId(selected.id)}
+                      >
+                        笔刷修正 · {selected.mask.strokes.length} 笔
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          commit({
+                            type: "setMask",
+                            layerId: selected.id,
+                            assetId: null,
+                          })
+                        }
+                      >
+                        移除蒙版
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+              {selected.kind === "text" && (
+                <div className="text-inspector">
+                  <label>
+                    文字内容
+                    <textarea
+                      value={selected.text}
+                      onChange={(event) =>
+                        commit({
+                          type: "editText",
+                          layerId: selected.id,
+                          text: event.target.value,
+                        })
+                      }
+                    />
+                  </label>
+                  <label>
+                    文字颜色
+                    <input
+                      type="color"
+                      value={selected.color}
+                      onChange={(event) =>
+                        commit({
+                          type: "editText",
+                          layerId: selected.id,
+                          text: selected.text,
+                          color: event.target.value,
+                        })
+                      }
+                    />
+                  </label>
+                  <label>
+                    字号
+                    <input
+                      type="number"
+                      min="1"
+                      value={selected.fontSize}
+                      onChange={(event) =>
+                        commit({
+                          type: "editText",
+                          layerId: selected.id,
+                          text: selected.text,
+                          fontSize: Number(event.target.value),
+                        })
+                      }
+                    />
+                  </label>
+                </div>
+              )}
+              <div className="layer-actions">
+                <button
+                  type="button"
+                  onClick={() =>
+                    commit({
+                      type: "moveLayer",
+                      layerId: selected.id,
+                      direction: "up",
+                    })
+                  }
+                >
+                  上移
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    commit({
+                      type: "moveLayer",
+                      layerId: selected.id,
+                      direction: "down",
+                    })
+                  }
+                >
+                  下移
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    commit({ type: "removeLayer", layerId: selected.id });
+                    setSelectedId(null);
+                  }}
+                >
+                  删除
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <h2 className="inspector-title">画布设置</h2>
+              <label className="background-control">
+                背景颜色
+                <input
+                  type="color"
+                  value={document.canvas.background}
+                  onChange={(event) =>
+                    commit({
+                      type: "setCanvas",
+                      patch: { background: event.target.value },
+                    })
+                  }
+                />
+              </label>
+              <div className="inspector-empty">
+                选中画布中的图片或文字，可调整位置、尺寸、角度与透明度。
+              </div>
+            </>
+          )}
+        </aside>
+      </div>
+      {maskEditorLayer?.kind === "image" && maskEditorLayer.mask && (
+        <MaskReview
+          layer={maskEditorLayer}
+          assets={assets}
+          onStroke={(stroke: MaskStroke) =>
+            commit({
+              type: "paintMask",
+              layerId: maskEditorLayer.id,
+              stroke,
+            })
+          }
+          onUndo={() => changeHistory("undo")}
+          onRedo={() => changeHistory("redo")}
+          canUndo={history.past.length > 0}
+          canRedo={history.future.length > 0}
+          onClose={() => setMaskEditorLayerId(null)}
+        />
+      )}
+    </main>
+  );
+}

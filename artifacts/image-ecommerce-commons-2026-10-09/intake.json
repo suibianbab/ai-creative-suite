@@ -1,0 +1,70 @@
+{
+  "source": "Wikimedia Commons CC0 product photographs; internal image-quality validation only",
+  "cases": [
+    {
+      "case": "matte-shampoo",
+      "title": "Matte shampoo bottle",
+      "category": "matte",
+      "filename": "matte-shampoo.jpg",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Dove_shampoo_bottle_in_black_background.jpg",
+      "source_filename": "Dove_shampoo_bottle_in_black_background.jpg",
+      "photographer": "Ranjima np",
+      "license": "CC0 1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "rights_confirmed": true,
+      "rights_basis": "Wikimedia Commons file page declares photographer's photo CC0 1.0; internal quality evaluation only. Dove trademark and packaging design are not cleared for advertising."
+    },
+    {
+      "case": "reflective-lens",
+      "title": "Reflective camera lens",
+      "category": "reflective_electronics",
+      "filename": "reflective-lens.jpg",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Camera_lens_(29030649476).jpg",
+      "source_filename": "Camera_lens_(29030649476).jpg",
+      "photographer": "freestocks.org",
+      "license": "CC0 1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "rights_confirmed": true,
+      "rights_basis": "Wikimedia Commons file page declares the photo CC0 1.0; internal quality evaluation only. Any visible product marks are not separately cleared."
+    },
+    {
+      "case": "fabric-backpack",
+      "title": "Fabric backpack and straps",
+      "category": "fabric_hair",
+      "filename": "fabric-backpack.jpg",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Quechua_backpack_-_B.jpg",
+      "source_filename": "Quechua_backpack_-_B.jpg",
+      "photographer": "Fructibus",
+      "license": "CC0 1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "rights_confirmed": true,
+      "rights_basis": "Wikimedia Commons file page declares the photographer's photo CC0 1.0; internal quality evaluation only. Quechua trademark is not cleared for advertising."
+    },
+    {
+      "case": "transparent-bottle",
+      "title": "Transparent mineral water bottle",
+      "category": "transparent_packaging",
+      "filename": "transparent-bottle.jpg",
+      "source_page": "https://commons.wikimedia.org/wiki/File:%D0%A8%D0%B0%D1%8F%D0%BD%D1%81%D1%8C%D0%BA%D0%B0-2.jpg",
+      "source_filename": "Шаянська-2.jpg",
+      "photographer": "Hayduchok",
+      "license": "CC0 1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "rights_confirmed": true,
+      "rights_basis": "Wikimedia Commons file page declares the photographer's photo CC0 1.0; internal quality evaluation only. The water brand label is not separately cleared for advertising."
+    },
+    {
+      "case": "dense-label-medicine",
+      "title": "Dense text on medicine carton and blister pack",
+      "category": "dense_text_logo",
+      "filename": "dense-label-medicine.jpg",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Fluimucil_NAC_pills_in_China.jpg",
+      "source_filename": "Fluimucil_NAC_pills_in_China.jpg",
+      "photographer": "Vack Xu",
+      "license": "CC0 1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "rights_confirmed": true,
+      "rights_basis": "Wikimedia Commons file page declares the photographer's photo CC0 1.0; internal quality evaluation only. Fluimucil and other packaging marks are not cleared for advertising."
+    }
+  ]
+}

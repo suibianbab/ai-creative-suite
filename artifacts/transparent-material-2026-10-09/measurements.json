@@ -1,0 +1,36 @@
+{
+  "model": "birefnet-general-lite",
+  "results": [
+    {
+      "case": "farina-cologne",
+      "object_id": null,
+      "source_sha256": "4e422c91a8f66ba35c79ccdc19108ce2ed4c92c5c2d3374d4441cff790f716e9",
+      "source_size": [
+        2835,
+        4252
+      ],
+      "model_input_size": [
+        1067,
+        1600
+      ],
+      "inference_seconds": 5.82,
+      "rgb_changed_pixels": 0,
+      "alpha_high_coverage_percent": 34.93,
+      "alpha_low_coverage_percent": 64.56,
+      "alpha_transition_percent": 0.51,
+      "mask_bbox": [
+        663,
+        348,
+        2182,
+        3984
+      ],
+      "outputs": {
+        "mask": "masks/farina-cologne.png",
+        "cutout": "cutouts/farina-cologne.png",
+        "white": "white/farina-cologne.png",
+        "square": "layouts/farina-cologne-square.png",
+        "portrait": "layouts/farina-cologne-portrait.png"
+      }
+    }
+  ]
+}

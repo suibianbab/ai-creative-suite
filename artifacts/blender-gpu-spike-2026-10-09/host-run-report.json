@@ -1,0 +1,13 @@
+{
+  "exit_code": 0,
+  "elapsed_seconds": 12.483,
+  "blender_executable": "D:\\codex\\animate\\.tools\\blender-5.2.2-windows-x64\\blender.exe",
+  "backend_requested": "OPTIX",
+  "gpu_monitor_note": "nvidia-smi samples are whole-GPU observations, not Blender-attributed VRAM",
+  "gpu_baseline": {
+    "memory_used_mib": 2318,
+    "utilization_percent": 14
+  },
+  "gpu_peak_memory_used_mib": 3092,
+  "gpu_peak_utilization_percent": 94
+}

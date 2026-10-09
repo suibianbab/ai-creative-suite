@@ -1,0 +1,121 @@
+{
+  "schema_version": 2,
+  "dataset_kind": "ecommerce",
+  "manifest_sha256": "f56f2ae03b12481658d2cbe666c5e851a6d4b52837c313bf191ac06771b4de86",
+  "created_at": "2026-10-09T05:00:10+00:00",
+  "cases": [
+    {
+      "key": "matte-shampoo",
+      "source_sha256": "2aac0a214508d5bd1d268418154510318e41b804eadc30e9e9a6b0ffb2cf3e01",
+      "category": "matte",
+      "triage": "correction",
+      "checks": {
+        "silhouette_edges": "not_checked",
+        "interior_holes": "not_checked",
+        "transparency": "not_checked",
+        "shape_color": "pass",
+        "logo_text": "not_checked",
+        "export_pixels": "pass",
+        "branded_scene": "not_checked",
+        "layouts": "not_checked"
+      },
+      "issues": [
+        "background_remnant"
+      ],
+      "manual_correction_seconds": null,
+      "notes": "Mask includes the decorative white petals beside the bottle; isolate bottle before ecommerce use.",
+      "reviewer": "Codex visual preflight (contact sheet)",
+      "reviewed_at": "2026-10-09T05:03:55+00:00"
+    },
+    {
+      "key": "reflective-lens",
+      "source_sha256": "6bc624789e24c1cd11ab48b4064286f28b8bb7988fbae612c55d365292d844be",
+      "category": "reflective_electronics",
+      "triage": "correction",
+      "checks": {
+        "silhouette_edges": "not_checked",
+        "interior_holes": "not_checked",
+        "transparency": "not_checked",
+        "shape_color": "pass",
+        "logo_text": "not_checked",
+        "export_pixels": "pass",
+        "branded_scene": "not_checked",
+        "layouts": "not_checked"
+      },
+      "issues": [
+        "support_or_shadow"
+      ],
+      "manual_correction_seconds": null,
+      "notes": "Reflection below the lens remains in the cutout; remove it for a floating product layout.",
+      "reviewer": "Codex visual preflight (contact sheet)",
+      "reviewed_at": "2026-10-09T05:03:55+00:00"
+    },
+    {
+      "key": "fabric-backpack",
+      "source_sha256": "df1698f9fa62b3714db27e8fea307470f3b3a0342f7ba7e5ea66bf40d07e40bd",
+      "category": "fabric_hair",
+      "triage": "preview_pass",
+      "checks": {
+        "silhouette_edges": "pass",
+        "interior_holes": "not_checked",
+        "transparency": "not_checked",
+        "shape_color": "pass",
+        "logo_text": "not_checked",
+        "export_pixels": "pass",
+        "branded_scene": "not_checked",
+        "layouts": "not_checked"
+      },
+      "issues": [],
+      "manual_correction_seconds": null,
+      "notes": "Orientation now correct after EXIF handling. Straps and outline appear intact at contact-sheet scale; inspect at 100% before acceptance.",
+      "reviewer": "Codex visual preflight (contact sheet)",
+      "reviewed_at": "2026-10-09T05:03:55+00:00"
+    },
+    {
+      "key": "transparent-bottle",
+      "source_sha256": "e71112b0f3e0a393634adc34df2c46a44896d6b0fc03c1d5ba5cce42567c212c",
+      "category": "transparent_packaging",
+      "triage": "fail",
+      "checks": {
+        "silhouette_edges": "not_checked",
+        "interior_holes": "not_checked",
+        "transparency": "issue",
+        "shape_color": "pass",
+        "logo_text": "not_checked",
+        "export_pixels": "pass",
+        "branded_scene": "not_checked",
+        "layouts": "not_checked"
+      },
+      "issues": [
+        "transmission_wrong"
+      ],
+      "manual_correction_seconds": null,
+      "notes": "Dark source background is baked into the clear bottle, so the white-background composite is physically wrong. Needs transmission-aware cleanup or a different source.",
+      "reviewer": "Codex visual preflight (contact sheet)",
+      "reviewed_at": "2026-10-09T05:03:55+00:00"
+    },
+    {
+      "key": "dense-label-medicine",
+      "source_sha256": "7211722e2ed1f548828bc5669ba8fa12b33d11cda4d52787930c75148113d602",
+      "category": "dense_text_logo",
+      "triage": "correction",
+      "checks": {
+        "silhouette_edges": "not_checked",
+        "interior_holes": "not_checked",
+        "transparency": "not_checked",
+        "shape_color": "pass",
+        "logo_text": "pass",
+        "export_pixels": "pass",
+        "branded_scene": "not_checked",
+        "layouts": "not_checked"
+      },
+      "issues": [
+        "missing_subject"
+      ],
+      "manual_correction_seconds": null,
+      "notes": "Carton and blister text retain original RGB pixels, but the loose tablets beside the blister are omitted. Define intended product group and refine mask.",
+      "reviewer": "Codex visual preflight (contact sheet)",
+      "reviewed_at": "2026-10-09T05:03:55+00:00"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+# Isolated, loopback-only development identity provider. Never use start-dev in production.
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.8.0
+    pull_policy: never
+    command: ["start-dev", "--import-realm"]
+    env_file:
+      - /opt/ai-creative-suite/auth.env
+    environment:
+      KC_HOSTNAME: http://localhost:8180
+      KC_HTTP_ENABLED: "true"
+    ports:
+      - "127.0.0.1:8180:8080"
+    mem_limit: 1g
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+      - /opt/ai-creative-suite/auth-realm-import:/opt/keycloak/data/import:ro
+
+volumes:
+  keycloak_data:

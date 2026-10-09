@@ -1,0 +1,14 @@
+{
+  "duration_seconds": 6,
+  "fps": 24,
+  "frame_count": 144,
+  "resolution": [
+    1280,
+    720
+  ],
+  "video": "D:\\codex\\animate\\artifacts\\fictional-product-ad-2026-10-09\\final\\form01_fictional_ad.mp4",
+  "audio": "D:\\codex\\animate\\artifacts\\fictional-product-ad-2026-10-09\\final\\original_audio.wav",
+  "visual_source": "D:\\codex\\animate\\artifacts\\fictional-product-ad-2026-10-09\\render",
+  "sound_source": "original synthesized in this script",
+  "compositor": "Pillow overlays + FFmpeg encode; prototype, not production Remotion pipeline"
+}

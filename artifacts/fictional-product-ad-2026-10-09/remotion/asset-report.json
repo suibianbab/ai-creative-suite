@@ -1,0 +1,15 @@
+{
+  "staged": {
+    "landscape": {
+      "frame_count": 72,
+      "render_source": "D:\\codex\\animate\\artifacts\\fictional-product-ad-2026-10-09\\render"
+    },
+    "portrait": {
+      "frame_count": 72,
+      "render_source": "D:\\codex\\animate\\artifacts\\fictional-product-ad-2026-10-09\\portrait\\render"
+    }
+  },
+  "audio": "D:\\codex\\animate\\artifacts\\fictional-product-ad-2026-10-09\\final\\original_audio.wav",
+  "public": "D:\\codex\\animate\\packages\\remotion-engine\\public\\form01",
+  "note": "Hardlinks when possible; staged files are generated and gitignored"
+}

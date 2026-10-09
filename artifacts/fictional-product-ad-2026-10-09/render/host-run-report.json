@@ -1,0 +1,24 @@
+{
+  "exit_code": 0,
+  "complete": true,
+  "frame_count": 72,
+  "elapsed_seconds": 381.463,
+  "gpu_monitor_note": "Whole-GPU nvidia-smi samples, not Blender-attributed VRAM",
+  "gpu_baseline": {
+    "memory_used_mib": 2003,
+    "utilization_percent": 16
+  },
+  "gpu_peak_memory_used_mib": 2852,
+  "gpu_peak_utilization_percent": 95,
+  "command": [
+    "D:\\codex\\animate\\.tools\\blender-5.2.2-windows-x64\\blender.exe",
+    "-b",
+    "-t",
+    "4",
+    "--python",
+    "D:\\codex\\animate\\scripts\\blender\\fictional_product_ad.py",
+    "--",
+    "D:\\codex\\animate\\artifacts\\fictional-product-ad-2026-10-09\\render",
+    "final"
+  ]
+}

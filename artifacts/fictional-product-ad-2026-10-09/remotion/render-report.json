@@ -1,0 +1,92 @@
+{
+  "landscape": {
+    "video": "D:\\codex\\animate\\artifacts\\fictional-product-ad-2026-10-09\\remotion\\form01_landscape.mp4",
+    "elapsed_seconds": 20.267,
+    "metadata": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "h264",
+          "width": 1280,
+          "height": 720,
+          "r_frame_rate": "24/1",
+          "nb_frames": "144"
+        },
+        {
+          "codec_name": "aac",
+          "r_frame_rate": "0/0",
+          "nb_frames": "284"
+        }
+      ],
+      "format": {
+        "duration": "6.016000",
+        "size": "739524"
+      }
+    },
+    "command": [
+      "C:\\Users\\\u60e0\u666e\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\bin\\fallback\\pnpm.cmd",
+      "--filter",
+      "@acs/remotion-engine",
+      "exec",
+      "remotion",
+      "render",
+      "src/index.ts",
+      "Form01-Landscape",
+      "D:\\codex\\animate\\artifacts\\fictional-product-ad-2026-10-09\\remotion\\form01_landscape.mp4",
+      "--codec=h264",
+      "--crf=18",
+      "--pixel-format=yuv420p",
+      "--image-format=png",
+      "--color-space=bt709",
+      "--concurrency=2",
+      "--browser-executable",
+      "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+    ]
+  },
+  "portrait": {
+    "video": "D:\\codex\\animate\\artifacts\\fictional-product-ad-2026-10-09\\remotion\\form01_portrait.mp4",
+    "elapsed_seconds": 19.463,
+    "metadata": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "h264",
+          "width": 720,
+          "height": 1280,
+          "r_frame_rate": "24/1",
+          "nb_frames": "144"
+        },
+        {
+          "codec_name": "aac",
+          "r_frame_rate": "0/0",
+          "nb_frames": "284"
+        }
+      ],
+      "format": {
+        "duration": "6.016000",
+        "size": "827789"
+      }
+    },
+    "command": [
+      "C:\\Users\\\u60e0\u666e\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\bin\\fallback\\pnpm.cmd",
+      "--filter",
+      "@acs/remotion-engine",
+      "exec",
+      "remotion",
+      "render",
+      "src/index.ts",
+      "Form01-Portrait",
+      "D:\\codex\\animate\\artifacts\\fictional-product-ad-2026-10-09\\remotion\\form01_portrait.mp4",
+      "--codec=h264",
+      "--crf=18",
+      "--pixel-format=yuv420p",
+      "--image-format=png",
+      "--color-space=bt709",
+      "--concurrency=2",
+      "--browser-executable",
+      "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+    ]
+  }
+}

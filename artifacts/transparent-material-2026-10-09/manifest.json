@@ -1,0 +1,14 @@
+{
+  "scope": "Internal image-quality comparison; not an authorized Farina advertisement",
+  "source_page": "https://commons.wikimedia.org/wiki/File:Farina1709-Eau-de-Cologne.jpg",
+  "photo_permission": "Wikimedia Commons VRT-confirmed copyrighted-free-use declaration permits use and modification of this photograph; third-party marks remain separate",
+  "model": "birefnet-general-lite",
+  "cases": [
+    {
+      "case": "farina-cologne",
+      "filename": "farina-cologne.jpg",
+      "title": "CLEAR GLASS SOURCE STUDY",
+      "sha256": "4e422c91a8f66ba35c79ccdc19108ce2ed4c92c5c2d3374d4441cff790f716e9"
+    }
+  ]
+}

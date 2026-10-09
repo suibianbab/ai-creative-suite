@@ -1,0 +1,69 @@
+{
+  "scope": "two sample-specific QA corrections",
+  "records": [
+    {
+      "case": "matte-shampoo",
+      "source_sha256": "2aac0a214508d5bd1d268418154510318e41b804eadc30e9e9a6b0ffb2cf3e01",
+      "initial_mask_sha256": "566ebe1b664e0b8110cf6003456e5d3a5b49e97add17a1d16f8176cf14468bc2",
+      "method": "Keep the largest 128-threshold mask component and 12-pixel alpha fringe",
+      "processing_seconds": 1.83,
+      "manual_correction_seconds": null,
+      "alpha_changed_pixels": 288365,
+      "rgb_changed_pixels": 0,
+      "outputs": {
+        "mask": {
+          "path": "corrected\\masks\\matte-shampoo.png",
+          "sha256": "578440b24f317a37e9e967fed967f9082058cf435227427ffe33bae8405d292a"
+        },
+        "cutout": {
+          "path": "corrected\\cutouts\\matte-shampoo.png",
+          "sha256": "5fa798d1587aad10cd7d9b3981f4f174422b32c1cfb3e021df4afdc9859932c5"
+        },
+        "white": {
+          "path": "corrected\\white\\matte-shampoo.png",
+          "sha256": "58d2c49074330e2704fe397e9828a995d6cceb62368b56c7939df13e9d09d4c3"
+        },
+        "square": {
+          "path": "corrected\\layouts\\matte-shampoo-square.png",
+          "sha256": "0e70302197b9dca86c3f23dbc8da0d1bb76d8351176d41399c10536b85c1f90f"
+        },
+        "portrait": {
+          "path": "corrected\\layouts\\matte-shampoo-portrait.png",
+          "sha256": "85e410bbfdb94e0c90c65d90b5976f34bf7a8b0557eb155b573fe6062589609f"
+        }
+      }
+    },
+    {
+      "case": "reflective-lens",
+      "source_sha256": "6bc624789e24c1cd11ab48b4064286f28b8bb7988fbae612c55d365292d844be",
+      "initial_mask_sha256": "28e2fa4fab03ce7af1e29be89f71c03206c1723c1352ad8bd7350237cf316e9e",
+      "method": "Trim alpha below the photographed dark-lens bottom contour",
+      "processing_seconds": 1.46,
+      "manual_correction_seconds": null,
+      "alpha_changed_pixels": 616166,
+      "rgb_changed_pixels": 0,
+      "outputs": {
+        "mask": {
+          "path": "corrected\\masks\\reflective-lens.png",
+          "sha256": "22ebe3ea42f07d2c283c023bb4484b3bdfedb12b1a672e562958151ffb8cbb5e"
+        },
+        "cutout": {
+          "path": "corrected\\cutouts\\reflective-lens.png",
+          "sha256": "bae5b99a38d6a89f565f0cd2c7b6fb8d029fbb7c0f7530ada6ea71f5e9c55429"
+        },
+        "white": {
+          "path": "corrected\\white\\reflective-lens.png",
+          "sha256": "1a03b4e5eb84ad1ae32be7d2766510e550812d7653935509047af2f35dd4b73f"
+        },
+        "square": {
+          "path": "corrected\\layouts\\reflective-lens-square.png",
+          "sha256": "a4300444546729d5e7d5201c523267cc31043a01e77e8affe2e1197506084fcb"
+        },
+        "portrait": {
+          "path": "corrected\\layouts\\reflective-lens-portrait.png",
+          "sha256": "f17fdc52b99df2c9717aafd8ab3b16f83fd0acb64844a0f654552e7293f0fc77"
+        }
+      }
+    }
+  ]
+}

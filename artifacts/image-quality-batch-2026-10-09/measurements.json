@@ -1,0 +1,585 @@
+{
+  "model": "birefnet-general-lite",
+  "results": [
+    {
+      "case": "matte-porcelain",
+      "object_id": 198685,
+      "source_sha256": "3f33a38f604c55b4d180a8e1605a3c7d49b581b4d36b2a1af2c6935c03a17ede",
+      "source_size": [
+        3200,
+        4000
+      ],
+      "model_input_size": [
+        1280,
+        1600
+      ],
+      "inference_seconds": 6.41,
+      "rgb_changed_pixels": 0,
+      "alpha_high_coverage_percent": 26.97,
+      "alpha_low_coverage_percent": 72.44,
+      "alpha_transition_percent": 0.59,
+      "mask_bbox": [
+        753,
+        717,
+        2396,
+        3756
+      ],
+      "outputs": {
+        "mask": "masks/matte-porcelain-198685.png",
+        "cutout": "cutouts/matte-porcelain-198685.png",
+        "white": "white/matte-porcelain-198685.png"
+      }
+    },
+    {
+      "case": "reflective-silver",
+      "object_id": 200114,
+      "source_sha256": "22041fc8c3a55989ab990a7eae3e5e7779471c3220f8e42f7ba6d7a10cd416cf",
+      "source_size": [
+        3859,
+        3470
+      ],
+      "model_input_size": [
+        1600,
+        1439
+      ],
+      "inference_seconds": 6.11,
+      "rgb_changed_pixels": 0,
+      "alpha_high_coverage_percent": 18.34,
+      "alpha_low_coverage_percent": 81.18,
+      "alpha_transition_percent": 0.48,
+      "mask_bbox": [
+        363,
+        832,
+        3464,
+        2611
+      ],
+      "outputs": {
+        "mask": "masks/reflective-silver-200114.png",
+        "cutout": "cutouts/reflective-silver-200114.png",
+        "white": "white/reflective-silver-200114.png"
+      }
+    },
+    {
+      "case": "fabric-detail",
+      "object_id": 69983,
+      "source_sha256": "d035ff8401a5fb6256677dfccb9aa35b37122164ec84ee734a31f940d26b2891",
+      "source_size": [
+        1264,
+        708
+      ],
+      "model_input_size": [
+        1264,
+        708
+      ],
+      "inference_seconds": 5.24,
+      "rgb_changed_pixels": 0,
+      "alpha_high_coverage_percent": 46.01,
+      "alpha_low_coverage_percent": 52.96,
+      "alpha_transition_percent": 1.03,
+      "mask_bbox": [
+        21,
+        51,
+        1251,
+        676
+      ],
+      "outputs": {
+        "mask": "masks/fabric-detail-69983.png",
+        "cutout": "cutouts/fabric-detail-69983.png",
+        "white": "white/fabric-detail-69983.png"
+      }
+    },
+    {
+      "case": "translucent-glass",
+      "object_id": 239782,
+      "source_sha256": "6dd04663d2ce0747602f9858f5365082c523933862085014ecfb60b9d7ee76c2",
+      "source_size": [
+        4000,
+        4000
+      ],
+      "model_input_size": [
+        1600,
+        1600
+      ],
+      "inference_seconds": 5.11,
+      "rgb_changed_pixels": 0,
+      "alpha_high_coverage_percent": 30.58,
+      "alpha_low_coverage_percent": 68.99,
+      "alpha_transition_percent": 0.42,
+      "mask_bbox": [
+        787,
+        702,
+        3215,
+        3145
+      ],
+      "outputs": {
+        "mask": "masks/translucent-glass-239782.png",
+        "cutout": "cutouts/translucent-glass-239782.png",
+        "white": "white/translucent-glass-239782.png"
+      }
+    },
+    {
+      "case": "dense-pattern",
+      "object_id": 202457,
+      "source_sha256": "dbca6ce73bab17eea7003a3e193de62c157c9f1fbfbb0cefa974c5b8e97ccf20",
+      "source_size": [
+        1412,
+        1940
+      ],
+      "model_input_size": [
+        1165,
+        1600
+      ],
+      "inference_seconds": 5.08,
+      "rgb_changed_pixels": 0,
+      "alpha_high_coverage_percent": 61.67,
+      "alpha_low_coverage_percent": 37.29,
+      "alpha_transition_percent": 1.03,
+      "mask_bbox": [
+        150,
+        156,
+        1280,
+        1815
+      ],
+      "outputs": {
+        "mask": "masks/dense-pattern-202457.png",
+        "cutout": "cutouts/dense-pattern-202457.png",
+        "white": "white/dense-pattern-202457.png"
+      }
+    },
+    {
+      "case": "wood-chair",
+      "object_id": 229,
+      "source_sha256": "1953c82ff9c93f73e91656cbab6653d456d9a458bb39cf471c6a29e31f097725",
+      "source_size": [
+        2216,
+        1784
+      ],
+      "model_input_size": [
+        1600,
+        1288
+      ],
+      "inference_seconds": 5.12,
+      "rgb_changed_pixels": 0,
+      "alpha_high_coverage_percent": 19.53,
+      "alpha_low_coverage_percent": 79.18,
+      "alpha_transition_percent": 1.29,
+      "mask_bbox": [
+        238,
+        84,
+        1970,
+        1629
+      ],
+      "outputs": {
+        "mask": "masks/wood-chair-229.png",
+        "cutout": "cutouts/wood-chair-229.png",
+        "white": "white/wood-chair-229.png"
+      }
+    },
+    {
+      "case": "jewelled-brooch",
+      "object_id": 1025,
+      "source_sha256": "132f7cf2ed6870e06d5845f64e2143391420bac292f373b460b94c2f19a8955f",
+      "source_size": [
+        2112,
+        2640
+      ],
+      "model_input_size": [
+        1280,
+        1600
+      ],
+      "inference_seconds": 5.28,
+      "rgb_changed_pixels": 0,
+      "alpha_high_coverage_percent": 20.79,
+      "alpha_low_coverage_percent": 77.17,
+      "alpha_transition_percent": 2.04,
+      "mask_bbox": [
+        413,
+        460,
+        1789,
+        2246
+      ],
+      "outputs": {
+        "mask": "masks/jewelled-brooch-1025.png",
+        "cutout": "cutouts/jewelled-brooch-1025.png",
+        "white": "white/jewelled-brooch-1025.png"
+      }
+    },
+    {
+      "case": "brass-clock",
+      "object_id": 1454,
+      "source_sha256": "321155d77fb85d6cbf3aaa78fc14aa6a5033145f3d6c2ce72ef07bc5336d74af",
+      "source_size": [
+        1704,
+        2300
+      ],
+      "model_input_size": [
+        1185,
+        1600
+      ],
+      "inference_seconds": 5.08,
+      "rgb_changed_pixels": 0,
+      "alpha_high_coverage_percent": 26.29,
+      "alpha_low_coverage_percent": 72.98,
+      "alpha_transition_percent": 0.73,
+      "mask_bbox": [
+        397,
+        426,
+        1247,
+        2044
+      ],
+      "outputs": {
+        "mask": "masks/brass-clock-1454.png",
+        "cutout": "cutouts/brass-clock-1454.png",
+        "white": "white/brass-clock-1454.png"
+      }
+    },
+    {
+      "case": "frosted-glass-lamp",
+      "object_id": 4706,
+      "source_sha256": "7cdbb4be1f1a2e1b5bd11cfaea704fe37c7b6337d1b4e27a842438b7291d3a73",
+      "source_size": [
+        3000,
+        4000
+      ],
+      "model_input_size": [
+        1200,
+        1600
+      ],
+      "inference_seconds": 5.1,
+      "rgb_changed_pixels": 0,
+      "alpha_high_coverage_percent": 14.04,
+      "alpha_low_coverage_percent": 85.44,
+      "alpha_transition_percent": 0.52,
+      "mask_bbox": [
+        915,
+        647,
+        2098,
+        3298
+      ],
+      "outputs": {
+        "mask": "masks/frosted-glass-lamp-4706.png",
+        "cutout": "cutouts/frosted-glass-lamp-4706.png",
+        "white": "white/frosted-glass-lamp-4706.png"
+      }
+    },
+    {
+      "case": "painted-metal-lamp",
+      "object_id": 4699,
+      "source_sha256": "263497b12016d9cbb3d14f2595690c05d705e7bbf97cc4fb06e6dfff9ef24ece",
+      "source_size": [
+        1671,
+        1613
+      ],
+      "model_input_size": [
+        1600,
+        1544
+      ],
+      "inference_seconds": 5.1,
+      "rgb_changed_pixels": 0,
+      "alpha_high_coverage_percent": 21.16,
+      "alpha_low_coverage_percent": 77.69,
+      "alpha_transition_percent": 1.15,
+      "mask_bbox": [
+        182,
+        152,
+        1492,
+        1554
+      ],
+      "outputs": {
+        "mask": "masks/painted-metal-lamp-4699.png",
+        "cutout": "cutouts/painted-metal-lamp-4699.png",
+        "white": "white/painted-metal-lamp-4699.png"
+      }
+    },
+    {
+      "case": "pressed-glass-lamp",
+      "object_id": 4722,
+      "source_sha256": "6eb018866168cfc35c02ac1851cb3b6f1addcb88d55d855f8dda699f665921fe",
+      "source_size": [
+        2008,
+        2572
+      ],
+      "model_input_size": [
+        1249,
+        1600
+      ],
+      "inference_seconds": 5.09,
+      "rgb_changed_pixels": 0,
+      "alpha_high_coverage_percent": 16.3,
+      "alpha_low_coverage_percent": 83.0,
+      "alpha_transition_percent": 0.7,
+      "mask_bbox": [
+        389,
+        416,
+        1513,
+        2211
+      ],
+      "outputs": {
+        "mask": "masks/pressed-glass-lamp-4722.png",
+        "cutout": "cutouts/pressed-glass-lamp-4722.png",
+        "white": "white/pressed-glass-lamp-4722.png"
+      }
+    },
+    {
+      "case": "figured-glass-bottle",
+      "object_id": 3692,
+      "source_sha256": "2ec872cd897985df4ca79a27e936d1604ee7602ac99c36a975aff5434c5f26e2",
+      "source_size": [
+        3000,
+        4000
+      ],
+      "model_input_size": [
+        1200,
+        1600
+      ],
+      "inference_seconds": 5.05,
+      "rgb_changed_pixels": 0,
+      "alpha_high_coverage_percent": 24.52,
+      "alpha_low_coverage_percent": 75.07,
+      "alpha_transition_percent": 0.41,
+      "mask_bbox": [
+        667,
+        667,
+        2358,
+        3680
+      ],
+      "outputs": {
+        "mask": "masks/figured-glass-bottle-3692.png",
+        "cutout": "cutouts/figured-glass-bottle-3692.png",
+        "white": "white/figured-glass-bottle-3692.png"
+      }
+    },
+    {
+      "case": "ceramic-bottle",
+      "object_id": 646,
+      "source_sha256": "55bbb1a8d9223245626016c8fb6fd25c4c2cd146c25f83257767d5cfcfba7f9d",
+      "source_size": [
+        2938,
+        4000
+      ],
+      "model_input_size": [
+        1175,
+        1600
+      ],
+      "inference_seconds": 5.12,
+      "rgb_changed_pixels": 0,
+      "alpha_high_coverage_percent": 22.69,
+      "alpha_low_coverage_percent": 76.9,
+      "alpha_transition_percent": 0.41,
+      "mask_bbox": [
+        930,
+        799,
+        2111,
+        3701
+      ],
+      "outputs": {
+        "mask": "masks/ceramic-bottle-646.png",
+        "cutout": "cutouts/ceramic-bottle-646.png",
+        "white": "white/ceramic-bottle-646.png"
+      }
+    },
+    {
+      "case": "gold-necklace",
+      "object_id": 446753,
+      "source_sha256": "6af5c87f2643a6b36b29d6a125e00765341c439fd1bca894c35c5b25a5d49100",
+      "source_size": [
+        3264,
+        2448
+      ],
+      "model_input_size": [
+        1600,
+        1200
+      ],
+      "inference_seconds": 5.16,
+      "rgb_changed_pixels": 0,
+      "alpha_high_coverage_percent": 24.55,
+      "alpha_low_coverage_percent": 71.98,
+      "alpha_transition_percent": 3.47,
+      "mask_bbox": [
+        0,
+        0,
+        3001,
+        2295
+      ],
+      "outputs": {
+        "mask": "masks/gold-necklace-446753.png",
+        "cutout": "cutouts/gold-necklace-446753.png",
+        "white": "white/gold-necklace-446753.png"
+      }
+    },
+    {
+      "case": "woven-handbag",
+      "object_id": 62209,
+      "source_sha256": "ba8767be88deea30b864d1d4f513243a394361df93cd282cc9fecbf95bdae4dc",
+      "source_size": [
+        925,
+        551
+      ],
+      "model_input_size": [
+        925,
+        551
+      ],
+      "inference_seconds": 5.0,
+      "rgb_changed_pixels": 0,
+      "alpha_high_coverage_percent": 62.73,
+      "alpha_low_coverage_percent": 36.29,
+      "alpha_transition_percent": 0.99,
+      "mask_bbox": [
+        18,
+        67,
+        906,
+        509
+      ],
+      "outputs": {
+        "mask": "masks/woven-handbag-62209.png",
+        "cutout": "cutouts/woven-handbag-62209.png",
+        "white": "white/woven-handbag-62209.png"
+      }
+    },
+    {
+      "case": "steel-helmet",
+      "object_id": 34339,
+      "source_sha256": "1a890e20bd10dba64abfa1a37c3bd9bd21da4d0168c8adbbe2802aae2c61fde8",
+      "source_size": [
+        4000,
+        3748
+      ],
+      "model_input_size": [
+        1600,
+        1499
+      ],
+      "inference_seconds": 5.1,
+      "rgb_changed_pixels": 0,
+      "alpha_high_coverage_percent": 44.96,
+      "alpha_low_coverage_percent": 54.35,
+      "alpha_transition_percent": 0.69,
+      "mask_bbox": [
+        295,
+        379,
+        3501,
+        3501
+      ],
+      "outputs": {
+        "mask": "masks/steel-helmet-34339.png",
+        "cutout": "cutouts/steel-helmet-34339.png",
+        "white": "white/steel-helmet-34339.png"
+      }
+    },
+    {
+      "case": "ceramic-plate",
+      "object_id": 326385,
+      "source_sha256": "f1dee8865e80681f4dcf7eba4134129e8727f63e467068c77033c1357c7c211f",
+      "source_size": [
+        800,
+        589
+      ],
+      "model_input_size": [
+        800,
+        589
+      ],
+      "inference_seconds": 5.0,
+      "rgb_changed_pixels": 0,
+      "alpha_high_coverage_percent": 24.59,
+      "alpha_low_coverage_percent": 74.85,
+      "alpha_transition_percent": 0.55,
+      "mask_bbox": [
+        51,
+        199,
+        765,
+        412
+      ],
+      "outputs": {
+        "mask": "masks/ceramic-plate-326385.png",
+        "cutout": "cutouts/ceramic-plate-326385.png",
+        "white": "white/ceramic-plate-326385.png"
+      }
+    },
+    {
+      "case": "earthenware-plate",
+      "object_id": 468520,
+      "source_sha256": "d3190765662878dbc26e4e40995fe2013f209a1b3a33a164079fecf07074d874",
+      "source_size": [
+        1950,
+        1968
+      ],
+      "model_input_size": [
+        1585,
+        1600
+      ],
+      "inference_seconds": 5.14,
+      "rgb_changed_pixels": 0,
+      "alpha_high_coverage_percent": 70.04,
+      "alpha_low_coverage_percent": 29.41,
+      "alpha_transition_percent": 0.55,
+      "mask_bbox": [
+        49,
+        52,
+        1917,
+        1924
+      ],
+      "outputs": {
+        "mask": "masks/earthenware-plate-468520.png",
+        "cutout": "cutouts/earthenware-plate-468520.png",
+        "white": "white/earthenware-plate-468520.png"
+      }
+    },
+    {
+      "case": "silk-textile",
+      "object_id": 450741,
+      "source_sha256": "b01c051df3bb0c21b83e1e1dd3f9ae4eb1d97891f3fa7fc7148b7290909ba64d",
+      "source_size": [
+        2944,
+        4000
+      ],
+      "model_input_size": [
+        1178,
+        1600
+      ],
+      "inference_seconds": 5.05,
+      "rgb_changed_pixels": 0,
+      "alpha_high_coverage_percent": 61.56,
+      "alpha_low_coverage_percent": 37.63,
+      "alpha_transition_percent": 0.81,
+      "mask_bbox": [
+        77,
+        162,
+        2731,
+        3867
+      ],
+      "outputs": {
+        "mask": "masks/silk-textile-450741.png",
+        "cutout": "cutouts/silk-textile-450741.png",
+        "white": "white/silk-textile-450741.png"
+      }
+    },
+    {
+      "case": "garnet-brooch",
+      "object_id": 20519,
+      "source_sha256": "dff38f0a94ff23da91d6255bbb651654af6fdf98839cdd8b2bc7e8addb34adc3",
+      "source_size": [
+        4000,
+        3513
+      ],
+      "model_input_size": [
+        1600,
+        1405
+      ],
+      "inference_seconds": 5.04,
+      "rgb_changed_pixels": 0,
+      "alpha_high_coverage_percent": 7.43,
+      "alpha_low_coverage_percent": 92.01,
+      "alpha_transition_percent": 0.56,
+      "mask_bbox": [
+        1215,
+        774,
+        3060,
+        2619
+      ],
+      "outputs": {
+        "mask": "masks/garnet-brooch-20519.png",
+        "cutout": "cutouts/garnet-brooch-20519.png",
+        "white": "white/garnet-brooch-20519.png"
+      }
+    }
+  ]
+}

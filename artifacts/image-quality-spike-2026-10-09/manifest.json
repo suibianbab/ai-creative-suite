@@ -1,0 +1,93 @@
+{
+  "source": "The Met Open Access Collection API",
+  "license_basis": "Each record returned isPublicDomain=true and a primaryImage URL; verify object pages before publication",
+  "cases": [
+    {
+      "case": "matte-porcelain",
+      "object_id": 198685,
+      "title": "Vase",
+      "object_url": "https://www.metmuseum.org/art/collection/search/198685",
+      "source_url": "https://images.metmuseum.org/CRDImages/es/original/DP-15275-023.jpg",
+      "is_public_domain": true,
+      "credit_line": "Gift of Mr. and Mrs. Howard Eric, 1940",
+      "filename": "matte-porcelain-198685.jpg",
+      "width": 3200,
+      "height": 4000,
+      "bytes": 1763430,
+      "sha256": "3f33a38f604c55b4d180a8e1605a3c7d49b581b4d36b2a1af2c6935c03a17ede"
+    },
+    {
+      "case": "reflective-silver",
+      "object_id": 200114,
+      "title": "Teapot",
+      "object_url": "https://www.metmuseum.org/art/collection/search/200114",
+      "source_url": "https://images.metmuseum.org/CRDImages/es/original/DP103146.jpg",
+      "is_public_domain": true,
+      "credit_line": "Bequest of Catherine D. Wentworth, 1948",
+      "filename": "reflective-silver-200114.jpg",
+      "width": 3859,
+      "height": 3470,
+      "bytes": 1234583,
+      "sha256": "22041fc8c3a55989ab990a7eae3e5e7779471c3220f8e42f7ba6d7a10cd416cf"
+    },
+    {
+      "case": "fabric-detail",
+      "object_id": 69983,
+      "title": "Woman's Shoe",
+      "object_url": "https://www.metmuseum.org/art/collection/search/69983",
+      "source_url": "https://images.metmuseum.org/CRDImages/as/original/DP14488.jpg",
+      "is_public_domain": true,
+      "credit_line": "Gift of Louise C. Thomas, 1953",
+      "filename": "fabric-detail-69983.jpg",
+      "width": 1264,
+      "height": 708,
+      "bytes": 211849,
+      "sha256": "d035ff8401a5fb6256677dfccb9aa35b37122164ec84ee734a31f940d26b2891"
+    },
+    {
+      "case": "translucent-glass",
+      "object_id": 239782,
+      "title": "Glass jar",
+      "object_url": "https://www.metmuseum.org/art/collection/search/239782",
+      "source_url": "https://images.metmuseum.org/CRDImages/gr/original/DP117576.jpg",
+      "is_public_domain": true,
+      "credit_line": "The Cesnola Collection, Purchased by subscription, 1874–76",
+      "filename": "translucent-glass-239782.jpg",
+      "width": 4000,
+      "height": 4000,
+      "bytes": 1713908,
+      "sha256": "6dd04663d2ce0747602f9858f5365082c523933862085014ecfb60b9d7ee76c2"
+    },
+    {
+      "case": "dense-pattern",
+      "object_id": 202457,
+      "title": "Book cover",
+      "object_url": "https://www.metmuseum.org/art/collection/search/202457",
+      "source_url": "https://images.metmuseum.org/CRDImages/es/original/171243.jpg",
+      "is_public_domain": true,
+      "credit_line": "Bequest of Rupert L. Joseph, 1959",
+      "filename": "dense-pattern-202457.jpg",
+      "width": 1412,
+      "height": 1940,
+      "bytes": 526215,
+      "sha256": "dbca6ce73bab17eea7003a3e193de62c157c9f1fbfbb0cefa974c5b8e97ccf20"
+    }
+  ],
+  "rejected_candidates": [
+    {
+      "case": "matte-porcelain",
+      "object_id": 5592,
+      "title": "Perfume Bottle",
+      "object_url": "https://www.metmuseum.org/art/collection/search/5592",
+      "source_url": "https://images.metmuseum.org/CRDImages/ad/original/47_90_97.jpg",
+      "is_public_domain": true,
+      "credit_line": "Gift of Dr. Charles W. Green, 1947",
+      "filename": "matte-porcelain-5592.jpg",
+      "width": 694,
+      "height": 700,
+      "bytes": 59131,
+      "sha256": "dcf323c25ac47e3aea0070080d383a51a9bbcabe5fd0cf1fa06284cd5ffb2be5",
+      "rejection_reason": "694x700 original is below the 1200px baseline and cannot validate delivery-resolution quality"
+    }
+  ]
+}

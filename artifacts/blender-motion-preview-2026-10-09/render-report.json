@@ -1,0 +1,15 @@
+{
+  "purpose": "Synthetic GPU animation pipeline preview; not product quality evidence",
+  "blender": "5.2.2 LTS",
+  "engine": "CYCLES",
+  "backend": "OPTIX",
+  "device": "NVIDIA GeForce RTX 4060",
+  "resolution": [
+    640,
+    360
+  ],
+  "fps": 24,
+  "frame_count": 48,
+  "samples": 16,
+  "render_seconds": 75.698
+}

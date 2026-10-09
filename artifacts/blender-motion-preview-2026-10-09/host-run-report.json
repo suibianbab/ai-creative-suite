@@ -1,0 +1,12 @@
+{
+  "exit_code": 0,
+  "elapsed_seconds": 82.896,
+  "gpu_monitor_note": "Whole-GPU nvidia-smi samples, not Blender-attributed VRAM",
+  "gpu_baseline": {
+    "memory_used_mib": 2421,
+    "utilization_percent": 7
+  },
+  "gpu_peak_memory_used_mib": 3202,
+  "gpu_peak_utilization_percent": 70,
+  "video": "D:\\codex\\animate\\artifacts\\blender-motion-preview-2026-10-09\\motion_preview.mp4"
+}

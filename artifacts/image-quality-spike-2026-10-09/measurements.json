@@ -1,0 +1,160 @@
+{
+  "model": "birefnet-general-lite",
+  "results": [
+    {
+      "case": "matte-porcelain",
+      "object_id": 198685,
+      "source_sha256": "3f33a38f604c55b4d180a8e1605a3c7d49b581b4d36b2a1af2c6935c03a17ede",
+      "source_size": [
+        3200,
+        4000
+      ],
+      "model_input_size": [
+        1280,
+        1600
+      ],
+      "inference_seconds": 5.97,
+      "rgb_changed_pixels": 0,
+      "alpha_high_coverage_percent": 26.97,
+      "alpha_low_coverage_percent": 72.44,
+      "alpha_transition_percent": 0.59,
+      "mask_bbox": [
+        753,
+        717,
+        2396,
+        3756
+      ],
+      "outputs": {
+        "mask": "masks/matte-porcelain-198685.png",
+        "cutout": "cutouts/matte-porcelain-198685.png",
+        "white": "white/matte-porcelain-198685.png",
+        "square": "layouts/matte-porcelain-198685-square.png",
+        "portrait": "layouts/matte-porcelain-198685-portrait.png"
+      }
+    },
+    {
+      "case": "reflective-silver",
+      "object_id": 200114,
+      "source_sha256": "22041fc8c3a55989ab990a7eae3e5e7779471c3220f8e42f7ba6d7a10cd416cf",
+      "source_size": [
+        3859,
+        3470
+      ],
+      "model_input_size": [
+        1600,
+        1439
+      ],
+      "inference_seconds": 5.72,
+      "rgb_changed_pixels": 0,
+      "alpha_high_coverage_percent": 18.34,
+      "alpha_low_coverage_percent": 81.18,
+      "alpha_transition_percent": 0.48,
+      "mask_bbox": [
+        363,
+        832,
+        3464,
+        2611
+      ],
+      "outputs": {
+        "mask": "masks/reflective-silver-200114.png",
+        "cutout": "cutouts/reflective-silver-200114.png",
+        "white": "white/reflective-silver-200114.png",
+        "square": "layouts/reflective-silver-200114-square.png",
+        "portrait": "layouts/reflective-silver-200114-portrait.png"
+      }
+    },
+    {
+      "case": "fabric-detail",
+      "object_id": 69983,
+      "source_sha256": "d035ff8401a5fb6256677dfccb9aa35b37122164ec84ee734a31f940d26b2891",
+      "source_size": [
+        1264,
+        708
+      ],
+      "model_input_size": [
+        1264,
+        708
+      ],
+      "inference_seconds": 5.28,
+      "rgb_changed_pixels": 0,
+      "alpha_high_coverage_percent": 46.01,
+      "alpha_low_coverage_percent": 52.96,
+      "alpha_transition_percent": 1.03,
+      "mask_bbox": [
+        21,
+        51,
+        1251,
+        676
+      ],
+      "outputs": {
+        "mask": "masks/fabric-detail-69983.png",
+        "cutout": "cutouts/fabric-detail-69983.png",
+        "white": "white/fabric-detail-69983.png",
+        "square": "layouts/fabric-detail-69983-square.png",
+        "portrait": "layouts/fabric-detail-69983-portrait.png"
+      }
+    },
+    {
+      "case": "translucent-glass",
+      "object_id": 239782,
+      "source_sha256": "6dd04663d2ce0747602f9858f5365082c523933862085014ecfb60b9d7ee76c2",
+      "source_size": [
+        4000,
+        4000
+      ],
+      "model_input_size": [
+        1600,
+        1600
+      ],
+      "inference_seconds": 5.38,
+      "rgb_changed_pixels": 0,
+      "alpha_high_coverage_percent": 30.58,
+      "alpha_low_coverage_percent": 68.99,
+      "alpha_transition_percent": 0.42,
+      "mask_bbox": [
+        787,
+        702,
+        3215,
+        3145
+      ],
+      "outputs": {
+        "mask": "masks/translucent-glass-239782.png",
+        "cutout": "cutouts/translucent-glass-239782.png",
+        "white": "white/translucent-glass-239782.png",
+        "square": "layouts/translucent-glass-239782-square.png",
+        "portrait": "layouts/translucent-glass-239782-portrait.png"
+      }
+    },
+    {
+      "case": "dense-pattern",
+      "object_id": 202457,
+      "source_sha256": "dbca6ce73bab17eea7003a3e193de62c157c9f1fbfbb0cefa974c5b8e97ccf20",
+      "source_size": [
+        1412,
+        1940
+      ],
+      "model_input_size": [
+        1165,
+        1600
+      ],
+      "inference_seconds": 5.14,
+      "rgb_changed_pixels": 0,
+      "alpha_high_coverage_percent": 61.67,
+      "alpha_low_coverage_percent": 37.29,
+      "alpha_transition_percent": 1.03,
+      "mask_bbox": [
+        150,
+        156,
+        1280,
+        1815
+      ],
+      "outputs": {
+        "mask": "masks/dense-pattern-202457.png",
+        "cutout": "cutouts/dense-pattern-202457.png",
+        "white": "white/dense-pattern-202457.png",
+        "square": "layouts/dense-pattern-202457-square.png",
+        "portrait": "layouts/dense-pattern-202457-portrait.png"
+      }
+    }
+  ]
+}

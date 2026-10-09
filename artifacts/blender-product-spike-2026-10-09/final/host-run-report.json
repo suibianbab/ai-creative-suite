@@ -1,0 +1,24 @@
+{
+  "exit_code": 0,
+  "elapsed_seconds": 20.461,
+  "gpu_monitor_note": "Whole-GPU nvidia-smi samples, not Blender-attributed VRAM",
+  "gpu_baseline": {
+    "memory_used_mib": 1931,
+    "utilization_percent": 17
+  },
+  "gpu_peak_memory_used_mib": 2917,
+  "gpu_peak_utilization_percent": 95,
+  "command": [
+    "D:\\codex\\animate\\.tools\\blender-5.2.2-windows-x64\\blender.exe",
+    "-b",
+    "D:\\codex\\animate\\artifacts\\blender-product-spike-2026-10-09\\source\\Camera_01_2k.blend",
+    "-t",
+    "4",
+    "--python",
+    "D:\\codex\\animate\\scripts\\blender\\camera_product_spike.py",
+    "--",
+    "D:\\codex\\animate\\artifacts\\blender-product-spike-2026-10-09\\final",
+    "OPTIX",
+    "final"
+  ]
+}

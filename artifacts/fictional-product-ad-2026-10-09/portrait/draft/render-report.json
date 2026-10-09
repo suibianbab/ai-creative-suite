@@ -1,0 +1,33 @@
+{
+  "purpose": "Original fictional product design and creative workflow sample",
+  "blender": "5.2.2 LTS",
+  "backend": "OPTIX",
+  "devices": [
+    {
+      "name": "NVIDIA GeForce RTX 4060",
+      "type": "CUDA"
+    },
+    {
+      "name": "Intel Core i5-14400F",
+      "type": "CPU"
+    },
+    {
+      "name": "NVIDIA GeForce RTX 4060",
+      "type": "OPTIX"
+    }
+  ],
+  "quality": "portrait-draft",
+  "aspect": "9:16",
+  "resolution": [
+    450,
+    800
+  ],
+  "samples": 16,
+  "render_seconds": 13.002,
+  "frame_count": 5,
+  "endcard_resolution": [
+    450,
+    800
+  ],
+  "endcard_samples": 16
+}

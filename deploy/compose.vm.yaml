@@ -1,0 +1,53 @@
+# VM-specific development stack using images already available on the provided VM.
+# Bind all service ports to VM loopback. Connect from the workstation through SSH tunnels.
+services:
+  postgres:
+    image: postgres:17-alpine
+    pull_policy: never
+    environment:
+      POSTGRES_USER: acs
+      POSTGRES_PASSWORD: acs_local_only
+      POSTGRES_DB: acs
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U acs -d acs"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    pull_policy: never
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  objectstore:
+    image: rustfs/rustfs@sha256:1ad63dd600df9fc18e23ab6b0b365ad1117a10a27479388edf4aaa9eb6bc6cee
+    pull_policy: never
+    command: ["/data"]
+    environment:
+      RUSTFS_ACCESS_KEY: acs_local
+      RUSTFS_SECRET_KEY: acs_local_only
+      RUSTFS_ADDRESS: ":9000"
+      RUSTFS_CONSOLE_ADDRESS: ":9001"
+      RUSTFS_CONSOLE_ENABLE: "true"
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    volumes:
+      - objectstore_data:/data
+
+volumes:
+  postgres_data:
+  redis_data:
+  objectstore_data:

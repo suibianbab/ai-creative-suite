@@ -1,0 +1,58 @@
+{
+  "purpose": "Licensed model product visual Golden Spike; not a specific advertiser's product",
+  "source_model": "Poly Haven Camera_01 2k",
+  "blender": "5.2.2 LTS",
+  "backend": "OPTIX",
+  "devices": [
+    {
+      "name": "NVIDIA GeForce RTX 4060",
+      "type": "CUDA"
+    },
+    {
+      "name": "Intel Core i5-14400F",
+      "type": "CPU"
+    },
+    {
+      "name": "NVIDIA GeForce RTX 4060",
+      "type": "OPTIX"
+    }
+  ],
+  "quality": "final",
+  "resolution": [
+    1600,
+    900
+  ],
+  "samples": 64,
+  "shots": [
+    {
+      "name": "hero",
+      "seconds": 9.047,
+      "camera": [
+        0.23,
+        -0.4,
+        0.18
+      ],
+      "target": [
+        -0.03,
+        -0.07,
+        0.04
+      ],
+      "lens_mm": 48
+    },
+    {
+      "name": "lens_detail",
+      "seconds": 10.32,
+      "camera": [
+        0.075,
+        -0.18,
+        0.105
+      ],
+      "target": [
+        0.006,
+        -0.063,
+        0.037
+      ],
+      "lens_mm": 90
+    }
+  ]
+}

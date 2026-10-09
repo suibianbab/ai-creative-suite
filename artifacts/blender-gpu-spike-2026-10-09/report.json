@@ -1,0 +1,35 @@
+{
+  "purpose": "GPU pipeline smoke test; synthetic model, not product-fidelity evidence",
+  "blender": "5.2.2 LTS",
+  "engine": "CYCLES",
+  "backend": "OPTIX",
+  "devices": [
+    {
+      "name": "NVIDIA GeForce RTX 4060",
+      "type": "CUDA"
+    },
+    {
+      "name": "Intel Core i5-14400F",
+      "type": "CPU"
+    },
+    {
+      "name": "NVIDIA GeForce RTX 4060",
+      "type": "OPTIX"
+    }
+  ],
+  "resolution": [
+    1280,
+    720
+  ],
+  "samples": 48,
+  "shots": [
+    {
+      "file": "hero.png",
+      "seconds": 5.504
+    },
+    {
+      "file": "detail.png",
+      "seconds": 5.554
+    }
+  ]
+}

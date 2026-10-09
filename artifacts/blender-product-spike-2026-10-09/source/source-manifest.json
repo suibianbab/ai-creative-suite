@@ -1,0 +1,100 @@
+{
+  "asset_id": "Camera_01",
+  "resolution": "2k",
+  "asset_page": "https://polyhaven.com/a/Camera_01",
+  "api_url": "https://api.polyhaven.com/files/Camera_01",
+  "license": "CC0 per the Poly Haven asset page",
+  "files": [
+    {
+      "path": "textures/Camera_01_body_diff_2k.png",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/png/2k/Camera_01/Camera_01_body_diff_2k.png",
+      "bytes": 3072450,
+      "md5": "5603c82c8f298b002e78f03f5265d3dd",
+      "sha256": "358942497934c45ac51944deea1058a5550487a4bab2b907e75c11aead4a11e6"
+    },
+    {
+      "path": "textures/Camera_01_body_metallic_2k.png",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/png/2k/Camera_01/Camera_01_body_metallic_2k.png",
+      "bytes": 496312,
+      "md5": "1fa879f3802253280099323e2d77293b",
+      "sha256": "44725f08bf1964fde26d6a21f2382312d897a7992bc7b38b18ce7f9c739804da"
+    },
+    {
+      "path": "textures/Camera_01_body_nor_gl_2k.png",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/png/2k/Camera_01/Camera_01_body_nor_gl_2k.png",
+      "bytes": 5680091,
+      "md5": "f385cc6a7f828d71094b708b68bff85b",
+      "sha256": "c1c05fab3be01f2b7e3d54e9d2d1b74c4277a4e76f08e75ef5765b9a73f0f375"
+    },
+    {
+      "path": "textures/Camera_01_body_roughness_2k.png",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/png/2k/Camera_01/Camera_01_body_roughness_2k.png",
+      "bytes": 2167749,
+      "md5": "ebfef8b13bd4ed3faf4d6ce366196192",
+      "sha256": "0cfda9ef8e7411eb4f53a1efdfe90e043ac5102044b2eacf0411c48a12ddbb2f"
+    },
+    {
+      "path": "textures/Camera_01_lens_body_diff_2k.png",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/png/2k/Camera_01/Camera_01_lens_body_diff_2k.png",
+      "bytes": 1700670,
+      "md5": "259c361738f9da485a7dbe5e3b39eda9",
+      "sha256": "4fc42844ed18a39bea6e38336c5dc112e53d42756f0e64632da480f0ede9159d"
+    },
+    {
+      "path": "textures/Camera_01_lens_body_metallic_2k.png",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/png/2k/Camera_01/Camera_01_lens_body_metallic_2k.png",
+      "bytes": 151698,
+      "md5": "7670a31846c155bf32072bf92a488d4d",
+      "sha256": "766671287f4a8277ea84be96ed3dc382d33eb04576d5753a48fa46eb4d2bf5bf"
+    },
+    {
+      "path": "textures/Camera_01_lens_body_nor_gl_2k.png",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/png/2k/Camera_01/Camera_01_lens_body_nor_gl_2k.png",
+      "bytes": 3940666,
+      "md5": "b7efb1cd1a3cd2cb2db9cb3c57fb6dc8",
+      "sha256": "4eeae2ecf23e472d0ea403b4d89896abd58b9a528c07080bb8c106c3855cdbd2"
+    },
+    {
+      "path": "textures/Camera_01_lens_body_roughness_2k.png",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/png/2k/Camera_01/Camera_01_lens_body_roughness_2k.png",
+      "bytes": 1612834,
+      "md5": "12a505e05ec7581bf965c184679268f3",
+      "sha256": "778b31027e5d423e67bcb3827f26fcb79d0bee888b460a67f1fc57130334703a"
+    },
+    {
+      "path": "textures/Camera_01_strap_diff_2k.png",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/png/2k/Camera_01/Camera_01_strap_diff_2k.png",
+      "bytes": 3621340,
+      "md5": "fee806cad991e8f3456fa6b64dabdf18",
+      "sha256": "2c2ff41acc8944e8443c12510b12f2a8aa1672e8b75c62e19f8e9024f147f463"
+    },
+    {
+      "path": "textures/Camera_01_strap_metallic_2k.png",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/png/2k/Camera_01/Camera_01_strap_metallic_2k.png",
+      "bytes": 52268,
+      "md5": "13636fc2cad0e94fd1370e695af8ea52",
+      "sha256": "70491afd23f2e2f5a29e2d5feb3c66b570a23543ee81230b706f0c29f8d8aba5"
+    },
+    {
+      "path": "textures/Camera_01_strap_nor_gl_2k.png",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/png/2k/Camera_01/Camera_01_strap_nor_gl_2k.png",
+      "bytes": 6050242,
+      "md5": "0701ba98431bc5ae79d1c77c50185ec4",
+      "sha256": "e5807532ac363828389d34516cfddff72ec5b3b7e4eea6f42cef2030790a3b3a"
+    },
+    {
+      "path": "textures/Camera_01_strap_roughness_2k.png",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/png/2k/Camera_01/Camera_01_strap_roughness_2k.png",
+      "bytes": 2153572,
+      "md5": "2d4d2f5c6b2b81a39d05e32feead83d8",
+      "sha256": "1c672d5b9c73acc191a41d932bf759e2e32ab2394acdcc82721dc3b8cf3afaec"
+    },
+    {
+      "path": "Camera_01_2k.blend",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/blend/2k/Camera_01/Camera_01_2k.blend",
+      "bytes": 955188,
+      "md5": "8dc78746b76d220bb93a68ed6efe339a",
+      "sha256": "8bb2a85f9bdc4b28abd8b9902f9fe6972db6cbc8d98dd0d47326ef53fa8da05d"
+    }
+  ]
+}

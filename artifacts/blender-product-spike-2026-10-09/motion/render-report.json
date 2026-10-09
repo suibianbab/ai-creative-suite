@@ -1,0 +1,15 @@
+{
+  "purpose": "Licensed model product motion quality preview",
+  "blender": "5.2.2 LTS",
+  "engine": "CYCLES",
+  "backend": "OPTIX",
+  "device": "NVIDIA GeForce RTX 4060",
+  "resolution": [
+    960,
+    540
+  ],
+  "fps": 24,
+  "frame_count": 72,
+  "samples": 24,
+  "render_seconds": 228.72
+}

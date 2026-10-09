@@ -1,0 +1,150 @@
+{
+  "model": "birefnet-general-lite",
+  "results": [
+    {
+      "case": "matte-shampoo",
+      "object_id": null,
+      "source_sha256": "2aac0a214508d5bd1d268418154510318e41b804eadc30e9e9a6b0ffb2cf3e01",
+      "source_size": [
+        3456,
+        2304
+      ],
+      "model_input_size": [
+        1600,
+        1067
+      ],
+      "inference_seconds": 5.65,
+      "rgb_changed_pixels": 0,
+      "alpha_high_coverage_percent": 13.85,
+      "alpha_low_coverage_percent": 85.7,
+      "alpha_transition_percent": 0.45,
+      "mask_bbox": [
+        919,
+        405,
+        2530,
+        2066
+      ],
+      "outputs": {
+        "mask": "masks/matte-shampoo.png",
+        "cutout": "cutouts/matte-shampoo.png",
+        "white": "white/matte-shampoo.png"
+      }
+    },
+    {
+      "case": "reflective-lens",
+      "object_id": null,
+      "source_sha256": "6bc624789e24c1cd11ab48b4064286f28b8bb7988fbae612c55d365292d844be",
+      "source_size": [
+        4415,
+        2943
+      ],
+      "model_input_size": [
+        1600,
+        1067
+      ],
+      "inference_seconds": 5.53,
+      "rgb_changed_pixels": 0,
+      "alpha_high_coverage_percent": 10.91,
+      "alpha_low_coverage_percent": 85.26,
+      "alpha_transition_percent": 3.83,
+      "mask_bbox": [
+        1702,
+        593,
+        2757,
+        2943
+      ],
+      "outputs": {
+        "mask": "masks/reflective-lens.png",
+        "cutout": "cutouts/reflective-lens.png",
+        "white": "white/reflective-lens.png"
+      }
+    },
+    {
+      "case": "fabric-backpack",
+      "object_id": null,
+      "source_sha256": "df1698f9fa62b3714db27e8fea307470f3b3a0342f7ba7e5ea66bf40d07e40bd",
+      "source_size": [
+        3456,
+        4608
+      ],
+      "model_input_size": [
+        1200,
+        1600
+      ],
+      "inference_seconds": 5.16,
+      "rgb_changed_pixels": 0,
+      "alpha_high_coverage_percent": 65.52,
+      "alpha_low_coverage_percent": 33.71,
+      "alpha_transition_percent": 0.77,
+      "mask_bbox": [
+        170,
+        340,
+        3336,
+        4424
+      ],
+      "outputs": {
+        "mask": "masks/fabric-backpack.png",
+        "cutout": "cutouts/fabric-backpack.png",
+        "white": "white/fabric-backpack.png"
+      }
+    },
+    {
+      "case": "transparent-bottle",
+      "object_id": null,
+      "source_sha256": "e71112b0f3e0a393634adc34df2c46a44896d6b0fc03c1d5ba5cce42567c212c",
+      "source_size": [
+        1365,
+        2048
+      ],
+      "model_input_size": [
+        1066,
+        1600
+      ],
+      "inference_seconds": 5.08,
+      "rgb_changed_pixels": 0,
+      "alpha_high_coverage_percent": 24.73,
+      "alpha_low_coverage_percent": 74.6,
+      "alpha_transition_percent": 0.67,
+      "mask_bbox": [
+        358,
+        197,
+        967,
+        1885
+      ],
+      "outputs": {
+        "mask": "masks/transparent-bottle.png",
+        "cutout": "cutouts/transparent-bottle.png",
+        "white": "white/transparent-bottle.png"
+      }
+    },
+    {
+      "case": "dense-label-medicine",
+      "object_id": null,
+      "source_sha256": "7211722e2ed1f548828bc5669ba8fa12b33d11cda4d52787930c75148113d602",
+      "source_size": [
+        1593,
+        1920
+      ],
+      "model_input_size": [
+        1328,
+        1600
+      ],
+      "inference_seconds": 5.31,
+      "rgb_changed_pixels": 0,
+      "alpha_high_coverage_percent": 49.7,
+      "alpha_low_coverage_percent": 49.06,
+      "alpha_transition_percent": 1.24,
+      "mask_bbox": [
+        176,
+        189,
+        1409,
+        1762
+      ],
+      "outputs": {
+        "mask": "masks/dense-label-medicine.png",
+        "cutout": "cutouts/dense-label-medicine.png",
+        "white": "white/dense-label-medicine.png"
+      }
+    }
+  ]
+}

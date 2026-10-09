@@ -1,0 +1,116 @@
+{
+  "blender": "5.2.2 LTS",
+  "source_file": "D:\\codex\\animate\\artifacts\\blender-product-spike-2026-10-09\\source\\Camera_01_2k.blend",
+  "mesh_count": 2,
+  "mesh_names": [
+    "Camera_01",
+    "Camera_01_strap"
+  ],
+  "mesh_bounds": {
+    "Camera_01": {
+      "min": [
+        -0.07362,
+        -0.07014,
+        0.00053
+      ],
+      "max": [
+        0.07372,
+        0.0187,
+        0.0781
+      ]
+    },
+    "Camera_01_strap": {
+      "min": [
+        -0.13554,
+        -0.20227,
+        0.00026
+      ],
+      "max": [
+        0.07836,
+        0.06056,
+        0.05806
+      ]
+    }
+  },
+  "triangle_count": 26987,
+  "material_names": [
+    "Camera_01_body",
+    "Camera_01_lens",
+    "Camera_01_lens_body",
+    "Camera_01_strap"
+  ],
+  "bounds_meters": {
+    "min": [
+      -0.13554,
+      -0.20227,
+      0.00026
+    ],
+    "max": [
+      0.07836,
+      0.06056,
+      0.0781
+    ]
+  },
+  "images": [
+    {
+      "name": "Camera_01_body_diff.png",
+      "path": "D:\\codex\\animate\\artifacts\\blender-product-spike-2026-10-09\\source\\textures\\Camera_01_body_diff_2k.png",
+      "exists": true
+    },
+    {
+      "name": "Camera_01_body_metallic.png",
+      "path": "D:\\codex\\animate\\artifacts\\blender-product-spike-2026-10-09\\source\\textures\\Camera_01_body_metallic_2k.png",
+      "exists": true
+    },
+    {
+      "name": "Camera_01_body_nor_gl.png",
+      "path": "D:\\codex\\animate\\artifacts\\blender-product-spike-2026-10-09\\source\\textures\\Camera_01_body_nor_gl_2k.png",
+      "exists": true
+    },
+    {
+      "name": "Camera_01_body_roughness.png",
+      "path": "D:\\codex\\animate\\artifacts\\blender-product-spike-2026-10-09\\source\\textures\\Camera_01_body_roughness_2k.png",
+      "exists": true
+    },
+    {
+      "name": "Camera_01_lens_body_diff.png",
+      "path": "D:\\codex\\animate\\artifacts\\blender-product-spike-2026-10-09\\source\\textures\\Camera_01_lens_body_diff_2k.png",
+      "exists": true
+    },
+    {
+      "name": "Camera_01_lens_body_metallic.png",
+      "path": "D:\\codex\\animate\\artifacts\\blender-product-spike-2026-10-09\\source\\textures\\Camera_01_lens_body_metallic_2k.png",
+      "exists": true
+    },
+    {
+      "name": "Camera_01_lens_body_nor_gl.png",
+      "path": "D:\\codex\\animate\\artifacts\\blender-product-spike-2026-10-09\\source\\textures\\Camera_01_lens_body_nor_gl_2k.png",
+      "exists": true
+    },
+    {
+      "name": "Camera_01_lens_body_roughness.png",
+      "path": "D:\\codex\\animate\\artifacts\\blender-product-spike-2026-10-09\\source\\textures\\Camera_01_lens_body_roughness_2k.png",
+      "exists": true
+    },
+    {
+      "name": "Camera_01_strap_diff.png",
+      "path": "D:\\codex\\animate\\artifacts\\blender-product-spike-2026-10-09\\source\\textures\\Camera_01_strap_diff_2k.png",
+      "exists": true
+    },
+    {
+      "name": "Camera_01_strap_metallic.png",
+      "path": "D:\\codex\\animate\\artifacts\\blender-product-spike-2026-10-09\\source\\textures\\Camera_01_strap_metallic_2k.png",
+      "exists": true
+    },
+    {
+      "name": "Camera_01_strap_nor_gl.png",
+      "path": "D:\\codex\\animate\\artifacts\\blender-product-spike-2026-10-09\\source\\textures\\Camera_01_strap_nor_gl_2k.png",
+      "exists": true
+    },
+    {
+      "name": "Camera_01_strap_roughness.png",
+      "path": "D:\\codex\\animate\\artifacts\\blender-product-spike-2026-10-09\\source\\textures\\Camera_01_strap_roughness_2k.png",
+      "exists": true
+    }
+  ]
+}

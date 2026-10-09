@@ -1,0 +1,44 @@
+{
+  "cases": [
+    {
+      "case": "matte-product",
+      "title": "Matte product",
+      "category": "matte",
+      "filename": "matte-product.jpg",
+      "rights_confirmed": false,
+      "rights_basis": ""
+    },
+    {
+      "case": "reflective-electronics",
+      "title": "Reflective electronic product",
+      "category": "reflective_electronics",
+      "filename": "reflective-electronics.jpg",
+      "rights_confirmed": false,
+      "rights_basis": ""
+    },
+    {
+      "case": "fabric-or-hair",
+      "title": "Fabric or hair-like edges",
+      "category": "fabric_hair",
+      "filename": "fabric-or-hair.jpg",
+      "rights_confirmed": false,
+      "rights_basis": ""
+    },
+    {
+      "case": "transparent-package",
+      "title": "Transparent packaging",
+      "category": "transparent_packaging",
+      "filename": "transparent-package.jpg",
+      "rights_confirmed": false,
+      "rights_basis": ""
+    },
+    {
+      "case": "dense-label",
+      "title": "Dense commercial logo and label text",
+      "category": "dense_text_logo",
+      "filename": "dense-label.jpg",
+      "rights_confirmed": false,
+      "rights_basis": ""
+    }
+  ]
+}
