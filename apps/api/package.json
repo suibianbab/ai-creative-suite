@@ -8,6 +8,7 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/main.js",
     "migrate": "node --env-file=../../.env --import tsx src/db/migrate.ts",
+    "orphan:audit": "node --env-file=../../.env --import tsx src/assets/orphan-audit.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {

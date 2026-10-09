@@ -40,6 +40,8 @@ pnpm build
 
 The local Compose credentials are development-only. The supplied Docker VM uses [`deploy/compose.vm.yaml`](./deploy/compose.vm.yaml), which runs the cached S3-compatible RustFS image because the pinned MinIO image could not be pulled there. All VM ports bind to loopback and require SSH forwarding from this workstation.
 
+The Asset Foundation has a dry-run orphan-object audit for an explicit organization: from `apps/api`, run `pnpm orphan:audit <organization-uuid>` with the development `.env` and VM tunnel available. See [`docs/ORPHAN_OBJECT_RETENTION.md`](./docs/ORPHAN_OBJECT_RETENTION.md); automatic deletion is not enabled.
+
 ## Windows Blender GPU smoke test
 
 The Windows host has a portable Blender 5.2.2 LTS build in `.tools/blender-5.2.2-windows-x64`. To rerun the synthetic Cycles/OptiX scene on its RTX 4060:

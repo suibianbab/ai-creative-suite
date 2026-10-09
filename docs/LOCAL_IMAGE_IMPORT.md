@@ -6,4 +6,4 @@
 
 在 `apps/api` 目录执行 `node --env-file=../../.env --import tsx src/image-projects/local-image-import.integration.ts`。集成测试使用一次性 PostgreSQL schema 和 RustFS 真正对象，模拟原图上传后项目保存失败，验证重试、原图读回、蒙版 ID 映射、跨组织隔离和导入记录不可更改。
 
-当前仅有内部服务，没有浏览器上传入口或自动同步。浏览器 IndexedDB 项目仍留在本机；接入实际身份提供方、成员管理、文件传输限制、独立安全审查与端到端浏览器验证后，才能开放导入 API。并发重试或数据库故障仍可能在对象存储留下无引用对象，需后续对象清扫机制。每次导入最多 50 个文件、总计 100 MiB，单个文件仍受 Asset Foundation 的 25 MiB 限制。
+当前仅有内部服务，没有浏览器上传入口或自动同步。浏览器 IndexedDB 项目仍留在本机；接入实际身份提供方、成员管理、文件传输限制、独立安全审查与端到端浏览器验证后，才能开放导入 API。并发重试或数据库故障仍可能在对象存储留下无引用对象；其默认只报告的清扫开发基线见 [`ORPHAN_OBJECT_RETENTION.md`](./ORPHAN_OBJECT_RETENTION.md)，正式自动执行尚待独立复核。每次导入最多 50 个文件、总计 100 MiB，单个文件仍受 Asset Foundation 的 25 MiB 限制。
