@@ -122,6 +122,7 @@ export default function ImageStudioPage() {
   const [instruction, setInstruction] = useState("");
   const instructionRef = useRef("");
   const [instructionBusy, setInstructionBusy] = useState(false);
+  const [instructionError, setInstructionError] = useState("");
   const [pendingInstruction, setPendingInstruction] =
     useState<PendingInstruction | null>(null);
   const [backgroundPrompt, setBackgroundPrompt] = useState("");
@@ -567,6 +568,7 @@ export default function ImageStudioPage() {
     const targetId = selectedId;
     const input = instruction;
     setInstructionBusy(true);
+    setInstructionError("");
     setPendingInstruction(null);
     try {
       let plan: ImageInstructionPlan;
@@ -608,7 +610,10 @@ export default function ImageStudioPage() {
       setMessage(`${source} 已生成预览；检查画布和操作列表后再应用。`);
     } catch (error) {
       setPendingInstruction(null);
-      setMessage(error instanceof Error ? error.message : "无法理解编辑要求。");
+      const detail =
+        error instanceof Error ? error.message : "无法理解编辑要求。";
+      setInstructionError(detail);
+      setMessage(detail);
     } finally {
       setInstructionBusy(false);
     }
@@ -1395,7 +1400,7 @@ export default function ImageStudioPage() {
             <h2>用文字编辑画面</h2>
             <p>
               本机 AI
-              理解编辑要求，先预览再应用。支持画布、背景、商品位置、基础调色和标题；生成或重绘暂不支持。
+              理解编辑要求，先预览再应用。支持画布、背景、商品位置、基础调色、整块商品换色和标题；换色前请先抠图，生成或重绘暂不支持。
             </p>
             <textarea
               aria-label="编辑要求"
@@ -1403,6 +1408,7 @@ export default function ImageStudioPage() {
               onChange={(event) => {
                 instructionRef.current = event.target.value;
                 setInstruction(event.target.value);
+                setInstructionError("");
                 setPendingInstruction(null);
               }}
               placeholder="例如：把商品亮度调到 20；曝光提高 0.5；添加标题：秋日新品"
@@ -1415,6 +1421,11 @@ export default function ImageStudioPage() {
             >
               {instructionBusy ? "AI 正在理解…" : "预览编辑"}
             </button>
+            {instructionError && (
+              <p className="instruction-error" role="alert">
+                {instructionError}
+              </p>
+            )}
             {pendingInstruction && pendingInstruction.origin !== "lighting" && (
               <div className="instruction-preview">
                 <strong>待应用的操作</strong>

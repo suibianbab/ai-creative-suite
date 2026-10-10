@@ -54,6 +54,7 @@ export type ImageLayer = {
   crop?: CropRect;
   mask?: LayerMask;
   adjustments?: ImageAdjustments;
+  recolor?: string;
   contactShadow?: ContactShadow;
   x: number;
   y: number;
@@ -116,6 +117,7 @@ export type ImageOperation =
       layerId: string;
       patch: Partial<ImageAdjustments>;
     }
+  | { type: "setRecolor"; layerId: string; color: string | null }
   | {
       type: "setContactShadow";
       layerId: string;
@@ -146,6 +148,7 @@ export type ImageCapability =
   | "canvas"
   | "crop"
   | "basic-adjustments"
+  | "basic-recolor"
   | "basic-shadow"
   | "mask-refine"
   | "remove-bg"
@@ -162,6 +165,7 @@ export function routeImageCapability(
     case "canvas":
     case "crop":
     case "basic-adjustments":
+    case "basic-recolor":
     case "basic-shadow":
     case "mask-refine":
       return "native";
@@ -230,6 +234,11 @@ function validateLayer(layer: ImageDocumentLayer): void {
       )
         throw new Error("Image adjustments are outside supported ranges");
     }
+    if (
+      layer.recolor !== undefined &&
+      (!layer.mask || !/^#[0-9a-fA-F]{6}$/.test(layer.recolor))
+    )
+      throw new Error("Recolor requires a masked image and a hex color");
     if (layer.contactShadow !== undefined) {
       const shadow = layer.contactShadow;
       if (
@@ -550,6 +559,13 @@ export function applyImageOperation(
             : adjustments,
         };
       });
+    case "setRecolor":
+      routeImageCapability("basic-recolor");
+      return updateLayer(document, operation.layerId, (layer) => {
+        if (layer.kind !== "image" || (operation.color && !layer.mask))
+          throw new Error("请先给商品图片生成或导入蒙版，再预览换色。");
+        return { ...layer, recolor: operation.color ?? undefined };
+      });
     case "setContactShadow":
       routeImageCapability("basic-shadow");
       return updateLayer(document, operation.layerId, (layer) => {
@@ -573,6 +589,7 @@ export function applyImageOperation(
             ? { assetId: operation.assetId, strokes: [] }
             : undefined,
           contactShadow: operation.assetId ? layer.contactShadow : undefined,
+          recolor: operation.assetId ? layer.recolor : undefined,
         };
         return operation.frame ? withFrame(masked, operation.frame) : masked;
       });

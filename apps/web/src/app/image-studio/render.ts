@@ -17,6 +17,10 @@ const maskedCache = new Map<
     base: { x: number; y: number } | null;
   }
 >();
+const recolorCache = new Map<
+  string,
+  { source: CanvasImageSource; color: string; canvas: HTMLCanvasElement }
+>();
 
 function canvasOf(width: number, height: number): HTMLCanvasElement {
   const canvas = window.document.createElement("canvas");
@@ -151,6 +155,48 @@ export function maskedSource(
   return result;
 }
 
+function recoloredSource(
+  layer: ImageLayer,
+  assets: ImageAssetMap,
+): CanvasImageSource | undefined {
+  const source = maskedSource(layer, assets);
+  if (!source || !layer.recolor) return source;
+  const cached = recolorCache.get(layer.id);
+  if (cached?.source === source && cached.color === layer.recolor)
+    return cached.canvas;
+  const canvas = canvasOf(layer.sourceWidth, layer.sourceHeight);
+  const context = canvas.getContext("2d", { willReadFrequently: true });
+  if (!context) throw new Error("Recolor canvas is unavailable");
+  context.drawImage(source, 0, 0, canvas.width, canvas.height);
+  const image = context.getImageData(0, 0, canvas.width, canvas.height);
+  const pixels = image.data;
+  const color = layer.recolor;
+  const target = [1, 3, 5].map((offset) =>
+    Number.parseInt(color.slice(offset, offset + 2), 16),
+  );
+  if (color.toLowerCase() === "#000000") target.fill(34);
+  // Preserve source shading while replacing hue. The original bitmap is never changed.
+  for (let i = 0; i < pixels.length; i += 4) {
+    if (pixels[i + 3] === 0) continue;
+    const luminance =
+      (pixels[i]! * 0.2126 +
+        pixels[i + 1]! * 0.7152 +
+        pixels[i + 2]! * 0.0722) /
+      255;
+    const shade = 0.45 + luminance * 1.45;
+    for (let channel = 0; channel < 3; channel++)
+      pixels[i + channel] = Math.min(255, Math.round(target[channel]! * shade));
+  }
+  context.putImageData(image, 0, 0);
+  recolorCache.delete(layer.id);
+  if (recolorCache.size >= 8) {
+    const oldest = recolorCache.keys().next().value;
+    if (oldest) recolorCache.delete(oldest);
+  }
+  recolorCache.set(layer.id, { source, color, canvas });
+  return canvas;
+}
+
 export function visibleProductBase(
   layer: ImageLayer,
   assets: ImageAssetMap,
@@ -224,7 +270,7 @@ export function drawImageDocument(
     context.globalAlpha = layer.opacity;
 
     if (layer.kind === "image") {
-      const bitmap = maskedSource(layer, assets);
+      const bitmap = recoloredSource(layer, assets);
       if (bitmap) {
         const crop = layer.crop ?? {
           x: 0,

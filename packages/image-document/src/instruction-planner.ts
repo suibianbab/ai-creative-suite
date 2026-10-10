@@ -25,6 +25,11 @@ const colors: Record<string, string> = {
   白色: "#ffffff",
   黑色: "#000000",
   浅灰色: "#f2f2f2",
+  红色: "#dc2828",
+  蓝色: "#2878d8",
+  绿色: "#278b53",
+  黄色: "#e7bd28",
+  粉色: "#e68fae",
 };
 
 function targetLayer(
@@ -77,6 +82,9 @@ export function planImageInstruction(
     );
     const adjustment = clause.match(
       /^(?:把)?(?:商品|图片|图像|选中图层)?\s*(亮度|对比度|饱和度|曝光)\s*(调到|设为|改为|提高|增加|降低|减少)\s*(-?\d+(?:\.\d+)?)\s*(?:档)?$/,
+    );
+    const recolor = clause.match(
+      /^(?:(?:把|将)\s*)?(?:商品|产品|帽子|小帽|选中图层)(?:的)?(?:颜色|色彩)\s*(?:改成|改为|换成|设为|调整为)\s*(黑色|白色|红色|蓝色|绿色|黄色|粉色|#[0-9a-fA-F]{6})$/,
     );
     const addTitle = clause.match(/^添加标题\s*[：:]\s*(.+)$/);
     const editTitle = clause.match(
@@ -139,6 +147,19 @@ export function planImageInstruction(
         patch: { [key]: value },
       };
       description = `${adjustment[1]}调整为 ${value}${key === "exposure" ? " 档" : ""}`;
+    } else if (recolor) {
+      const layer = targetLayer(draft, selectedId, "image");
+      if (layer.kind !== "image" || !layer.mask)
+        throw new Error(
+          "换商品颜色需要先抠图：选中帽子图片，在右侧图片设置中点击“自动抠图（本机）”，检查蒙版后再预览这条指令。",
+        );
+      const color = recolor[1]!;
+      operation = {
+        type: "setRecolor",
+        layerId: layer.id,
+        color: colors[color] ?? color.toLowerCase(),
+      };
+      description = `商品近似换色为 ${color}（整块蒙版区域，需检查纹理和标志）`;
     } else if (addTitle) {
       const value = addTitle[1]!.trim();
       if (!value || value.length > 80) throw new Error("标题需要 1–80 个字。");

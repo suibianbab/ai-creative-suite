@@ -105,6 +105,53 @@ test("unsupported or invalid instructions never partially change the document", 
   assert.equal(history.past.length, 0);
 });
 
+test("masked product color instruction previews and undoes without changing the original asset", () => {
+  const original = applyImageOperation(createImageDocument("recolor-doc"), {
+    type: "addImage",
+    layer: product,
+  });
+  assert.throws(
+    () =>
+      planImageInstruction(
+        original,
+        product.id,
+        "将帽子的颜色换成黑色",
+        () => "unused",
+      ),
+    /先抠图/,
+  );
+  const masked = applyImageOperation(original, {
+    type: "setMask",
+    layerId: product.id,
+    assetId: "hat-mask",
+  });
+  const plan = planImageInstruction(
+    masked,
+    product.id,
+    "将帽子的颜色换成黑色",
+    () => "unused",
+  );
+  assert.equal(plan.operations.length, 1);
+  const history = commitImageOperations(
+    createImageHistory(masked),
+    plan.operations,
+  );
+  const result = history.present.layers[0] as ImageLayer;
+  assert.equal(result.recolor, "#000000");
+  assert.equal(result.assetId, product.assetId);
+  assert.deepEqual(undoImageOperation(history).present, masked);
+  assert.equal(
+    (
+      applyImageOperation(history.present, {
+        type: "setMask",
+        layerId: product.id,
+        assetId: null,
+      }).layers[0] as ImageLayer
+    ).recolor,
+    undefined,
+  );
+});
+
 test("invalid transforms and duplicate layer IDs are rejected", () => {
   const document = applyImageOperation(createImageDocument("doc-2"), {
     type: "addImage",
