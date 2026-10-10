@@ -155,6 +155,24 @@ export default function ImageStudioPage() {
     setForceCloudLogin(false);
   }
 
+  function clearCurrentCanvas() {
+    const next = createImageHistory(createImageDocument(crypto.randomUUID()));
+    historyRef.current = next;
+    setHistory(next);
+    originalFiles.current = new Map();
+    cloudKnownAssetIds.current = new Set();
+    setAssets({});
+    setSelectedId(null);
+    setCropDraft(null);
+    setDrag(null);
+    setInstruction("");
+    setPendingInstruction(null);
+    setMaskEditorLayerId(null);
+    setCloudCurrent(null);
+    setCloudToOpen("");
+    savedSnapshot.current = null;
+  }
+
   async function openCloud() {
     const config = cloudConfig();
     const session = cloudSession();
@@ -933,13 +951,23 @@ export default function ImageStudioPage() {
             <button
               type="button"
               className="project-action"
+              disabled={projectBusy || maskBusy}
               onClick={() => {
+                if (
+                  historyRef.current.present.layers.length > 0 &&
+                  JSON.stringify(historyRef.current.present) !==
+                    savedSnapshot.current &&
+                  !window.confirm(
+                    "清除会话将关闭当前画布，未保存的修改会丢失。继续吗？",
+                  )
+                )
+                  return;
                 cloudLogout();
                 setCloudConnected(false);
                 setCloudProjects([]);
-                setCloudCurrent(null);
+                clearCurrentCanvas();
                 setMessage(
-                  "本页访问令牌已清除；身份服务会话可能仍有效。本地编辑可继续。",
+                  "本页访问令牌与画布已清除；身份服务会话可能仍有效。本地项目仍保存在此浏览器。",
                 );
               }}
             >

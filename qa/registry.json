@@ -293,6 +293,21 @@
       ]
     },
     {
+      "id": "UI-005",
+      "title": "Clear cloud session removes the current canvas from memory",
+      "fixture": "An open cloud image project with original image data in the current browser tab",
+      "steps": [
+        "Open a cloud project and confirm that its image layers are visible",
+        "Click 清除本页会话 and accept the unsaved-work prompt if shown",
+        "Inspect the canvas and cloud project controls"
+      ],
+      "passCriteria": [
+        "The current canvas, image layers and in-memory originals are cleared",
+        "The cloud project list is no longer visible",
+        "The browser-profile IndexedDB limitation remains documented separately under UI-004"
+      ]
+    },
+    {
       "id": "VIS-001",
       "title": "Product cutout and export quality",
       "fixture": "Five rights-cleared product classes; see docs/IMAGE_QUALITY_REVIEW.md",
