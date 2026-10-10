@@ -12,6 +12,20 @@ export type LayerMask = {
   strokes: MaskStroke[];
 };
 
+export type ImageAdjustments = {
+  brightness: number;
+  contrast: number;
+  saturation: number;
+  exposure: number;
+};
+
+export const DEFAULT_IMAGE_ADJUSTMENTS: Readonly<ImageAdjustments> = {
+  brightness: 0,
+  contrast: 0,
+  saturation: 0,
+  exposure: 0,
+};
+
 export type ImageLayer = {
   id: string;
   kind: "image";
@@ -21,6 +35,7 @@ export type ImageLayer = {
   sourceHeight: number;
   crop?: CropRect;
   mask?: LayerMask;
+  adjustments?: ImageAdjustments;
   x: number;
   y: number;
   width: number;
@@ -78,6 +93,11 @@ export type ImageOperation =
   | { type: "removeLayer"; layerId: string }
   | { type: "setCrop"; layerId: string; crop: CropRect | null }
   | {
+      type: "setAdjustments";
+      layerId: string;
+      patch: Partial<ImageAdjustments>;
+    }
+  | {
       type: "setMask";
       layerId: string;
       assetId: string | null;
@@ -101,6 +121,7 @@ export type ImageCapability =
   | "basic-text"
   | "canvas"
   | "crop"
+  | "basic-adjustments"
   | "mask-refine"
   | "remove-bg";
 export type CapabilityExecutor = "native" | "photocraft" | "ai-provider";
@@ -114,6 +135,7 @@ export function routeImageCapability(
     case "basic-text":
     case "canvas":
     case "crop":
+    case "basic-adjustments":
     case "mask-refine":
       return "native";
     case "remove-bg":
@@ -158,6 +180,28 @@ function validateLayer(layer: ImageDocumentLayer): void {
   if (!layer.id || !layer.name) throw new Error("Layer identity is required");
   if (layer.kind === "image") {
     if (!layer.assetId) throw new Error("Image asset ID is required");
+    if (layer.adjustments !== undefined) {
+      const adjustment = layer.adjustments;
+      if (
+        typeof adjustment !== "object" ||
+        adjustment === null ||
+        Array.isArray(adjustment) ||
+        Object.keys(adjustment).some(
+          (key) => !(key in DEFAULT_IMAGE_ADJUSTMENTS),
+        ) ||
+        ![
+          adjustment.brightness,
+          adjustment.contrast,
+          adjustment.saturation,
+        ].every(
+          (value) => Number.isFinite(value) && value >= -100 && value <= 100,
+        ) ||
+        !Number.isFinite(adjustment.exposure) ||
+        adjustment.exposure < -2 ||
+        adjustment.exposure > 2
+      )
+        throw new Error("Image adjustments are outside supported ranges");
+    }
     if (layer.mask) {
       if (!layer.mask.assetId || !Array.isArray(layer.mask.strokes))
         throw new Error("Mask asset and strokes are required");
@@ -427,6 +471,29 @@ export function applyImageOperation(
             offsetX * Math.sin(radians) +
             offsetY * Math.cos(radians) -
             height / 2,
+        };
+      });
+    case "setAdjustments":
+      routeImageCapability("basic-adjustments");
+      return updateLayer(document, operation.layerId, (layer) => {
+        if (layer.kind !== "image")
+          throw new Error("Only image layers can be adjusted");
+        if (
+          Object.keys(operation.patch).some(
+            (key) => !(key in DEFAULT_IMAGE_ADJUSTMENTS),
+          )
+        )
+          throw new Error("Unknown image adjustment");
+        const adjustments = {
+          ...DEFAULT_IMAGE_ADJUSTMENTS,
+          ...layer.adjustments,
+          ...operation.patch,
+        };
+        return {
+          ...layer,
+          adjustments: Object.values(adjustments).every((value) => value === 0)
+            ? undefined
+            : adjustments,
         };
       });
     case "setMask":

@@ -26,6 +26,7 @@
       "checks": [
         "Original asset references remain unchanged by composition edits",
         "Crop, mask and framing preserve non-destructive undo and redo",
+        "Basic color adjustments validate ranges, survive JSON, and undo without replacing originals",
         "Text instructions commit atomically and reject unsupported edits"
       ]
     },
@@ -73,6 +74,7 @@
       "requiresPorts": [5432, 9000],
       "checks": [
         "Version conflict rejects stale saves",
+        "Image adjustment values persist in immutable project versions",
         "Historical versions remain immutable",
         "Wrong-workspace assets and reads are rejected"
       ]
@@ -305,6 +307,22 @@
         "The current canvas, image layers and in-memory originals are cleared",
         "The cloud project list is no longer visible",
         "The browser-profile IndexedDB limitation remains documented separately under UI-004"
+      ]
+    },
+    {
+      "id": "UI-006",
+      "title": "Non-destructive color adjustments and export",
+      "fixture": "Locally owned color test PNG with known pixels",
+      "steps": [
+        "Import the PNG and set brightness, contrast, saturation and exposure",
+        "Verify preview, undo, redo and reset controls",
+        "Save and reopen the document, then export a PNG",
+        "Use a numeric text instruction and apply its preview"
+      ],
+      "passCriteria": [
+        "The image layer retains its original asset ID and source bytes",
+        "The exported pixels reflect the adjustments while text and background stay unchanged",
+        "Adjustments survive project reopen and numeric text edits remain one undo step"
       ]
     },
     {

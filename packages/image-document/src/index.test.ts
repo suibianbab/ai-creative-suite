@@ -185,6 +185,120 @@ test("product image resizing preserves its source aspect ratio", () => {
   );
 });
 
+test("basic adjustments survive JSON round trip and undo without changing the original asset", () => {
+  const original = applyImageOperation(createImageDocument("adjustment-doc"), {
+    type: "addImage",
+    layer: product,
+  });
+  const edited = commitImageOperation(createImageHistory(original), {
+    type: "setAdjustments",
+    layerId: product.id,
+    patch: { brightness: 20, contrast: -10, saturation: 30, exposure: 0.5 },
+  });
+  const layer = edited.present.layers[0] as ImageLayer;
+  assert.deepEqual(layer.adjustments, {
+    brightness: 20,
+    contrast: -10,
+    saturation: 30,
+    exposure: 0.5,
+  });
+  assert.equal(layer.assetId, product.assetId);
+  assert.equal((original.layers[0] as ImageLayer).adjustments, undefined);
+  assert.deepEqual(JSON.parse(JSON.stringify(edited.present)), edited.present);
+  assert.deepEqual(undoImageOperation(edited).present, original);
+  assert.deepEqual(
+    redoImageOperation(undoImageOperation(edited)).present,
+    edited.present,
+  );
+  const reset = applyImageOperation(edited.present, {
+    type: "setAdjustments",
+    layerId: product.id,
+    patch: { brightness: 0, contrast: 0, saturation: 0, exposure: 0 },
+  });
+  assert.equal((reset.layers[0] as ImageLayer).adjustments, undefined);
+});
+
+test("invalid adjustments and adjustment on text are rejected", () => {
+  const original = applyImageOperation(
+    createImageDocument("adjustment-bounds"),
+    {
+      type: "addImage",
+      layer: product,
+    },
+  );
+  for (const patch of [
+    { brightness: 101 },
+    { contrast: -101 },
+    { saturation: Number.NaN },
+    { exposure: 2.1 },
+    { assetId: "other" },
+  ]) {
+    assert.throws(() =>
+      applyImageOperation(original, {
+        type: "setAdjustments",
+        layerId: product.id,
+        patch: patch as never,
+      }),
+    );
+  }
+  const withText = applyImageOperation(original, {
+    type: "addText",
+    layer: {
+      id: "text-layer",
+      kind: "text",
+      name: "Title",
+      text: "Sample",
+      fontSize: 40,
+      color: "#000000",
+      fontFamily: "Arial",
+      x: 0,
+      y: 0,
+      width: 300,
+      height: 60,
+      rotation: 0,
+      opacity: 1,
+    },
+  });
+  assert.throws(() =>
+    applyImageOperation(withText, {
+      type: "setAdjustments",
+      layerId: "text-layer",
+      patch: { brightness: 20 },
+    }),
+  );
+});
+
+test("text instructions preview numeric image adjustments as one undo step", () => {
+  const original = applyImageOperation(
+    createImageDocument("adjustment-prompt"),
+    {
+      type: "addImage",
+      layer: product,
+    },
+  );
+  const plan = planImageInstruction(
+    original,
+    product.id,
+    "把商品亮度调到 20；对比度降低 10；饱和度提高 30；曝光提高 0.5",
+    () => "unused",
+  );
+  const history = commitImageOperations(
+    createImageHistory(original),
+    plan.operations,
+  );
+  assert.deepEqual((history.present.layers[0] as ImageLayer).adjustments, {
+    brightness: 20,
+    contrast: -10,
+    saturation: 30,
+    exposure: 0.5,
+  });
+  assert.equal(history.past.length, 1);
+  assert.deepEqual(undoImageOperation(history).present, original);
+  assert.throws(() =>
+    planImageInstruction(original, product.id, "亮度调到 200", () => "unused"),
+  );
+});
+
 test("crop keeps original pixels referenced and survives undo and redo", () => {
   const original = applyImageOperation(createImageDocument("crop-doc"), {
     type: "addImage",

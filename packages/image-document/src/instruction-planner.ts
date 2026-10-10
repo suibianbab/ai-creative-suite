@@ -1,5 +1,6 @@
 import {
   applyImageOperation,
+  type ImageAdjustments,
   type ImageDocument,
   type ImageDocumentLayer,
   type ImageOperation,
@@ -74,6 +75,9 @@ export function planImageInstruction(
     const position = clause.match(
       /^(?:把)?(?:商品|图片|图层|它|选中图层)\s*(?:移到|放到)\s*(左边|右边|中间|顶部|底部)$/,
     );
+    const adjustment = clause.match(
+      /^(?:把)?(?:商品|图片|图像|选中图层)?\s*(亮度|对比度|饱和度|曝光)\s*(调到|设为|改为|提高|增加|降低|减少)\s*(-?\d+(?:\.\d+)?)\s*(?:档)?$/,
+    );
     const addTitle = clause.match(/^添加标题\s*[：:]\s*(.+)$/);
     const editTitle = clause.match(
       /^(?:把)?(?:标题|选中文字)\s*(?:改成|改为|设为)\s*(.+)$/,
@@ -111,6 +115,30 @@ export function planImageInstruction(
             : { y: vertical[place as keyof typeof vertical] },
       };
       description = `商品移到${place}`;
+    } else if (adjustment) {
+      const layer = targetLayer(draft, selectedId, "image");
+      const key = {
+        亮度: "brightness",
+        对比度: "contrast",
+        饱和度: "saturation",
+        曝光: "exposure",
+      }[adjustment[1]!] as keyof ImageAdjustments;
+      const verb = adjustment[2]!;
+      const amount = Number(adjustment[3]);
+      const current =
+        layer.kind === "image" ? (layer.adjustments?.[key] ?? 0) : 0;
+      const value =
+        verb === "提高" || verb === "增加"
+          ? current + amount
+          : verb === "降低" || verb === "减少"
+            ? current - amount
+            : amount;
+      operation = {
+        type: "setAdjustments",
+        layerId: layer.id,
+        patch: { [key]: value },
+      };
+      description = `${adjustment[1]}调整为 ${value}${key === "exposure" ? " 档" : ""}`;
     } else if (addTitle) {
       const value = addTitle[1]!.trim();
       if (!value || value.length > 80) throw new Error("标题需要 1–80 个字。");
@@ -145,7 +173,7 @@ export function planImageInstruction(
       description = `标题改为「${value}」`;
     } else {
       throw new Error(
-        `暂不支持“${clause.slice(0, 32)}”。可尝试画布、背景、商品位置或标题指令。`,
+        `暂不支持“${clause.slice(0, 32)}”。可尝试画布、背景、商品位置、基础调色或标题指令。`,
       );
     }
 

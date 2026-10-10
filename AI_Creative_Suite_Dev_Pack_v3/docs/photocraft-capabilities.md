@@ -5,6 +5,7 @@
 | Transform | High | BUILD | Native | - | Core UX |
 | Crop | High | BUILD | Native | - | Core UX |
 | Basic Text | High | BUILD | Native | - | Core ecommerce need |
+| Basic Adjustments | High | BUILD | Native | - | Brightness, contrast, saturation and approximate exposure; advanced tonal controls stay with PhotoCraft |
 | Basic Shadow | High | BUILD | Native | - | Cheap and frequent |
 | Remove BG | High | AI_PROVIDER | AI | simple mask | Ecommerce critical |
 | Generative Fill | High | AI_PROVIDER | AI | unavailable | Do not reimplement |

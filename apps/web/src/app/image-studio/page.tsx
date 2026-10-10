@@ -7,6 +7,8 @@ import {
   commitImageOperations,
   createImageDocument,
   createImageHistory,
+  DEFAULT_IMAGE_ADJUSTMENTS,
+  type ImageAdjustments,
   type ImageDocument,
   type ImageDocumentLayer,
   type ImageInstructionPlan,
@@ -768,6 +770,15 @@ export default function ImageStudioPage() {
     });
   }
 
+  function setAdjustment(key: keyof ImageAdjustments, value: number) {
+    if (selected?.kind !== "image" || !Number.isFinite(value)) return;
+    commit({
+      type: "setAdjustments",
+      layerId: selected.id,
+      patch: { [key]: value },
+    });
+  }
+
   function cropToAspect(ratio: number) {
     if (selected?.kind !== "image") return;
     let width = selected.sourceWidth;
@@ -1090,7 +1101,7 @@ export default function ImageStudioPage() {
           <section className="instruction-panel" aria-label="文字编辑要求">
             <h2>用文字编辑画面</h2>
             <p>
-              本地指令预览：画布尺寸、背景色、商品位置和标题。涉及生成或重绘商品的要求会提示暂不支持。
+              本地指令预览：画布尺寸、背景色、商品位置、基础调色和标题。涉及生成或重绘商品的要求会提示暂不支持。
             </p>
             <textarea
               aria-label="编辑要求"
@@ -1099,7 +1110,7 @@ export default function ImageStudioPage() {
                 setInstruction(event.target.value);
                 setPendingInstruction(null);
               }}
-              placeholder="例如：改成竖图；背景改成白色；把商品移到右边；添加标题：秋日新品"
+              placeholder="例如：把商品亮度调到 20；曝光提高 0.5；添加标题：秋日新品"
               maxLength={240}
             />
             <button
@@ -1166,6 +1177,53 @@ export default function ImageStudioPage() {
                   </label>
                 ))}
               </div>
+              {selected.kind === "image" && (
+                <div className="crop-inspector">
+                  <h3>基础调色</h3>
+                  <p>仅调整当前图片图层的显示和导出；保存的原图保持不变。</p>
+                  <div className="inspector-grid">
+                    {(
+                      [
+                        ["brightness", "亮度", -100, 100, 1],
+                        ["contrast", "对比度", -100, 100, 1],
+                        ["saturation", "饱和度", -100, 100, 1],
+                        ["exposure", "曝光（档）", -2, 2, 0.1],
+                      ] as const
+                    ).map(([key, label, min, max, step]) => (
+                      <label key={key}>
+                        {label}
+                        <input
+                          type="number"
+                          min={min}
+                          max={max}
+                          step={step}
+                          value={
+                            selected.adjustments?.[key] ??
+                            DEFAULT_IMAGE_ADJUSTMENTS[key]
+                          }
+                          onChange={(event) =>
+                            setAdjustment(key, Number(event.target.value))
+                          }
+                        />
+                      </label>
+                    ))}
+                  </div>
+                  <div className="crop-presets">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        commit({
+                          type: "setAdjustments",
+                          layerId: selected.id,
+                          patch: { ...DEFAULT_IMAGE_ADJUSTMENTS },
+                        })
+                      }
+                    >
+                      重置调色
+                    </button>
+                  </div>
+                </div>
+              )}
               {selected.kind === "image" && cropDraft && (
                 <div className="crop-inspector">
                   <h3>非破坏裁切</h3>

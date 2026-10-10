@@ -24,6 +24,16 @@ function canvasOf(width: number, height: number): HTMLCanvasElement {
   return canvas;
 }
 
+export function imageAdjustmentFilter(layer: ImageLayer): string {
+  const adjustment = layer.adjustments;
+  if (!adjustment) return "none";
+  const exposure = 2 ** adjustment.exposure;
+  const brightness = 1 + adjustment.brightness / 100;
+  const contrast = 1 + adjustment.contrast / 100;
+  const saturation = 1 + adjustment.saturation / 100;
+  return `brightness(${exposure}) brightness(${brightness}) contrast(${contrast}) saturate(${saturation})`;
+}
+
 function paintStroke(context: CanvasRenderingContext2D, stroke: MaskStroke) {
   const first = stroke.points[0];
   if (!first) return;
@@ -137,6 +147,7 @@ export function drawImageDocument(
           width: layer.sourceWidth,
           height: layer.sourceHeight,
         };
+        context.filter = imageAdjustmentFilter(layer);
         context.drawImage(
           bitmap,
           crop.x,
@@ -148,6 +159,7 @@ export function drawImageDocument(
           layer.width,
           layer.height,
         );
+        context.filter = "none";
       }
     } else {
       context.fillStyle = layer.color;

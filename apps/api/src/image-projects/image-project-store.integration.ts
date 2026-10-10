@@ -116,7 +116,7 @@ try {
     bytes: Buffer.from("image-b"),
   });
   const projectId = randomUUID();
-  const document = applyImageOperation(createImageDocument(projectId), {
+  const baseDocument = applyImageOperation(createImageDocument(projectId), {
     type: "addImage",
     layer: {
       id: randomUUID(),
@@ -133,15 +133,24 @@ try {
       opacity: 1,
     },
   });
+  const document = applyImageOperation(baseDocument, {
+    type: "setAdjustments",
+    layerId: baseDocument.layers[0]!.id,
+    patch: { brightness: 20, contrast: 15, saturation: 25, exposure: 0.5 },
+  });
   const [first, replay] = await Promise.all([
     store.save(scopeA, "Project", document, 0, "create-1"),
     store.save(scopeA, "Project", document, 0, "create-1"),
   ]);
   assert.equal(first.version, 1);
   assert.equal(replay.version, 1);
-  assert.equal(
-    (await store.get(scopeA, projectId))?.document.layers[0]?.kind,
-    "image",
+  const storedProject = await store.get(scopeA, projectId);
+  assert.equal(storedProject?.document.layers[0]?.kind, "image");
+  assert.deepEqual(
+    storedProject?.document.layers[0]?.kind === "image"
+      ? storedProject.document.layers[0].adjustments
+      : undefined,
+    { brightness: 20, contrast: 15, saturation: 25, exposure: 0.5 },
   );
   assert.equal(await store.get(scopeB, projectId), null);
   assert.equal(await store.get(scopeC, projectId), null);
