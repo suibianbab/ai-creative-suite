@@ -9,8 +9,9 @@
 2. 在 `apps/api` 执行 `node --env-file=../../.env --import tsx src/auth/dev-browser-provision.ts`。脚本创建或复用 `acs-dev-web` 公开客户端和开发工作区，并写入 Git 忽略的根目录 `.env` 与 `apps/web/.env.local`。它不会输出密码或客户端密钥。
 3. 构建或重启 API 和 Web。Web 的 `NEXT_PUBLIC_*` 配置在启动时读取。打开 `http://localhost:3000/image-studio`，点击“登录工作区”。登录使用 `.env.auth.local` 中已有的开发测试用户。
 4. 在浏览器中保存一个本地 ImageDocument 后点“保存到云端”；从“选择云端项目”打开它。再次编辑并保存会写入下一不可变版本。新增原图或蒙版会先按本地 Asset ID 幂等上传，再保存版本；上传或保存失败时本地项目仍可保留。
+5. 双账号隔离测试前，在 `apps/api` 执行 `node --env-file=../../.env --import tsx src/auth/dev-isolation-user.ts`。它创建无工作区成员关系的 `acs-dev-isolated`，把随机测试密码写入 Git 忽略的 `.env.auth.local`，不会输出密码。`AUTH-004` 用该账号验证项目 API 返回 403。
 
 API 端点为 `GET /workspaces/:workspaceId/image-projects`、`GET /:projectId`、`GET /:projectId/assets/:assetId`、`POST /imports`、`POST /:projectId/assets` 和 `PUT /:projectId`。所有端点需要 Bearer 令牌与当前数据库授权。上传要求 `Content-Length`，在缓冲文件前拒绝超大请求；内部限制 50 文件、单文件 25 MiB、总计 100 MiB，接受 PNG/JPEG/WebP 并校验文件头。项目版本保存要求 `expectedVersion`；冲突返回 409。
 
-回归用例 `PRJ-003` 对真实 PostgreSQL/RustFS 运行 HTTP 测试，覆盖匿名上传拒绝、跨租户拒绝、导入重试、原图字节、增量上传、旧版本冲突和成员撤销。`AUTH-003` 用真实 Keycloak 令牌读取已配置的开发工作区，并核对浏览器客户端示例令牌的实际受众。浏览器 `UI-003` 已用开发账号完成授权码登录、导入本地项目、增量上传自制 PNG、保存版本 2、刷新与重新登录后重开，以及版本 3 保存；两张图片与编辑后文字均恢复。截图与记录见 `qa/reports/ui003-cloud-v3.png` 和 `qa/UI-003-2026-10-10.md`。跨账号的浏览器隔离尚未手工复测，接口级租户隔离由 `PRJ-003` 覆盖。独立新上下文安全复核、密钥轮换、生产身份提供方、审计及正式多用户管理尚未完成；这些开发路由不应对外开放。
+回归用例 `PRJ-003` 对真实 PostgreSQL/RustFS 运行 HTTP 测试，覆盖匿名上传拒绝、跨租户拒绝、导入重试、原图字节、增量上传、旧版本冲突和成员撤销。`AUTH-003` 用真实 Keycloak 令牌读取已配置的开发工作区，并核对浏览器客户端示例令牌的实际受众；`AUTH-004` 用第二个真实 Keycloak 用户验证无成员关系时列表与项目读取均为 403。浏览器 `UI-003` 已完成授权码登录、导入、增量上传、版本保存、刷新与重新登录后重开；第二账号在页面中只能看到无权限提示，不能列出云端项目。详见 `qa/UI-003-2026-10-10.md`。同一浏览器资料中的本地 IndexedDB 草稿仍可跨账号读取，另记 `UI-004` 失败；此限制见 [`LOCAL_DRAFT_PRIVACY.md`](./LOCAL_DRAFT_PRIVACY.md)。独立新上下文安全复核、密钥轮换、生产身份提供方、审计及正式多用户管理尚未完成；这些开发路由不应对外开放。
 授权边界的自查证据和未完成门槛见 [`CLOUD_PROJECT_SECURITY_GATE.md`](./CLOUD_PROJECT_SECURITY_GATE.md)。

@@ -79,6 +79,7 @@ export default function ImageStudioPage() {
   const [projectToOpen, setProjectToOpen] = useState("");
   const [projectBusy, setProjectBusy] = useState(false);
   const [cloudConnected, setCloudConnected] = useState(false);
+  const [forceCloudLogin, setForceCloudLogin] = useState(false);
   const [cloudProjects, setCloudProjects] = useState<CloudProjectSummary[]>([]);
   const [cloudToOpen, setCloudToOpen] = useState("");
   const [cloudCurrent, setCloudCurrent] = useState<{
@@ -133,10 +134,16 @@ export default function ImageStudioPage() {
         const projects = await listCloudProjects(config, session.accessToken);
         setCloudProjects(projects);
         setCloudConnected(true);
+        setForceCloudLogin(false);
       })
-      .catch((error) =>
-        setMessage(error instanceof Error ? error.message : "云端登录失败"),
-      );
+      .catch((error) => {
+        if (
+          error instanceof Error &&
+          error.message === "当前账户没有此工作区的访问权限"
+        )
+          setForceCloudLogin(true);
+        setMessage(error instanceof Error ? error.message : "云端登录失败");
+      });
   }, []);
 
   async function refreshCloudProjects() {
@@ -145,6 +152,7 @@ export default function ImageStudioPage() {
     if (!config || !session) throw new Error("请先登录云端工作区");
     setCloudProjects(await listCloudProjects(config, session.accessToken));
     setCloudConnected(true);
+    setForceCloudLogin(false);
   }
 
   async function openCloud() {
@@ -194,6 +202,13 @@ export default function ImageStudioPage() {
       ) {
         cloudLogout();
         setCloudConnected(false);
+      }
+      if (
+        error instanceof Error &&
+        error.message === "当前账户没有此工作区的访问权限"
+      ) {
+        setCloudConnected(false);
+        setForceCloudLogin(true);
       }
       setMessage(error instanceof Error ? error.message : "云端项目打开失败");
     } finally {
@@ -346,6 +361,13 @@ export default function ImageStudioPage() {
       ) {
         cloudLogout();
         setCloudConnected(false);
+      }
+      if (
+        error instanceof Error &&
+        error.message === "当前账户没有此工作区的访问权限"
+      ) {
+        setCloudConnected(false);
+        setForceCloudLogin(true);
       }
       setMessage(error instanceof Error ? error.message : "云端保存失败");
     } finally {
@@ -871,10 +893,10 @@ export default function ImageStudioPage() {
             disabled={!cloudConfig() || projectBusy}
             onClick={() => {
               const config = cloudConfig();
-              if (config) void beginCloudLogin(config);
+              if (config) void beginCloudLogin(config, forceCloudLogin);
             }}
           >
-            登录工作区
+            {forceCloudLogin ? "切换账号登录" : "登录工作区"}
           </button>
         ) : (
           <>
@@ -945,7 +967,7 @@ export default function ImageStudioPage() {
             ＋ 添加文字
           </button>
           <p className="panel-caption">
-            点击“保存项目”会把原图与编辑文档保存在此浏览器；图片按原始比例缩放。
+            本地项目和原图保存在此浏览器资料中，切换云端账号后仍可打开。共享设备请使用独立的浏览器资料。
           </p>
           <div className="layer-list">
             {[...document.layers].reverse().map((layer) => (

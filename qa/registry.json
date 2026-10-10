@@ -198,6 +198,25 @@
       ]
     },
     {
+      "id": "AUTH-004",
+      "tier": "oidc",
+      "title": "Real second-account workspace isolation",
+      "cwd": "apps/api",
+      "argv": [
+        "node",
+        "--env-file=../../.env",
+        "--import",
+        "tsx",
+        "src/auth/dev-isolation-http-smoke.ts"
+      ],
+      "requiresFiles": [".env", ".env.auth.local"],
+      "requiresPorts": [5432, 8180],
+      "checks": [
+        "An authenticated Keycloak user with no membership receives 403 on project list",
+        "The same user cannot read an existing project by ID"
+      ]
+    },
+    {
       "id": "IMG-002",
       "tier": "image-qa",
       "title": "Image QA intake and source integrity",
@@ -257,6 +276,20 @@
         "The project and both original files load after reload",
         "The edited version and mask are preserved",
         "No token, original bytes or cross-workspace data appear in another account"
+      ]
+    },
+    {
+      "id": "UI-004",
+      "title": "Shared-browser local draft account boundary",
+      "fixture": "Two development Keycloak users sharing one browser profile and a saved local image project",
+      "steps": [
+        "Save an image project locally while using the first account",
+        "End the identity-service session and log in as the second account in the same browser profile",
+        "Inspect the local project list and try opening the first account's draft"
+      ],
+      "passCriteria": [
+        "The second account cannot see the first account's local project or original bytes",
+        "Any migration of existing local drafts preserves them for the original owner"
       ]
     },
     {

@@ -53,7 +53,10 @@ function redirectUri(): string {
   return `${window.location.origin}/image-studio`;
 }
 
-export async function beginCloudLogin(config: CloudConfig): Promise<void> {
+export async function beginCloudLogin(
+  config: CloudConfig,
+  forceLogin = false,
+): Promise<void> {
   const verifier = base64Url(crypto.getRandomValues(new Uint8Array(32)));
   const challenge = base64Url(
     new Uint8Array(
@@ -74,6 +77,7 @@ export async function beginCloudLogin(config: CloudConfig): Promise<void> {
     code_challenge: challenge,
     code_challenge_method: "S256",
     state,
+    ...(forceLogin ? { prompt: "login" } : {}),
   }).toString();
   window.location.assign(url);
 }
