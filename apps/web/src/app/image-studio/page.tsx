@@ -150,7 +150,12 @@ export default function ImageStudioPage() {
   async function openCloud() {
     const config = cloudConfig();
     const session = cloudSession();
-    if (!config || !session || !cloudToOpen) return;
+    if (!config || !cloudToOpen) return;
+    if (!session) {
+      setCloudConnected(false);
+      setMessage("登录已过期，请重新登录");
+      return;
+    }
     if (
       historyRef.current.present.layers.length > 0 &&
       JSON.stringify(historyRef.current.present) !== savedSnapshot.current &&
@@ -183,6 +188,13 @@ export default function ImageStudioPage() {
       setMaskEditorLayerId(null);
       setMessage(`云端项目已恢复（版本 ${loaded.project.version}）。`);
     } catch (error) {
+      if (
+        error instanceof Error &&
+        error.message === "登录已过期，请重新登录"
+      ) {
+        cloudLogout();
+        setCloudConnected(false);
+      }
       setMessage(error instanceof Error ? error.message : "云端项目打开失败");
     } finally {
       setProjectBusy(false);
@@ -193,7 +205,8 @@ export default function ImageStudioPage() {
     const config = cloudConfig();
     const session = cloudSession();
     if (!config || !session) {
-      setMessage("请先登录云端工作区");
+      setCloudConnected(false);
+      setMessage(config ? "登录已过期，请重新登录" : "请先登录云端工作区");
       return;
     }
     setProjectBusy(true);
@@ -327,6 +340,13 @@ export default function ImageStudioPage() {
       }
       await refreshCloudProjects();
     } catch (error) {
+      if (
+        error instanceof Error &&
+        error.message === "登录已过期，请重新登录"
+      ) {
+        cloudLogout();
+        setCloudConnected(false);
+      }
       setMessage(error instanceof Error ? error.message : "云端保存失败");
     } finally {
       setProjectBusy(false);
