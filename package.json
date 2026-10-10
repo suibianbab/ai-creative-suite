@@ -8,7 +8,12 @@
     "typecheck": "pnpm --filter @acs/shared build && pnpm --filter @acs/image-document build && pnpm -r typecheck",
     "test": "pnpm --filter @acs/image-document build && pnpm --filter @acs/image-document test",
     "lint": "biome check .",
-    "format": "biome format --write ."
+    "format": "biome format --write .",
+    "qa:validate": "node scripts/qa/run-regression.mjs validate",
+    "qa:smoke": "node scripts/qa/run-regression.mjs smoke",
+    "qa:integration": "node scripts/qa/run-regression.mjs integration",
+    "qa:oidc": "node scripts/qa/run-regression.mjs oidc",
+    "qa:image": "node scripts/qa/run-regression.mjs image-qa"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.2.0",

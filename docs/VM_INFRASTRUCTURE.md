@@ -30,6 +30,7 @@ ssh -N -L 5432:127.0.0.1:5432 -L 6379:127.0.0.1:6379 -L 9000:127.0.0.1:9000 -L 9
 ```
 
 On Windows, [`scripts/vm_tunnel.py`](../scripts/vm_tunnel.py) can open the same loopback forwards using `info.txt`. Install `paramiko` in a local Python environment, then run `python scripts/vm_tunnel.py`. It verifies the saved SSH host key and does not print the password.
+The tunnel now sends SSH keepalives and replaces a disconnected SSH transport while keeping its local listeners. QA preflight checks the actual PostgreSQL, RustFS and Keycloak responses; an open local port alone does not prove the VM services are reachable.
 
 Copy `.env.example` to `.env` locally. The URLs in that file assume the SSH tunnel is active. The object store API is on port 9000; its console is on 9001.
 

@@ -32,11 +32,13 @@ Build first with `pnpm build`. The generic local Compose file uses MinIO. For th
 ## Checks
 
 ```bash
-pnpm lint
-pnpm typecheck
-pnpm test
-pnpm build
+pnpm qa:smoke
+pnpm qa:integration
+pnpm qa:oidc
+pnpm qa:image
 ```
+
+The [regression case library](./qa/README.md) records stable case IDs, prerequisites, manual visual cases and per-run JSON reports. CI runs the smoke tier; VM and visual acceptance tiers are separate gates.
 
 The local Compose credentials are development-only. The supplied Docker VM uses [`deploy/compose.vm.yaml`](./deploy/compose.vm.yaml), which runs the cached S3-compatible RustFS image because the pinned MinIO image could not be pulled there. All VM ports bind to loopback and require SSH forwarding from this workstation.
 

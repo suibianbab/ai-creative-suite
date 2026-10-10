@@ -17,6 +17,7 @@ artifacts/**
 !artifacts/**/
 !artifacts/**/*.md
 !artifacts/**/*.json
+qa/reports/
 .DS_Store
 AI_Creative_Suite_Dev_Pack_v3/info.txt
 AI_Creative_Suite_Dev_Pack_v3.zip

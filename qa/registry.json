@@ -1,0 +1,252 @@
+{
+  "schemaVersion": 1,
+  "automated": [
+    {
+      "id": "QG-001",
+      "tier": "smoke",
+      "title": "Source lint and formatting",
+      "cwd": ".",
+      "argv": ["pnpm", "lint"],
+      "checks": ["No Biome errors or formatting drift"]
+    },
+    {
+      "id": "QG-002",
+      "tier": "smoke",
+      "title": "Type boundaries across workspaces",
+      "cwd": ".",
+      "argv": ["pnpm", "typecheck"],
+      "checks": ["All TypeScript workspaces typecheck"]
+    },
+    {
+      "id": "IMG-001",
+      "tier": "smoke",
+      "title": "ImageDocument operations and text-instruction transactions",
+      "cwd": ".",
+      "argv": ["pnpm", "test"],
+      "checks": [
+        "Original asset references remain unchanged by composition edits",
+        "Crop, mask and framing preserve non-destructive undo and redo",
+        "Text instructions commit atomically and reject unsupported edits"
+      ]
+    },
+    {
+      "id": "QG-003",
+      "tier": "smoke",
+      "title": "Production build",
+      "cwd": ".",
+      "argv": ["pnpm", "build"],
+      "checks": ["API and web production builds complete"]
+    },
+    {
+      "id": "AST-001",
+      "tier": "integration",
+      "title": "Tenant-scoped immutable original assets",
+      "cwd": "apps/api",
+      "argv": [
+        "node",
+        "--env-file=../../.env",
+        "--import",
+        "tsx",
+        "src/assets/asset-foundation.integration.ts"
+      ],
+      "requiresFiles": [".env"],
+      "requiresPorts": [5432, 9000],
+      "checks": [
+        "Cross-tenant reads fail",
+        "Original bytes and hash remain intact",
+        "Idempotent and concurrent writes do not overwrite originals"
+      ]
+    },
+    {
+      "id": "PRJ-001",
+      "tier": "integration",
+      "title": "Versioned ImageDocument persistence",
+      "cwd": "apps/api",
+      "argv": [
+        "node",
+        "--env-file=../../.env",
+        "--import",
+        "tsx",
+        "src/image-projects/image-project-store.integration.ts"
+      ],
+      "requiresFiles": [".env"],
+      "requiresPorts": [5432, 9000],
+      "checks": [
+        "Version conflict rejects stale saves",
+        "Historical versions remain immutable",
+        "Wrong-workspace assets and reads are rejected"
+      ]
+    },
+    {
+      "id": "AUTH-001",
+      "tier": "integration",
+      "title": "JWT and database membership authorization",
+      "cwd": "apps/api",
+      "argv": [
+        "node",
+        "--env-file=../../.env",
+        "--import",
+        "tsx",
+        "src/auth/access-context.integration.ts"
+      ],
+      "requiresFiles": [".env"],
+      "requiresPorts": [5432],
+      "checks": [
+        "Forged and expired tokens fail",
+        "Token role claims grant no access",
+        "Membership revocation and tenant boundaries take effect immediately"
+      ]
+    },
+    {
+      "id": "PRJ-002",
+      "tier": "integration",
+      "title": "Retry-safe local project import",
+      "cwd": "apps/api",
+      "argv": [
+        "node",
+        "--env-file=../../.env",
+        "--import",
+        "tsx",
+        "src/image-projects/local-image-import.integration.ts"
+      ],
+      "requiresFiles": [".env"],
+      "requiresPorts": [5432, 9000],
+      "checks": [
+        "Failed import retries reuse assets",
+        "Original and mask references map to server IDs",
+        "Cross-tenant import records are isolated"
+      ]
+    },
+    {
+      "id": "AST-002",
+      "tier": "integration",
+      "title": "Conservative orphan-object cleanup",
+      "cwd": "apps/api",
+      "argv": [
+        "node",
+        "--env-file=../../.env",
+        "--import",
+        "tsx",
+        "src/assets/orphan-object-sweeper.integration.ts"
+      ],
+      "requiresFiles": [".env"],
+      "requiresPorts": [5432, 9000],
+      "checks": [
+        "Dry-run changes nothing",
+        "Recent and referenced objects are retained",
+        "Only old unreferenced test objects are conditionally deleted"
+      ]
+    },
+    {
+      "id": "AUTH-002",
+      "tier": "oidc",
+      "title": "Real Keycloak token and JWKS development flow",
+      "cwd": "apps/api",
+      "argv": [
+        "node",
+        "--env-file=../../.env",
+        "--import",
+        "tsx",
+        "src/auth/keycloak-smoke.ts"
+      ],
+      "requiresFiles": [".env", ".env.auth.local"],
+      "requiresPorts": [5432, 8180],
+      "checks": [
+        "Real issuer and audience token verifies against JWKS",
+        "Database membership grants and revocation are enforced"
+      ]
+    },
+    {
+      "id": "IMG-002",
+      "tier": "image-qa",
+      "title": "Image QA intake and source integrity",
+      "cwd": ".",
+      "argv": ["python", "scripts/image_quality/test_review_workflow.py"],
+      "checks": [
+        "Original checksum changes invalidate review",
+        "Missing rights and outputs block acceptance",
+        "Review case identity cannot be swapped"
+      ]
+    }
+  ],
+  "manual": [
+    {
+      "id": "UI-001",
+      "title": "Local Image Studio project round trip",
+      "fixture": "Owned or synthetic PNG product image",
+      "steps": [
+        "Import image and add text",
+        "Save the local project",
+        "Reload and reopen it",
+        "Export a PNG"
+      ],
+      "passCriteria": [
+        "Image, text, crop and mask state return",
+        "Original file remains unchanged",
+        "Export dimensions match the canvas"
+      ]
+    },
+    {
+      "id": "UI-002",
+      "title": "Text-instruction preview and single-step undo",
+      "fixture": "Synthetic product image with one image layer",
+      "steps": [
+        "Enter: 改成竖图；背景改成浅灰色；把商品移到右边；添加标题：新品上市",
+        "Inspect preview before applying",
+        "Apply and undo once",
+        "Try: 把商品换成另一款"
+      ],
+      "passCriteria": [
+        "Preview shows all four operations",
+        "One undo restores the whole prior document",
+        "Unsupported product replacement changes nothing"
+      ]
+    },
+    {
+      "id": "VIS-001",
+      "title": "Product cutout and export quality",
+      "fixture": "Five rights-cleared product classes; see docs/IMAGE_QUALITY_REVIEW.md",
+      "steps": [
+        "Run remove-background on each original",
+        "Inspect full-size edges on white, black and high-contrast backgrounds",
+        "Record manual correction time",
+        "Export white and transparent PNGs"
+      ],
+      "passCriteria": [
+        "Source RGB and branding are preserved",
+        "No missing holes, support objects or obvious halos",
+        "Review record binds to source hash and rights evidence"
+      ]
+    },
+    {
+      "id": "VID-001",
+      "title": "Motion composition delivery",
+      "fixture": "Owned storyboard and licensed render assets",
+      "steps": [
+        "Render landscape and portrait compositions",
+        "Inspect first, middle and last frames",
+        "Play final files with sound"
+      ],
+      "passCriteria": [
+        "Correct size, frame count and audio",
+        "No clipped text, missing frames or visible scene seam",
+        "Shot timing matches approved storyboard"
+      ]
+    },
+    {
+      "id": "3D-001",
+      "title": "Exact product model advertisement",
+      "fixture": "Rights-cleared customer-approved accurate 3D model and product reference photos",
+      "steps": [
+        "Render hero and detail shots with Blender Cycles GPU",
+        "Compare geometry, labels, materials and proportions with references",
+        "Review final encoded advertisement"
+      ],
+      "passCriteria": [
+        "Product identity matches approved references",
+        "Lighting and materials withstand close-up review",
+        "Customer approves the final advertisement"
+      ]
+    }
+  ]
+}
