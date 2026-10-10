@@ -138,6 +138,26 @@
       ]
     },
     {
+      "id": "PRJ-003",
+      "tier": "integration",
+      "title": "Authenticated Image Studio project HTTP workflow",
+      "cwd": "apps/api",
+      "argv": [
+        "node",
+        "--env-file=../../.env",
+        "--import",
+        "tsx",
+        "src/image-projects/image-project-http.integration.ts"
+      ],
+      "requiresFiles": [".env"],
+      "requiresPorts": [5432, 9000],
+      "checks": [
+        "Unauthenticated uploads and cross-workspace reads fail before file handling",
+        "Import replay preserves source bytes and asset identity",
+        "Incremental asset upload is idempotent; stale saves conflict; revocation takes effect"
+      ]
+    },
+    {
       "id": "AUTH-002",
       "tier": "oidc",
       "title": "Real Keycloak token and JWKS development flow",
@@ -154,6 +174,25 @@
       "checks": [
         "Real issuer and audience token verifies against JWKS",
         "Database membership grants and revocation are enforced"
+      ]
+    },
+    {
+      "id": "AUTH-003",
+      "tier": "oidc",
+      "title": "Real Keycloak token through project HTTP authorization",
+      "cwd": "apps/api",
+      "argv": [
+        "node",
+        "--env-file=../../.env",
+        "--import",
+        "tsx",
+        "src/auth/dev-browser-http-smoke.ts"
+      ],
+      "requiresFiles": [".env", ".env.auth.local"],
+      "requiresPorts": [5432, 8180],
+      "checks": [
+        "Anonymous project list receives 401",
+        "Real Keycloak token with database membership reads the development workspace"
       ]
     },
     {
@@ -200,6 +239,22 @@
         "Preview shows all four operations",
         "One undo restores the whole prior document",
         "Unsupported product replacement changes nothing"
+      ]
+    },
+    {
+      "id": "UI-003",
+      "title": "OIDC login and cloud Image Studio round trip",
+      "fixture": "Development Keycloak public client, workspace and owned PNG image",
+      "steps": [
+        "Log in using authorization code and PKCE",
+        "Import a local project into the cloud workspace",
+        "Edit text, add a new image or mask and save another version",
+        "Reload the page, log in again and reopen the cloud project"
+      ],
+      "passCriteria": [
+        "The project and both original files load after reload",
+        "The edited version and mask are preserved",
+        "No token, original bytes or cross-workspace data appear in another account"
       ]
     },
     {

@@ -175,6 +175,31 @@ function mapRow(row: ProjectRow): SavedImageProject {
 export class ImageProjectStore {
   constructor(private readonly db: pg.Pool) {}
 
+  async list(
+    scope: TenantScope,
+  ): Promise<Array<Omit<SavedImageProject, "document">>> {
+    requireScope(scope);
+    const result = await this.db.query<{
+      id: string;
+      organization_id: string;
+      workspace_id: string;
+      title: string;
+      current_version: number;
+    }>(
+      `SELECT id, organization_id, workspace_id, title, current_version
+       FROM image_projects WHERE organization_id = $1 AND workspace_id = $2
+       ORDER BY updated_at DESC, id DESC LIMIT 100`,
+      [scope.organizationId, scope.workspaceId],
+    );
+    return result.rows.map((row) => ({
+      id: row.id,
+      organizationId: row.organization_id,
+      workspaceId: row.workspace_id,
+      title: row.title,
+      version: row.current_version,
+    }));
+  }
+
   async get(
     scope: TenantScope,
     projectId: string,

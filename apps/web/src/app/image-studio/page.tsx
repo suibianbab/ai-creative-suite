@@ -21,6 +21,21 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { removeBackground } from "./capabilities";
 import {
+  beginCloudLogin,
+  cloudConfig,
+  cloudLogout,
+  cloudSession,
+  finishCloudLogin,
+} from "./cloud-auth";
+import {
+  type CloudProjectSummary,
+  importCloudProject,
+  listCloudProjects,
+  loadCloudProject,
+  saveCloudProject,
+  uploadCloudOriginal,
+} from "./cloud-projects";
+import {
   type LocalProjectSummary,
   listLocalProjects,
   loadLocalProject,
@@ -63,6 +78,14 @@ export default function ImageStudioPage() {
   const [projects, setProjects] = useState<LocalProjectSummary[]>([]);
   const [projectToOpen, setProjectToOpen] = useState("");
   const [projectBusy, setProjectBusy] = useState(false);
+  const [cloudConnected, setCloudConnected] = useState(false);
+  const [cloudProjects, setCloudProjects] = useState<CloudProjectSummary[]>([]);
+  const [cloudToOpen, setCloudToOpen] = useState("");
+  const [cloudCurrent, setCloudCurrent] = useState<{
+    id: string;
+    version: number;
+  } | null>(null);
+  const cloudKnownAssetIds = useRef(new Set<string>());
   const [maskBusy, setMaskBusy] = useState(false);
   const [instruction, setInstruction] = useState("");
   const [pendingInstruction, setPendingInstruction] =
@@ -100,6 +123,194 @@ export default function ImageStudioPage() {
       .catch(() => setMessage("浏览器本地存储不可用，当前仍可编辑和导出。"));
   }, []);
 
+  useEffect(() => {
+    const config = cloudConfig();
+    if (!config) return;
+    void finishCloudLogin(config)
+      .then(async () => {
+        const session = cloudSession();
+        if (!session) return;
+        setCloudConnected(true);
+        setCloudProjects(await listCloudProjects(config, session.accessToken));
+      })
+      .catch((error) =>
+        setMessage(error instanceof Error ? error.message : "云端登录失败"),
+      );
+  }, []);
+
+  async function refreshCloudProjects() {
+    const config = cloudConfig();
+    const session = cloudSession();
+    if (!config || !session) throw new Error("请先登录云端工作区");
+    setCloudProjects(await listCloudProjects(config, session.accessToken));
+    setCloudConnected(true);
+  }
+
+  async function openCloud() {
+    const config = cloudConfig();
+    const session = cloudSession();
+    if (!config || !session || !cloudToOpen) return;
+    if (
+      historyRef.current.present.layers.length > 0 &&
+      JSON.stringify(historyRef.current.present) !== savedSnapshot.current &&
+      !window.confirm("当前项目有未保存的修改。仍要打开云端项目吗？")
+    )
+      return;
+    setProjectBusy(true);
+    try {
+      const loaded = await loadCloudProject(
+        config,
+        session.accessToken,
+        cloudToOpen,
+      );
+      const bitmaps: ImageAssetMap = {};
+      for (const [assetId, file] of loaded.originals)
+        bitmaps[assetId] = await createImageBitmap(file);
+      originalFiles.current = loaded.originals;
+      cloudKnownAssetIds.current = new Set(loaded.originals.keys());
+      setAssets(bitmaps);
+      const next = createImageHistory(loaded.project.document);
+      historyRef.current = next;
+      setHistory(next);
+      setCloudCurrent({
+        id: loaded.project.id,
+        version: loaded.project.version,
+      });
+      savedSnapshot.current = JSON.stringify(loaded.project.document);
+      setSelectedId(null);
+      setPendingInstruction(null);
+      setMaskEditorLayerId(null);
+      setMessage(`云端项目已恢复（版本 ${loaded.project.version}）。`);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "云端项目打开失败");
+    } finally {
+      setProjectBusy(false);
+    }
+  }
+
+  async function saveCloud() {
+    const config = cloudConfig();
+    const session = cloudSession();
+    if (!config || !session) {
+      setMessage("请先登录云端工作区");
+      return;
+    }
+    setProjectBusy(true);
+    try {
+      const current = historyRef.current.present;
+      if (cloudCurrent?.id === current.id) {
+        const ids = current.layers.flatMap((layer) =>
+          layer.kind === "image"
+            ? [layer.assetId, ...(layer.mask ? [layer.mask.assetId] : [])]
+            : [],
+        );
+        const newIds = [
+          ...new Set(ids.filter((id) => !cloudKnownAssetIds.current.has(id))),
+        ];
+        const map = new Map<string, string>();
+        if (newIds.length)
+          await saveLocalProject(current, originalFiles.current);
+        for (const localId of newIds) {
+          const file = originalFiles.current.get(localId);
+          if (!file) throw new Error(`原图或蒙版缺失：${localId}`);
+          map.set(
+            localId,
+            await uploadCloudOriginal(
+              config,
+              session.accessToken,
+              current.id,
+              localId,
+              file,
+            ),
+          );
+        }
+        const rewritten: ImageDocument = map.size
+          ? {
+              ...current,
+              layers: current.layers.map((layer) =>
+                layer.kind === "image"
+                  ? {
+                      ...layer,
+                      assetId: map.get(layer.assetId) ?? layer.assetId,
+                      mask: layer.mask
+                        ? {
+                            ...layer.mask,
+                            assetId:
+                              map.get(layer.mask.assetId) ?? layer.mask.assetId,
+                          }
+                        : undefined,
+                    }
+                  : layer,
+              ),
+            }
+          : current;
+        const saved = await saveCloudProject(
+          config,
+          session.accessToken,
+          rewritten,
+          cloudCurrent.version,
+        );
+        if (map.size) {
+          const nextFiles = new Map(originalFiles.current);
+          const nextAssets = { ...assets };
+          for (const [localId, serverId] of map) {
+            const file = nextFiles.get(localId);
+            if (file) nextFiles.set(serverId, file);
+            nextFiles.delete(localId);
+            const bitmap = nextAssets[localId];
+            if (bitmap) nextAssets[serverId] = bitmap;
+            delete nextAssets[localId];
+          }
+          originalFiles.current = nextFiles;
+          cloudKnownAssetIds.current = new Set(nextFiles.keys());
+          setAssets(nextAssets);
+          const next = createImageHistory(saved.document);
+          historyRef.current = next;
+          setHistory(next);
+          setSelectedId(null);
+        }
+        setCloudCurrent({ id: saved.id, version: saved.version });
+        savedSnapshot.current = JSON.stringify(saved.document);
+        setMessage(`已保存到云端，版本 ${saved.version}。`);
+      } else {
+        await saveLocalProject(current, originalFiles.current);
+        const result = await importCloudProject(
+          config,
+          session.accessToken,
+          current,
+          originalFiles.current,
+        );
+        const remappedFiles = new Map<string, File>();
+        const remappedAssets: ImageAssetMap = {};
+        for (const [localId, serverId] of Object.entries(result.assetIdMap)) {
+          const file = originalFiles.current.get(localId);
+          if (file) remappedFiles.set(serverId, file);
+          const bitmap = assets[localId];
+          if (bitmap) remappedAssets[serverId] = bitmap;
+        }
+        originalFiles.current = remappedFiles;
+        cloudKnownAssetIds.current = new Set(remappedFiles.keys());
+        setAssets(remappedAssets);
+        const next = createImageHistory(result.project.document);
+        historyRef.current = next;
+        setHistory(next);
+        setCloudCurrent({
+          id: result.project.id,
+          version: result.project.version,
+        });
+        savedSnapshot.current = JSON.stringify(result.project.document);
+        setSelectedId(null);
+        setCloudToOpen(result.project.id);
+        setMessage("本地项目已导入云端；编辑历史已在新项目中重新开始。");
+      }
+      await refreshCloudProjects();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "云端保存失败");
+    } finally {
+      setProjectBusy(false);
+    }
+  }
+
   async function saveProject() {
     setProjectBusy(true);
     try {
@@ -134,6 +345,8 @@ export default function ImageStudioPage() {
         bitmaps[assetId] = await createImageBitmap(file);
       }
       originalFiles.current = loaded.originals;
+      setCloudCurrent(null);
+      cloudKnownAssetIds.current = new Set();
       setAssets(bitmaps);
       const next = createImageHistory(loaded.document);
       historyRef.current = next;
@@ -606,6 +819,69 @@ export default function ImageStudioPage() {
           导出 PNG
         </button>
       </header>
+
+      <div className="cloud-toolbar">
+        <span>云端项目（开发环境）</span>
+        {!cloudConnected ? (
+          <button
+            type="button"
+            className="project-action"
+            disabled={!cloudConfig() || projectBusy}
+            onClick={() => {
+              const config = cloudConfig();
+              if (config) void beginCloudLogin(config);
+            }}
+          >
+            登录工作区
+          </button>
+        ) : (
+          <>
+            <select
+              className="project-picker"
+              aria-label="云端项目"
+              value={cloudToOpen}
+              onChange={(event) => setCloudToOpen(event.target.value)}
+              disabled={projectBusy}
+            >
+              <option value="">选择云端项目</option>
+              {cloudProjects.map((project) => (
+                <option key={project.id} value={project.id}>
+                  {project.title} · v{project.version}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              className="project-action"
+              onClick={() => void openCloud()}
+              disabled={!cloudToOpen || projectBusy}
+            >
+              打开云端
+            </button>
+            <button
+              type="button"
+              className="project-action"
+              onClick={() => void saveCloud()}
+              disabled={projectBusy || !!pendingInstruction}
+            >
+              保存到云端
+            </button>
+            <button
+              type="button"
+              className="project-action"
+              onClick={() => {
+                cloudLogout();
+                setCloudConnected(false);
+                setCloudProjects([]);
+                setCloudCurrent(null);
+                setMessage("云端会话已退出，本地编辑仍可继续。");
+              }}
+            >
+              退出
+            </button>
+          </>
+        )}
+      </div>
 
       <div className="studio-workspace">
         <aside className="studio-panel studio-left">

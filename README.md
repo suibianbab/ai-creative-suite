@@ -40,6 +40,8 @@ pnpm qa:image
 
 The [regression case library](./qa/README.md) records stable case IDs, prerequisites, manual visual cases and per-run JSON reports. CI runs the smoke tier; VM and visual acceptance tiers are separate gates.
 
+The development [Image Studio cloud project workflow](./docs/CLOUD_IMAGE_PROJECTS.md) adds OIDC login, protected project routes and browser import/open/save. It requires explicit local provisioning and is not a production auth release.
+
 The local Compose credentials are development-only. The supplied Docker VM uses [`deploy/compose.vm.yaml`](./deploy/compose.vm.yaml), which runs the cached S3-compatible RustFS image because the pinned MinIO image could not be pulled there. All VM ports bind to loopback and require SSH forwarding from this workstation.
 
 The Asset Foundation has a dry-run orphan-object audit for an explicit organization: from `apps/api`, run `pnpm orphan:audit <organization-uuid>` with the development `.env` and VM tunnel available. See [`docs/ORPHAN_OBJECT_RETENTION.md`](./docs/ORPHAN_OBJECT_RETENTION.md); automatic deletion is not enabled.
