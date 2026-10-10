@@ -14,6 +14,7 @@ const maskedCache = new Map<
     original: ImageBitmap;
     maskBitmap: ImageBitmap;
     canvas: HTMLCanvasElement;
+    base: { x: number; y: number } | null;
   }
 >();
 
@@ -98,6 +99,37 @@ export function maskedSource(
   maskContext.putImageData(pixels, 0, 0);
   for (const stroke of layer.mask.strokes) paintStroke(maskContext, stroke);
 
+  const alpha = layer.mask.strokes.length
+    ? maskContext.getImageData(0, 0, width, height).data
+    : data;
+  let bottom = -1;
+  const minimumRowPixels = Math.max(3, Math.round(width * 0.005));
+  for (let y = height - 1; y >= 0 && bottom < 0; y--) {
+    let visible = 0;
+    for (let x = 0; x < width; x++) {
+      if (alpha[(y * width + x) * 4 + 3]! >= 64) {
+        visible++;
+        if (visible >= minimumRowPixels) {
+          bottom = y;
+          break;
+        }
+      }
+    }
+  }
+  let left = width;
+  let right = -1;
+  if (bottom >= 0) {
+    const top = Math.max(0, bottom - Math.round(height * 0.02));
+    for (let y = top; y <= bottom; y++) {
+      for (let x = 0; x < width; x++) {
+        if (alpha[(y * width + x) * 4 + 3]! < 64) continue;
+        left = Math.min(left, x);
+        right = Math.max(right, x);
+      }
+    }
+  }
+  const base = right >= left ? { x: (left + right) / 2, y: bottom + 1 } : null;
+
   const result = canvasOf(width, height);
   const resultContext = result.getContext("2d");
   if (!resultContext) throw new Error("Image canvas is unavailable");
@@ -114,8 +146,60 @@ export function maskedSource(
     original,
     maskBitmap,
     canvas: result,
+    base,
   });
   return result;
+}
+
+export function visibleProductBase(
+  layer: ImageLayer,
+  assets: ImageAssetMap,
+): { x: number; y: number } | null {
+  if (!layer.mask || !maskedSource(layer, assets)) return null;
+  const base = maskedCache.get(layer.id)?.base;
+  if (!base) return null;
+  const crop = layer.crop ?? {
+    x: 0,
+    y: 0,
+    width: layer.sourceWidth,
+    height: layer.sourceHeight,
+  };
+  const baseX = Math.max(crop.x, Math.min(crop.x + crop.width, base.x));
+  const baseY = Math.max(crop.y, Math.min(crop.y + crop.height, base.y));
+  return {
+    x: layer.x + ((baseX - crop.x) / crop.width) * layer.width,
+    y: layer.y + ((baseY - crop.y) / crop.height) * layer.height,
+  };
+}
+
+function drawContactShadow(
+  context: CanvasRenderingContext2D,
+  layer: ImageLayer,
+  assets: ImageAssetMap,
+) {
+  const shadow = layer.contactShadow;
+  if (!shadow || !layer.mask || shadow.opacity === 0) return;
+  const red = Number.parseInt(shadow.color.slice(1, 3), 16);
+  const green = Number.parseInt(shadow.color.slice(3, 5), 16);
+  const blue = Number.parseInt(shadow.color.slice(5, 7), 16);
+  const rgba = (opacity: number) =>
+    `rgba(${red}, ${green}, ${blue}, ${opacity})`;
+  const base = visibleProductBase(layer, assets);
+  if (!base) return;
+  const centerX = base.x + shadow.offsetX;
+  const centerY = base.y + shadow.offsetY;
+  context.save();
+  context.translate(centerX, centerY);
+  context.scale((layer.width * shadow.widthScale) / 2, shadow.depth);
+  const gradient = context.createRadialGradient(0, 0, 0, 0, 0, 1);
+  gradient.addColorStop(0, rgba(shadow.opacity));
+  gradient.addColorStop(0.45, rgba(shadow.opacity * 0.55));
+  gradient.addColorStop(1, rgba(0));
+  context.fillStyle = gradient;
+  context.beginPath();
+  context.arc(0, 0, 1, 0, Math.PI * 2);
+  context.fill();
+  context.restore();
 }
 
 export function drawImageDocument(
@@ -133,6 +217,7 @@ export function drawImageDocument(
   }
 
   for (const layer of document.layers) {
+    if (layer.kind === "image") drawContactShadow(context, layer, assets);
     context.save();
     context.translate(layer.x + layer.width / 2, layer.y + layer.height / 2);
     context.rotate((layer.rotation * Math.PI) / 180);

@@ -19,6 +19,24 @@ export type ImageAdjustments = {
   exposure: number;
 };
 
+export type ContactShadow = {
+  color: string;
+  opacity: number;
+  widthScale: number;
+  depth: number;
+  offsetX: number;
+  offsetY: number;
+};
+
+export const DEFAULT_CONTACT_SHADOW: Readonly<ContactShadow> = {
+  color: "#463624",
+  opacity: 0.5,
+  widthScale: 0.86,
+  depth: 26,
+  offsetX: 0,
+  offsetY: 8,
+};
+
 export const DEFAULT_IMAGE_ADJUSTMENTS: Readonly<ImageAdjustments> = {
   brightness: 0,
   contrast: 0,
@@ -36,6 +54,7 @@ export type ImageLayer = {
   crop?: CropRect;
   mask?: LayerMask;
   adjustments?: ImageAdjustments;
+  contactShadow?: ContactShadow;
   x: number;
   y: number;
   width: number;
@@ -98,6 +117,11 @@ export type ImageOperation =
       patch: Partial<ImageAdjustments>;
     }
   | {
+      type: "setContactShadow";
+      layerId: string;
+      shadow: ContactShadow | null;
+    }
+  | {
       type: "setMask";
       layerId: string;
       assetId: string | null;
@@ -122,6 +146,7 @@ export type ImageCapability =
   | "canvas"
   | "crop"
   | "basic-adjustments"
+  | "basic-shadow"
   | "mask-refine"
   | "remove-bg"
   | "background-replace";
@@ -137,6 +162,7 @@ export function routeImageCapability(
     case "canvas":
     case "crop":
     case "basic-adjustments":
+    case "basic-shadow":
     case "mask-refine":
       return "native";
     case "remove-bg":
@@ -203,6 +229,32 @@ function validateLayer(layer: ImageDocumentLayer): void {
         adjustment.exposure > 2
       )
         throw new Error("Image adjustments are outside supported ranges");
+    }
+    if (layer.contactShadow !== undefined) {
+      const shadow = layer.contactShadow;
+      if (
+        !layer.mask ||
+        typeof shadow !== "object" ||
+        shadow === null ||
+        Array.isArray(shadow) ||
+        Object.keys(shadow).some((key) => !(key in DEFAULT_CONTACT_SHADOW)) ||
+        typeof shadow.color !== "string" ||
+        !/^#[0-9a-fA-F]{6}$/.test(shadow.color) ||
+        !Number.isFinite(shadow.opacity) ||
+        shadow.opacity < 0 ||
+        shadow.opacity > 0.8 ||
+        !Number.isFinite(shadow.widthScale) ||
+        shadow.widthScale < 0.2 ||
+        shadow.widthScale > 2 ||
+        !Number.isFinite(shadow.depth) ||
+        shadow.depth < 2 ||
+        shadow.depth > 200 ||
+        !Number.isFinite(shadow.offsetX) ||
+        Math.abs(shadow.offsetX) > 500 ||
+        !Number.isFinite(shadow.offsetY) ||
+        Math.abs(shadow.offsetY) > 200
+      )
+        throw new Error("Contact shadow is outside supported ranges");
     }
     if (layer.mask) {
       if (!layer.mask.assetId || !Array.isArray(layer.mask.strokes))
@@ -498,6 +550,16 @@ export function applyImageOperation(
             : adjustments,
         };
       });
+    case "setContactShadow":
+      routeImageCapability("basic-shadow");
+      return updateLayer(document, operation.layerId, (layer) => {
+        if (layer.kind !== "image" || !layer.mask)
+          throw new Error("Contact shadow requires a masked image");
+        return {
+          ...layer,
+          contactShadow: operation.shadow ?? undefined,
+        };
+      });
     case "setMask":
       routeImageCapability("mask-refine");
       return updateLayer(document, operation.layerId, (layer) => {
@@ -510,6 +572,7 @@ export function applyImageOperation(
           mask: operation.assetId
             ? { assetId: operation.assetId, strokes: [] }
             : undefined,
+          contactShadow: operation.assetId ? layer.contactShadow : undefined,
         };
         return operation.frame ? withFrame(masked, operation.frame) : masked;
       });

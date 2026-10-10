@@ -27,6 +27,7 @@
         "Original asset references remain unchanged by composition edits",
         "Crop, mask and framing preserve non-destructive undo and redo",
         "Basic color adjustments validate ranges, survive JSON, and undo without replacing originals",
+        "Native contact shadows validate ranges, preserve masked originals, and undo with alignment",
         "Text instructions commit atomically and reject unsupported edits",
         "Model-translated clauses are validated before any ImageDocument change",
         "Generated background layers sit below the masked product, preserve the original, and undo in one step"
@@ -357,6 +358,23 @@
         "The background sits below the product and original RGB and mask references stay intact",
         "Apply is one undo step and export dimensions match the canvas",
         "Both layers and original assets return after local project reopen"
+      ]
+    },
+    {
+      "id": "UI-009",
+      "title": "Visible-mask product base, surface alignment and contact shadow",
+      "fixture": "UI-008 synthetic pump bottle, mask and warm stone pedestal background",
+      "steps": [
+        "Open the saved background-composite project and select the masked product",
+        "Set the surface Y to the visible pedestal top and apply alignment plus shadow",
+        "Inspect the exported full-size PNG and compare the contact region with the baseline",
+        "Undo once, redo once, save the local project, reload and reopen it"
+      ],
+      "passCriteria": [
+        "The base position follows the visible mask rather than the padded layer rectangle",
+        "Alignment and shadow apply as one undoable document transaction while original and mask assets remain intact",
+        "Exported contact pixels darken and the shadow remains behind the product",
+        "Shadow settings persist after local project reopen"
       ]
     },
     {

@@ -2,11 +2,13 @@
 
 import {
   applyImageOperation,
+  type ContactShadow,
   type CropRect,
   commitImageOperation,
   commitImageOperations,
   createImageDocument,
   createImageHistory,
+  DEFAULT_CONTACT_SHADOW,
   DEFAULT_IMAGE_ADJUSTMENTS,
   type ImageAdjustments,
   type ImageDocument,
@@ -51,7 +53,12 @@ import {
 } from "./local-projects";
 import { frameFromMask } from "./mask-framing";
 import { MaskReview } from "./mask-review";
-import { drawImageDocument, hitTestLayer, type ImageAssetMap } from "./render";
+import {
+  drawImageDocument,
+  hitTestLayer,
+  type ImageAssetMap,
+  visibleProductBase,
+} from "./render";
 import "./studio.css";
 
 const presets = [
@@ -91,6 +98,7 @@ export default function ImageStudioPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selectedIdRef = useRef<string | null>(null);
   const [cropDraft, setCropDraft] = useState<CropRect | null>(null);
+  const [surfaceYDraft, setSurfaceYDraft] = useState<number | null>(null);
   const [drag, setDrag] = useState<DragState | null>(null);
   const [message, setMessage] = useState("导入一张商品图，开始制作广告画面。");
   const [projects, setProjects] = useState<LocalProjectSummary[]>([]);
@@ -124,6 +132,11 @@ export default function ImageStudioPage() {
   const savedSnapshot = useRef<string | null>(null);
   const document = history.present;
   const selected = document.layers.find((layer) => layer.id === selectedId);
+  const selectedBase =
+    selected?.kind === "image" ? visibleProductBase(selected, assets) : null;
+  useEffect(() => {
+    setSurfaceYDraft(null);
+  }, [selectedId]);
   useEffect(() => {
     selectedIdRef.current = selectedId;
   }, [selectedId]);
@@ -962,6 +975,46 @@ export default function ImageStudioPage() {
     });
   }
 
+  function setContactShadow(shadow: ContactShadow | null) {
+    if (selected?.kind !== "image" || !selected.mask) return;
+    commit({ type: "setContactShadow", layerId: selected.id, shadow });
+  }
+
+  function alignProductToSurface() {
+    if (selected?.kind !== "image" || !selected.mask || !selectedBase) return;
+    const targetY = surfaceYDraft ?? Math.round(selectedBase.y);
+    if (
+      !Number.isFinite(targetY) ||
+      targetY < 0 ||
+      targetY > document.canvas.height
+    )
+      return setMessage("台面高度必须在画布范围内。");
+    try {
+      cancelBackgroundPreview();
+      setPendingInstruction(null);
+      const operations: ImageOperation[] = [
+        {
+          type: "transform",
+          layerId: selected.id,
+          patch: { y: selected.y + targetY - selectedBase.y },
+        },
+      ];
+      if (!selected.contactShadow)
+        operations.push({
+          type: "setContactShadow",
+          layerId: selected.id,
+          shadow: { ...DEFAULT_CONTACT_SHADOW },
+        });
+      const next = commitImageOperations(historyRef.current, operations);
+      historyRef.current = next;
+      setHistory(next);
+      setSurfaceYDraft(targetY);
+      setMessage("已按蒙版可见底边对齐台面并添加接触阴影，可一步撤销。");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "台面对齐失败。");
+    }
+  }
+
   function cropToAspect(ratio: number) {
     if (selected?.kind !== "image") return;
     let width = selected.sourceWidth;
@@ -1468,6 +1521,101 @@ export default function ImageStudioPage() {
                       重置调色
                     </button>
                   </div>
+                </div>
+              )}
+              {selected.kind === "image" && selected.mask && (
+                <div className="crop-inspector">
+                  <h3>台面对齐与接触阴影</h3>
+                  <p>
+                    根据蒙版可见底边定位商品。输入背景中台面的画布 Y
+                    坐标，阴影作为可撤销的合成效果保存。当前适合直立的不透明商品，旋转或透光主体需人工复核。
+                  </p>
+                  <div className="inspector-grid">
+                    <label>
+                      台面 Y
+                      <input
+                        type="number"
+                        min={0}
+                        max={document.canvas.height}
+                        step={1}
+                        value={
+                          surfaceYDraft ??
+                          Math.round(
+                            selectedBase?.y ?? selected.y + selected.height,
+                          )
+                        }
+                        onChange={(event) =>
+                          setSurfaceYDraft(Number(event.target.value))
+                        }
+                      />
+                    </label>
+                    <label>
+                      当前商品底边 Y
+                      <input
+                        type="number"
+                        value={Math.round(
+                          selectedBase?.y ?? selected.y + selected.height,
+                        )}
+                        readOnly
+                      />
+                    </label>
+                  </div>
+                  <div className="crop-presets">
+                    <button type="button" onClick={alignProductToSurface}>
+                      对齐台面并开启阴影
+                    </button>
+                    {selected.contactShadow && (
+                      <button
+                        type="button"
+                        onClick={() => setContactShadow(null)}
+                      >
+                        移除阴影
+                      </button>
+                    )}
+                  </div>
+                  {selected.contactShadow && (
+                    <div className="inspector-grid">
+                      {(
+                        [
+                          ["opacity", "浓度", 0, 0.8, 0.05],
+                          ["widthScale", "宽度倍率", 0.2, 2, 0.05],
+                          ["depth", "柔和范围", 2, 200, 1],
+                          ["offsetX", "水平偏移", -500, 500, 1],
+                          ["offsetY", "垂直偏移", -200, 200, 1],
+                        ] as const
+                      ).map(([key, label, min, max, step]) => (
+                        <label key={key}>
+                          {label}
+                          <input
+                            type="number"
+                            min={min}
+                            max={max}
+                            step={step}
+                            value={selected.contactShadow?.[key] ?? 0}
+                            onChange={(event) =>
+                              setContactShadow({
+                                ...selected.contactShadow!,
+                                [key]: Number(event.target.value),
+                              })
+                            }
+                          />
+                        </label>
+                      ))}
+                      <label>
+                        阴影颜色
+                        <input
+                          type="color"
+                          value={selected.contactShadow.color}
+                          onChange={(event) =>
+                            setContactShadow({
+                              ...selected.contactShadow!,
+                              color: event.target.value,
+                            })
+                          }
+                        />
+                      </label>
+                    </div>
+                  )}
                 </div>
               )}
               {selected.kind === "image" && cropDraft && (
