@@ -153,6 +153,7 @@
       "requiresPorts": [5432, 9000],
       "checks": [
         "Unauthenticated uploads and cross-workspace reads fail before file handling",
+        "Oversized multipart requests are rejected before file buffering",
         "Import replay preserves source bytes and asset identity",
         "Incremental asset upload is idempotent; stale saves conflict; revocation takes effect"
       ]
@@ -192,6 +193,7 @@
       "requiresPorts": [5432, 8180],
       "checks": [
         "Anonymous project list receives 401",
+        "Public browser client enforces PKCE and permits only the development origin",
         "Real Keycloak token with database membership reads the development workspace"
       ]
     },

@@ -22,8 +22,79 @@ const credentials = Object.fromEntries(
 );
 const clientSecret = credentials.ACS_AUTH_CLIENT_SECRET;
 const password = credentials.ACS_AUTH_TEST_PASSWORD;
-if (!clientSecret || !password || !process.env.DATABASE_URL)
+const adminPassword = credentials.ACS_AUTH_ADMIN_PASSWORD;
+if (!clientSecret || !password || !adminPassword || !process.env.DATABASE_URL)
   throw new Error("Development OIDC credentials and database URL are required");
+const corsResponse = await fetch(`${issuer}/protocol/openid-connect/token`, {
+  method: "OPTIONS",
+  headers: {
+    origin: "http://localhost:3000",
+    "access-control-request-method": "POST",
+    "access-control-request-headers": "content-type",
+  },
+});
+assert.equal(corsResponse.status, 200);
+assert.equal(
+  corsResponse.headers.get("access-control-allow-origin"),
+  "http://localhost:3000",
+);
+const adminResponse = await fetch(
+  "http://localhost:8180/realms/master/protocol/openid-connect/token",
+  {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      grant_type: "password",
+      client_id: "admin-cli",
+      username: "acs-dev-admin",
+      password: adminPassword,
+    }),
+  },
+);
+assert.equal(adminResponse.status, 200);
+const { access_token: adminToken } = (await adminResponse.json()) as {
+  access_token: string;
+};
+const clientsResponse = await fetch(
+  "http://localhost:8180/admin/realms/acs-dev/clients?clientId=acs-dev-web",
+  {
+    headers: { authorization: `Bearer ${adminToken}` },
+  },
+);
+assert.equal(clientsResponse.status, 200);
+const clients = (await clientsResponse.json()) as Array<{ id: string }>;
+assert.equal(clients.length, 1);
+const clientResponse = await fetch(
+  `http://localhost:8180/admin/realms/acs-dev/clients/${clients[0]?.id}`,
+  {
+    headers: { authorization: `Bearer ${adminToken}` },
+  },
+);
+assert.equal(clientResponse.status, 200);
+const publicClient = (await clientResponse.json()) as {
+  publicClient: boolean;
+  standardFlowEnabled: boolean;
+  directAccessGrantsEnabled: boolean;
+  redirectUris: string[];
+  webOrigins: string[];
+  attributes: Record<string, string>;
+  protocolMappers?: Array<{ name: string; config: Record<string, string> }>;
+};
+assert.equal(publicClient.publicClient, true);
+assert.equal(publicClient.standardFlowEnabled, true);
+assert.equal(publicClient.directAccessGrantsEnabled, false);
+assert.deepEqual(publicClient.redirectUris, [
+  "http://localhost:3000/image-studio",
+]);
+assert.deepEqual(publicClient.webOrigins, ["http://localhost:3000"]);
+assert.equal(publicClient.attributes["pkce.code.challenge.method"], "S256");
+assert.ok(
+  publicClient.protocolMappers?.some(
+    (mapper) =>
+      mapper.name === "acs-api-audience" &&
+      mapper.config["included.client.audience"] === "acs-api",
+  ),
+);
 const tokenResponse = await fetch(`${issuer}/protocol/openid-connect/token`, {
   method: "POST",
   headers: { "content-type": "application/x-www-form-urlencoded" },
@@ -60,7 +131,7 @@ try {
   assert.equal(authorized.status, 200);
   assert.ok(Array.isArray(await authorized.json()));
   console.log(
-    "PASS: real Keycloak access token reaches the configured browser workspace HTTP API",
+    "PASS: public PKCE client and CORS configuration; real Keycloak token reaches the browser workspace HTTP API",
   );
 } finally {
   await app.close();

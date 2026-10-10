@@ -36,6 +36,7 @@ export class ImageProjectHttpService implements OnModuleDestroy {
     const audience = required("AUTH_AUDIENCE");
     const jwksUrl = required("AUTH_JWKS_URL");
     const url = new URL(jwksUrl);
+    const issuerUrl = new URL(issuer);
     const loopbackHttp =
       process.env.AUTH_ALLOW_INSECURE_LOOPBACK === "true" &&
       url.protocol === "http:" &&
@@ -46,6 +47,21 @@ export class ImageProjectHttpService implements OnModuleDestroy {
     }
     if (url.username || url.password || url.hash)
       throw new Error("AUTH_JWKS_URL cannot contain credentials or fragment");
+    if (
+      (issuerUrl.protocol !== "https:" &&
+        !(
+          loopbackHttp &&
+          issuerUrl.protocol === "http:" &&
+          issuerUrl.host === url.host
+        )) ||
+      issuerUrl.username ||
+      issuerUrl.password ||
+      issuerUrl.hash ||
+      issuerUrl.search
+    )
+      throw new Error(
+        "AUTH_ISSUER must be trusted HTTPS or matching development loopback",
+      );
     const provider = loopbackHttp
       ? new JwtAuthProvider(
           {

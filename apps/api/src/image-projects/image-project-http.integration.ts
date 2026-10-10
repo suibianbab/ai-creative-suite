@@ -2,6 +2,7 @@ import "reflect-metadata";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
+import { createConnection } from "node:net";
 import { resolve } from "node:path";
 import { applyImageOperation, createImageDocument } from "@acs/image-document";
 import {
@@ -165,6 +166,32 @@ try {
     .setExpirationTime("10m")
     .sign(privateKey);
   const headers = { authorization: `Bearer ${token}` };
+  const oversizedStatus = await new Promise<number>(
+    (resolveStatus, rejectStatus) => {
+      const port = Number(new URL(base).port);
+      const socket = createConnection({ host: "127.0.0.1", port });
+      socket.setTimeout(3000);
+      socket.once("connect", () => {
+        socket.write(
+          `POST /workspaces/${workspaceA}/image-projects/imports HTTP/1.1\r\nHost: localhost\r\nAuthorization: Bearer ${token}\r\nContent-Type: multipart/form-data; boundary=test\r\nContent-Length: 120000000\r\nConnection: close\r\n\r\n`,
+        );
+      });
+      socket.once("data", (data) => {
+        socket.destroy();
+        resolveStatus(
+          Number(/^HTTP\/1\.1 (\d{3})/.exec(data.toString("ascii"))?.[1]),
+        );
+      });
+      socket.once("timeout", () => {
+        socket.destroy();
+        rejectStatus(
+          new Error("Oversized request did not receive an early response"),
+        );
+      });
+      socket.once("error", rejectStatus);
+    },
+  );
+  assert.equal(oversizedStatus, 413);
   const localId = randomUUID();
   const document = applyImageOperation(createImageDocument(randomUUID()), {
     type: "addImage",
@@ -338,7 +365,7 @@ try {
   );
   assert.equal((await fetch(projectUrl, { headers })).status, 403);
   console.log(
-    "PASS: HTTP auth before upload, tenant scope, import replay, original bytes, incremental asset upload, list/load, read-only role, stale write and revocation",
+    "PASS: HTTP auth before upload, early size rejection, tenant scope, import replay, original bytes, incremental asset upload, list/load, read-only role, stale write and revocation",
   );
 } finally {
   await app?.close();

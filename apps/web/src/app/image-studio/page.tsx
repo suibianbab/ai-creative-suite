@@ -250,6 +250,12 @@ export default function ImageStudioPage() {
           rewritten,
           cloudCurrent.version,
         );
+        if (historyRef.current.present !== current && map.size) {
+          await refreshCloudProjects();
+          throw new Error(
+            "云端已保存发起时的快照；编辑期间项目又变化，请重新打开云端项目核对",
+          );
+        }
         if (map.size) {
           const nextFiles = new Map(originalFiles.current);
           const nextAssets = { ...assets };
@@ -257,7 +263,9 @@ export default function ImageStudioPage() {
             const file = nextFiles.get(localId);
             if (file) nextFiles.set(serverId, file);
             nextFiles.delete(localId);
-            const bitmap = nextAssets[localId];
+            const bitmap =
+              nextAssets[localId] ??
+              (file ? await createImageBitmap(file) : undefined);
             if (bitmap) nextAssets[serverId] = bitmap;
             delete nextAssets[localId];
           }
@@ -271,7 +279,11 @@ export default function ImageStudioPage() {
         }
         setCloudCurrent({ id: saved.id, version: saved.version });
         savedSnapshot.current = JSON.stringify(saved.document);
-        setMessage(`已保存到云端，版本 ${saved.version}。`);
+        setMessage(
+          historyRef.current.present === current
+            ? `已保存到云端，版本 ${saved.version}。`
+            : `云端已保存版本 ${saved.version}；编辑期间还有新改动，请再次保存。`,
+        );
       } else {
         await saveLocalProject(current, originalFiles.current);
         const result = await importCloudProject(
@@ -280,12 +292,20 @@ export default function ImageStudioPage() {
           current,
           originalFiles.current,
         );
+        if (historyRef.current.present !== current) {
+          await refreshCloudProjects();
+          throw new Error(
+            "云端已导入发起时的快照；编辑期间项目又变化，请从云端项目列表重新打开核对",
+          );
+        }
         const remappedFiles = new Map<string, File>();
         const remappedAssets: ImageAssetMap = {};
         for (const [localId, serverId] of Object.entries(result.assetIdMap)) {
           const file = originalFiles.current.get(localId);
           if (file) remappedFiles.set(serverId, file);
-          const bitmap = assets[localId];
+          const bitmap =
+            assets[localId] ??
+            (file ? await createImageBitmap(file) : undefined);
           if (bitmap) remappedAssets[serverId] = bitmap;
         }
         originalFiles.current = remappedFiles;
@@ -874,10 +894,12 @@ export default function ImageStudioPage() {
                 setCloudConnected(false);
                 setCloudProjects([]);
                 setCloudCurrent(null);
-                setMessage("云端会话已退出，本地编辑仍可继续。");
+                setMessage(
+                  "本页访问令牌已清除；身份服务会话可能仍有效。本地编辑可继续。",
+                );
               }}
             >
-              退出
+              清除本页会话
             </button>
           </>
         )}

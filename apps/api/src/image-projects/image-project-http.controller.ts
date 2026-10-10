@@ -14,6 +14,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
   Param,
+  PayloadTooLargeException,
   Post,
   Put,
   Req,
@@ -45,7 +46,9 @@ import {
   type LocalOriginal,
 } from "./local-image-import.js";
 
-type RequestHeaders = { headers: { authorization?: string } };
+type RequestHeaders = {
+  headers: { authorization?: string; "content-length"?: string };
+};
 type Upload = {
   fieldname: string;
   originalname: string;
@@ -62,11 +65,13 @@ export class ImageProjectHttpGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context
-      .switchToHttp()
-      .getRequest<
-        RequestHeaders & { method: string; params: { workspaceId?: string } }
-      >();
+    const request = context.switchToHttp().getRequest<
+      RequestHeaders & {
+        method: string;
+        originalUrl: string;
+        params: { workspaceId?: string };
+      }
+    >();
     try {
       await this.service
         .get()
@@ -75,6 +80,15 @@ export class ImageProjectHttpGuard implements CanActivate {
           request.params.workspaceId ?? "",
           request.method === "GET" ? "read" : "write",
         );
+      if (request.method === "POST") {
+        const length = Number(request.headers["content-length"]);
+        if (!Number.isSafeInteger(length) || length < 1)
+          throw new HttpException("Upload Content-Length required", 411);
+        const max = request.originalUrl.split("?")[0]?.endsWith("/imports")
+          ? 104 * 1024 * 1024
+          : 26 * 1024 * 1024;
+        if (length > max) throw new PayloadTooLargeException();
+      }
       return true;
     } catch (error) {
       routeError(error);
@@ -129,7 +143,7 @@ function routeError(error: unknown): never {
   if (
     error instanceof Error &&
     (error.message.includes("is required for project HTTP routes") ||
-      error.message === "AUTH_JWKS_URL must use HTTPS")
+      error.message.startsWith("AUTH_"))
   )
     throw new ServiceUnavailableException("Project API is not configured");
   throw new InternalServerErrorException("Project operation failed");
@@ -241,6 +255,7 @@ export class ImageProjectHttpController {
     try {
       const context = await this.authorized(request, workspaceId, "write");
       if (
+        !body ||
         typeof body.title !== "string" ||
         typeof body.requestKey !== "string" ||
         typeof body.document !== "string" ||
@@ -307,6 +322,7 @@ export class ImageProjectHttpController {
       if (!(await this.service.get().projects.get(context.scope, projectId)))
         throw new NotFoundException();
       if (
+        !body ||
         typeof body.requestKey !== "string" ||
         !Array.isArray(files) ||
         files.length !== 1 ||

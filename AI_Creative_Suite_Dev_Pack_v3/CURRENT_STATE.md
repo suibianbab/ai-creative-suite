@@ -36,7 +36,7 @@ Current phase: Phase 0 Foundation plus early Image Studio editing and quality sp
 - Image Studio 文字指令 MVP：本地规则规划器支持中文画布尺寸、背景颜色、商品位置和标题操作，先预览，再作为一个可撤销的 ImageDocument 事务应用；未知要求整体拒绝，保留原始商品 Asset。尚未接入语言模型、生成式局部修图或任意自然语言理解，见根目录 `docs/IMAGE_INSTRUCTION_MVP.md`。
 - Asset 孤儿对象清扫开发基线：新增按单个组织扫描的默认只报告命令；内部执行路径要求至少 7 天宽限、精确键格式、数据库引用复查及 S3 ETag 条件删除。随机 schema 与 RustFS 隔离测试验证只删除无引用测试对象，原件保持不变。自动生产清扫、正式保留策略和独立复核尚未完成，见根目录 `docs/ORPHAN_OBJECT_RETENTION.md`。
 - 回归测试用例库：根目录 `qa/registry.json` 登记 13 个自动用例与 6 个手工验收场景；`qa:smoke` 接入 CI，VM 集成、真实 OIDC 和图片审核分组运行，输出含 Git 版本的本地 JSON 报告。基础回归 smoke 4/4、原有 integration 5/5、oidc 1/1、image-qa 1/1 已通过，新项目 HTTP 和真实 Keycloak 路由用例也单独通过；首次 integration 运行因旧 SSH 隧道失活为 3/5，报告保留，新隧道增加存活检测与重连。手工视觉验收与真实客户素材门槛尚未完成，见根目录 `qa/README.md`。
-- Image Studio 云端项目开发闭环：新增 Keycloak 公开客户端 Authorization Code + PKCE 浏览器入口、受保护的项目/原件/导入 HTTP API、本地项目首次导入、云端列表/打开与增量素材和版本保存。开发工作区已配置；接口级真实 PostgreSQL/RustFS 回归覆盖匿名/跨租户拒绝、重试幂等、原图字节、旧版本冲突和成员撤销，真实 Keycloak 令牌经 HTTP 项目列表验证通过。浏览器已验证登录跳转到 Keycloak；完整交互式登录及跨浏览器视觉验收 `UI-003` 尚待执行。独立新上下文安全复核和生产身份配置仍是对外开放门槛。见根目录 `docs/CLOUD_IMAGE_PROJECTS.md`。
+- Image Studio 云端项目开发闭环：新增 Keycloak 公开客户端 Authorization Code + PKCE 浏览器入口、受保护的项目/原件/导入 HTTP API、本地项目首次导入、云端列表/打开与增量素材和版本保存。开发工作区已配置；接口级真实 PostgreSQL/RustFS 回归覆盖匿名/跨租户拒绝、超大请求在缓冲前拒绝、重试幂等、原图字节、旧版本冲突和成员撤销，真实 Keycloak 令牌经 HTTP 项目列表验证通过。浏览器已验证登录跳转到 Keycloak；完整交互式登录及跨浏览器视觉验收 `UI-003` 尚待执行。独立新上下文安全复核和生产身份配置仍是对外开放门槛。见根目录 `docs/CLOUD_IMAGE_PROJECTS.md` 与 `docs/CLOUD_PROJECT_SECURITY_GATE.md`。
 
 已完成产品与架构方向：
 - AI Image Studio 一级产品
