@@ -34,6 +34,26 @@
       ]
     },
     {
+      "id": "IMG-003",
+      "tier": "smoke",
+      "title": "Scene light comparison remains advisory and detects opposing directions",
+      "cwd": ".",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@acs/api",
+        "exec",
+        "tsx",
+        "--test",
+        "../web/src/app/image-studio/scene-lighting.test.ts"
+      ],
+      "checks": [
+        "Opposite left-right brightness directions require manual review",
+        "Matching directions do not assert physical or commercial quality",
+        "Clipping and insufficient sample counts remain explicit"
+      ]
+    },
+    {
       "id": "QG-003",
       "tier": "smoke",
       "title": "Production build",
@@ -375,6 +395,23 @@
         "Alignment and shadow apply as one undoable document transaction while original and mask assets remain intact",
         "Exported contact pixels darken and the shadow remains behind the product",
         "Shadow settings persist after local project reopen"
+      ]
+    },
+    {
+      "id": "UI-010",
+      "title": "Scene lighting report and reversible exposure trial",
+      "fixture": "Saved synthetic masked pump bottle with warm studio background",
+      "steps": [
+        "Open the saved project, select the masked product and run scene lighting check",
+        "Inspect product and background direction, numeric brightness differences and uncertainty note",
+        "Preview -0.2 exposure, cancel and confirm the document is unchanged",
+        "Preview again, apply, undo once and check exposure returns to zero"
+      ],
+      "passCriteria": [
+        "Report is available only with a masked product and generated background",
+        "The report remains advisory and is hidden when the document changes",
+        "Exposure trial previews before applying and cannot be saved or exported prematurely",
+        "One undo restores the original adjustment and original asset reference"
       ]
     },
     {

@@ -115,6 +115,13 @@
 .background-panel .instruction-actions button {
   flex: 1;
 }
+.background-panel > .instruction-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.background-panel > .instruction-actions button:last-child {
+  grid-column: 1 / -1;
+}
 .instruction-panel h2 {
   margin: 0;
   color: #1b4b36;

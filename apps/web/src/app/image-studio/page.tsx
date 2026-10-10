@@ -59,6 +59,10 @@ import {
   type ImageAssetMap,
   visibleProductBase,
 } from "./render";
+import {
+  inspectSceneLighting,
+  type SceneLightingReport,
+} from "./scene-lighting";
 import "./studio.css";
 
 const presets = [
@@ -78,6 +82,7 @@ type DragState = {
 type PendingInstruction = ImageInstructionPlan & {
   base: ImageDocument;
   preview: ImageDocument;
+  origin?: "lighting";
 };
 
 type PendingBackground = {
@@ -121,6 +126,11 @@ export default function ImageStudioPage() {
     useState<PendingInstruction | null>(null);
   const [backgroundPrompt, setBackgroundPrompt] = useState("");
   const [backgroundBusy, setBackgroundBusy] = useState(false);
+  const [lightingReport, setLightingReport] = useState<{
+    base: ImageDocument;
+    productId: string;
+    result: SceneLightingReport;
+  } | null>(null);
   const [pendingBackground, setPendingBackground] =
     useState<PendingBackground | null>(null);
   const pendingBackgroundRef = useRef<PendingBackground | null>(null);
@@ -139,6 +149,7 @@ export default function ImageStudioPage() {
   }, [selectedId]);
   useEffect(() => {
     selectedIdRef.current = selectedId;
+    setPendingInstruction(null);
   }, [selectedId]);
   const cancelBackgroundPreview = useCallback(() => {
     pendingBackgroundRef.current?.bitmap.close();
@@ -720,6 +731,50 @@ export default function ImageStudioPage() {
       setMessage("背景已应用为独立图层；商品原图未改写，可一步撤销。");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "背景应用失败。");
+    }
+  }
+
+  function checkSceneLighting() {
+    if (selected?.kind !== "image" || !selected.mask) return;
+    const plate = document.layers.find(
+      (layer): layer is ImageLayer =>
+        layer.kind === "image" && layer.name === "AI 背景",
+    );
+    if (!plate) {
+      setMessage("请先应用一张场景背景。");
+      return;
+    }
+    try {
+      const result = inspectSceneLighting(document, selected, plate, assets);
+      setLightingReport({ base: document, productId: selected.id, result });
+      setMessage("场景光照检查完成，请结合商品材质人工判断。");
+    } catch (error) {
+      setLightingReport(null);
+      setMessage(error instanceof Error ? error.message : "场景光照检查失败。");
+    }
+  }
+
+  function previewLightExposure(delta: number) {
+    if (selected?.kind !== "image" || !selected.mask) return;
+    try {
+      cancelBackgroundPreview();
+      const requirement =
+        delta > 0 ? `曝光提高 ${delta}` : `曝光降低 ${Math.abs(delta)}`;
+      const plan = planImageInstruction(
+        document,
+        selected.id,
+        requirement,
+        () => crypto.randomUUID(),
+      );
+      setPendingInstruction({
+        ...plan,
+        base: document,
+        preview: plan.operations.reduce(applyImageOperation, document),
+        origin: "lighting",
+      });
+      setMessage("正在预览商品曝光试调；确认前项目不会改变。");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "曝光试调失败。");
     }
   }
 
@@ -1360,7 +1415,7 @@ export default function ImageStudioPage() {
             >
               {instructionBusy ? "AI 正在理解…" : "预览编辑"}
             </button>
-            {pendingInstruction && (
+            {pendingInstruction && pendingInstruction.origin !== "lighting" && (
               <div className="instruction-preview">
                 <strong>待应用的操作</strong>
                 <ol>
@@ -1419,7 +1474,96 @@ export default function ImageStudioPage() {
               >
                 试用背景样片
               </button>
+              <button
+                type="button"
+                onClick={checkSceneLighting}
+                disabled={
+                  selected?.kind !== "image" ||
+                  !selected.mask ||
+                  !!pendingInstruction ||
+                  !!pendingBackground ||
+                  !document.layers.some(
+                    (layer) =>
+                      layer.kind === "image" && layer.name === "AI 背景",
+                  )
+                }
+              >
+                检查场景光照
+              </button>
             </div>
+            {lightingReport?.base === document &&
+              !pendingBackground &&
+              lightingReport.productId === selectedId && (
+                <div className="instruction-preview">
+                  <strong>
+                    {lightingReport.result.status === "review"
+                      ? "需要人工复核光照"
+                      : lightingReport.result.status === "insufficient"
+                        ? "像素不足，无法判断"
+                        : "未发现明显左右光向冲突"}
+                  </strong>
+                  <ul>
+                    {lightingReport.result.observations.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                  <p>
+                    商品左右亮度差：
+                    {lightingReport.result.productDelta.toFixed(1)}；背景：
+                    {lightingReport.result.backgroundDelta.toFixed(1)}。
+                    该检查不判断材质、真实色温或广告是否达标。
+                  </p>
+                  {pendingInstruction?.origin === "lighting" && (
+                    <p>上述指标来自应用前画面；应用试调后请重新检查。</p>
+                  )}
+                  {lightingReport.result.status !== "insufficient" && (
+                    <div className="instruction-actions">
+                      <button
+                        type="button"
+                        onClick={() => previewLightExposure(0.2)}
+                        disabled={
+                          (selected?.kind === "image"
+                            ? (selected.adjustments?.exposure ?? 0)
+                            : 0) > 1.8
+                        }
+                      >
+                        预览提亮 0.2 档
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => previewLightExposure(-0.2)}
+                        disabled={
+                          (selected?.kind === "image"
+                            ? (selected.adjustments?.exposure ?? 0)
+                            : 0) < -1.8
+                        }
+                      >
+                        预览压暗 0.2 档
+                      </button>
+                    </div>
+                  )}
+                  {pendingInstruction?.origin === "lighting" &&
+                    pendingInstruction.base === document && (
+                      <div className="instruction-preview">
+                        <strong>{pendingInstruction.summary.join("；")}</strong>
+                        <div className="instruction-actions">
+                          <button type="button" onClick={applyInstruction}>
+                            应用试调
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPendingInstruction(null);
+                              setMessage("已取消曝光试调，项目未改变。");
+                            }}
+                          >
+                            取消
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                </div>
+              )}
             {pendingBackground && (
               <div className="instruction-preview">
                 <strong>待应用：独立背景图层</strong>

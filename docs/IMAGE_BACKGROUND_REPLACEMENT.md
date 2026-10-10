@@ -25,4 +25,10 @@ The editor now finds the visible base from the saved mask, including brush corre
 
 On the synthetic pump bottle, this creates a measurable and visibly better contact cue. It remains a simple 2D shadow: it does not infer physical light direction, cast complex occlusion on adjacent props, reconstruct transparent material, or guarantee a final advertisement-quality match. Those gates remain open.
 
+## Scene light inspection
+
+With a selected masked product and an applied `AI 背景` plate, **检查场景光照** renders each layer separately at a bounded analysis resolution. It compares mean luminance in the left and right central regions, and counts clipped product highlights and shadows. Opposing strong left/right gradients or substantial clipping trigger an advisory review result. The report is bound to the exact ImageDocument version and disappears after an edit; it never changes the original or blocks export by itself.
+
+Two explicit exposure trial buttons use the existing validated ImageDocument adjustment planner. Each trial previews on the canvas, blocks save/export until applied or cancelled, and commits as one undoable operation. They are user-chosen previews, not an automatic color correction. Average luminance cannot infer a material's intrinsic color, real color temperature, shadow geometry or a commercial quality pass. Professional color management remains outside the thin native editor per the PhotoCraft capability decision. See [`UI-010-2026-10-10.md`](../qa/UI-010-2026-10-10.md).
+
 Synthetic source prompts are recorded in the UI-008 report for reproducibility. No third-party product rights are implicated by this sample.
