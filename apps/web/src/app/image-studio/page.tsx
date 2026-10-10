@@ -15,6 +15,7 @@ import {
   type ImageLayer,
   type ImageOperation,
   type MaskStroke,
+  planBackgroundPlate,
   planImageInstruction,
   planModelImageInstruction,
   redoImageOperation,
@@ -22,6 +23,10 @@ import {
 } from "@acs/image-document";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  AiBackgroundPlateProvider,
+  loadSampleBackgroundPlate,
+} from "./background-provider";
 import { removeBackground } from "./capabilities";
 import {
   beginCloudLogin,
@@ -68,6 +73,15 @@ type PendingInstruction = ImageInstructionPlan & {
   preview: ImageDocument;
 };
 
+type PendingBackground = {
+  base: ImageDocument;
+  preview: ImageDocument;
+  operations: ImageOperation[];
+  assetId: string;
+  file: File;
+  bitmap: ImageBitmap;
+};
+
 export default function ImageStudioPage() {
   const [history, setHistory] = useState(() =>
     createImageHistory(createImageDocument(crypto.randomUUID())),
@@ -97,6 +111,11 @@ export default function ImageStudioPage() {
   const [instructionBusy, setInstructionBusy] = useState(false);
   const [pendingInstruction, setPendingInstruction] =
     useState<PendingInstruction | null>(null);
+  const [backgroundPrompt, setBackgroundPrompt] = useState("");
+  const [backgroundBusy, setBackgroundBusy] = useState(false);
+  const [pendingBackground, setPendingBackground] =
+    useState<PendingBackground | null>(null);
+  const pendingBackgroundRef = useRef<PendingBackground | null>(null);
   const [maskEditorLayerId, setMaskEditorLayerId] = useState<string | null>(
     null,
   );
@@ -108,6 +127,18 @@ export default function ImageStudioPage() {
   useEffect(() => {
     selectedIdRef.current = selectedId;
   }, [selectedId]);
+  const cancelBackgroundPreview = useCallback(() => {
+    pendingBackgroundRef.current?.bitmap.close();
+    pendingBackgroundRef.current = null;
+    setPendingBackground(null);
+  }, []);
+  useEffect(() => {
+    if (
+      pendingBackgroundRef.current &&
+      pendingBackgroundRef.current.base !== history.present
+    )
+      cancelBackgroundPreview();
+  }, [history, cancelBackgroundPreview]);
   const maskEditorLayer = document.layers.find(
     (layer) => layer.id === maskEditorLayerId && layer.kind === "image",
   );
@@ -454,19 +485,24 @@ export default function ImageStudioPage() {
     }
   }
 
-  const commit = useCallback((operation: ImageOperation) => {
-    try {
-      setPendingInstruction(null);
-      const next = commitImageOperation(historyRef.current, operation);
-      historyRef.current = next;
-      setHistory(next);
-      setMessage("");
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "操作失败");
-    }
-  }, []);
+  const commit = useCallback(
+    (operation: ImageOperation) => {
+      try {
+        cancelBackgroundPreview();
+        setPendingInstruction(null);
+        const next = commitImageOperation(historyRef.current, operation);
+        historyRef.current = next;
+        setHistory(next);
+        setMessage("");
+      } catch (error) {
+        setMessage(error instanceof Error ? error.message : "操作失败");
+      }
+    },
+    [cancelBackgroundPreview],
+  );
 
   function changeHistory(direction: "undo" | "redo") {
+    cancelBackgroundPreview();
     setPendingInstruction(null);
     const next =
       direction === "undo"
@@ -479,8 +515,14 @@ export default function ImageStudioPage() {
     );
   }
 
-  let preview = pendingInstruction?.preview ?? document;
-  if (drag && !pendingInstruction) {
+  const visibleBackground =
+    pendingBackground?.base === document ? pendingBackground : null;
+  let preview =
+    visibleBackground?.preview ?? pendingInstruction?.preview ?? document;
+  const previewAssets = visibleBackground
+    ? { ...assets, [visibleBackground.assetId]: visibleBackground.bitmap }
+    : assets;
+  if (drag && !pendingInstruction && !pendingBackground) {
     const layer = document.layers.find((item) => item.id === drag.layerId);
     if (layer) {
       preview = applyImageOperation(document, {
@@ -496,6 +538,7 @@ export default function ImageStudioPage() {
 
   async function prepareInstruction() {
     if (instructionBusy) return;
+    cancelBackgroundPreview();
     const base = historyRef.current.present;
     const targetId = selectedId;
     const input = instruction;
@@ -571,14 +614,110 @@ export default function ImageStudioPage() {
     }
   }
 
+  async function prepareBackground(source: "sample" | "ai") {
+    if (backgroundBusy) return;
+    const product = selected;
+    if (product?.kind !== "image" || !product.mask) {
+      setMessage("请先选中已抠图的商品图片图层。");
+      return;
+    }
+    if (source === "ai" && !backgroundPrompt.trim()) {
+      setMessage("请先描述想要的背景场景。");
+      return;
+    }
+    const base = historyRef.current.present;
+    const targetId = product.id;
+    setBackgroundBusy(true);
+    setMessage(
+      source === "sample" ? "正在加载背景样片…" : "正在生成背景，请稍候…",
+    );
+    cancelBackgroundPreview();
+    setPendingInstruction(null);
+    try {
+      const file =
+        source === "sample"
+          ? await loadSampleBackgroundPlate()
+          : await new AiBackgroundPlateProvider().generate(
+              backgroundPrompt.trim(),
+              base.canvas,
+            );
+      const bitmap = await createImageBitmap(file);
+      if (
+        historyRef.current.present !== base ||
+        selectedIdRef.current !== targetId
+      ) {
+        bitmap.close();
+        throw new Error("项目或所选商品已变化，请重新预览背景。");
+      }
+      try {
+        const assetId = crypto.randomUUID();
+        const operations = planBackgroundPlate(
+          base,
+          targetId,
+          assetId,
+          bitmap.width,
+          bitmap.height,
+          () => crypto.randomUUID(),
+        );
+        const pending: PendingBackground = {
+          base,
+          preview: operations.reduce(applyImageOperation, base),
+          operations,
+          assetId,
+          file,
+          bitmap,
+        };
+        pendingBackgroundRef.current = pending;
+        setPendingBackground(pending);
+        setDrag(null);
+        setMessage("背景已预览。请检查商品边缘、透光和接触阴影后再应用。");
+      } catch (error) {
+        bitmap.close();
+        throw error;
+      }
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "背景预览失败。");
+    } finally {
+      setBackgroundBusy(false);
+    }
+  }
+
+  function applyBackground() {
+    const pending = pendingBackgroundRef.current;
+    if (!pending) return;
+    if (historyRef.current.present !== pending.base) {
+      cancelBackgroundPreview();
+      setMessage("项目已变化，请重新预览背景。");
+      return;
+    }
+    try {
+      const next = commitImageOperations(
+        historyRef.current,
+        pending.operations,
+      );
+      originalFiles.current.set(pending.assetId, pending.file);
+      setAssets((current) => ({
+        ...current,
+        [pending.assetId]: pending.bitmap,
+      }));
+      pendingBackgroundRef.current = null;
+      setPendingBackground(null);
+      historyRef.current = next;
+      setHistory(next);
+      setMessage("背景已应用为独立图层；商品原图未改写，可一步撤销。");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "背景应用失败。");
+    }
+  }
+
   useEffect(() => {
     const canvas = canvasRef.current;
     const context = canvas?.getContext("2d");
     if (!canvas || !context) return;
     canvas.width = preview.canvas.width;
     canvas.height = preview.canvas.height;
-    drawImageDocument(context, preview, assets, selectedId ?? undefined);
-  }, [preview, assets, selectedId]);
+    drawImageDocument(context, preview, previewAssets, selectedId ?? undefined);
+  }, [preview, previewAssets, selectedId]);
 
   async function importImage(file?: File) {
     if (!file) return;
@@ -761,7 +900,7 @@ export default function ImageStudioPage() {
   }
 
   function pointerDown(event: React.PointerEvent<HTMLCanvasElement>) {
-    if (pendingInstruction) return;
+    if (pendingInstruction || pendingBackground) return;
     const point = canvasPoint(event);
     const hit = [...document.layers]
       .reverse()
@@ -935,7 +1074,7 @@ export default function ImageStudioPage() {
           type="button"
           className="project-action"
           onClick={() => void saveProject()}
-          disabled={projectBusy || !!pendingInstruction}
+          disabled={projectBusy || !!pendingInstruction || !!pendingBackground}
         >
           保存项目
         </button>
@@ -943,7 +1082,7 @@ export default function ImageStudioPage() {
           type="button"
           className="project-action"
           onClick={() => void exportPng(true)}
-          disabled={!!pendingInstruction}
+          disabled={!!pendingInstruction || !!pendingBackground}
         >
           导出透明 PNG
         </button>
@@ -951,7 +1090,7 @@ export default function ImageStudioPage() {
           type="button"
           className="export-button"
           onClick={() => void exportPng()}
-          disabled={!!pendingInstruction}
+          disabled={!!pendingInstruction || !!pendingBackground}
         >
           导出 PNG
         </button>
@@ -999,7 +1138,9 @@ export default function ImageStudioPage() {
               type="button"
               className="project-action"
               onClick={() => void saveCloud()}
-              disabled={projectBusy || !!pendingInstruction}
+              disabled={
+                projectBusy || !!pendingInstruction || !!pendingBackground
+              }
             >
               保存到云端
             </button>
@@ -1135,7 +1276,7 @@ export default function ImageStudioPage() {
           <div className="studio-status">
             <span>
               {preview.canvas.width} × {preview.canvas.height} px
-              {pendingInstruction ? " · 预览" : ""}
+              {pendingInstruction || pendingBackground ? " · 预览" : ""}
             </span>
             <span>{message}</span>
           </div>
@@ -1181,6 +1322,65 @@ export default function ImageStudioPage() {
                   <button
                     type="button"
                     onClick={() => setPendingInstruction(null)}
+                  >
+                    取消
+                  </button>
+                </div>
+              </div>
+            )}
+          </section>
+          <section
+            className="instruction-panel background-panel"
+            aria-label="场景背景"
+          >
+            <h2>场景背景</h2>
+            <p>
+              先选中已抠图商品。背景单独生成并放在商品图层下方；原图和蒙版保持不变。
+            </p>
+            <textarea
+              aria-label="背景场景描述"
+              value={backgroundPrompt}
+              onChange={(event) => setBackgroundPrompt(event.target.value)}
+              placeholder="例如：暖色摄影棚，浅色石材展台，左侧柔光"
+              maxLength={400}
+            />
+            <div className="instruction-actions">
+              <button
+                type="button"
+                onClick={() => void prepareBackground("ai")}
+                disabled={
+                  backgroundBusy ||
+                  !backgroundPrompt.trim() ||
+                  selected?.kind !== "image" ||
+                  !selected.mask
+                }
+              >
+                {backgroundBusy ? "正在准备背景…" : "AI 生成背景"}
+              </button>
+              <button
+                type="button"
+                onClick={() => void prepareBackground("sample")}
+                disabled={
+                  backgroundBusy || selected?.kind !== "image" || !selected.mask
+                }
+              >
+                试用背景样片
+              </button>
+            </div>
+            {pendingBackground && (
+              <div className="instruction-preview">
+                <strong>待应用：独立背景图层</strong>
+                <p>检查主体边缘和接触阴影；确认后可一步撤销。</p>
+                <div className="instruction-actions">
+                  <button type="button" onClick={applyBackground}>
+                    应用背景
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      cancelBackgroundPreview();
+                      setMessage("已取消背景预览，项目未改变。");
+                    }}
                   >
                     取消
                   </button>

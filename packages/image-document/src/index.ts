@@ -123,7 +123,8 @@ export type ImageCapability =
   | "crop"
   | "basic-adjustments"
   | "mask-refine"
-  | "remove-bg";
+  | "remove-bg"
+  | "background-replace";
 export type CapabilityExecutor = "native" | "photocraft" | "ai-provider";
 
 export function routeImageCapability(
@@ -139,6 +140,7 @@ export function routeImageCapability(
     case "mask-refine":
       return "native";
     case "remove-bg":
+    case "background-replace":
       return "ai-provider";
   }
 }
@@ -653,6 +655,7 @@ export function redoImageOperation(history: ImageHistory): ImageHistory {
   };
 }
 
+export { planBackgroundPlate } from "./background-plate.js";
 export type { ImageInstructionPlan } from "./instruction-planner.js";
 export { planImageInstruction } from "./instruction-planner.js";
 export { planModelImageInstruction } from "./model-instruction.js";

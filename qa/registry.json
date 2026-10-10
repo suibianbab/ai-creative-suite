@@ -28,7 +28,8 @@
         "Crop, mask and framing preserve non-destructive undo and redo",
         "Basic color adjustments validate ranges, survive JSON, and undo without replacing originals",
         "Text instructions commit atomically and reject unsupported edits",
-        "Model-translated clauses are validated before any ImageDocument change"
+        "Model-translated clauses are validated before any ImageDocument change",
+        "Generated background layers sit below the masked product, preserve the original, and undo in one step"
       ]
     },
     {
@@ -339,6 +340,23 @@
         "Both supported intents appear in the preview and apply as one undo step",
         "The unsupported repaint request rejects the whole plan without changing the canvas",
         "The original asset reference remains unchanged"
+      ]
+    },
+    {
+      "id": "UI-008",
+      "title": "Masked product background plate preview, export and local reopen",
+      "fixture": "Synthetic unbranded pump bottle PNG, same-size mask and empty studio background plate",
+      "steps": [
+        "Import product and mask, then select the masked product layer",
+        "Preview the sample background and cancel once; preview again and apply",
+        "Undo once and confirm both background operations disappear, then redo",
+        "Export a 1080-square PNG, save the project, reload and reopen it"
+      ],
+      "passCriteria": [
+        "Preview and cancellation leave the saved document unchanged",
+        "The background sits below the product and original RGB and mask references stay intact",
+        "Apply is one undo step and export dimensions match the canvas",
+        "Both layers and original assets return after local project reopen"
       ]
     },
     {
