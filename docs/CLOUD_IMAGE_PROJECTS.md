@@ -1,7 +1,7 @@
 # Image Studio 云端项目开发闭环
 
 当前开发环境使用 Keycloak 公开客户端的 Authorization Code + PKCE 登录。浏览器仅在当前标签会话存放短期访问令牌；API 用显式配置的签发者、受众和 JWKS 验签，再从数据库实时读取组织及工作区成员关系。工作区 ID 只是选择器，不提供权限。生产配置要求 HTTPS JWKS；HTTP 仅允许非生产环境的本机回环地址。API 默认只监听 `127.0.0.1`，部署到容器时需明确配置 `API_HOST`。
-“清除本页会话”只移除当前标签内的令牌，不结束 Keycloak 的身份服务会话。
+“清除本页会话”只移除当前标签内的令牌，不结束 Keycloak 的身份服务会话。开发客户端的 Audience Mapper 使用自定义 `acs-api` 受众；如果误配为不存在的客户端受众，浏览器令牌会缺少 `aud` 并被 API 拒绝。`AUTH-003` 现检查 Keycloak 生成的浏览器客户端示例令牌的实际受众。
 
 ## 本地运行
 
@@ -12,5 +12,5 @@
 
 API 端点为 `GET /workspaces/:workspaceId/image-projects`、`GET /:projectId`、`GET /:projectId/assets/:assetId`、`POST /imports`、`POST /:projectId/assets` 和 `PUT /:projectId`。所有端点需要 Bearer 令牌与当前数据库授权。上传要求 `Content-Length`，在缓冲文件前拒绝超大请求；内部限制 50 文件、单文件 25 MiB、总计 100 MiB，接受 PNG/JPEG/WebP 并校验文件头。项目版本保存要求 `expectedVersion`；冲突返回 409。
 
-回归用例 `PRJ-003` 对真实 PostgreSQL/RustFS 运行 HTTP 测试，覆盖匿名上传拒绝、跨租户拒绝、导入重试、原图字节、增量上传、旧版本冲突和成员撤销。`AUTH-003` 用真实 Keycloak 令牌读取已配置的开发工作区。浏览器已验证跳转到 Keycloak 登录页；完整登录、导入、刷新、重开的 `UI-003` 仍为待执行手工验收。独立新上下文安全复核、密钥轮换、生产身份提供方、审计及正式多用户管理尚未完成；这些开发路由不应对外开放。
+回归用例 `PRJ-003` 对真实 PostgreSQL/RustFS 运行 HTTP 测试，覆盖匿名上传拒绝、跨租户拒绝、导入重试、原图字节、增量上传、旧版本冲突和成员撤销。`AUTH-003` 用真实 Keycloak 令牌读取已配置的开发工作区，并核对浏览器客户端示例令牌的实际受众。浏览器 `UI-003` 已用开发账号完成授权码登录、导入本地项目、增量上传自制 PNG、保存版本 2、刷新与重新登录后重开，以及版本 3 保存；两张图片与编辑后文字均恢复。截图与记录见 `qa/reports/ui003-cloud-v3.png` 和 `qa/UI-003-2026-10-10.md`。跨账号的浏览器隔离尚未手工复测，接口级租户隔离由 `PRJ-003` 覆盖。独立新上下文安全复核、密钥轮换、生产身份提供方、审计及正式多用户管理尚未完成；这些开发路由不应对外开放。
 授权边界的自查证据和未完成门槛见 [`CLOUD_PROJECT_SECURITY_GATE.md`](./CLOUD_PROJECT_SECURITY_GATE.md)。

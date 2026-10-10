@@ -130,8 +130,9 @@ export default function ImageStudioPage() {
       .then(async () => {
         const session = cloudSession();
         if (!session) return;
+        const projects = await listCloudProjects(config, session.accessToken);
+        setCloudProjects(projects);
         setCloudConnected(true);
-        setCloudProjects(await listCloudProjects(config, session.accessToken));
       })
       .catch((error) =>
         setMessage(error instanceof Error ? error.message : "云端登录失败"),
@@ -250,7 +251,8 @@ export default function ImageStudioPage() {
           rewritten,
           cloudCurrent.version,
         );
-        if (historyRef.current.present !== current && map.size) {
+        const editedDuringSave = historyRef.current.present !== current;
+        if (editedDuringSave && map.size) {
           await refreshCloudProjects();
           throw new Error(
             "云端已保存发起时的快照；编辑期间项目又变化，请重新打开云端项目核对",
@@ -280,7 +282,7 @@ export default function ImageStudioPage() {
         setCloudCurrent({ id: saved.id, version: saved.version });
         savedSnapshot.current = JSON.stringify(saved.document);
         setMessage(
-          historyRef.current.present === current
+          !editedDuringSave
             ? `已保存到云端，版本 ${saved.version}。`
             : `云端已保存版本 ${saved.version}；编辑期间还有新改动，请再次保存。`,
         );

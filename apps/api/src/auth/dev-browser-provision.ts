@@ -78,7 +78,7 @@ if (existing.length === 0) {
           protocol: "openid-connect",
           protocolMapper: "oidc-audience-mapper",
           config: {
-            "included.client.audience": "acs-api",
+            "included.custom.audience": "acs-api",
             "id.token.claim": "false",
             "access.token.claim": "true",
           },
@@ -89,6 +89,64 @@ if (existing.length === 0) {
   if (response.status !== 201)
     throw new Error(
       `Development browser client creation failed: HTTP ${response.status}`,
+    );
+}
+const clientLookup = await fetch(`${adminBase}?clientId=acs-dev-web`, {
+  headers: { authorization: `Bearer ${adminToken}` },
+});
+if (!clientLookup.ok)
+  throw new Error(
+    `Development client lookup failed: HTTP ${clientLookup.status}`,
+  );
+const clientList = (await clientLookup.json()) as Array<{ id: string }>;
+const clientId = clientList[0]?.id;
+if (!clientId) throw new Error("Development browser client is missing");
+const clientResponse = await fetch(`${adminBase}/${clientId}`, {
+  headers: { authorization: `Bearer ${adminToken}` },
+});
+if (!clientResponse.ok)
+  throw new Error(
+    `Development client read failed: HTTP ${clientResponse.status}`,
+  );
+const client = (await clientResponse.json()) as {
+  id: string;
+  protocolMappers?: Array<{
+    id: string;
+    name: string;
+    config: Record<string, string>;
+  }>;
+};
+const mapper = client.protocolMappers?.find(
+  (item) => item.name === "acs-api-audience",
+);
+if (
+  !mapper ||
+  mapper.config["included.custom.audience"] !== "acs-api" ||
+  mapper.config["included.client.audience"]
+) {
+  const mapperUrl = `${adminBase}/${client.id}/protocol-mappers/models${mapper ? `/${mapper.id}` : ""}`;
+  const mapperResponse = await fetch(mapperUrl, {
+    method: mapper ? "PUT" : "POST",
+    headers: {
+      authorization: `Bearer ${adminToken}`,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      ...(mapper ? { id: mapper.id } : {}),
+      name: "acs-api-audience",
+      protocol: "openid-connect",
+      protocolMapper: "oidc-audience-mapper",
+      config: {
+        "included.client.audience": "",
+        "included.custom.audience": "acs-api",
+        "id.token.claim": "false",
+        "access.token.claim": "true",
+      },
+    }),
+  });
+  if (!mapperResponse.ok)
+    throw new Error(
+      `Development audience mapper update failed: HTTP ${mapperResponse.status}`,
     );
 }
 

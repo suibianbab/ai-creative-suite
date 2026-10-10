@@ -26,4 +26,4 @@ Every run writes an ignored JSON report under `qa/reports/` with case IDs, statu
 4. A `BLOCKED` case must be rerun after its prerequisite is restored. Preserve the failed report and the successful rerun report for diagnosis.
 
 Current gaps: manual cases are documented but not automated in a browser; no authorized customer product set or approved exact 3D model has completed final acceptance. The 20-image proxy and Commons sample reviews are development evidence, not a release pass.
-The cloud project HTTP regression (`PRJ-003`) and real Keycloak route check (`AUTH-003`) are automated. The browser PKCE round trip (`UI-003`) remains a manual gate until tested with the development user in the UI.
+The cloud project HTTP regression (`PRJ-003`) and real Keycloak route check (`AUTH-003`) are automated. The browser PKCE and cloud version round trip was observed on 2026-10-10; see [`UI-003-2026-10-10.md`](./UI-003-2026-10-10.md). Its cross-account browser check remains open, so the full manual case is not marked passed.

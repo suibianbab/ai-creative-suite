@@ -23,7 +23,14 @@ const credentials = Object.fromEntries(
 const clientSecret = credentials.ACS_AUTH_CLIENT_SECRET;
 const password = credentials.ACS_AUTH_TEST_PASSWORD;
 const adminPassword = credentials.ACS_AUTH_ADMIN_PASSWORD;
-if (!clientSecret || !password || !adminPassword || !process.env.DATABASE_URL)
+const subject = credentials.ACS_AUTH_TEST_SUBJECT;
+if (
+  !clientSecret ||
+  !password ||
+  !adminPassword ||
+  !subject ||
+  !process.env.DATABASE_URL
+)
   throw new Error("Development OIDC credentials and database URL are required");
 const corsResponse = await fetch(`${issuer}/protocol/openid-connect/token`, {
   method: "OPTIONS",
@@ -92,8 +99,23 @@ assert.ok(
   publicClient.protocolMappers?.some(
     (mapper) =>
       mapper.name === "acs-api-audience" &&
-      mapper.config["included.client.audience"] === "acs-api",
+      mapper.config["included.custom.audience"] === "acs-api" &&
+      !mapper.config["included.client.audience"],
   ),
+);
+const exampleResponse = await fetch(
+  `http://localhost:8180/admin/realms/acs-dev/clients/${clients[0]?.id}/evaluate-scopes/generate-example-access-token?scope=openid&userId=${encodeURIComponent(subject)}`,
+  { headers: { authorization: `Bearer ${adminToken}` } },
+);
+assert.equal(exampleResponse.status, 200);
+const exampleToken = (await exampleResponse.json()) as {
+  aud?: string | string[];
+};
+assert.ok(
+  Array.isArray(exampleToken.aud)
+    ? exampleToken.aud.includes("acs-api")
+    : exampleToken.aud === "acs-api",
+  "Public browser token must include the API audience",
 );
 const tokenResponse = await fetch(`${issuer}/protocol/openid-connect/token`, {
   method: "POST",
