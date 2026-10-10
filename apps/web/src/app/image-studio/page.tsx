@@ -16,6 +16,7 @@ import {
   type ImageOperation,
   type MaskStroke,
   planImageInstruction,
+  planModelImageInstruction,
   redoImageOperation,
   undoImageOperation,
 } from "@acs/image-document";
@@ -74,6 +75,7 @@ export default function ImageStudioPage() {
   const historyRef = useRef(history);
   const [assets, setAssets] = useState<ImageAssetMap>({});
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selectedIdRef = useRef<string | null>(null);
   const [cropDraft, setCropDraft] = useState<CropRect | null>(null);
   const [drag, setDrag] = useState<DragState | null>(null);
   const [message, setMessage] = useState("导入一张商品图，开始制作广告画面。");
@@ -91,6 +93,8 @@ export default function ImageStudioPage() {
   const cloudKnownAssetIds = useRef(new Set<string>());
   const [maskBusy, setMaskBusy] = useState(false);
   const [instruction, setInstruction] = useState("");
+  const instructionRef = useRef("");
+  const [instructionBusy, setInstructionBusy] = useState(false);
   const [pendingInstruction, setPendingInstruction] =
     useState<PendingInstruction | null>(null);
   const [maskEditorLayerId, setMaskEditorLayerId] = useState<string | null>(
@@ -101,6 +105,9 @@ export default function ImageStudioPage() {
   const savedSnapshot = useRef<string | null>(null);
   const document = history.present;
   const selected = document.layers.find((layer) => layer.id === selectedId);
+  useEffect(() => {
+    selectedIdRef.current = selectedId;
+  }, [selectedId]);
   const maskEditorLayer = document.layers.find(
     (layer) => layer.id === maskEditorLayerId && layer.kind === "image",
   );
@@ -487,19 +494,56 @@ export default function ImageStudioPage() {
     }
   }
 
-  function prepareInstruction() {
+  async function prepareInstruction() {
+    if (instructionBusy) return;
+    const base = historyRef.current.present;
+    const targetId = selectedId;
+    const input = instruction;
+    setInstructionBusy(true);
+    setPendingInstruction(null);
     try {
-      const base = historyRef.current.present;
-      const plan = planImageInstruction(base, selectedId, instruction, () =>
-        crypto.randomUUID(),
-      );
+      let plan: ImageInstructionPlan;
+      let source = "AI";
+      try {
+        const response = await fetch("/api/image-instruction", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ instruction: input }),
+        });
+        if (!response.ok) throw new Error("AI service unavailable");
+        plan = planModelImageInstruction(
+          base,
+          targetId,
+          await response.json(),
+          () => crypto.randomUUID(),
+        );
+      } catch (error) {
+        if (
+          error instanceof Error &&
+          error.message !== "AI service unavailable" &&
+          !(error instanceof TypeError)
+        )
+          throw error;
+        plan = planImageInstruction(base, targetId, input, () =>
+          crypto.randomUUID(),
+        );
+        source = "本地规则";
+      }
+      if (
+        historyRef.current.present !== base ||
+        instructionRef.current !== input ||
+        selectedIdRef.current !== targetId
+      )
+        throw new Error("项目或指令已变化，请重新预览。");
       const next = plan.operations.reduce(applyImageOperation, base);
       setDrag(null);
       setPendingInstruction({ ...plan, base, preview: next });
-      setMessage("已生成预览；检查画布和操作列表后再应用。");
+      setMessage(`${source} 已生成预览；检查画布和操作列表后再应用。`);
     } catch (error) {
       setPendingInstruction(null);
       setMessage(error instanceof Error ? error.message : "无法理解编辑要求。");
+    } finally {
+      setInstructionBusy(false);
     }
   }
 
@@ -1101,12 +1145,14 @@ export default function ImageStudioPage() {
           <section className="instruction-panel" aria-label="文字编辑要求">
             <h2>用文字编辑画面</h2>
             <p>
-              本地指令预览：画布尺寸、背景色、商品位置、基础调色和标题。涉及生成或重绘商品的要求会提示暂不支持。
+              本机 AI
+              理解编辑要求，先预览再应用。支持画布、背景、商品位置、基础调色和标题；生成或重绘暂不支持。
             </p>
             <textarea
               aria-label="编辑要求"
               value={instruction}
               onChange={(event) => {
+                instructionRef.current = event.target.value;
                 setInstruction(event.target.value);
                 setPendingInstruction(null);
               }}
@@ -1116,9 +1162,9 @@ export default function ImageStudioPage() {
             <button
               type="button"
               onClick={prepareInstruction}
-              disabled={!instruction.trim()}
+              disabled={!instruction.trim() || instructionBusy}
             >
-              预览编辑
+              {instructionBusy ? "AI 正在理解…" : "预览编辑"}
             </button>
             {pendingInstruction && (
               <div className="instruction-preview">

@@ -27,7 +27,8 @@
         "Original asset references remain unchanged by composition edits",
         "Crop, mask and framing preserve non-destructive undo and redo",
         "Basic color adjustments validate ranges, survive JSON, and undo without replacing originals",
-        "Text instructions commit atomically and reject unsupported edits"
+        "Text instructions commit atomically and reject unsupported edits",
+        "Model-translated clauses are validated before any ImageDocument change"
       ]
     },
     {
@@ -323,6 +324,21 @@
         "The image layer retains its original asset ID and source bytes",
         "The exported pixels reflect the adjustments while text and background stay unchanged",
         "Adjustments survive project reopen and numeric text edits remain one undo step"
+      ]
+    },
+    {
+      "id": "UI-007",
+      "title": "Local AI language understanding and all-or-nothing preview",
+      "fixture": "Owned synthetic color PNG, local Ollama qwen3:8b",
+      "steps": [
+        "Ask: 让商品稍微亮一点，背景换成浅灰色",
+        "Inspect both preview operations, apply, and undo once",
+        "Ask: 背景换成黑色，还要把产品瓶身重绘成红色"
+      ],
+      "passCriteria": [
+        "Both supported intents appear in the preview and apply as one undo step",
+        "The unsupported repaint request rejects the whole plan without changing the canvas",
+        "The original asset reference remains unchanged"
       ]
     },
     {

@@ -655,3 +655,4 @@ export function redoImageOperation(history: ImageHistory): ImageHistory {
 
 export type { ImageInstructionPlan } from "./instruction-planner.js";
 export { planImageInstruction } from "./instruction-planner.js";
+export { planModelImageInstruction } from "./model-instruction.js";
