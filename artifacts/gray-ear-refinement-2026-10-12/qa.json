@@ -1,0 +1,47 @@
+{
+  "source": ".tools\\photocraft-selection-qa\\gray-ear\\gray-ear-refined.pcraft",
+  "selected_stroke": "fur-strands",
+  "changed_bounds_xyxy": [
+    1309,
+    439,
+    1636,
+    543
+  ],
+  "head_change_baseline": 3.261,
+  "head_change_refined": 2.578,
+  "head_change_added_gray_fibers_candidate": 2.77,
+  "ear_core_points_unchanged_from_previous": [
+    [
+      1540,
+      310
+    ],
+    [
+      1550,
+      350
+    ],
+    [
+      1560,
+      430
+    ]
+  ],
+  "control_points_equal_original": [
+    [
+      1050,
+      330
+    ],
+    [
+      200,
+      300
+    ],
+    [
+      1500,
+      800
+    ],
+    [
+      800,
+      1200
+    ]
+  ],
+  "editable_project_layers": 2,
+  "adjustment_off_matches_original_max_channel_error": 4
+}

@@ -1,0 +1,9 @@
+[
+  {
+    "no": 1,
+    "flow": "环境/工具链（非本仓库代码）",
+    "what": "Next 16.4 dev 服务器（Node 22.22.2）HMR websocket 对真实浏览器握手失败：携带 Sec-WebSocket-Extensions: permessage-deflate 时 101 挂起，携带 Origin 头时直接返回 Unauthorized；HMR 连不上导致页面永不 hydrate——页面完整渲染但所有按钮/上传完全无响应，且浏览器无任何报错",
+    "evidence": "直接访问 http://127.0.0.1:3000/image-studio：SSR HTML 正常、18 个 JS chunk 全部 200 加载、无 pageerror，但 DOM 上没有 __reactFiber$，＋添加文字/上传图片点击均无效；curl 复现：带 deflate 扩展头 upgrade 无响应，带 Origin 头返回 Unauthorized，两者都不带则 101 正常",
+    "repro": "启动 apps/web dev（next 16.4.0 / Node 22.22.2），用任意浏览器打开 /image-studio，观察 Network 中 ws://.../_next/hmr 反复失败（ERR_INVALID_HTTP_RESPONSE）且页面不可交互"
+  }
+]

@@ -18,3 +18,14 @@ D014 Image Studio uses Thin Native Editor + Capability Router + PhotoCraft Adapt
 D015 Every Photoshop-like feature must be classified BUILD / WAIT / INTEGRATE / AI_PROVIDER.
 D016 We build ecommerce creative workflows, not a Photoshop clone.
 D017 PhotoCraft upgrades require compatibility and golden-image regression before production.
+
+## 2026-10-10 alignment (supersedes D005, D007, D013, D014 where conflicting)
+
+D018 PhotoCraft is the intended primary professional Image Studio canvas; AI providers handle generative edits. Bridge, save/reopen and quality must be validated before production use.
+D019 Image/Video Studio own workflow, assets, storyboard, versions, permissions and editor-source references; avoid duplicate full image or motion editor models.
+D020 VectorCraft, EffectCraft and FilmCraft are priority integration candidates for vector editing, conventional motion graphics and editable video finishing. Each requires an end-to-end sample before adoption.
+D021 HTML/SVG/GSAP/D3/Three.js, Blender, Remotion and specialist interactive routes retain content-specific roles. HyperFrames is a candidate for code-driven scenes, not a default for every scene.
+D022 Video/Motion Studio covers multiple content types; product ads are one use case. Category-specific samples and quality review determine delivered capability.
+D023 Existing ImageDocument development projects require no mandatory bulk migration. Preserve originals and accessible exports; convert individual projects only when needed.
+
+See `docs/adr/0012-reuse-professional-editors.md` and `../docs/PRODUCT_ARCHITECTURE_ALIGNMENT.md`.

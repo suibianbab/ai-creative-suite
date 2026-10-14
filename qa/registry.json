@@ -54,6 +54,25 @@
       ]
     },
     {
+      "id": "IMG-005",
+      "tier": "smoke",
+      "title": "PhotoCraft bounded language plan validation",
+      "cwd": ".",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@acs/api",
+        "exec",
+        "tsx",
+        "--test",
+        "../web/src/app/image-studio/photocraft/instruction.test.ts"
+      ],
+      "checks": [
+        "Direct phrase plans retain object and protection constraints",
+        "Model plans reject unsupported commands, unsafe amounts and partial requests"
+      ]
+    },
+    {
       "id": "QG-003",
       "tier": "smoke",
       "title": "Production build",
@@ -180,7 +199,73 @@
         "Unauthenticated uploads and cross-workspace reads fail before file handling",
         "Oversized multipart requests are rejected before file buffering",
         "Import replay preserves source bytes and asset identity",
-        "Incremental asset upload is idempotent; stale saves conflict; revocation takes effect"
+        "Incremental asset upload is idempotent; stale saves conflict; revocation takes effect",
+        "PhotoCraft source files save as immutable versions, replay returns the saved version, and original image identity remains fixed",
+        "Native whole-image adjustment jobs create verified editable layers and sequential cloud versions"
+      ]
+    },
+    {
+      "id": "IMG-040",
+      "tier": "smoke",
+      "title": "PhotoCraft cloud adjustment job parameter validation",
+      "cwd": "apps/api",
+      "argv": [
+        "node",
+        "--import",
+        "tsx",
+        "--test",
+        "src/image-projects/photocraft-edit-jobs.test.ts"
+      ],
+      "checks": [
+        "Only the allowlisted adjustment operations and exact parameter keys are accepted",
+        "Invalid ranges, non-numeric values and unsupported command parameters are rejected"
+      ]
+    },
+    {
+      "id": "IMG-041",
+      "tier": "smoke",
+      "title": "PhotoCraft masked cloud adjustment request validation",
+      "cwd": "apps/api",
+      "argv": [
+        "node",
+        "--import",
+        "tsx",
+        "--test",
+        "src/image-projects/photocraft-edit-jobs.test.ts"
+      ],
+      "checks": [
+        "Only bounded rectangle, lasso, object or saved-native selection parameters are accepted",
+        "Unknown command fields, invalid geometry, excessive edge values and unsupported patches are rejected"
+      ]
+    },
+    {
+      "id": "IMG-042",
+      "tier": "image-qa",
+      "title": "PhotoCraft native masked adjustment pixel boundary",
+      "cwd": ".",
+      "argv": ["python", "qa/photocraft_masked_pixel_check.py"],
+      "requiresFiles": ["qa/fixtures/photocraft-hat-teal.png"],
+      "checks": [
+        "Selected pixels change under a native editable brightness mask",
+        "Every pixel outside the selected rectangle remains unchanged"
+      ]
+    },
+    {
+      "id": "IMG-043",
+      "tier": "smoke",
+      "title": "PhotoCraft cloud generation provider and composition guardrails",
+      "cwd": "apps/api",
+      "argv": [
+        "node",
+        "--import",
+        "tsx",
+        "--test",
+        "src/image-projects/generation-quality.test.ts",
+        "src/image-projects/image-generation-provider.test.ts"
+      ],
+      "checks": [
+        "Signed image output from the trusted Qwen OSS host is accepted; foreign hosts are rejected",
+        "Obvious rectangular paste seams are rejected and soft local changes pass"
       ]
     },
     {
@@ -251,6 +336,486 @@
         "Original checksum changes invalidate review",
         "Missing rights and outputs block acceptance",
         "Review case identity cannot be swapped"
+      ]
+    },
+    {
+      "id": "IMG-004",
+      "tier": "image-qa",
+      "title": "PhotoCraft native masked black-hat recipe",
+      "cwd": ".",
+      "argv": ["python", "scripts/photocraft/test_hat_bridge.py"],
+      "requiresFiles": ["qa/fixtures/photocraft-hat-teal.png"],
+      "requiresPorts": [4112],
+      "checks": [
+        "Editable PhotoCraft source retains a masked adjustment layer",
+        "Hat fabric changes strongly while the label and background stay within measured limits",
+        "Rendered image dimensions remain unchanged"
+      ]
+    },
+    {
+      "id": "IMG-006",
+      "tier": "image-qa",
+      "title": "PhotoCraft bounded local edit recipes and protected region",
+      "cwd": ".",
+      "argv": ["python", "scripts/photocraft/test_local_instruction_bridge.py"],
+      "requiresFiles": ["qa/fixtures/photocraft-hat-teal.png"],
+      "requiresPorts": [4112],
+      "checks": [
+        "PhotoCraft lasso confines brim recolor away from the crown and cast shadow",
+        "Sampled green recolor and label exclusion leave protected patch pixels unchanged",
+        "Masked brightness affects only the user-drawn rectangle",
+        "An explicit label-protection instruction fails without a protection rectangle"
+      ]
+    },
+    {
+      "id": "IMG-007",
+      "tier": "image-qa",
+      "title": "Local Qwen3 instruction interpretation through the web route",
+      "cwd": ".",
+      "argv": ["node", "scripts/photocraft/test_instruction_model.mjs"],
+      "requiresPorts": [3000, 11435],
+      "checks": [
+        "Non-rule recolor and saturation phrases produce bounded plans with the correct target",
+        "Logo protection survives model translation",
+        "Unsupported white recolor returns a clear error"
+      ]
+    },
+    {
+      "id": "IMG-008",
+      "tier": "image-qa",
+      "title": "PhotoCraft native add/subtract lasso and edge refinement quality",
+      "cwd": ".",
+      "argv": ["python", "scripts/photocraft/test_selection_refinement.py"],
+      "requiresFiles": ["qa/fixtures/photocraft-hat-teal.png"],
+      "requiresPorts": [4112],
+      "checks": [
+        "Expanded lasso recovers the known teal brim border",
+        "Color-range intersection reduces neutral background spill",
+        "Native add/subtract patches change the selected mask",
+        "Label, crown and distant background remain unchanged",
+        "Malformed patches and out-of-range edge shifts are rejected"
+      ]
+    },
+    {
+      "id": "IMG-009",
+      "tier": "image-qa",
+      "title": "PhotoCraft hat brim boundary golden sample",
+      "cwd": ".",
+      "argv": ["python", "scripts/photocraft/test_hat_brim_boundary.py"],
+      "requiresFiles": ["qa/fixtures/photocraft-hat-teal.png"],
+      "checks": [
+        "Native editable PhotoCraft source has original and masked adjustment layers",
+        "Left brim cyan residue is confined to at most 20 sampled fabric pixels",
+        "Neutral background and the dark region beneath the brim remain unchanged",
+        "The crown and label retain their original pixels"
+      ]
+    },
+    {
+      "id": "IMG-010",
+      "tier": "image-qa",
+      "title": "PhotoCraft native Object Selection and Refine Edge bridge",
+      "cwd": ".",
+      "argv": ["python", "scripts/photocraft/test_native_object_selection.py"],
+      "requiresFiles": ["qa/fixtures/photocraft-hat-teal.png"],
+      "requiresPorts": [4112],
+      "checks": [
+        "Native Object Selection isolates the hat brim within the user box",
+        "Native Refine Edge preserves most fabric while limiting shadow spill",
+        "Black recolor visibly darkens the selected brim while preserving the hat crown",
+        "Result remains an editable masked PhotoCraft project",
+        "Object mode rejects requests without a target box",
+        "Empty object selections return actionable guidance before Refine Edge or any adjustment",
+        "Tiny object selections cannot be accepted as a successful recolor preview"
+      ]
+    },
+    {
+      "id": "IMG-011",
+      "tier": "image-qa",
+      "title": "PhotoCraft native whole-image adjustments and crop",
+      "cwd": ".",
+      "argv": ["python", "scripts/photocraft/test_general_native_edits.py"],
+      "requiresFiles": ["qa/fixtures/photocraft-hat-teal.png"],
+      "requiresPorts": [4112],
+      "checks": [
+        "PhotoCraft crops to the user box without deleting source pixels",
+        "Whole-image brightness, contrast and saturation create editable native adjustment layers",
+        "Missing crop box and conflicting whole-image protection are rejected"
+      ]
+    },
+    {
+      "id": "IMG-012",
+      "tier": "image-qa",
+      "title": "PhotoCraft native mask brush correction and undo source",
+      "cwd": ".",
+      "argv": ["python", "scripts/photocraft/test_native_mask_refinement.py"],
+      "requiresFiles": ["qa/fixtures/photocraft-hat-teal.png"],
+      "requiresPorts": [4112],
+      "checks": [
+        "Black mask stroke removes a local color spill and white stroke restores it",
+        "Each stroke returns a new editable PhotoCraft source while retaining the prior preview for undo",
+        "Out-of-bounds strokes are rejected"
+      ]
+    },
+    {
+      "id": "IMG-013",
+      "tier": "image-qa",
+      "title": "PhotoCraft native spot healing, exposure and vibrance",
+      "cwd": ".",
+      "argv": ["python", "scripts/photocraft/test_native_heal_and_tone.py"],
+      "requiresFiles": ["qa/fixtures/photocraft-hat-teal.png"],
+      "requiresPorts": [4112],
+      "checks": [
+        "Spot healing restores a marked blemish while retaining an untouched source layer",
+        "Exposure and vibrance use editable PhotoCraft adjustment layers",
+        "A healing request without a clicked point is rejected"
+      ]
+    },
+    {
+      "id": "IMG-014",
+      "tier": "image-qa",
+      "title": "PhotoCraft ICC profile and format export",
+      "cwd": ".",
+      "argv": [
+        "python",
+        "scripts/photocraft/test_profile_and_format_export.py"
+      ],
+      "requiresFiles": ["qa/fixtures/photocraft-hat-teal.png"],
+      "requiresPorts": [4112],
+      "checks": [
+        "Source profile inspection reports Display P3",
+        "PNG, JPEG, WebP, TIFF and PSD preserve embedded Display P3 ICC data",
+        "sRGB export converts the profile",
+        "PSD reopens with editable layers and adjustment mask"
+      ]
+    },
+    {
+      "id": "IMG-015",
+      "tier": "image-qa",
+      "title": "Provider subject mask becomes a native PhotoCraft adjustment mask",
+      "cwd": ".",
+      "argv": ["python", "scripts/photocraft/test_provider_mask_bridge.py"],
+      "requiresFiles": ["qa/fixtures/photocraft-fluffy-cat-cc0.jpg"],
+      "requiresPorts": [4101, 4112],
+      "checks": [
+        "JPEG and editable PhotoCraft sources both receive Provider masks through the versioned bridge",
+        "A PhotoCraft lasso can intersect the Provider mask to keep the face outside the local ear edit",
+        "The Provider overlay is removed and the result retains an editable native adjustment mask",
+        "Remote background and the other ear retain original sample pixels",
+        "Disabling the diagnostic green adjustment restores the original ear and background while keeping the editable mask"
+      ]
+    },
+    {
+      "id": "IMG-016",
+      "tier": "image-qa",
+      "title": "PhotoCraft native Curves and Levels round trip",
+      "cwd": ".",
+      "argv": ["python", "scripts/photocraft/test_native_curves_levels.py"],
+      "requiresFiles": ["qa/fixtures/photocraft-hat-teal.png"],
+      "checks": [
+        "Curves and Levels alter pixels through native editable adjustment layers",
+        "Native and PSD source reopen with both adjustment layers"
+      ]
+    },
+    {
+      "id": "IMG-017",
+      "tier": "image-qa",
+      "title": "Pinned PhotoCraft worker admission and failure recovery",
+      "cwd": ".",
+      "argv": ["python", "scripts/photocraft/test_bridge_task_limits.py"],
+      "requiresFiles": ["qa/fixtures/photocraft-fluffy-cat-cc0.jpg"],
+      "requiresPorts": [4101, 4112],
+      "checks": [
+        "Bridge reports pinned PhotoCraft 0.6.0 and admits one active edit",
+        "Concurrent edit receives retryable 429 instead of competing for local GPU resources",
+        "A failed CLI request releases its slot and the next valid request succeeds"
+      ]
+    },
+    {
+      "id": "IMG-018",
+      "tier": "image-qa",
+      "title": "PhotoCraft natural-language plan safety rules",
+      "cwd": ".",
+      "argv": ["node", "scripts/photocraft/test_instruction_rules.mjs"],
+      "checks": [
+        "Direct plans preserve target, direction and numeric amount",
+        "Unsupported combined effects and conflicting model plans fail closed"
+      ]
+    },
+    {
+      "id": "IMG-019",
+      "tier": "image-qa",
+      "title": "PhotoCraft gray cat ear recolor with editable mask",
+      "cwd": ".",
+      "argv": ["python", "scripts/photocraft/test_gray_cat_ear_bridge.py"],
+      "requiresFiles": ["qa/fixtures/photocraft-fluffy-cat-cc0.jpg"],
+      "requiresPorts": [4101, 4112],
+      "checks": [
+        "Ear tip, middle and root lose orange chroma without losing luminance texture",
+        "PhotoCraft mask brush reduces gray spill on the orange head while ear samples remain unchanged",
+        "Other ear, face, blanket and background remain unchanged",
+        "PhotoCraft source contains an editable masked adjustment layer and disabling it restores the original"
+      ]
+    },
+    {
+      "id": "IMG-021",
+      "tier": "image-qa",
+      "title": "PhotoCraft gray ear root brush refinement and editable source",
+      "cwd": ".",
+      "argv": ["python", "scripts/photocraft/refine_gray_ear_root.py"],
+      "requiresFiles": [
+        "qa/fixtures/photocraft-fluffy-cat-cc0.jpg",
+        ".tools/photocraft-selection-qa/gray-ear/gray-ear-refined.pcraft",
+        ".tools/photocraft-selection-qa/gray-ear/gray-ear-refined.png"
+      ],
+      "checks": [
+        "Native PhotoCraft mask strokes change only the ear-root neighborhood",
+        "Ear core and other control points remain unchanged",
+        "Head spill decreases and the editable adjustment mask reopens",
+        "Disabling the adjustment restores the original image"
+      ]
+    },
+    {
+      "id": "IMG-022",
+      "tier": "image-qa",
+      "title": "PhotoCraft ordered instruction sequence and editable source",
+      "cwd": ".",
+      "argv": ["node", "scripts/photocraft/test_instruction_sequence.mjs"],
+      "requiresFiles": ["qa/fixtures/photocraft-hat-teal.png"],
+      "requiresPorts": [4112],
+      "checks": [
+        "Recolor, whole-image brightness and square crop execute in order on PhotoCraft native sources",
+        "Every effect changes the rendered preview and editable adjustment layers survive",
+        "Final crop has the expected square dimensions and PNG preview"
+      ]
+    },
+    {
+      "id": "IMG-023",
+      "tier": "image-qa",
+      "title": "PhotoCraft fine hat brim visual sample",
+      "cwd": ".",
+      "argv": ["python", "scripts/photocraft/render_hat_brim_fine.py"],
+      "requiresFiles": ["qa/fixtures/photocraft-hat-teal.png"],
+      "requiresPorts": [4112],
+      "checks": [
+        "Native PhotoCraft lasso follows the crown seam and visible brim edge",
+        "At least 8250 of 8289 sampled teal brim pixels become red with no sampled neutral shadow damage",
+        "Label and crown controls are unchanged by recolor",
+        "Final square source reopens with two editable adjustment masks and a preserved pixel layer"
+      ]
+    },
+    {
+      "id": "IMG-024",
+      "tier": "image-qa",
+      "title": "PhotoCraft hat brim quality gate rejects rough selection",
+      "cwd": ".",
+      "argv": ["python", "scripts/photocraft/test_hat_quality_gate.py"],
+      "requiresFiles": ["qa/fixtures/photocraft-hat-teal.png"],
+      "requiresPorts": [4112],
+      "checks": [
+        "Five-point rough lasso fails target coverage or background protection",
+        "383-point native PhotoCraft lasso passes target coverage and background protection",
+        "Quality thresholds stay tied to the fixed fixture, not arbitrary user images"
+      ]
+    },
+    {
+      "id": "IMG-025",
+      "tier": "image-qa",
+      "title": "PhotoCraft command catalog and reusable native plan executor",
+      "cwd": ".",
+      "argv": ["node", "scripts/photocraft/test_native_command_adapter.mjs"],
+      "checks": [
+        "Pinned PhotoCraft command catalog exposes verified groups",
+        "A command sequence is compiled through one executor",
+        "Unknown PhotoCraft command IDs are rejected before execution"
+      ]
+    },
+    {
+      "id": "IMG-026",
+      "tier": "image-qa",
+      "title": "PhotoCraft native text layer through instruction bridge",
+      "cwd": ".",
+      "argv": ["python", "scripts/photocraft/test_native_text_bridge.py"],
+      "requiresFiles": ["qa/fixtures/photocraft-hat-teal.png"],
+      "requiresPorts": [4112],
+      "checks": [
+        "Native type.create changes preview without changing distant original pixels",
+        "Saved .pcraft reopens with a separate editable Type layer",
+        "The versioned bridge capability endpoint reports type.create"
+      ]
+    },
+    {
+      "id": "IMG-027",
+      "tier": "image-qa",
+      "title": "PhotoCraft canvas size capability through shared native adapter",
+      "cwd": ".",
+      "argv": ["python", "scripts/photocraft/test_canvas_size_bridge.py"],
+      "requiresFiles": ["qa/fixtures/photocraft-tiny.png"],
+      "requiresPorts": [4112],
+      "checks": [
+        "Native image.canvasSize changes the preview to the requested dimensions",
+        "Saved .pcraft reopens with the same dimensions and editable original pixel layer",
+        "Original fixture bytes remain unchanged"
+      ]
+    },
+    {
+      "id": "IMG-028",
+      "tier": "image-qa",
+      "title": "PhotoCraft image resampling and editable Levels capability",
+      "cwd": ".",
+      "argv": [
+        "python",
+        "scripts/photocraft/test_native_geometry_levels_bridge.py"
+      ],
+      "requiresFiles": ["qa/fixtures/photocraft-tiny.png"],
+      "requiresPorts": [4112],
+      "checks": [
+        "Native image.imageSize changes preview and reopened source to requested dimensions",
+        "Native Levels visibly changes preview and reopens with an editable adjustment layer and exact parameters",
+        "Original fixture bytes remain unchanged"
+      ]
+    },
+    {
+      "id": "IMG-029",
+      "tier": "image-qa",
+      "title": "PhotoCraft native text style and layer drop shadow",
+      "cwd": ".",
+      "argv": [
+        "python",
+        "scripts/photocraft/test_native_type_style_shadow_bridge.py"
+      ],
+      "requiresFiles": ["qa/fixtures/photocraft-hat-teal.png"],
+      "requiresPorts": [4112],
+      "checks": [
+        "Native type.setStyle saves the requested bold weight and underline in an editable Type layer",
+        "Native layer.layerStyle.dropShadow changes preview and survives source reopen",
+        "An invisible full-canvas background shadow is rejected and original fixture bytes remain unchanged"
+      ]
+    },
+    {
+      "id": "IMG-030",
+      "tier": "image-qa",
+      "title": "Capability-aware PhotoCraft natural-language planner",
+      "cwd": ".",
+      "argv": ["node", "scripts/photocraft/test_capability_planner.mjs"],
+      "requiresPorts": [3000, 11435],
+      "checks": [
+        "Multiple phrasings of image-size resolve to the same exact dimensions",
+        "Levels, text style and drop shadow resolve to bounded PhotoCraft plans",
+        "Missing parameters, unsupported colors and mixed effects do not produce executable plans"
+      ]
+    },
+    {
+      "id": "IMG-031",
+      "tier": "image-qa",
+      "title": "PhotoCraft saved selection and active layer binding",
+      "cwd": ".",
+      "argv": ["python", "scripts/photocraft/test_selected_context.py"],
+      "requiresFiles": ["qa/fixtures/photocraft-hat-teal.png"],
+      "requiresPorts": [4112],
+      "checks": [
+        "Inspect returns the saved active layer and selection bounds",
+        "An existing native selection drives a local editable adjustment",
+        "A stale expected layer id is rejected before any edit"
+      ]
+    },
+    {
+      "id": "IMG-032",
+      "tier": "image-qa",
+      "title": "Generated result composes as an editable PhotoCraft masked layer",
+      "cwd": ".",
+      "argv": ["python", "scripts/photocraft/test_generated_compose.py"],
+      "requiresFiles": [
+        "qa/fixtures/photocraft-tiny.pcraft",
+        "qa/fixtures/photocraft-tiny.png"
+      ],
+      "requiresPorts": [4112],
+      "checks": [
+        "Generated PNG is placed as a separate masked layer in native source",
+        "Pixels outside the selected rectangle are unchanged",
+        "Optional PhotoCraft lasso outline masks the generated layer without exposing rectangle corners",
+        "Saved PhotoCraft selection is reused as the generated layer mask and absent selection is rejected",
+        "A generated Smart Object mask accepts a native brush correction and remains editable",
+        "Reopened source retains the generated layer and editable mask"
+      ]
+    },
+    {
+      "id": "IMG-033",
+      "tier": "image-qa",
+      "title": "Local image edit Provider boundary and disabled state",
+      "cwd": ".",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@acs/api",
+        "exec",
+        "tsx",
+        "--test",
+        "../web/src/app/api/image-local-edit/route.test.ts"
+      ],
+      "requiresFiles": ["qa/fixtures/photocraft-hat-teal.png"],
+      "checks": [
+        "Unconfigured provider rejects without an image edit",
+        "Configured development route sends image, mask, prompt and bounded rectangle through the Provider abstraction",
+        "Qwen response URL is restricted to provider storage and downloaded as a bounded PNG",
+        "Valid Provider PNG returns as a bounded PNG response"
+      ]
+    },
+    {
+      "id": "IMG-035",
+      "tier": "image-qa",
+      "title": "PhotoCraft foreground mask and independent generated background",
+      "cwd": ".",
+      "argv": ["python", "scripts/photocraft/test_background_compose.py"],
+      "requiresPorts": [4112],
+      "checks": [
+        "Background replacement retains original foreground pixels behind a native editable PhotoCraft mask",
+        "Generated background is an independent Smart Object below the foreground",
+        "Original source remains below both layers and output dimensions remain unchanged",
+        "Optional Drop Shadow is attached to the foreground layer and missing saved selection is rejected",
+        "Foreground preview supports native lasso subtraction and mask brush before final background composition",
+        "A corrected prepared foreground mask survives replacement of the neutral Fill layer with the generated Smart Object"
+      ]
+    },
+    {
+      "id": "IMG-036",
+      "tier": "image-qa",
+      "title": "PhotoCraft whole-image rotation and mirror commands",
+      "cwd": ".",
+      "argv": ["python", "scripts/photocraft/test_native_orient_bridge.py"],
+      "requiresPorts": [4112],
+      "checks": [
+        "Five bounded native PhotoCraft commands preserve expected pixel orientation",
+        "Quarter turns swap width and height while mirrors retain dimensions",
+        "Native editable project reopens with its Pixel layer intact",
+        "Unsupported orientation is rejected"
+      ]
+    },
+    {
+      "id": "IMG-037",
+      "tier": "image-qa",
+      "title": "PhotoCraft selected-layer duplicate and visibility",
+      "cwd": ".",
+      "argv": ["python", "scripts/photocraft/test_native_layer_action.py"],
+      "requiresPorts": [4112],
+      "checks": [
+        "Native layer duplicate retains original and adds an editable Pixel layer",
+        "Hide and show change only the selected layer visibility and reopen correctly",
+        "A stale selected-layer ID is rejected before editing",
+        "Original source bytes remain unchanged"
+      ]
+    },
+    {
+      "id": "IMG-038",
+      "tier": "image-qa",
+      "title": "PhotoCraft PSD save does not persist an active selection",
+      "cwd": ".",
+      "argv": ["python", "scripts/photocraft/test_psd_selection_roundtrip.py"],
+      "requiresFiles": ["qa/fixtures/photocraft-hat-teal.png"],
+      "requiresPorts": [4112],
+      "checks": [
+        "A native .pcraft source retains selection bounds after reopen",
+        "The same document saved as PSD has no active selection after reopen",
+        "The workbench must not advertise Web-saved PSD selections as reusable native selections"
       ]
     }
   ],
@@ -412,6 +977,486 @@
         "The report remains advisory and is hidden when the document changes",
         "Exposure trial previews before applying and cannot be saved or exported prematurely",
         "One undo restores the original adjustment and original asset reference"
+      ]
+    },
+    {
+      "id": "UI-011",
+      "title": "PhotoCraft canvas open, native save, browser and cloud reopen",
+      "fixture": "qa/fixtures/photocraft-tiny.png and qa/fixtures/photocraft-tiny.pcraft",
+      "steps": [
+        "Import a PNG in the PhotoCraft workbench and verify the editor canvas and layer panel display it",
+        "Save the canvas and confirm a .pcraft project version appears without a browser download",
+        "Reload, open the local project, save again, then upload and reopen the cloud project"
+      ],
+      "passCriteria": [
+        "No manual download and reimport is needed",
+        "The editable source opens with its layers after reload",
+        "Cloud source bytes match the saved version and access is tenant scoped"
+      ]
+    },
+    {
+      "id": "UI-012",
+      "title": "PhotoCraft black hat instruction and visual identity review",
+      "fixture": "qa/fixtures/photocraft-hat-teal.png, generated original with FORM 01 patch",
+      "steps": [
+        "Open the hat image and enter 将帽子的颜色换成黑色",
+        "Sample multiple bright, shadow and brim fabric points while avoiding the patch",
+        "Preview, inspect the full-size label, stitch texture, brim and background, then apply",
+        "Save the editable source, reload and reopen its two layers"
+      ],
+      "passCriteria": [
+        "The material looks black and the background remains visually unchanged",
+        "The FORM 01 patch is legible and fabric seams remain visible",
+        "The project retains the original pixel layer and a masked PhotoCraft adjustment layer"
+      ]
+    },
+    {
+      "id": "UI-013",
+      "title": "PhotoCraft bounded language, region protection, preview and native reopen",
+      "fixture": "qa/fixtures/photocraft-hat-teal.png",
+      "steps": [
+        "Import the hat, enter 把帽沿改成红色，保留标签, and inspect the parsed plan",
+        "Click at least three outline points around the brim and two corners around the label",
+        "Preview, inspect brim edges and label, then apply and save the native project",
+        "Reload and reopen the project; try 改红再去掉标签 and inspect the rejection"
+      ],
+      "passCriteria": [
+        "Plan retains brim target and label protection requirement",
+        "Preview appears before apply, with no silent partial execution",
+        "Saved .pcraft reopens with original and masked adjustment layers",
+        "Known hand-drawn edge residue is recorded and blocks premium image quality acceptance"
+      ]
+    },
+    {
+      "id": "UI-014",
+      "title": "PhotoCraft selection patches and edge controls",
+      "fixture": "qa/fixtures/photocraft-hat-teal.png and a rights-cleared fine-hair boundary image",
+      "steps": [
+        "Draw a base brim outline, add a missing fabric patch, subtract an unwanted background patch",
+        "Adjust edge expansion and feather, add two fabric samples, and preview the result",
+        "Compare the brim and neutral background at full resolution before applying",
+        "Apply, save, reload, and reopen the editable .pcraft source",
+        "Repeat visual review on a fine-hair boundary image when a rights-cleared fixture is available"
+      ],
+      "passCriteria": [
+        "Patch and edge controls change the preview only after explicit user input",
+        "The new preview reduces visible target-color residue without coloring the background",
+        "Native source reopens with its masked adjustment layer",
+        "Fine-hair acceptance remains pending until the additional fixture is reviewed"
+      ]
+    },
+    {
+      "id": "UI-015",
+      "title": "PhotoCraft native mask refinement, save, preview sync and reopen",
+      "fixture": "qa/fixtures/photocraft-hat-teal.png; qa/fixtures/photocraft-fluffy-cat-cc0.jpg",
+      "steps": [
+        "Create a masked local recolor and enter the enlarged PhotoCraft canvas",
+        "Select the adjustment layer mask thumbnail, verify the document tab names Layer Mask/8, and paint one black and one white stroke",
+        "Save the native source from the canvas toolbar, check the local version and updated preview, then reopen the saved project",
+        "Inspect the hat edge and the fur boundary at full resolution; record any background spill or target-color residue"
+      ],
+      "passCriteria": [
+        "The official editor owns mask brush operations and preserves an editable adjustment layer",
+        "Canvas save refreshes the local preview from the saved .pcraft source",
+        "Saved mask changes remain visible after reopening",
+        "Complex fur-edge failure blocks premium quality acceptance and routes to AI segmentation evaluation"
+      ]
+    },
+    {
+      "id": "UI-016",
+      "title": "PhotoCraft smart-object box drag without native image drag",
+      "fixture": "qa/fixtures/photocraft-hat-teal.png",
+      "steps": [
+        "Import the hat into the PhotoCraft workspace and keep smart object selection with scope box mode",
+        "Drag diagonally across the brim in the image preview and inspect the live dashed rectangle",
+        "Release the pointer and verify a persistent selection box without an image-drag ghost",
+        "Clear the box and select the same region with two corner clicks",
+        "Preview a black recolor and switch between the edited image and the original",
+        "Draw a tiny box on the brim and verify the interface asks for a larger target box"
+      ],
+      "passCriteria": [
+        "Native browser image dragging does not start",
+        "Both drag and two-click interactions create a visible scope rectangle",
+        "The rectangle remains aligned with the preview image and can be cleared",
+        "The primary preview shows the black result before applying, and the compare button restores the original",
+        "A tiny box cannot proceed as a successful recolor preview"
+      ]
+    },
+    {
+      "id": "UI-017",
+      "title": "PhotoCraft natural-language whole-image adjustment and box crop",
+      "fixture": "qa/fixtures/photocraft-hat-teal.png",
+      "steps": [
+        "Import the hat and parse 整张图亮度提高25; preview without drawing a selection",
+        "Compare original and preview, then apply and reopen the editable PhotoCraft project",
+        "Parse 把图片裁剪到选区, draw a crop box, preview and apply"
+      ],
+      "passCriteria": [
+        "Whole-image edit changes the full image through a native adjustment layer",
+        "Crop preview has the selected dimensions and native project reopens with the cropped canvas"
+      ]
+    },
+    {
+      "id": "UI-018",
+      "title": "PhotoCraft preview mask brush, undo and editable save",
+      "fixture": "qa/fixtures/photocraft-hat-teal.png",
+      "steps": [
+        "Create a local masked recolor preview and choose black erase brush",
+        "Drag across one recolored brim spot, then choose white restore brush and repaint the same spot",
+        "Undo the last mask stroke, then apply and save the current preview",
+        "Reopen the PhotoCraft source and inspect its adjustment-layer mask"
+      ],
+      "passCriteria": [
+        "Pointer drag changes only the previewed native mask and does not move the image",
+        "Black and white strokes have opposite effects; undo returns the previous immutable preview",
+        "Applying saves a source that can reopen with its editable mask"
+      ]
+    },
+    {
+      "id": "UI-019",
+      "title": "PhotoCraft spot healing, profile inspection and export",
+      "fixture": "qa/fixtures/photocraft-hat-teal.png",
+      "steps": [
+        "Open the image and inspect its dimensions, layer count and color profile",
+        "Parse 去掉这个污点, click one small blemish, preview and apply",
+        "Export the saved source as PNG in sRGB and PSD with its original profile",
+        "Reopen the saved project and inspect its editable repair layer"
+      ],
+      "passCriteria": [
+        "The healing plan requires one clicked point and preserves the original pixel layer",
+        "The workbench shows the source profile and does not silently convert it",
+        "Export format and profile choices reach PhotoCraft native commands"
+      ]
+    },
+    {
+      "id": "UI-020",
+      "title": "Provider fur edge preview and native editable reopen",
+      "fixture": "qa/fixtures/photocraft-fluffy-cat-cc0.jpg",
+      "steps": [
+        "Open the fur sample, choose AI edge mask to PhotoCraft and draw a box around one ear",
+        "Preview at full size and inspect outer fur, inner transition and background",
+        "Apply, reopen the native source and inspect its adjustment mask"
+      ],
+      "passCriteria": [
+        "Background is not recolored and the outer fur boundary follows the Provider mask",
+        "The inner box transition is reviewable and adjustable through native PhotoCraft controls",
+        "Result remains an editable native source; no quality pass is claimed from one sample"
+      ]
+    },
+    {
+      "id": "UI-021",
+      "title": "PhotoCraft canvas save and workbench preview synchronization",
+      "fixture": "Existing editable PhotoCraft project with an adjustment mask",
+      "steps": [
+        "Open a local project and enter the enlarged PhotoCraft Web canvas",
+        "Refine its adjustment mask using PhotoCraft native controls",
+        "Choose 保存并返回工作台 and wait for the saved project version and refreshed preview",
+        "Reopen the saved native source and inspect its editable mask"
+      ],
+      "passCriteria": [
+        "The workbench remains blocked while the native source is saving and normalizing",
+        "A successful save advances the local project version and refreshes the workbench preview before returning",
+        "A failed or timed-out save leaves the user in the canvas with an error, without claiming synchronized state",
+        "A PSD larger than 20 MB can pass the bounded native-source normalization endpoint"
+      ]
+    },
+    {
+      "id": "UI-022",
+      "title": "Gray cat ear root visual review after PhotoCraft mask brush refinement",
+      "fixture": "qa/fixtures/photocraft-fluffy-cat-cc0.jpg and artifacts/gray-ear-refinement-2026-10-12/",
+      "steps": [
+        "Compare original, previous and refined ear-root crops at native resolution",
+        "Inspect the full refined image and the orange head, other ear, face and background",
+        "Reopen the gray-ear-refined native project in PhotoCraft Web"
+      ],
+      "passCriteria": [
+        "The gray ear remains complete with visible original fur texture",
+        "The root transition follows fur and has no obvious straight cut or large gray spill on the head",
+        "No unrelated region changes and the editable native source reopens"
+      ]
+    },
+    {
+      "id": "UI-023",
+      "title": "PhotoCraft compound natural-language edit confirmation and save round trip",
+      "fixture": "qa/fixtures/photocraft-hat-teal.png",
+      "steps": [
+        "Enter 把帽沿改红、保留标签、整体稍微提亮并裁成方图 and parse the plan",
+        "Verify all three steps are listed and preview requires confirmation",
+        "Confirm, trace a fine brim contour and label protection frame, then preview the first step",
+        "Inspect or refine the native PhotoCraft mask, then confirm continuation of remaining steps",
+        "Inspect the final result at original size and complete four quality checks",
+        "Apply and save the native source, then reopen the local project"
+      ],
+      "passCriteria": [
+        "No requested step is silently omitted",
+        "Only the first step previews initially, remaining steps require explicit confirmation, and apply stays disabled until all steps and quality checks are complete",
+        "A failed step leaves the original project untouched",
+        "The reopened project has editable adjustment layers and a square crop",
+        "The user reviews selection edge quality before applying; the checklist is not an automated commercial-grade verdict"
+      ]
+    },
+    {
+      "id": "UI-024",
+      "title": "Natural-language native PhotoCraft text preview",
+      "fixture": "qa/fixtures/photocraft-hat-teal.png",
+      "steps": [
+        "Open the hat project and enter 在图片上添加文字「SALE」字号72，红色",
+        "Parse the plan, click a text anchor on the image and preview",
+        "Inspect the visible red text, the editable Type layer in the source and the disabled apply button before quality confirmation",
+        "Cancel the preview without saving the test edit"
+      ],
+      "passCriteria": [
+        "The text instruction is parsed as one operation despite its comma",
+        "The preview visibly adds text using native PhotoCraft type.create",
+        "Cancellation leaves the existing project unchanged"
+      ]
+    },
+    {
+      "id": "UI-025",
+      "title": "PhotoCraft layer context, multi-step edit and local generation",
+      "fixture": "An editable PhotoCraft project with a Type layer and a rights-cleared photo",
+      "steps": [
+        "Select the Type layer in PhotoCraft and save the canvas; verify workbench shows the selected layer",
+        "Run 将当前文字设为粗体，然后给当前文字图层添加投影，距离8像素，大小10像素，不透明度55%",
+        "For local generation, configure a development image provider, draw a rectangle and request a local change",
+        "Inspect the preview, PhotoCraft generated layer and mask; cancel or apply and reopen"
+      ],
+      "passCriteria": [
+        "The plan lists both steps and does not edit a different active layer",
+        "A generated result remains inside the native PhotoCraft mask and the original outside is preserved",
+        "No provider configuration gives a clear unavailable message without altering the project",
+        "Actual generated image quality requires a configured provider and separate visual review"
+      ]
+    },
+    {
+      "id": "UI-026",
+      "title": "Generated edit uses the saved PhotoCraft selection",
+      "fixture": "Native .pcraft with a persisted CLI selection; Qwen development image Provider",
+      "steps": [
+        "Open a native .pcraft with a persisted selection; do not rely on the Web PSD save path to retain an active selection",
+        "Verify the workbench reports that selection and leave Use native source selection enabled",
+        "Request a generated local edit, inspect the masked preview, apply and reopen the editable source",
+        "Repeat with no saved selection using a manually drawn outline"
+      ],
+      "passCriteria": [
+        "The saved selection is used without redrawing its boundary in the workbench",
+        "Generated pixels are limited by a native editable PhotoCraft layer mask",
+        "The source and preview survive reopen; outside-selection pixels remain original",
+        "Image quality is judged per edit; background shadow residue blocks visual acceptance"
+      ]
+    },
+    {
+      "id": "UI-027",
+      "title": "PhotoCraft general edge workflow on dark-background product",
+      "fixture": "artifacts/image-ecommerce-commons-2026-10-09/originals/matte-shampoo.jpg; artifacts/background-layer-qa-2026-10-13/shampoo-corrected-mask.png and shampoo-corrected.png",
+      "steps": [
+        "On the pinned and candidate PhotoCraft versions, prepare the foreground with the same object selection and flower exclusion; retain the native editable mask",
+        "Inspect the neutral preview and beige composite at source resolution, including cap, both sides and bottom",
+        "Use only general PhotoCraft selection, edge and mask tools available in the tested version; record the commands, human corrections and time",
+        "Save and reopen the native project, and compare with the 2026-10-13 baseline"
+      ],
+      "passCriteria": [
+        "The flower remains excluded and the bottle label and shape remain intact",
+        "Dark fringe, hard cutout, translucent cap and generic shadow are recorded separately; technical mask success is not a visual pass",
+        "The result receives an honest quality grade and any remaining retouch is assigned to a person",
+        "A candidate upgrade changes the default only after full-size visual improvement and editable source reopen"
+      ]
+    },
+    {
+      "id": "UI-028",
+      "title": "PhotoCraft general edge workflow on fur",
+      "fixture": "qa/fixtures/photocraft-fluffy-cat-cc0.jpg; artifacts/background-layer-qa-2026-10-13/cat-fur.png and cat-fur-refined.png",
+      "steps": [
+        "On the pinned and candidate PhotoCraft versions, create the foreground mask using the available general selection workflow",
+        "Inspect outer fur, ears and background intrusion at source resolution over light, dark and target backgrounds",
+        "Apply only available general PhotoCraft edge and mask corrections; record commands, human corrections and time",
+        "Save and reopen the native project and compare against the 2026-10-13 baseline"
+      ],
+      "passCriteria": [
+        "Missing fur, hard ear cuts, background contamination and floating appearance are recorded distinctly",
+        "A natural-looking result is required for a visual pass; a valid editable mask alone is insufficient",
+        "The result receives an honest quality grade and remaining fine-fur work is assigned to a person",
+        "A candidate upgrade changes the default only after full-size visual improvement and editable source reopen"
+      ]
+    },
+    {
+      "id": "UI-029",
+      "title": "PhotoCraft workbench invalidates stale edit context",
+      "fixture": "Two saved PhotoCraft projects with distinct layer names; native .pcraft fixture with a persisted selection",
+      "steps": [
+        "Open the first project, parse an instruction and create an edit preview",
+        "Change the current layer or selection in the PhotoCraft canvas, then return to the workbench",
+        "Verify the unsynchronized status, save the canvas, and recheck the selected target",
+        "Open the second project from the local list and repeat from a cloud project if available",
+        "Change the instruction text while a model-backed plan is being parsed"
+      ],
+      "passCriteria": [
+        "Canvas interaction cancels an existing preview and disables parsing, preview and apply until save completes",
+        "After Web save, the workbench shows the newly selected layer and honestly reports the active selection as unavailable through PSD; a native .pcraft selection remains reusable",
+        "Switching projects clears the former image, plan, selection geometry and preview before the new image is ready",
+        "A delayed response from an old plan or preview cannot restore a stale edit",
+        "The user can preview, apply, save and reopen a new edit on the second project"
+      ]
+    },
+    {
+      "id": "UI-030",
+      "title": "PhotoCraft quality grade and editable manual handoff",
+      "fixture": "Independent 8x8 PhotoCraft browser QA project; UI-027 bottle and UI-028 fur remain visual defect references",
+      "steps": [
+        "Create a real PhotoCraft preview and leave at least one quality criterion unchecked",
+        "Verify direct-use apply is disabled; record a grade and a concrete retouch note, then save an editable draft",
+        "Reopen the draft and verify the grade, note, original, layers and mask/source structure remain available",
+        "Save a new version from the PhotoCraft canvas and verify the previous grade is no longer applied to the new version",
+        "Try direct-use regrading with incomplete checks, then record a non-ready grade and reopen it"
+      ],
+      "passCriteria": [
+        "An unchecked quality criterion cannot be silently marked as direct-use",
+        "The lower-grade draft preserves an editable .pcraft source and the recorded retouch note",
+        "The new source version starts unreviewed; previous review remains in history",
+        "The reviewer can regrade the current version without changing PhotoCraft pixels or claiming visual quality from this synthetic sample",
+        "Known fur and bottle defects remain visual failures requiring PhotoCraft manual retouch"
+      ]
+    },
+    {
+      "id": "IMG-039",
+      "title": "Cloud PhotoCraft edit job and versioned quality review",
+      "fixture": "Isolated PostgreSQL schema, RustFS and PhotoCraft 0.6.0 CLI hat fixture",
+      "steps": [
+        "Create a cloud PhotoCraft project and submit an allowlisted orientation job",
+        "Reject anonymous and cross-workspace job or review requests",
+        "Replay the same request key and reject a changed payload",
+        "Execute the fixed CLI command in the worker and reopen the next .pcraft version",
+        "Append a quality review to a specific version and read its history"
+      ],
+      "passCriteria": [
+        "The task writes a changed editable source as the next immutable version",
+        "Job status and review history stay within the authorized workspace",
+        "Replays do not create another edit or review; conflicting payloads return 409",
+        "Only four completed checks can receive the ready grade; another grade requires a retouch note",
+        "A new source version has no inherited quality grade"
+      ]
+    },
+    {
+      "id": "UI-031",
+      "title": "Cloud PhotoCraft job and quality review browser round trip",
+      "fixture": "Independent rights-cleared hat image saved as a new PhotoCraft cloud project",
+      "steps": [
+        "Sign in to the development workspace and import the isolated hat fixture",
+        "Save the native PhotoCraft source as cloud version 1",
+        "Parse a whole-image rotation instruction and submit the cloud job",
+        "Verify cloud version 2 opens in the official PhotoCraft canvas",
+        "Record a non-ready quality grade and retouch note; reload and reopen the cloud project",
+        "Sign in again and reopen the same cloud version"
+      ],
+      "passCriteria": [
+        "The submitted job finishes and creates a visible rotated editable version 2",
+        "The new version begins unreviewed",
+        "The quality grade and note are visible in both current-version and cloud-version panels after reload and sign-in",
+        "A failed cloud review sync can be retried without creating a second local review",
+        "No existing product project is modified"
+      ]
+    },
+    {
+      "id": "UI-032",
+      "title": "PhotoCraft local draft survives opening a divergent cloud version",
+      "fixture": "Independent UI-031 cloud hat project with one additional unsynced browser edit",
+      "steps": [
+        "Open the cloud version and save a distinct edit only in the browser project",
+        "Click the older cloud version in the same workspace",
+        "Verify a clear conflict choice appears before any local source is replaced",
+        "Choose to preserve the local draft and open the cloud version",
+        "Reopen the preserved local draft and compare its native source, version and quality note",
+        "Repeat with an already synchronized local source and verify no unnecessary fork"
+      ],
+      "passCriteria": [
+        "The original unsynced native source and review remain available under an independent local project ID",
+        "The cloud project opens with its exact remote version, not the maximum of local and remote counters",
+        "The preserved draft has no stale cloud-version pointer and can be saved separately",
+        "Choosing to continue the local draft makes no cloud-cache replacement",
+        "A synchronized source opens the newer cloud version without a draft copy"
+      ]
+    },
+    {
+      "id": "UI-033",
+      "title": "Cloud PhotoCraft current-layer duplicate and visibility jobs",
+      "fixture": "Independent UI-031 cloud hat project with an active editable layer",
+      "steps": [
+        "Parse and submit duplicate current layer to the cloud worker",
+        "Open the next native version and verify two layers",
+        "Submit hide and show current layer as separate versioned jobs",
+        "Reload and reopen the final cloud source"
+      ],
+      "passCriteria": [
+        "Only the three allowlisted layer operations are accepted",
+        "Worker output preserves editable native layers and verifies count or visibility",
+        "Each successful job creates exactly one immutable cloud version",
+        "The final version reopens in the official PhotoCraft canvas without a local-list error"
+      ]
+    },
+    {
+      "id": "UI-034",
+      "title": "Cloud PhotoCraft whole-image adjustment jobs",
+      "fixture": "Independent cloud PhotoCraft hat project with an editable native source",
+      "steps": [
+        "Submit a levels instruction with explicit black, white and gamma values",
+        "Wait for the worker, open the new cloud version and inspect the native adjustment layer",
+        "Submit a brightness instruction, wait and reopen the next version",
+        "Sign out and sign in again, then reopen the saved cloud source"
+      ],
+      "passCriteria": [
+        "Only allowlisted commands and validated numeric parameters reach the worker",
+        "Each successful job creates exactly one immutable cloud version with the requested editable PhotoCraft adjustment layer",
+        "The saved source reopens in the official PhotoCraft canvas after a fresh login"
+      ]
+    },
+    {
+      "id": "UI-035",
+      "title": "Cloud PhotoCraft masked local adjustment",
+      "fixture": "Independent cloud PhotoCraft project with a visible subject and background",
+      "steps": [
+        "Open a saved cloud source and enter a local brightness or saturation instruction",
+        "Draw a rectangle or lasso in the image preview and submit the cloud job",
+        "Open the next version in the official PhotoCraft canvas and inspect the editable adjustment mask",
+        "Compare the edited region and a background region, then reload and reopen the source"
+      ],
+      "passCriteria": [
+        "The job binds to the expected cloud version and uses PhotoCraft native selection and adjustment commands",
+        "The next version contains one new editable masked adjustment layer and preserves earlier layers",
+        "Outside the selected region remains unchanged; the selected region shows the requested adjustment",
+        "Reloading the cloud source retains the editable mask and quality grade is reset"
+      ]
+    },
+    {
+      "id": "UI-036",
+      "title": "Development generative edit and cloud version handoff",
+      "fixture": "Independent PhotoCraft cloud project with a provider-enabled development environment",
+      "steps": [
+        "Create a local generative preview from a cloud source and inspect the editable PhotoCraft layer and mask",
+        "Mark the result ready or record a manual-retouch note",
+        "Apply the preview and save that editable source to the cloud in one action",
+        "Reload the cloud version and its quality review"
+      ],
+      "passCriteria": [
+        "Provider generation and PhotoCraft composition use existing development adapters",
+        "The next cloud version reopens with the generated layer and mask",
+        "The quality grade and note bind to the new version rather than inheriting an older grade",
+        "Failed cloud upload leaves the local editable source available for retry"
+      ]
+    },
+    {
+      "id": "UI-037",
+      "title": "Cloud generation credits and editable PhotoCraft mask",
+      "fixture": "An independent PhotoCraft cloud hat project with generation credits",
+      "steps": [
+        "Draw an object target and submit a cloud local-generation task",
+        "Confirm one credit reservation and the next editable cloud version",
+        "Reopen the version and inspect the generated layer, mask and original",
+        "Record any visible selection defects as a version-bound quality review"
+      ],
+      "passCriteria": [
+        "A successful task writes an editable new version and settles one credit",
+        "Failed tasks refund their reservation without changing the project version",
+        "Visible defects are not marked as finished commercial quality"
       ]
     },
     {

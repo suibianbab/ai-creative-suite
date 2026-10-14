@@ -13,7 +13,8 @@
     "qa:smoke": "node scripts/qa/run-regression.mjs smoke",
     "qa:integration": "node scripts/qa/run-regression.mjs integration",
     "qa:oidc": "node scripts/qa/run-regression.mjs oidc",
-    "qa:image": "node scripts/qa/run-regression.mjs image-qa"
+    "qa:image": "node scripts/qa/run-regression.mjs image-qa",
+    "dev:photocraft-bridge": "node scripts/photocraft/dev-bridge.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.2.0",

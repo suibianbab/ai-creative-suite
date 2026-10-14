@@ -129,11 +129,17 @@ async function checkPostgres() {
 
 async function checkPort(port) {
   if (port === 5432) return await checkPostgres();
-  if (port === 9000 || port === 8180) {
+  if ([9000, 8180, 4112, 3000, 11435].includes(port)) {
     const url =
       port === 9000
         ? "http://127.0.0.1:9000/health"
-        : "http://127.0.0.1:8180/realms/acs-dev/.well-known/openid-configuration";
+        : port === 4112
+          ? "http://127.0.0.1:4112/health"
+          : port === 3000
+            ? "http://localhost:3000/image-studio/photocraft"
+            : port === 11435
+              ? "http://127.0.0.1:11435/health"
+              : "http://127.0.0.1:8180/realms/acs-dev/.well-known/openid-configuration";
     try {
       return (await fetch(url, { signal: AbortSignal.timeout(3000) })).ok;
     } catch {

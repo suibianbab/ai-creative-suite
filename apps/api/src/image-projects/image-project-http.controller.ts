@@ -45,6 +45,19 @@ import {
   LocalImageImportValidationError,
   type LocalOriginal,
 } from "./local-image-import.js";
+import {
+  PhotoCraftInsufficientCreditsError,
+  PhotoCraftJobConflictError,
+  PhotoCraftJobValidationError,
+} from "./photocraft-edit-jobs.js";
+import {
+  PhotoCraftConflictError,
+  PhotoCraftValidationError,
+} from "./photocraft-project-store.js";
+import {
+  PhotoCraftQualityConflictError,
+  PhotoCraftQualityValidationError,
+} from "./photocraft-quality-reviews.js";
 
 type RequestHeaders = {
   headers: { authorization?: string; "content-length"?: string };
@@ -80,13 +93,21 @@ export class ImageProjectHttpGuard implements CanActivate {
           request.params.workspaceId ?? "",
           request.method === "GET" ? "read" : "write",
         );
-      if (request.method === "POST") {
+      if (
+        (request.method === "POST" &&
+          !request.originalUrl.split("?")[0]?.endsWith("/jobs") &&
+          !request.originalUrl.includes("/reviews/")) ||
+        (request.method === "PUT" &&
+          request.originalUrl.includes("/photocraft-projects"))
+      ) {
         const length = Number(request.headers["content-length"]);
         if (!Number.isSafeInteger(length) || length < 1)
           throw new HttpException("Upload Content-Length required", 411);
-        const max = request.originalUrl.split("?")[0]?.endsWith("/imports")
-          ? 104 * 1024 * 1024
-          : 26 * 1024 * 1024;
+        const max = request.originalUrl.includes("/photocraft-projects")
+          ? 52 * 1024 * 1024
+          : request.originalUrl.split("?")[0]?.endsWith("/imports")
+            ? 104 * 1024 * 1024
+            : 26 * 1024 * 1024;
         if (length > max) throw new PayloadTooLargeException();
       }
       return true;
@@ -123,19 +144,27 @@ function supportedImage(file: Upload): boolean {
   return false;
 }
 
-function routeError(error: unknown): never {
+export function routeError(error: unknown): never {
   if (error instanceof HttpException) throw error;
+  if (error instanceof PhotoCraftInsufficientCreditsError)
+    throw new HttpException("Insufficient generation credits", 402);
   if (error instanceof AuthenticationError) throw new UnauthorizedException();
   if (error instanceof AccessDeniedError || error instanceof AssetScopeError)
     throw new ForbiddenException();
   if (
     error instanceof ImageProjectConflictError ||
+    error instanceof PhotoCraftConflictError ||
+    error instanceof PhotoCraftJobConflictError ||
+    error instanceof PhotoCraftQualityConflictError ||
     error instanceof LocalImageImportConflictError ||
     error instanceof AssetConflictError
   )
     throw new ConflictException(error.message);
   if (
     error instanceof ImageProjectValidationError ||
+    error instanceof PhotoCraftValidationError ||
+    error instanceof PhotoCraftJobValidationError ||
+    error instanceof PhotoCraftQualityValidationError ||
     error instanceof ImageProjectAssetError ||
     error instanceof LocalImageImportValidationError
   )

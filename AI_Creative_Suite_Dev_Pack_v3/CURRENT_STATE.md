@@ -1,5 +1,29 @@
 # Current State v2
 
+## 2026-10-10 target update
+
+用户已确认 `../docs/PRODUCT_ARCHITECTURE_ALIGNMENT.md` 的多题材 Video/Motion 与专业编辑器复用方向；ADR-0012 已取代旧的 PhotoCraft 可选和完整原生编辑器目标。以下实现清单仍描述当前开发原型；PhotoCraft 已完成开发级闭环，VectorCraft、EffectCraft、FilmCraft 尚未集成。近期技术验证优先级：巩固 PhotoCraft 质量与生产桥接；再验证 VectorCraft 素材流、EffectCraft 非商品题材动效与 FilmCraft 多轨剪辑。旧 ImageDocument 项目不要求先批量迁移，原图与可导出结果须可继续访问。
+
+PhotoCraft 0.6.0 集成验证已扩展为真实闭环：官方 Web 画布可接收宿主导入、保存原生 `.pcraft` 到浏览器项目、刷新重开；独立 PhotoCraft 云项目 API 可经 Keycloak 工作区授权保存不可变版本并重开，浏览器已验证云端版本 1→2。自然语言局部编辑现在有受限规则/模型计划、选区和保护框、PhotoCraft 蒙版调整层、预览/应用/保存；浏览器已验证“帽沿改红，保留标签”后刷新重开，也验证了本机 Qwen3 4B 对非规则蓝色帽沿句式的解析。手绘选区的外缘仍有可见青色残留。仍是版本锁定的 Web 适配与本机开发桥接，不是任意自然语言修图或生产级多租户 CLI 任务服务。见 `../docs/PHOTOCRAFT_INTEGRATION_SPIKE.md` 和 `../docs/PHOTOCRAFT_NL_EDITING.md`。
+
+2026-10-11 增量：自然语言编辑已接入 PhotoCraft 原生非破坏裁切及整图亮度、对比度、饱和度调整。裁切和整图调色复用现有预览、应用、原生项目保存流程；浏览器已验证“整张图亮度提高25”无需选区生成预览，以及“把图片裁剪到选区”后保存重开保持裁切尺寸。`IMG-011` 回归覆盖原生命令和不可变原图边界。模型自由句式仍受解析质量限制；不是任意修图能力。
+
+2026-10-11 复杂边缘/精修增量：PhotoCraft 智能选物体在 CC0 猫耳图上只有紧画框能识别；宽框返回空选区，调大原生精修边缘半径仍有耳根硬截断，自动毛绒边缘质量未达标。工作台预览接入 PhotoCraft 原生蒙版黑/白笔触和 1×/2×/4× 放大；每笔生成可编辑 `.pcraft`，可撤销。帽沿样图的原生像素测试及浏览器黑白笔触、撤销、保存重开通过。见 `../docs/PHOTOCRAFT_SELECTION_REFINEMENT.md`。
+
+2026-10-11 后续增量：单点污点修复、曝光和自然饱和度的受限自然语言计划已映射到 PhotoCraft 原生工具；污点修复保留下层像素，调整均为可编辑图层。工作台可显示原生文件尺寸、图层及 ICC 配置，导出 PNG/JPEG/WebP/TIFF/PSD 时可保留原配置或转换 sRGB。Display P3 ICC 与 PSD 图层/蒙版重开经自动回归验证；浏览器已验证单点修复预览、应用、刷新重开与 PSD 文件实际落盘，CLI 重开确认两层。仍不支持任意对象移除、CMYK/HDR 或复杂毛绒边缘自动精品修复。见 `../docs/PHOTOCRAFT_NL_EDITING.md`、`../docs/PHOTOCRAFT_COLOR_EXPORT.md` 与 `../qa/UI-019-2026-10-11.md`。
+
+2026-10-11 顺序任务：0.7.0 官方 CLI 隔离试验未解决猫耳边界问题，固定的 0.6.0 未升级。现有 BiRefNet 分割蒙版可经 PhotoCraft 原生命令生成可编辑调整层；矩形框误涂额头后又增加原生套索与 Provider 蒙版相交，浏览器猫耳轮廓换色、额头保护和两层源应用通过。用户复核发现整只目标耳朵突兀变绿，失败范围不限于耳根过渡。随后错误地将 PhotoCraft 颜色范围与耳朵蒙版相交，造成大块橙色未换色，已撤销该交集与强制取样；完整耳朵换色恢复，Color 混合保留原图明暗，`IMG-015` 增加耳根换色回归。整耳覆盖属于功能通过，耳根衔接和细毛视觉质量仍未达精品标准。自然语言增加暗部/高光单项 Curves 调整，纠正模型误判方向和复合要求静默丢失；原生 Curves/Levels 的 `.pcraft` 与 PSD 往返通过。桥接启动检查固定 CLI 版本，单任务限流、超时和失败后释放名额已通过 `IMG-017`；这些属于本机开发桥接可靠性，生产多租户任务隔离和独立安全复核仍未完成。见 `../docs/PHOTOCRAFT_SELECTION_REFINEMENT.md`、`../docs/PHOTOCRAFT_BRIDGE_BOUNDARY.md`。
+
+2026-10-12 猫图纠偏：此前绿色耳朵来自测试指令“将选区改成绿色”，仅是诊断效果；用户要去掉大块绿色，我却反复把它当成目标色并误报修复，相关质量说法作废。现用 PhotoCraft 原生图层可见性关闭该调整层，绿色消失，原图恢复；`IMG-015` 加入可逆性回归。这个结果只解决错误诊断层，不代表复杂边缘效果达标。后续样片必须先锁定用户期望的目标区域与颜色，参见 `../qa/UI-020-2026-10-11.md`。
+
+2026-10-12 提示点分割对照：PhotoCraft 原生正负点、SAM 1、SAM 2.1（局部和整图，带/不带范围框）均未超过现有 BiRefNet 主体蒙版＋PhotoCraft 套索/蒙版画笔的灰耳样片；典型失败为只选耳尖、耳根漏色或污染头部。点提示模型未进入正式桥接，现有 PhotoCraft 原生蒙版精修继续保留。见 `../qa/IMG-020-2026-10-12.md`。
+
+2026-10-12 画布同步：放大 PhotoCraft 画布返回工作台时先保存原生源、刷新预览，成功后才返回；失败或超时不误报同步成功。现有猫图 Web 保存导出的约 30 MB PSD 暴露桥接统一 20 MB 限额，已单独将原生文件规范化入口限额设为 64 MB。浏览器验证本地项目版本 1→2 和工作台预览刷新；见 `../qa/UI-021-2026-10-12.md`。
+
+选区精修已接入 PhotoCraft 原生补选/剔除套索、边缘扩展/收缩、羽化和面料取样颜色交集；自制帽图的边缘残留有量化改善，浏览器完成预览撤销及原生源重开。帽沿下方仍有暗红溢色，尚未通过精品商品图视觉验收，见 `../docs/PHOTOCRAFT_SELECTION_REFINEMENT.md`。
+
+PhotoCraft Web 画布新增放大蒙版精修入口与画布保存后原生预览同步；浏览器验证调整层蒙版可选中、笔触可保存并重开。Web 画布白色补画同一点未稳定复现，CLI 黑白笔触可逆。CC0 毛绒猫图换色出现硬矩形背景污染，已作为失败样本记录到 `../qa/UI-015-2026-10-11.md`；复杂毛发边界应评估 AI 分割 Provider，当前不能宣称精品边界达标。
+
 Current phase: Phase 0 Foundation plus early Image Studio editing and quality spikes, 2026-10-10. Baseline audit: `REPO_AUDIT.md`.
 
 当前进展：
@@ -54,14 +78,26 @@ Current phase: Phase 0 Foundation plus early Image Studio editing and quality sp
 - Cloud / Enterprise / AirGap
 - Codex Risk Policy
 
-下一步：
-1. 解决共享浏览器资料的本地草稿隐私门槛 `UI-004`，完成独立新上下文授权安全复核、审计与密钥轮换演练；再设计正式成员管理与生产身份提供方，复核孤儿对象清扫和正式保留策略
-2. 用获授权的真实商品样本运行 Image Studio Golden Spike，补充全尺寸边缘质量、标签/文字保真和人工修正耗时记录；对本轮透明材质及镂空失败类型建立专项回归
-3. 以 FORM 01 双尺寸样片为基线，继续提升镜头/材质/节奏，并设计自有 MotionDocument 到 Remotion 合成的适配与渲染任务边界；真实商品还原另待准确模型或足够多角度素材及品牌方复核
+原计划后续事项仍未全部完成，包括本地草稿隐私、安全复核和真实素材质量检查；具体功能顺序按 ADR-0012 更新。优先验证 PhotoCraft 的 Web 桥接、实际编辑与可编辑保存重开，再用非商品动效和多轨视频样片验证 EffectCraft、FilmCraft 等候选。已有 Blender/Remotion 样片保留为管线基线。
 
 ## PhotoCraft integration status
-- PhotoCraft is not a release blocker.
-- Thin Native Editor owns essential basic editing only.
-- AI providers own generative edits.
-- PhotoCraft owns optional advanced traditional editing.
-- Capability Registry / Router is required before deep integration.
+- 2026-10-14：云端局部调整任务新增受限矩形、套索、智能选物体及原生已存选区，PhotoCraft CLI 建立局部选区与可编辑调整蒙版。隔离 HTTP/Worker 回归通过，真实浏览器 UI-035 将帽图第 8 版局部亮度调整为第 9 版，新增可编辑蒙版层并保留选区；区域外像素由 IMG-042 固定样本验证不变。开发环境生成式预览经 UI-036 保存为云端第 10 版并可刷新重开，质量备注随版本保留；该图有明显矩形拼接，标为“需人工精修”。此路径仍用已有 Provider/PhotoCraft 开发桥接，不是生产级云端生成 Worker。见 `../qa/UI-035-2026-10-14.md`、`../qa/UI-036-2026-10-14.md`。
+- 2026-10-14 当前：`UI-032` 本地草稿/云端冲突保护已通过真实浏览器验收：未同步第 3 版在打开云端第 2 版前得到选择，独立草稿保留原生源与质量备注；已同步源重开不重复复制。云端 Worker 的当前图层复制、隐藏、显示在第 3～5 版通过浏览器验收，重新登录后第 5 版仍可在官方画布重开。七种整图调整与色阶也进入固定 PhotoCraft CLI Worker；隔离 HTTP/Worker 回归检查八个原生可编辑调整层，浏览器色阶、亮度、对比度任务生成第 6～8 版，见 `../qa/UI-033-2026-10-14.md`、`../qa/IMG-040-2026-10-14.md`、`../qa/UI-034-2026-10-14.md`。局部蒙版和生成式任务尚未迁入 Worker；生产沙箱及配额仍未完成。
+- 2026-10-14：云端 PhotoCraft 增加有限任务 Worker：五种整图方向命令经工作区授权提交，任务绑定不可变项目版本和源资产，固定 CLI 0.6.0 写回新版本，支持幂等、租约和三次尝试。云端质量记录按源版本追加，保留审核人、四项检查和人工说明；前端打开云端版时读取，保存与重新评级时同步。本机迁移 0006/0007 已应用，API 与 Worker 运行中。隔离 PostgreSQL/RustFS + CLI HTTP 回归通过，见 `../qa/IMG-039-2026-10-14.md`。进程沙箱、生产配额和独立安全复核仍待完成，不能宣称生产服务达标。
+- 2026-10-14 后续：真实浏览器 `UI-031` 已完成云端编辑和质量记录往返：独立帽图创建第 1 版，云端旋转任务生成第 2 版，PhotoCraft 画布可打开；质量备注在刷新和重新登录后保留。发现并修复审核请求多发本地字段导致 HTTP 400、以及云端评级与当前版本栏不一致；同步失败可单独重试。此用例只验证功能，不代表商业精修画质或生产安全验收。
+- 2026-10-13：工作台新增四级质量记录和人工精修接力。预览不满足质量检查时可带缺陷说明保存 PhotoCraft 可编辑草稿；只有全部确认才可标为“可直接使用”。PhotoCraft 画布保存新源版本后旧评级不自动沿用，前一版结论保留在本浏览器历史记录中；同版本可重新评级。`UI-030` 用独立合成项目验证草稿保存、3 图层重开、评级失效与历史留存。猫毛和瓶身真实样图仍标为需人工精修，云端暂不携带质量元数据，不宣称商业精修通过。
+- 2026-10-13：从边缘样图循环转向通用功能增量。自然语言新增整图 90/180 度旋转、水平/垂直翻转，以及当前图层复制/隐藏/显示，全部调用固定 PhotoCraft 0.6.0 原生命令，继续使用现有预览、应用和可编辑源保存链路。非方形像素图五种方向、图层显隐与复制、过期图层 ID 拒绝、指令计划及源重开已通过自动回归 `IMG-036/037`；浏览器点击流程尚未单独验收。见 `../qa/IMG-036-037-2026-10-13.md`。
+- 2026-10-13：换背景新增生成前主体蒙版检查：PhotoCraft 当前选区、框选物体、手画套索或既有分割服务可作为起点，补选/剔除和蒙版笔刷均调用 PhotoCraft 原生命令；确认后才花费千问生成背景。洗发水实图用框选加一块剔除选区移除了误带入的花瓣，修正后的三层 `.pcraft` 可重开；猫毛仍不能自动达商业精修。IMG-035 覆盖准备、笔刷修正、最终合成及错误源拒绝，详见 `../qa/IMG-035-2026-10-13.md`。
+- 2026-10-13：背景替换改为分层方案：千问生成空背景，原图主体经已有分割服务（或 PhotoCraft 当前选区）载入 PhotoCraft 原生蒙版并保留原始像素，背景为独立 Smart Object，原图仍在底层；可选原生投影单独编辑。帽图旧灰影已消除，结构回归 IMG-035 通过。猫毛边缘仍硬、洗发水多物体图误带入花瓣，视觉验收不通过，需人工 PhotoCraft 选区/蒙版精修；原生 `select.refineEdge` 对猫图未明显改善。详见 `../qa/IMG-035-2026-10-13.md`。
+- 2026-10-13：生成图层的蒙版笔刷入口现支持 PhotoCraft Smart Object 原生蒙版；自动回归验证补笔后可编辑保存。背景样图的旧灰影经主体/对象选区、颜色范围减选和宽笔触尝试仍未通过视觉验收，宽笔触还产生新瑕疵；不能视为换背景成片。详见 `../qa/IMG-034-2026-10-13.md`。
+- 2026-10-13：生成式局部编辑已能直接复用 PhotoCraft 保存的当前选区作为结果图层蒙版，无须在工作台重复描边；无选区会明确拒绝，保存/重开保留双图层和蒙版。三类帽图对照中，原生换色通过单图验证；千问移除标签完成可编辑合成但织纹略平滑；千问换暖色背景在 PhotoCraft 主体反选后仍有灰色旧阴影，视觉验收失败，需修正阴影选区。见 `../qa/IMG-034-2026-10-13.md`。
+- 2026-10-13：千问帽檐局部生成样片已改用 PhotoCraft 原生套索选区、1 像素扩选和图层蒙版合成；矩形背景接缝消失，右侧青色尖端改为红色。原图青色帽檐采样 8,289 点中 8,288 点在合成图变红，22 个中性边缘采样有超过 20 RGB 的变化；可编辑 `.pcraft` 重开仍有 2 图层与蒙版。这是针对该帽图轮廓的修复，不代表其他图片自动选区或商业精修验收。工作台现可明确选择已绘制轮廓作为生成蒙版，见 `../docs/PHOTOCRAFT_CONTEXT_SEQUENCE_GENERATIVE.md`。
+- 2026-10-13：开发环境局部生成已接入千问云端图片 Provider，实测此 API Key 可调用 `qwen-image-2.0-pro` 并返回 PNG；`qwen-image-edit` 与 `qwen-image-edit-plus` 在此账户返回 `Model not exist`。帽檐变红样片生成成功，但模型重绘了部分帽形和标签，尚未达到商业局部精修质量。PhotoCraft 保留可编辑蒙版图层和范围外原图；见 `../docs/PHOTOCRAFT_CONTEXT_SEQUENCE_GENERATIVE.md`。
+- 2026-10-13：工作台现在读取 PhotoCraft 保存源中的当前图层、已选图层和选区范围；可直接沿用 PhotoCraft 已保存选区做局部调整，并在文字样式/投影执行前绑定当前图层，图层变化则拒绝编辑。已有多步骤流程扩至同一文字层的样式+投影、整图调整+色阶等安全组合。新增开发环境的生成式局部编辑入口：矩形范围内调用图片 Provider，结果作为 PhotoCraft 独立蒙版图层预览、应用和重开；未配置 Provider 时明确不可用，真实生成画质尚未验证。IMG-031/032/033 已验证原生选区、图层绑定、蒙版合成、范围外像素保持及 Provider 边界；详见 `../docs/PHOTOCRAFT_CONTEXT_SEQUENCE_GENERATIVE.md`。
+- 2026-10-13：Image Studio 的本机自然语言规划现在由已接入能力目录生成受限 schema；模型只选择 PhotoCraft 计划，明确的尺寸、色阶、投影和文字参数从用户原话提取复核。不同说法的换色、文字、图片尺寸、画布、色阶、文字样式和投影经本机 llama.cpp 返回受限计划；缺投影参数、白色换色、混合操作与删除标签会拒绝。规划目录与服务端原生命令能力的操作名有一致性回归（IMG-030）；原生编辑与重开仍由 IMG-028/029 覆盖。此能力仅限已接入的命令，不代表任意自然语言修图或复杂边缘商业质量通过。
+- PhotoCraft 0.6.0 is the primary editor in the development bridge. The Web canvas opens and saves editable native sources; local and development cloud project round trips are verified. This is not yet a production multi-tenant render service.
+- The Web canvas save path now synchronizes the editable project and workbench preview before leaving focused editing. After an editor interaction, the next local edit preview first saves the canvas and requires a fresh selection. Browser regression UI-021 includes saving with PhotoCraft's File menu open and the stale-preview guard; it does not certify the gray-ear visual quality.
+- Gray cat ear root was refined with additional native PhotoCraft mask strokes; the local head spill check fell from 3.261 to 2.578, while ear core and unrelated control pixels stayed unchanged. The editable source was saved as a separate local browser project `gray-ear-refined` and reopened after refresh. This is a one-image local recolor result, with full image and native source in `artifacts/gray-ear-refinement-2026-10-12/`; it is not a general commercial fur-retouch claim. See `qa/IMG-021-2026-10-12.md`.
+- The thin native editor and ImageDocument remain development/legacy paths.
+- AI providers own generative edits. A production versioned bridge, wider quality gates and security review remain.
+- 2026-10-14：云端局部生成已通过真实帽图端到端测试：千问 Provider → PhotoCraft 智能选物体/羽化蒙版 → 云端新可编辑版本；积分预留、成功结算、失败退款与不可变流水已落地，明显矩形拼接会被拒绝。帽图第 2 版仍有帽冠下沿蓝绿色漏选，已按版本记录“需人工精修”，不可宣称商业成片通过。PhotoCraft 蒙版扩缩已开放给云端生成任务。详见根目录 `qa/UI-037-2026-10-14.md`、`qa/IMG-043-2026-10-14.md`。Worker 尚无进程级沙箱与独立安全复核，不能对公网作为正式生产服务开放。

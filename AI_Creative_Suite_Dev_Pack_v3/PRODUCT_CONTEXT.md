@@ -13,5 +13,5 @@ Octop 只作为 AgentRuntime 候选，不作为 SaaS 主后端。
 Sub2API 只借鉴账户/计费思想，最终使用自有 SaaS Core。
 Cloud / Enterprise / AirGap 使用同一代码库。
 
-## PhotoCraft strategy update
-PhotoCraft is a fast-evolving optional advanced image capability provider, not the core Image Studio runtime. We explicitly avoid rebuilding Photoshop. Durable investment stays in ecommerce workflows, Asset/Brand, Product Identity Lock, batch, AI editing, Image→Motion and enterprise capabilities. Architecture: UI → ImageDocument → Operation Layer → Capability Router → Native / PhotoCraft / AI.
+## 2026-10-10 architecture alignment
+PhotoCraft is the intended primary professional image canvas, subject to bridge, editable save/reopen and quality validation. VectorCraft, EffectCraft and FilmCraft are priority candidates for vector, motion graphics and video editing. Image/Video Studio own creative workflows, storyboard, assets, brand, versions, permissions, AI routing, quality and delivery. Native ImageDocument and canvas remain development/legacy compatibility paths; new projects need no mandatory bulk migration. Video/Motion Studio covers multiple content types beyond product ads. See `docs/adr/0012-reuse-professional-editors.md` and `../docs/PRODUCT_ARCHITECTURE_ALIGNMENT.md`.

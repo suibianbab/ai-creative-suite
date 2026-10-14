@@ -9,6 +9,9 @@ import {
 } from "../auth/access-context.js";
 import { ImageProjectStore } from "./image-project-store.js";
 import { LocalImageImportService } from "./local-image-import.js";
+import { PhotoCraftEditJobStore } from "./photocraft-edit-jobs.js";
+import { PhotoCraftProjectStore } from "./photocraft-project-store.js";
+import { PhotoCraftQualityReviewStore } from "./photocraft-quality-reviews.js";
 
 type ProjectServices = Readonly<{
   db: pg.Pool;
@@ -17,6 +20,9 @@ type ProjectServices = Readonly<{
   assets: AssetFoundation;
   projects: ImageProjectStore;
   imports: LocalImageImportService;
+  photocraftProjects: PhotoCraftProjectStore;
+  photocraftJobs: PhotoCraftEditJobStore;
+  photocraftReviews: PhotoCraftQualityReviewStore;
 }>;
 
 function required(name: string): string {
@@ -106,6 +112,9 @@ export class ImageProjectHttpService implements OnModuleDestroy {
       assets,
       projects,
       imports: new LocalImageImportService(db, assets, projects),
+      photocraftProjects: new PhotoCraftProjectStore(db, assets),
+      photocraftJobs: new PhotoCraftEditJobStore(db),
+      photocraftReviews: new PhotoCraftQualityReviewStore(db),
     };
     return this.services;
   }

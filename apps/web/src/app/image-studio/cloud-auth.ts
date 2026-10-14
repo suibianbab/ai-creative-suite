@@ -56,6 +56,7 @@ function redirectUri(): string {
 export async function beginCloudLogin(
   config: CloudConfig,
   forceLogin = false,
+  returnPath = "/image-studio",
 ): Promise<void> {
   const verifier = base64Url(crypto.getRandomValues(new Uint8Array(32)));
   const challenge = base64Url(
@@ -66,7 +67,7 @@ export async function beginCloudLogin(
   const state = crypto.randomUUID();
   sessionStorage.setItem(
     LOGIN_KEY,
-    JSON.stringify({ verifier, state, at: Date.now() }),
+    JSON.stringify({ verifier, state, at: Date.now(), returnPath }),
   );
   const url = new URL(`${config.issuer}/protocol/openid-connect/auth`);
   url.search = new URLSearchParams({
@@ -91,7 +92,12 @@ export async function finishCloudLogin(config: CloudConfig): Promise<boolean> {
   window.history.replaceState(null, "", window.location.pathname);
   if (params.has("error")) throw new Error("登录已取消或身份服务拒绝了请求");
   const attempt = stored
-    ? (JSON.parse(stored) as { verifier: string; state: string; at: number })
+    ? (JSON.parse(stored) as {
+        verifier: string;
+        state: string;
+        at: number;
+        returnPath?: string;
+      })
     : null;
   if (
     !attempt ||
@@ -131,5 +137,12 @@ export async function finishCloudLogin(config: CloudConfig): Promise<boolean> {
       expiresAt: Date.now() + token.expires_in * 1000,
     }),
   );
+  if (
+    attempt.returnPath?.startsWith("/") &&
+    !attempt.returnPath.startsWith("//") &&
+    attempt.returnPath !== window.location.pathname
+  ) {
+    window.location.replace(attempt.returnPath);
+  }
   return true;
 }

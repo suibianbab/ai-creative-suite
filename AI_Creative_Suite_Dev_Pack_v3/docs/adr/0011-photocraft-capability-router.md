@@ -1,7 +1,7 @@
 # ADR-0011: PhotoCraft Capability Router Strategy
 
 ## Status
-Accepted
+Superseded by ADR-0012 on 2026-10-10. Retained as history.
 
 ## Context
 PhotoCraft is progressing quickly but is not yet a complete stable Photoshop replacement. Building all missing Photoshop features ourselves would create duplication and future migration conflict.

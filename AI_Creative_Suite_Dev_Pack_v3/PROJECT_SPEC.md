@@ -1,5 +1,7 @@
 # AI Creative Suite — 完整产品与技术开发总方案 v2
 
+> 2026-10-10 架构更新：用户已确认[目标与架构基线](../docs/PRODUCT_ARCHITECTURE_ALIGNMENT.md)及[ADR-0012](docs/adr/0012-reuse-professional-editors.md)。本文关于 PhotoCraft 可选、完整原生 ImageDocument/画布、HyperFrames 作为所有场景默认引擎及仅按 Phase 判断能力的旧描述，按 ADR-0012 解释；尚未完成的引擎接入仍须样片验证。
+
 ## 1. 产品总定位
 
 产品升级为 AI Creative Suite，不再只是 AI 动画网站。

@@ -1,5 +1,7 @@
 # Repository Audit — 2026-10-08
 
+> Historical pre-implementation audit. Current architecture direction is ADR-0012 and `../docs/PRODUCT_ARCHITECTURE_ALIGNMENT.md`; current implementation status is `CURRENT_STATE.md`.
+
 ## Scope and finding
 
 Inspected `D:\codex\animate` and this development pack, including hidden files, the full file list, and Git status. The workspace contains this documentation pack and its ZIP archive only. Neither directory is a Git repository. There is no application source, package manifest, database schema, test suite, CI configuration, or deployable environment to audit or run. This is a pre-implementation baseline, not an assessment of an existing product.

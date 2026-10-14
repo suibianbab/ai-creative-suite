@@ -1161,6 +1161,9 @@ export default function ImageStudioPage() {
         <span className="studio-divider" />
         <span className="studio-title">Image Studio</span>
         <span className="studio-badge">本地编辑原型</span>
+        <Link href="/image-studio/photocraft" className="project-action">
+          PhotoCraft 验证版
+        </Link>
         <select
           className="project-picker"
           aria-label="已保存的本地项目"
