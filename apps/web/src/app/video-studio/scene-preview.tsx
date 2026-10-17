@@ -1,14 +1,15 @@
 "use client";
 
 import {
+  assertNodeBudget,
   defaultRegistry,
+  reactSvgAttrs,
   type SceneSpec,
   type SvgNode,
   seededRandom,
   validateSceneSpec,
 } from "@acs/video-scene";
 import { createElement, useEffect, useMemo, useRef, useState } from "react";
-import { reactSvgAttrs } from "./react-svg-attrs";
 
 // SvgNode 数据树 → React 元素（自 remotion-engine 同名渲染器复制，web 不依赖
 // remotion-engine；属性名经 reactSvgAttrs 转 React 驼峰，text 与 children 二选一）。
@@ -65,6 +66,7 @@ export function ScenePreview({ spec }: { spec: SceneSpec }) {
     height: PREVIEW_HEIGHT,
     random: seededRandom(validated.seed),
   });
+  assertNodeBudget(node); // 与渲染桥同一出站上限（ADR 0003 §2.4）
 
   return (
     <div className="preview-box">

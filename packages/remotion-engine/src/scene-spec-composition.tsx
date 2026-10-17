@@ -1,5 +1,7 @@
 import {
+  assertNodeBudget,
   defaultRegistry,
+  reactSvgAttrs,
   type SceneSpec,
   type SvgNode,
   seededRandom,
@@ -10,12 +12,13 @@ import { AbsoluteFill, useCurrentFrame, useVideoConfig } from "remotion";
 import "./assets/fonts/font.css";
 
 // SvgNode 数据树 → React 元素。组件输出的是纯数据（@acs/video-scene 不依赖 React），
-// 这里做一次性桥接：属性原样透传，text 与 children 二选一。
+// 这里做一次性桥接：属性名经 reactSvgAttrs 转 React 驼峰（与 web 预览桥共用同一份
+// 转换），text 与 children 二选一。
 export function SvgTree({ node }: { node: SvgNode }): JSX.Element {
   const children =
     node.text ??
     node.children?.map((child, index) => <SvgTree key={index} node={child} />);
-  return createElement(node.tag, node.attrs, children);
+  return createElement(node.tag, reactSvgAttrs(node.attrs), children);
 }
 
 export type SceneSpecProps = { spec?: SceneSpec };
@@ -39,6 +42,7 @@ export const SceneSpecScene: FC<SceneSpecProps> = ({ spec }) => {
     height,
     random: seededRandom(validated.seed),
   });
+  assertNodeBudget(node); // ADR 0003 §2.4：出站元素数上限，超限拒绝渲染
   return (
     <AbsoluteFill
       style={{

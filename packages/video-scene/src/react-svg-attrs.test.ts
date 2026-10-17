@@ -1,6 +1,6 @@
-// P1-A E2E 控制台门禁暴露的缺陷：SvgNode 的 attrs 是 SVG 原生 kebab-case
-// （序列化渲染路径需要），React createElement 却要求驼峰，否则每个预览帧
-// 都打 Invalid DOM property 错误。reactSvgAttrs 负责这层适配。
+// P3-lite：SvgNode.attrs 的 React 适配层归一到本包。SvgNode 用 SVG 原生
+// kebab-case（序列化渲染路径依赖），React createElement 只认驼峰；两座
+// SvgTree 桥（web 预览 / remotion 合成）必须用同一份转换，不允许各自漂移。
 import assert from "node:assert/strict";
 import test from "node:test";
 import { reactSvgAttrs } from "./react-svg-attrs.js";

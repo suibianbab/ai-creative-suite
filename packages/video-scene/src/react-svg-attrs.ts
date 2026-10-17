@@ -1,6 +1,6 @@
-// SvgNode.attrs 用 SVG 原生 kebab-case（render-scene 的字符串序列化路径
-// 依赖它），React createElement 只认驼峰。这层适配只做属性名转换，
-// 值与顺序原样透传。
+// SvgNode.attrs 用 SVG 原生 kebab-case（字符串序列化路径依赖），React
+// createElement 只认驼峰。两座 SvgTree 桥（apps/web 预览、remotion-engine
+// 合成）共用这一份转换，避免各平台属性名适配漂移。只转换属性名，值原样透传。
 export function reactSvgAttrs(
   attrs: Record<string, string | number>,
 ): Record<string, string | number> {
