@@ -16,6 +16,8 @@ export const VIDEO_PROJECT_MAX_BYTES = 2 * 1024 * 1024;
 const UUID =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const ISO_8601 = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/;
+// TextEncoder 而非 Buffer：本包同时被浏览器（工作台）与 Node（CLI）引用。
+const encoder = new TextEncoder();
 const MAX_ARRAY = 1000;
 const MAX_DURATION_MS = 600000;
 const ASPECT_TARGETS: readonly AspectTarget[] = ["landscape", "portrait"];
@@ -222,7 +224,7 @@ export function validateVideoProject(value: unknown): VideoProject {
       "VideoProject is not JSON serializable",
     );
   }
-  if (!json || Buffer.byteLength(json) > VIDEO_PROJECT_MAX_BYTES) {
+  if (!json || encoder.encode(json).length > VIDEO_PROJECT_MAX_BYTES) {
     throw new VideoProjectValidationError("VideoProject exceeds size limit");
   }
   const parsed: unknown = JSON.parse(json);
