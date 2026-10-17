@@ -1,0 +1,98 @@
+{
+  "schemaVersion": 1,
+  "id": "33333333-3333-4333-8333-333333333333",
+  "title": "P0 冒烟样片",
+  "brief": {
+    "sentence": "做一个3秒的文字动画，标题是开盘大涨",
+    "aspectTargets": [
+      "landscape",
+      "portrait"
+    ]
+  },
+  "shots": [
+    {
+      "shotId": "44444444-4444-4444-8444-444444444444",
+      "order": 0,
+      "locked": false,
+      "workingVersionId": "22222222-2222-4222-8222-222222222222",
+      "contentVersions": [
+        {
+          "versionId": "22222222-2222-4222-8222-222222222222",
+          "createdAt": "2026-10-17T10:00:00Z",
+          "durationMs": 3000,
+          "description": "文字动画冒烟镜头",
+          "narrationText": "",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 3000,
+              "seed": 7,
+              "background": "#10203a",
+              "params": {
+                "title": "开盘大涨",
+                "subtitle": "沪指高开 1.2%",
+                "titleColor": "#ffffff",
+                "subtitleColor": "#aabbee",
+                "entrance": "fade-up",
+                "enterMs": 900
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-p0",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "22222222-2222-4222-8222-222222222222",
+          "at": "2026-10-17T10:00:00Z",
+          "actor": "ai"
+        }
+      ]
+    }
+  ],
+  "renderRecords": [
+    {
+      "renderId": "70c5ff5e-3487-4def-ad06-248878309209",
+      "versionId": "22222222-2222-4222-8222-222222222222",
+      "contentDigest": "bfe2a0cb1c660cb977982878f6864c59a2b8abd84dabe53915dac759486f7eaf",
+      "engineId": "remotion",
+      "engineVersion": "1",
+      "rendererVersion": "4.0.534",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "799b3ef7-2a67-474d-9a3c-6586a7485ee4",
+      "versionId": "22222222-2222-4222-8222-222222222222",
+      "contentDigest": "bfe2a0cb1c660cb977982878f6864c59a2b8abd84dabe53915dac759486f7eaf",
+      "engineId": "remotion",
+      "engineVersion": "1",
+      "rendererVersion": "4.0.534",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    }
+  ],
+  "deliveries": [],
+  "savedVersion": 2
+}

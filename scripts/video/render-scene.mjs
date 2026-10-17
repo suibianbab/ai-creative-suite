@@ -8,6 +8,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
+import { browserLabel } from "./env-info.mjs";
 
 const ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -108,13 +109,15 @@ if (spec.durationMs !== version.durationMs)
     `spec.durationMs(${spec.durationMs}) 与 ContentVersion.durationMs(${version.durationMs}) 不一致`,
   );
 
-// 3. 帧数（累计边界量化）+ 字体指纹
+// 3. 帧数（累计边界量化）+ 字体指纹 + 浏览器标识（ADR §2.5 确定性输入）
 const totalFrames = quantizeTimeline([version.durationMs], FPS).totalFrames;
 const fontDigests = {
   "NotoSansSC-Regular.woff": sha256(readFileSync(path.join(ROOT, FONT_REL))),
 };
 const specDigest = sha256(canonicalJson(spec));
 const contentDigest = sha256(canonicalJson(version));
+// 实际渲染用的浏览器：显式传了 Chrome 就记其版本，否则是 Remotion 自带 headless shell
+const browser = browserLabel(existsSync(CHROME) ? CHROME : "");
 
 // 4. 逐 aspect 渲染 + ffprobe 校验
 const aspects = project.brief.aspectTargets;
@@ -123,6 +126,7 @@ const manifest = {
   projectId: project.id,
   versionId: version.versionId,
   remotion: remotionVersion,
+  browser,
   fontDigests,
   aspects: {},
 };
@@ -204,6 +208,7 @@ for (const aspect of aspects) {
     engineId: "remotion",
     engineVersion: String(defaultRegistry.version),
     rendererVersion: remotionVersion,
+    browser,
     fps: FPS,
     width,
     height,

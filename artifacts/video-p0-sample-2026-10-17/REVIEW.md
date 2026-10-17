@@ -9,7 +9,7 @@
 | 文字 | `做一个12秒的文字动画，标题是云制造发布会，副标题是Video Studio P0` | 云制造发布会 | text-animation v1 |
 | 线描 | `做一个8秒的线描动画，标题是山水发布` | 山水发布 | line-drawing v1 |
 
-两轮均：浏览器新建项目 → 规划器解析 → 确认卡应用 → 保存 v2 → 导出项目 JSON → 渲染双尺寸 → 回写 RenderRecord（savedVersion=3）→ 刷新重开逐字段校验通过（标题、一句话需求回填、场景源 JSON、事件 `["submitted"]`）。
+两轮均：浏览器新建项目 → 规划器解析 → 确认卡应用 → 保存 v2 → 导出项目 JSON → 渲染双尺寸 → 回写 RenderRecord → 刷新重开逐字段校验通过（标题、一句话需求回填、场景源 JSON、事件 `["submitted"]`）。样片共渲染两遍（文字轮裁切修复后重渲、终审补记浏览器版本后重渲），最终 savedVersion=4、RenderRecord ×4/项目。
 
 ## 2. SceneSpec（存储侧 sceneSource.type = "spec"）
 
@@ -39,6 +39,7 @@
 ## 3. 引擎 / 组件 / 字体版本与摘要
 
 - Remotion **4.0.534**（本地 Chrome Headless 渲染），Node **v22.22.2**
+- 无头浏览器 **Google Chrome 155.0.8059.41**（ADR §2.5 确定性输入，已记入 manifest 与 RenderRecord.browser；Windows 经文件版本资源探测，不启动进程）
 - 组件注册表 registryVersion **1**；text-animation / line-drawing 均 **v1**
 - 字体：NotoSansSC-Regular.woff（本地打包，无网络）
   digest `1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a`
@@ -55,10 +56,10 @@ ffprobe 校验通过（分辨率/帧数/时长）；RenderRecord ×2 已回写�
 
 ## 5. 确定性校验（`pnpm qa:video-determinism`，exit 0，72/72 帧双渲染逐帧一致）
 
-manifest 原文：
+manifest 原文（终审修复后含 browser 字段）：
 
 ```json
-{"specDigest":"811c8858baa0b49b7384c2e0f617795f3c56e0c62ead39a9e245e0470ced931b","registryVersion":1,"componentId":"text-animation","componentVersion":1,"remotion":"4.0.534","node":"v22.22.2","fontDigests":{"NotoSansSC-Regular.woff":"1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"},"fps":24,"frames":72}
+{"specDigest":"811c8858baa0b49b7384c2e0f617795f3c56e0c62ead39a9e245e0470ced931b","registryVersion":1,"componentId":"text-animation","componentVersion":1,"remotion":"4.0.534","node":"v22.22.2","browser":"Google Chrome 155.0.8059.41","fontDigests":{"NotoSansSC-Regular.woff":"1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"},"fps":24,"frames":72}
 ```
 
 说明：确定性夹具为 3 字标题（钳制不触发），故该缺陷修复前后 manifest 摘要不变；钳制行为由组件单测覆盖（26/26）。

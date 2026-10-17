@@ -336,6 +336,16 @@ export function validateVideoProject(value: unknown): VideoProject {
       if (typeof digest !== "string" || digest.length === 0)
         fail(`${field}.fontDigests[${font}] must be a non-empty string`);
     }
+    if (
+      record.browser !== undefined &&
+      (typeof record.browser !== "string" ||
+        record.browser.trim().length === 0 ||
+        record.browser.length > 128)
+    ) {
+      fail(
+        `${field}.browser must be a trimmed non-empty string of at most 128 characters`,
+      );
+    }
   }
   if (
     !Array.isArray(parsed.deliveries) ||

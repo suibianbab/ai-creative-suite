@@ -53,6 +53,9 @@ export type RenderRecord = {
   frames: number;
   fontDigests: Record<string, string>;
   outputAssetRef: string; // 本地 P0 为输出文件相对路径
+  // ADR §2.5：无头浏览器是确定性输入，出片时记录实际浏览器标识与版本。
+  // 可选：早期存储文档无此字段，重开仍须通过校验。
+  browser?: string;
 };
 
 export type DeliveryRecord = {

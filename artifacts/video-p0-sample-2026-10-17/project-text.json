@@ -91,8 +91,44 @@
         "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
       },
       "outputAssetRef": "render-text/portrait.mp4"
+    },
+    {
+      "renderId": "2bb40d46-922d-4743-829d-01af2651c9f8",
+      "versionId": "f5d053d3-34f4-4817-8d85-ed8cfbe8892c",
+      "contentDigest": "0d349a94e4455f3e293b2a12b18a8849f634b15ab5b14be0bf85de170e8ab0df",
+      "engineId": "remotion",
+      "engineVersion": "1",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 288,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render-text/landscape.mp4"
+    },
+    {
+      "renderId": "228bb94f-be80-41f1-a865-eb6c26161d8c",
+      "versionId": "f5d053d3-34f4-4817-8d85-ed8cfbe8892c",
+      "contentDigest": "0d349a94e4455f3e293b2a12b18a8849f634b15ab5b14be0bf85de170e8ab0df",
+      "engineId": "remotion",
+      "engineVersion": "1",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 288,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render-text/portrait.mp4"
     }
   ],
   "deliveries": [],
-  "savedVersion": 3
+  "savedVersion": 4
 }

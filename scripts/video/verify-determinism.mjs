@@ -17,6 +17,7 @@ import {
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
+import { browserLabel } from "./env-info.mjs";
 
 const ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -158,6 +159,7 @@ const manifest = {
   componentVersion: spec.componentVersion,
   remotion: remotionVersion,
   node: process.version,
+  browser: browserLabel(existsSync(CHROME) ? CHROME : ""),
   fontDigests: {
     "NotoSansSC-Regular.woff": sha256(readFileSync(path.join(ROOT, FONT_REL))),
   },

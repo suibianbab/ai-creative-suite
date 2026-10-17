@@ -1169,8 +1169,20 @@
       "cwd": ".",
       "argv": ["pnpm", "qa:video-determinism"],
       "checks": [
-        "The pinned text-animation fixture renders twice with identical PNG bytes for all 72 frames",
-        "The manifest records spec, component, registry, Remotion, Node and font digests for the run"
+        "The committed text-animation fixture (artifacts/video-studio-smoke/project.json) renders twice with identical PNG bytes for all 72 frames",
+        "The manifest records spec, component, registry, Remotion, Node, headless browser and font digests for the run"
+      ]
+    },
+    {
+      "id": "VID-004",
+      "tier": "smoke",
+      "title": "Render environment browser-version probe",
+      "cwd": ".",
+      "argv": ["node", "--test", "scripts/video/env-info.test.mjs"],
+      "checks": [
+        "browserLabel returns a version-bearing label for an existing executable and never throws",
+        "Missing paths and empty paths (Remotion bundled headless shell) return explicit unavailable markers",
+        "On Windows the version comes from the executable file version resource without launching the browser process"
       ]
     }
   ],

@@ -94,3 +94,39 @@ test("approved 事件 actor 不允许 ai", () => {
   p.shots[0]!.events[1]! = { ...p.shots[0]!.events[1]!, actor: "ai" } as never;
   assert.throws(() => validateVideoProject(p), /actor/);
 });
+
+const RENDER_ID = "0b0b13a2-6c63-4d3d-9a52-a70f6a3b2002";
+function baseWithRenderRecord(): VideoProject {
+  const p = baseProject();
+  p.renderRecords.push({
+    renderId: RENDER_ID,
+    versionId: UUID,
+    contentDigest: "a".repeat(64),
+    engineId: "scene-registry",
+    engineVersion: "1",
+    rendererVersion: "4.0.534",
+    fps: 24,
+    width: 1280,
+    height: 720,
+    codec: "h264",
+    frames: 288,
+    fontDigests: { "NotoSansSC-Regular.woff": "b".repeat(64) },
+    outputAssetRef: "render/landscape.mp4",
+  });
+  return p;
+}
+
+test("RenderRecord.browser 可选：缺省与字符串合法，空串拒绝（ADR §2.5 无头浏览器版本入记录）", () => {
+  // 缺省：旧存储文档（无 browser 字段）仍合法
+  assert.equal(baseWithRenderRecord().renderRecords.length, 1);
+  assert.equal(validateVideoProject(baseWithRenderRecord()).id, UUID);
+  // 非空字符串合法
+  const withBrowser = baseWithRenderRecord();
+  (withBrowser.renderRecords[0] as { browser?: string }).browser =
+    "Chrome 131.0.6778.86";
+  assert.equal(validateVideoProject(withBrowser).id, UUID);
+  // 空串拒绝
+  const empty = baseWithRenderRecord();
+  (empty.renderRecords[0] as { browser?: string }).browser = "  ";
+  assert.throws(() => validateVideoProject(empty), /browser/);
+});
