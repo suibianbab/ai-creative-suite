@@ -3,6 +3,7 @@
 import type { VideoProject } from "@acs/video-document";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { applyPlan } from "./apply-plan";
 import {
   listVideoProjects,
   openVideoProject,
@@ -22,53 +23,6 @@ function createEmptyVideoProject(): VideoProject {
     title: "未命名视频项目",
     brief: { sentence: "", aspectTargets: ["landscape", "portrait"] },
     shots: [],
-    renderRecords: [],
-    deliveries: [],
-    savedVersion: 1,
-  };
-}
-
-const COMPONENT_LABEL: Record<string, string> = {
-  "text-animation": "文字",
-  "line-drawing": "线描",
-  "basic-shapes": "图形",
-};
-
-// 确认环落地：按 operations.test.ts 的 baseProject 结构直接构造初始文档
-// （首镜头 = 初始内容版本 + submitted(human) 事件，workingVersionId 指向它；
-// 不用 addCandidateVersion——它作用于已存在的镜头）。
-function projectFromPlan(
-  sentence: string,
-  plan: Extract<PlanResult, { ok: true }>,
-): VideoProject {
-  const now = new Date().toISOString();
-  const versionId = crypto.randomUUID();
-  const label = COMPONENT_LABEL[plan.spec.componentId] ?? plan.spec.componentId;
-  return {
-    schemaVersion: 1,
-    id: crypto.randomUUID(),
-    title: plan.title,
-    brief: { sentence, aspectTargets: ["landscape", "portrait"] },
-    shots: [
-      {
-        shotId: crypto.randomUUID(),
-        order: 0,
-        locked: false,
-        workingVersionId: versionId,
-        contentVersions: [
-          {
-            versionId,
-            createdAt: now,
-            durationMs: plan.spec.durationMs,
-            description: `${label}动画：${plan.title}`,
-            narrationText: "",
-            sceneSource: { type: "spec", spec: plan.spec },
-            provenance: { engineId: "planner-rules", engineVersion: "1" },
-          },
-        ],
-        events: [{ kind: "submitted", versionId, at: now, actor: "human" }],
-      },
-    ],
     renderRecords: [],
     deliveries: [],
     savedVersion: 1,
@@ -181,17 +135,25 @@ export default function VideoStudioPage() {
                 <button
                   type="button"
                   className="plan-apply"
-                  onClick={() =>
+                  onClick={() => {
+                    // P2-B：空项目 = 首次规划落当前文档；已有镜头 = 明示另存为新项目
+                    const applied = applyPlan(document, sentence.trim(), plan, {
+                      project: crypto.randomUUID(),
+                      shot: crypto.randomUUID(),
+                      version: crypto.randomUUID(),
+                    });
                     setEditor({
-                      document: projectFromPlan(sentence.trim(), plan),
-                      message: "已应用规划，确认无误后点「保存」",
+                      document: applied.document,
+                      message: applied.notice,
                       busy: false,
                       sentence: sentence,
                       plan: null,
-                    })
-                  }
+                    });
+                  }}
                 >
-                  确认应用
+                  {document.shots.length > 0
+                    ? "确认应用（另存为新项目）"
+                    : "确认应用"}
                 </button>
                 <button
                   type="button"

@@ -3,13 +3,14 @@
 //  1) 同像素、不同 PNG 元数据 → 解码哈希必须相等（旧口径=文件字节哈希会误报）；
 //  2) 不同像素 → 解码哈希必须不等；
 //  3) 解码失败要给出可读错误。
-import test from "node:test";
+
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { decodeFrameHash } from "./frame-compare.mjs";
 

@@ -82,7 +82,11 @@ const LINE_TEMPLATES: string[][] = [
 
 // —— 图形模板：归一化包围盒（basic-shapes 组件契约）——
 // 下标与 SHAPE_TEMPLATE_LABELS 一一对应，用途同线描。
-const SHAPE_TEMPLATE_LABELS = ["单个方块", "圆与横条", "三角形、小方块与小圆"] as const;
+const SHAPE_TEMPLATE_LABELS = [
+  "单个方块",
+  "圆与横条",
+  "三角形、小方块与小圆",
+] as const;
 
 const SHAPE_TEMPLATES = [
   [{ kind: "rect", x: 0.3, y: 0.3, w: 0.4, h: 0.4, color: "#497a61" }],
