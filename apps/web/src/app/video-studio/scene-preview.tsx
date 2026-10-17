@@ -11,7 +11,7 @@ import {
   validateSceneSpec,
 } from "@acs/video-scene";
 import { createElement, useEffect, useMemo, useRef, useState } from "react";
-import { advanceGlobalFrame } from "./piece-preview";
+import { advanceGlobalFrame, shotCanvasContext } from "./piece-preview";
 
 // SvgNode 数据树 → React 元素（自 remotion-engine 同名渲染器复制，web 不依赖
 // remotion-engine；属性名经 reactSvgAttrs 转 React 驏峰，text 与 children 二选一）。
@@ -28,16 +28,22 @@ const PREVIEW_WIDTH = 640;
 const PREVIEW_HEIGHT = 360;
 
 // 静态帧画布：validate → render → 节点预算 → SVG。单镜头预览与整片预览共用。
+// fps/durationFrames 可覆盖：整片预览必须传 24fps + 量化 span 帧数（与出片一致），
+// 单镜头预览沿用 P0 默认 30fps（另行收口）。
 export function SpecCanvas({
   spec,
   frame,
   width = PREVIEW_WIDTH,
   height = PREVIEW_HEIGHT,
+  fps = FPS,
+  durationFrames,
 }: {
   spec: SceneSpec;
   frame: number;
   width?: number;
   height?: number;
+  fps?: number;
+  durationFrames?: number;
 }) {
   const validated = useMemo(
     () => validateSceneSpec(spec, defaultRegistry),
@@ -47,12 +53,13 @@ export function SpecCanvas({
     validated.componentId,
     validated.componentVersion,
   );
-  const durationFrames = Math.ceil((validated.durationMs / 1000) * FPS);
-  const clampedFrame = Math.min(Math.max(frame, 0), durationFrames - 1);
+  const spanFrames =
+    durationFrames ?? Math.ceil((validated.durationMs / 1000) * fps);
+  const clampedFrame = Math.min(Math.max(frame, 0), spanFrames - 1);
   const node = component.render(validated, {
     frame: clampedFrame,
-    fps: FPS,
-    durationFrames,
+    fps,
+    durationFrames: spanFrames,
     width,
     height,
     random: seededRandom(validated.seed),
@@ -170,14 +177,23 @@ export function TimelinePreview({
 
   const mapping = mapGlobalFrame(timeline, Math.floor(frame));
   const active = items[mapping.shotIndex];
+  // 与出片同口径：24fps + 量化 span 帧数（不能用 30fps/ceil 重算，见 shotCanvasContext）
+  const activeContext = active
+    ? shotCanvasContext({
+        durationMs: active.spec.durationMs,
+        frames: active.frames,
+      })
+    : null;
 
   return (
     <div className="preview-box piece-preview">
-      {active ? (
+      {active && activeContext ? (
         <SpecCanvas
           key={mapping.shotIndex}
           spec={active.spec}
           frame={mapping.localFrame}
+          fps={activeContext.fps}
+          durationFrames={activeContext.durationFrames}
         />
       ) : null}
       <div className="preview-controls">

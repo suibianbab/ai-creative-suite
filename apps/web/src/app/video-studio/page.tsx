@@ -30,6 +30,7 @@ import {
   TimelinePreview,
   type TimelinePreviewItem,
 } from "./scene-preview";
+import { shotWorkingSpec } from "./shot-specs";
 import "./video-studio.css";
 
 // 新项目从空镜头开始（validateVideoProject 允许 shots 为空数组）；
@@ -74,17 +75,10 @@ export default function VideoStudioPage() {
 
   if (editor) {
     const { document, message, busy, sentence, plan, storyboard } = editor;
-    // 镜头时间线（量化帧图 @24fps）：镜头卡 + 时间条 + 整片预览共用
-    // video-document 里 spec 是 unknown（包不依赖 video-scene）；本工作台写入的
-    // spec 都是规划器产出并过 validateSceneSpec 的 SceneSpec——预览渲染前仍会再验。
-    const shotSpecs = document.shots.map((shot) => {
-      const working = shot.contentVersions.find(
-        (version) => version.versionId === shot.workingVersionId,
-      );
-      return working && working.sceneSource.type === "spec"
-        ? (working.sceneSource.spec as SceneSpec | null)
-        : null;
-    });
+    // 镜头时间线（量化帧图 @24fps）：镜头卡 + 时间条 + 整片预览共用。
+    // spec 解析走 shotWorkingSpec：unknown → validateSceneSpec，非法（导入件来自
+    // 更新版本/手改）降级 null 走「不可预览」提示，不在渲染期抛错炸整页。
+    const shotSpecs = document.shots.map((shot) => shotWorkingSpec(shot));
     const durations = document.shots.map((shot) => {
       const working = shot.contentVersions.find(
         (version) => version.versionId === shot.workingVersionId,

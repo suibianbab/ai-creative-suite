@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { mapGlobalFrame, quantizeTimeline } from "@acs/video-document";
-import { advanceGlobalFrame } from "./piece-preview.js";
+import { advanceGlobalFrame, shotCanvasContext } from "./piece-preview.js";
 
 // 整片预览的纯推进逻辑：rAF 的 dt 折算帧增量后调用，跨镜头边界推进正确、
 // 到尾回零循环、负增量钳零——播放循环永不越界（评审关注 #3）。
@@ -34,4 +34,27 @@ test("advanceGlobalFrame + mapGlobalFrame：推进后全局帧正确归属镜头
 
 test("advanceGlobalFrame：totalFrames 非法时抛错", () => {
   assert.throws(() => advanceGlobalFrame(0, 1, 0), /totalFrames/);
+});
+
+// 终评 Important#1 回归：整片预览的镜头画布必须按 24fps + 量化 span 帧数取上下文。
+// 旧行为（30fps / ceil(durationMs×fps/1000) 重算）会把 1600ms 首镜头画成 48 帧
+// 30fps——动画慢 20% 且末 20% 帧永不显示，与出片结果不符。
+test("shotCanvasContext：24fps + 量化 span 帧数（非 30fps/非 ceil 重算）", () => {
+  // [1600,1600,1600]ms@24 → spans [38,39,38]
+  const timeline = quantizeTimeline([1600, 1600, 1600], 24);
+  const first = shotCanvasContext({
+    durationMs: 1600,
+    frames: timeline.shots[0]!.frames,
+  });
+  assert.equal(first.fps, 24, "必须与出片同帧率");
+  assert.equal(
+    first.durationFrames,
+    38,
+    "用量化 span 帧数（ceil 重算会得 39）",
+  );
+  const second = shotCanvasContext({
+    durationMs: 1600,
+    frames: timeline.shots[1]!.frames,
+  });
+  assert.equal(second.durationFrames, 39);
 });
