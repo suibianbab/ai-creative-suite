@@ -84,24 +84,30 @@ export async function listVideoProjects(): Promise<VideoProjectSummary[]> {
 }
 
 // 保存即 savedVersion + 1；同 id 同内容重放幂等（直接返回存储版本，不再递增）。
-// 读存在前、写在后是两个事务——P0 单机单用户可接受，与 image-studio 同形。
+// get→版本比较→put 必须在同一个 readwrite 事务内完成：IndexedDB 串行化同库
+// readwrite 事务，两个标签页并发保存时后者会在事务内读到前者已提交的版本，
+// 于是恰有一个成功、另一个收到 VideoProjectConflictError（P1-C）。
 export async function saveVideoProject(
   document: VideoProject,
 ): Promise<VideoProject> {
   validateVideoProject(document);
   const database = await openDatabase();
   try {
-    const read = database.transaction("projects", "readonly");
+    const transaction = database.transaction("projects", "readwrite");
+    const done = transactionDone(transaction);
     const stored = await requestResult(
-      read.objectStore("projects").get(document.id) as IDBRequest<
+      transaction.objectStore("projects").get(document.id) as IDBRequest<
         ProjectRecord | undefined
       >,
     );
     if (stored) {
       if (canonicalJson(document) === canonicalJson(stored.document)) {
-        return stored.document; // 重放：同 id 同 savedVersion 同内容
+        await done; // 重放：同 id 同 savedVersion 同内容，等事务空提交
+        return stored.document;
       }
       if (document.savedVersion !== stored.document.savedVersion) {
+        done.catch(() => {}); // abort 的拒绝在此路径无人等待，别泄漏成未处理拒绝
+        transaction.abort();
         throw new VideoProjectConflictError(
           document.id,
           document.savedVersion,
@@ -114,8 +120,6 @@ export async function saveVideoProject(
       savedVersion: document.savedVersion + 1,
     };
     validateVideoProject(next);
-    const transaction = database.transaction("projects", "readwrite");
-    const done = transactionDone(transaction);
     transaction.objectStore("projects").put({
       id: next.id,
       title: next.title,
