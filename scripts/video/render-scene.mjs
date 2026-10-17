@@ -1,6 +1,8 @@
 #!/usr/bin/env node
-// P0 出片脚本：项目 JSON → 双尺寸 MP4 + render-manifest.json + RenderRecord 回写。
-// 用法: node scripts/video/render-scene.mjs --project <path.json> --out <dir>
+// 出片脚本：项目 JSON → 整片双尺寸 MP4 + render-manifest.json + RenderRecord 回写。
+// P1 起支持多镜头：量化帧图拼成单文件整片（Timeline-* 合成），单镜头是 N=1 特例。
+// 渲染前先跑逐帧干跑门禁（worker 隔离 + 单帧预算，P2-A 补齐），--skip-dryrun 可跳。
+// 用法: node scripts/video/render-scene.mjs --project <path.json> --out <dir> [--skip-dryrun] [--budget-ms 500]
 // 依赖: packages/{video-document,video-scene} 已 build（pnpm -r build）；ffprobe 在 PATH。
 import { spawnSync } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
@@ -9,6 +11,11 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
 import { browserLabel } from "./env-info.mjs";
+import {
+  buildProjectDryRunJobs,
+  DEFAULT_BUDGET_MS,
+  dryRunJobs,
+} from "./frame-dryrun.mjs";
 
 const ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -70,11 +77,13 @@ const { values } = parseArgs({
   options: {
     project: { type: "string" },
     out: { type: "string" },
+    "skip-dryrun": { type: "boolean" },
+    "budget-ms": { type: "string" },
   },
 });
 if (!values.project || !values.out)
   fail(
-    "用法: node scripts/video/render-scene.mjs --project <path.json> --out <dir>",
+    "用法: node scripts/video/render-scene.mjs --project <path.json> --out <dir> [--skip-dryrun] [--budget-ms 500]",
   );
 
 const projectPath = path.resolve(values.project);
@@ -89,53 +98,87 @@ try {
   fail(`项目校验失败: ${error.message}`);
 }
 
-// 2. P0 单镜头 + working version 的 spec
-if (project.shots.length !== 1)
-  fail(`P0 出片脚本仅支持单镜头项目，当前 ${project.shots.length} 个镜头`);
-const shot = project.shots[0];
-const version = shot.contentVersions.find(
-  (candidate) => candidate.versionId === shot.workingVersionId,
-);
-if (version.sceneSource.type !== "spec")
-  fail('P0 仅支持 sceneSource.type === "spec" 的镜头');
-let spec;
-try {
-  spec = validateSceneSpec(version.sceneSource.spec, defaultRegistry);
-} catch (error) {
-  fail(`scene_spec 校验失败: ${error.message}`);
-}
-if (spec.durationMs !== version.durationMs)
-  fail(
-    `spec.durationMs(${spec.durationMs}) 与 ContentVersion.durationMs(${version.durationMs}) 不一致`,
+// 2. 全镜头 working version 的 spec（多镜头整片；单镜头是 N=1 特例）
+const shotEntries = project.shots.map((shot, index) => {
+  const version = shot.contentVersions.find(
+    (candidate) => candidate.versionId === shot.workingVersionId,
   );
+  if (!version) fail(`镜头 ${index + 1} 缺少 working version`);
+  if (version.sceneSource.type !== "spec")
+    fail(`镜头 ${index + 1} 的 sceneSource 不是 spec（出片仅支持 spec 镜头）`);
+  let spec;
+  try {
+    spec = validateSceneSpec(version.sceneSource.spec, defaultRegistry);
+  } catch (error) {
+    fail(`镜头 ${index + 1} scene_spec 校验失败: ${error.message}`);
+  }
+  if (spec.durationMs !== version.durationMs)
+    fail(
+      `镜头 ${index + 1} spec.durationMs(${spec.durationMs}) 与 ContentVersion.durationMs(${version.durationMs}) 不一致`,
+    );
+  return { shot, version, spec };
+});
+if (shotEntries.length === 0) fail("项目没有镜头，无法出片");
 
-// 3. 帧数（累计边界量化）+ 字体指纹 + 浏览器标识（ADR §2.5 确定性输入）
-const totalFrames = quantizeTimeline([version.durationMs], FPS).totalFrames;
+// 3. 帧图（累计边界量化）+ 字体指纹 + 浏览器标识（ADR §2.5 确定性输入）
+const timeline = quantizeTimeline(
+  shotEntries.map((entry) => entry.version.durationMs),
+  FPS,
+);
+const totalFrames = timeline.totalFrames;
 const fontDigests = {
   "NotoSansSC-Regular.woff": sha256(readFileSync(path.join(ROOT, FONT_REL))),
 };
-const specDigest = sha256(canonicalJson(spec));
-const contentDigest = sha256(canonicalJson(version));
+const contentDigests = shotEntries.map((entry) =>
+  sha256(canonicalJson(entry.version)),
+);
 // 实际渲染用的浏览器：显式传了 Chrome 就记其版本，否则是 Remotion 自带 headless shell
 const browser = browserLabel(existsSync(CHROME) ? CHROME : "");
 
-// 4. 逐 aspect 渲染 + ffprobe 校验
+// 3.5 逐帧干跑门禁（P2-A 补齐）：超时/抛错/超节点预算在出片前拦截
+if (!values["skip-dryrun"]) {
+  const budgetMs = values["budget-ms"]
+    ? Number(values["budget-ms"])
+    : DEFAULT_BUDGET_MS;
+  const { jobs } = await buildProjectDryRunJobs(project);
+  console.log(
+    `[render-scene] 干跑 ${totalFrames} 帧（预算 ${budgetMs}ms/帧）…`,
+  );
+  const dryRun = await dryRunJobs(jobs, { budgetMs });
+  if (!dryRun.ok) {
+    fail(
+      `逐帧干跑失败: ${dryRun.failures
+        .map((item) => `${item.label} 第 ${item.frame} 帧 ${item.reason}`)
+        .join("; ")}`,
+    );
+  }
+  console.log("[render-scene] 干跑全部通过");
+}
+
+// 4. 逐 aspect 渲染整片 + ffprobe 校验
 const aspects = project.brief.aspectTargets;
 const manifest = {
   generatedAt: new Date().toISOString(),
   projectId: project.id,
-  versionId: version.versionId,
   remotion: remotionVersion,
   browser,
   fontDigests,
   aspects: {},
 };
+// Timeline props：量化帧图 + 逐镜头 spec（TimelineScene 要求 spans 连续无缝）
+const timelineProps = {
+  shots: timeline.shots.map((span) => ({
+    spec: shotEntries[span.shotIndex].spec,
+    startFrame: span.startFrame,
+    frames: span.frames,
+  })),
+};
 
 for (const aspect of aspects) {
-  const compositionId = `SceneSpec-${aspect === "landscape" ? "Landscape" : "Portrait"}`;
+  const compositionId = `Timeline-${aspect === "landscape" ? "Landscape" : "Portrait"}`;
   const videoPath = path.join(outDir, `${aspect}.mp4`);
   const propsPath = path.join(outDir, `props-${aspect}.json`);
-  writeFileSync(propsPath, JSON.stringify({ spec }));
+  writeFileSync(propsPath, JSON.stringify(timelineProps));
 
   const command = [
     "--filter",
@@ -189,37 +232,49 @@ for (const aspect of aspects) {
   }
 
   manifest.aspects[aspect] = {
-    specDigest,
     registryVersion: defaultRegistry.version,
-    componentId: spec.componentId,
-    componentVersion: spec.componentVersion,
     fps: FPS,
     width,
     height,
     frames: totalFrames,
     output: path.relative(outDir, videoPath),
+    // frameMap：整片帧图 → 逐镜头 span 与内容指纹（RenderRecord 一一对应）
+    frameMap: timeline.shots.map((span) => ({
+      shotIndex: span.shotIndex,
+      shotId: shotEntries[span.shotIndex].shot.shotId,
+      versionId: shotEntries[span.shotIndex].version.versionId,
+      componentId: shotEntries[span.shotIndex].spec.componentId,
+      startFrame: span.startFrame,
+      frames: span.frames,
+      contentDigest: contentDigests[span.shotIndex],
+    })),
   };
 
-  // RenderRecord 追加（输出路径相对项目文件，便于本地找回）
-  project.renderRecords.push({
-    renderId: randomUUID(),
-    versionId: version.versionId,
-    contentDigest,
-    engineId: "remotion",
-    engineVersion: String(defaultRegistry.version),
-    rendererVersion: remotionVersion,
-    browser,
-    fps: FPS,
-    width,
-    height,
-    codec: "h264",
-    frames: totalFrames,
-    fontDigests,
-    outputAssetRef: path
-      .relative(path.dirname(projectPath), videoPath)
-      .split(path.sep)
-      .join("/"),
-  });
+  // RenderRecord 追加：每画幅 × 每镜头一条（frames = 该镜头 span，输出为整片）
+  // 输出路径相对项目文件，便于本地找回
+  const outputAssetRef = path
+    .relative(path.dirname(projectPath), videoPath)
+    .split(path.sep)
+    .join("/");
+  for (const span of timeline.shots) {
+    const entry = shotEntries[span.shotIndex];
+    project.renderRecords.push({
+      renderId: randomUUID(),
+      versionId: entry.version.versionId,
+      contentDigest: contentDigests[span.shotIndex],
+      engineId: "remotion",
+      engineVersion: String(defaultRegistry.version),
+      rendererVersion: remotionVersion,
+      browser,
+      fps: FPS,
+      width,
+      height,
+      codec: "h264",
+      frames: span.frames,
+      fontDigests,
+      outputAssetRef,
+    });
+  }
 }
 
 // 5. 回写项目（追加后重校验 + savedVersion 递增）
@@ -232,5 +287,5 @@ writeFileSync(
 );
 
 console.log(
-  `[render-scene] 完成: ${aspects.map((a) => `${a}.mp4`).join(", ")}; RenderRecord x${aspects.length} 已回写 ${path.basename(projectPath)} (savedVersion=${project.savedVersion})`,
+  `[render-scene] 完成: ${aspects.map((a) => `${a}.mp4`).join(", ")}（${shotEntries.length} 镜头 × ${aspects.length} 画幅）; RenderRecord x${shotEntries.length * aspects.length} 已回写 ${path.basename(projectPath)} (savedVersion=${project.savedVersion})`,
 );

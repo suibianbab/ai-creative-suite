@@ -1,0 +1,351 @@
+{
+  "schemaVersion": 1,
+  "id": "e1c0a7ea-0000-4000-8000-000000000001",
+  "title": "勾股定理",
+  "brief": {
+    "sentence": "做一个12秒的STEM解说视频，主题是勾股定理，分4个镜头",
+    "aspectTargets": [
+      "landscape",
+      "portrait"
+    ]
+  },
+  "shots": [
+    {
+      "shotId": "e1c0a7ea-1000-4000-8000-000000000000",
+      "order": 0,
+      "locked": false,
+      "workingVersionId": "e1c0a7ea-2000-4000-8000-000000000000",
+      "contentVersions": [
+        {
+          "versionId": "e1c0a7ea-2000-4000-8000-000000000000",
+          "createdAt": "2026-10-17T16:28:08.955Z",
+          "durationMs": 3000,
+          "description": "开场（文字动画）：勾股定理",
+          "narrationText": "",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 3000,
+              "seed": 280549775,
+              "background": "#ffffff",
+              "params": {
+                "title": "勾股定理",
+                "titleColor": "#1b2c29",
+                "subtitleColor": "#5d7469",
+                "entrance": "fade-up",
+                "enterMs": 900
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-rules",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "e1c0a7ea-2000-4000-8000-000000000000",
+          "at": "2026-10-17T16:28:08.955Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "e1c0a7ea-1000-4000-8000-000000000001",
+      "order": 1,
+      "locked": false,
+      "workingVersionId": "e1c0a7ea-2000-4000-8000-000000000001",
+      "contentVersions": [
+        {
+          "versionId": "e1c0a7ea-2000-4000-8000-000000000001",
+          "createdAt": "2026-10-17T16:28:08.955Z",
+          "durationMs": 3000,
+          "description": "要点 1（文字动画）：勾股定理",
+          "narrationText": "",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 3000,
+              "seed": 263772156,
+              "background": "#ffffff",
+              "params": {
+                "title": "勾股定理",
+                "subtitle": "要点 1",
+                "titleColor": "#1b2c29",
+                "subtitleColor": "#5d7469",
+                "entrance": "fade-up",
+                "enterMs": 900
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-rules",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "e1c0a7ea-2000-4000-8000-000000000001",
+          "at": "2026-10-17T16:28:08.955Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "e1c0a7ea-1000-4000-8000-000000000002",
+      "order": 2,
+      "locked": false,
+      "workingVersionId": "e1c0a7ea-2000-4000-8000-000000000002",
+      "contentVersions": [
+        {
+          "versionId": "e1c0a7ea-2000-4000-8000-000000000002",
+          "createdAt": "2026-10-17T16:28:08.955Z",
+          "durationMs": 3000,
+          "description": "示意 1（图形动画）：勾股定理",
+          "narrationText": "",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "basic-shapes",
+              "componentVersion": 1,
+              "durationMs": 3000,
+              "seed": 314105013,
+              "background": "#ffffff",
+              "params": {
+                "shapes": [
+                  {
+                    "kind": "rect",
+                    "x": 0.3,
+                    "y": 0.3,
+                    "w": 0.4,
+                    "h": 0.4,
+                    "color": "#497a61",
+                    "delayMs": 0,
+                    "enterMs": 900
+                  }
+                ]
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-rules",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "e1c0a7ea-2000-4000-8000-000000000002",
+          "at": "2026-10-17T16:28:08.955Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "e1c0a7ea-1000-4000-8000-000000000003",
+      "order": 3,
+      "locked": false,
+      "workingVersionId": "e1c0a7ea-2000-4000-8000-000000000003",
+      "contentVersions": [
+        {
+          "versionId": "e1c0a7ea-2000-4000-8000-000000000003",
+          "createdAt": "2026-10-17T16:28:08.955Z",
+          "durationMs": 3000,
+          "description": "结语（文字动画）：勾股定理",
+          "narrationText": "",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 3000,
+              "seed": 297327394,
+              "background": "#ffffff",
+              "params": {
+                "title": "勾股定理",
+                "subtitle": "谢谢观看",
+                "titleColor": "#1b2c29",
+                "subtitleColor": "#5d7469",
+                "entrance": "fade-up",
+                "enterMs": 900
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-rules",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "e1c0a7ea-2000-4000-8000-000000000003",
+          "at": "2026-10-17T16:28:08.955Z",
+          "actor": "human"
+        }
+      ]
+    }
+  ],
+  "renderRecords": [
+    {
+      "renderId": "82f8bc8c-19f3-4bc3-ba1d-246664daab52",
+      "versionId": "e1c0a7ea-2000-4000-8000-000000000000",
+      "contentDigest": "8a5d2aafe434b3e27004b1a8684b0c5fcfacbba5bcca2ffe38c846aecbc78aa5",
+      "engineId": "remotion",
+      "engineVersion": "1",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "3859986f-b517-479d-b117-bf2f3c7845b4",
+      "versionId": "e1c0a7ea-2000-4000-8000-000000000001",
+      "contentDigest": "b4e1f588162cd9b9b919d0d72d9634d1dba88208daa910617abd02d4b26dfb38",
+      "engineId": "remotion",
+      "engineVersion": "1",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "4d8af347-b48f-4e6d-8a24-b6f411759c75",
+      "versionId": "e1c0a7ea-2000-4000-8000-000000000002",
+      "contentDigest": "86ba37aab54b406ee286f8950d2733972c947dc08cef5b703efc26097a5daf4b",
+      "engineId": "remotion",
+      "engineVersion": "1",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "87dab238-583d-4212-a9c6-7b68c6dbdae1",
+      "versionId": "e1c0a7ea-2000-4000-8000-000000000003",
+      "contentDigest": "e1cbb1b0ea293fec6299d7d078ee4e5cf66974d3541656dbf77ae9b86067e648",
+      "engineId": "remotion",
+      "engineVersion": "1",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "f639f042-4d3a-4334-b7ad-da39898e7677",
+      "versionId": "e1c0a7ea-2000-4000-8000-000000000000",
+      "contentDigest": "8a5d2aafe434b3e27004b1a8684b0c5fcfacbba5bcca2ffe38c846aecbc78aa5",
+      "engineId": "remotion",
+      "engineVersion": "1",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    },
+    {
+      "renderId": "27d63bd3-148a-41d3-948b-174b4dabc903",
+      "versionId": "e1c0a7ea-2000-4000-8000-000000000001",
+      "contentDigest": "b4e1f588162cd9b9b919d0d72d9634d1dba88208daa910617abd02d4b26dfb38",
+      "engineId": "remotion",
+      "engineVersion": "1",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    },
+    {
+      "renderId": "d3b706a6-33d9-4bc6-ab43-14c600408cf8",
+      "versionId": "e1c0a7ea-2000-4000-8000-000000000002",
+      "contentDigest": "86ba37aab54b406ee286f8950d2733972c947dc08cef5b703efc26097a5daf4b",
+      "engineId": "remotion",
+      "engineVersion": "1",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    },
+    {
+      "renderId": "1a6a8e45-f075-45c9-a468-c3fbb4ef9487",
+      "versionId": "e1c0a7ea-2000-4000-8000-000000000003",
+      "contentDigest": "e1cbb1b0ea293fec6299d7d078ee4e5cf66974d3541656dbf77ae9b86067e648",
+      "engineId": "remotion",
+      "engineVersion": "1",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    }
+  ],
+  "deliveries": [],
+  "savedVersion": 2
+}
