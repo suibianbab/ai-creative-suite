@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { defaultRegistry, validateSceneSpec } from "@acs/video-scene";
-import { planFromSentence } from "./planner.js";
+import {
+  isStoryboardSentence,
+  planFromSentence,
+  planStoryboard,
+  splitShotDurations,
+} from "./planner.js";
 
 test("合法文字动画句 → ok，spec 通过注册表校验", () => {
   const result = planFromSentence(
@@ -102,4 +107,95 @@ test("内容预告：图形句同样点名模板名与「标题不进画面」",
   assert.ok(result.ok);
   assert.match(result.renderHint, /模板「[^」]+」/);
   assert.match(result.renderHint, /标题「发布」不会出现在画面/);
+});
+
+// —— P1 分镜规划器（planStoryboard）——
+
+test("分镜：合法 30s/4 镜头 STEM 句 → 4 镜头、Σ时长=30000、逐 spec 过注册表校验", () => {
+  const sb = planStoryboard(
+    "做一个30秒的STEM解说视频，主题是勾股定理，分4个镜头",
+  );
+  assert.ok(sb.ok);
+  assert.equal(sb.title, "勾股定理");
+  assert.equal(sb.totalMs, 30000);
+  assert.equal(sb.shots.length, 4);
+  const sum = sb.shots.reduce((acc, s) => acc + s.plan.spec.durationMs, 0);
+  assert.equal(sum, 30000);
+  for (const s of sb.shots) validateSceneSpec(s.plan.spec, defaultRegistry);
+  // 构成：开场文字 → 要点文字 → 图形示意 → 结语文字
+  assert.deepEqual(
+    sb.shots.map((s) => s.plan.spec.componentId),
+    ["text-animation", "text-animation", "basic-shapes", "text-animation"],
+  );
+  assert.match(sb.shots[0]!.label, /开场/);
+  assert.match(sb.shots[3]!.label, /结语/);
+});
+
+test("分镜：内容预告如实——开场点名标题、要点点名占位、示意点名模板、结语点名副标题", () => {
+  const sb = planStoryboard("做一个30秒的STEM解说视频，主题是水循环");
+  assert.ok(sb.ok);
+  assert.match(sb.shots[0]!.plan.renderHint, /标题「水循环」/);
+  assert.match(sb.shots[1]!.plan.renderHint, /要点 1/);
+  assert.match(sb.shots[2]!.plan.renderHint, /模板「[^」]+」/);
+  assert.match(sb.shots[3]!.plan.renderHint, /谢谢观看/);
+});
+
+test("分镜：默认 4 镜头；「分3/8个镜头」生效且交替构成正确", () => {
+  const d = planStoryboard("做一个12秒的STEM解说视频，主题是光的折射");
+  assert.ok(d.ok);
+  assert.equal(d.shots.length, 4);
+  const n3 = planStoryboard(
+    "做一个12秒的STEM解说视频，主题是光的折射，分3个镜头",
+  );
+  assert.ok(n3.ok);
+  assert.equal(n3.shots.length, 3);
+  const n8 = planStoryboard(
+    "做一个12秒的STEM解说视频，主题是光的折射，分8个镜头",
+  );
+  assert.ok(n8.ok);
+  assert.equal(n8.shots.length, 8);
+  assert.deepEqual(
+    n8.shots.map((s) => s.plan.spec.componentId),
+    [
+      "text-animation",
+      "text-animation",
+      "basic-shapes",
+      "text-animation",
+      "basic-shapes",
+      "text-animation",
+      "basic-shapes",
+      "text-animation",
+    ],
+  );
+});
+
+test("分镜：秒数 3..120、镜头数 3..8 越界拒绝且 reason 点名", () => {
+  const s2 = planStoryboard("做一个2秒的STEM解说视频，主题是X");
+  assert.ok(!s2.ok);
+  assert.match(s2.reason, /秒数/);
+  assert.ok(!planStoryboard("做一个121秒的STEM解说视频，主题是X").ok);
+  const n2 = planStoryboard("做一个12秒的STEM解说视频，主题是X，分2个镜头");
+  assert.ok(!n2.ok);
+  assert.match(n2.reason, /镜头/);
+  assert.ok(!planStoryboard("做一个12秒的STEM解说视频，主题是X，分9个镜头").ok);
+});
+
+test("分镜：同句可复现、镜头间 seed 互异；isStoryboardSentence 分流正确", () => {
+  const a = planStoryboard("做一个20秒的STEM解说视频，主题是浮力，分5个镜头");
+  const b = planStoryboard("做一个20秒的STEM解说视频，主题是浮力，分5个镜头");
+  assert.ok(a.ok && b.ok);
+  assert.deepEqual(a, b);
+  const seeds = new Set(a.shots.map((s) => s.plan.spec.seed));
+  assert.equal(seeds.size, a.shots.length);
+  assert.ok(isStoryboardSentence("做一个30秒的STEM解说视频，主题是X"));
+  assert.ok(!isStoryboardSentence("做一个12秒的文字动画，标题是X"));
+});
+
+test("分镜：splitShotDurations 均分且末镜头吸收余数", () => {
+  assert.deepEqual(splitShotDurations(30000, 4), [7500, 7500, 7500, 7500]);
+  assert.deepEqual(splitShotDurations(10000, 3), [3333, 3333, 3334]);
+  assert.equal(
+    splitShotDurations(10000, 3).reduce((x, y) => x + y, 0),
+    10000,
+  );
 });

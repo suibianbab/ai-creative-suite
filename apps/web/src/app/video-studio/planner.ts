@@ -1,3 +1,4 @@
+import { quantizeTimeline, ZeroFrameShotError } from "@acs/video-document";
 import {
   defaultRegistry,
   type SceneSpec,
@@ -203,4 +204,147 @@ export function specSummary(spec: SceneSpec): string {
   const label =
     TYPE_LABEL[spec.componentId as keyof typeof TYPE_LABEL] ?? spec.componentId;
   return `${label}动画 ${spec.durationMs / 1000}s · seed ${spec.seed} · 背景 ${spec.background}`;
+}
+
+// —— P1 分镜规划器：一句话 STEM 解说视频 → N 个镜头的 spec 序列 ——
+//
+//   做一个<3..120>秒的STEM解说视频，主题是<标题>[，分<3..8>个镜头]（默认 4）
+//
+// 与 P0 单镜头规划器同一纪律：只认固定句式，失败原样告知语法，不猜不降级。
+// 规则是确定性的：要点/示意是固定占位与模板库内容（按句+镜头序号的 seed 抽取），
+// 不做题材生成——预告文案必须如实说清这一点。
+
+export const STORYBOARD_GUIDANCE =
+  "P1 分镜句式：做一个<3..120>秒的STEM解说视频，主题是<标题>" +
+  "[，分<3..8>个镜头]（默认 4 个镜头）。" +
+  "示例：做一个30秒的STEM解说视频，主题是勾股定理，分4个镜头";
+
+const STORYBOARD_MIN_SECONDS = 3;
+const STORYBOARD_MAX_SECONDS = 120;
+const STORYBOARD_MIN_SHOTS = 3;
+const STORYBOARD_MAX_SHOTS = 8;
+const STORYBOARD_FPS = 24;
+
+const STORYBOARD_RE =
+  /^做一个(\d{1,3})秒的STEM解说视频，主题是([^，]{1,80})(?:，分(\d{1,2})个镜头)?$/;
+const STORYBOARD_HEAD_RE = /^做一个\d{1,3}秒的STEM解说视频，/;
+
+export function isStoryboardSentence(sentence: string): boolean {
+  return STORYBOARD_HEAD_RE.test(sentence);
+}
+
+// 总时长均分到 N 个镜头：每镜头 floor(total/N)，末镜头吸收余数，Σ 恒等于 total。
+export function splitShotDurations(totalMs: number, shots: number): number[] {
+  const base = Math.floor(totalMs / shots);
+  return Array.from({ length: shots }, (_, index) =>
+    index === shots - 1 ? totalMs - base * (shots - 1) : base,
+  );
+}
+
+export type StoryboardShot = {
+  label: string;
+  plan: PlanResult & { ok: true };
+};
+
+export type StoryboardResult =
+  | { ok: true; title: string; totalMs: number; shots: StoryboardShot[] }
+  | { ok: false; reason: string; guidance: string };
+
+function rejectStoryboard(reason: string): StoryboardResult {
+  return { ok: false, reason, guidance: STORYBOARD_GUIDANCE };
+}
+
+export function planStoryboard(sentence: string): StoryboardResult {
+  const match = STORYBOARD_RE.exec(sentence);
+  if (!match) {
+    return rejectStoryboard("这句不在 P1 分镜句式里，我不猜你的意思");
+  }
+  const seconds = Number(match[1]);
+  if (seconds < STORYBOARD_MIN_SECONDS || seconds > STORYBOARD_MAX_SECONDS) {
+    return rejectStoryboard(
+      `秒数必须是 ${STORYBOARD_MIN_SECONDS}..${STORYBOARD_MAX_SECONDS} 的整数`,
+    );
+  }
+  const title = match[2] as string;
+  const shotCount = match[3] === undefined ? 4 : Number(match[3]);
+  if (shotCount < STORYBOARD_MIN_SHOTS || shotCount > STORYBOARD_MAX_SHOTS) {
+    return rejectStoryboard(
+      `镜头数必须是 ${STORYBOARD_MIN_SHOTS}..${STORYBOARD_MAX_SHOTS} 的整数`,
+    );
+  }
+
+  const totalMs = seconds * 1000;
+  const durations = splitShotDurations(totalMs, shotCount);
+  // 零帧预检（评审关注 #1）：当前边界（最短 3000ms/8=375ms≈9 帧@24fps）下不可能
+  // 零帧，预检为将来放宽秒数/镜头数边界时的兜底——零帧是编排错误，不许静默过。
+  try {
+    quantizeTimeline(durations, STORYBOARD_FPS);
+  } catch (error) {
+    if (error instanceof ZeroFrameShotError)
+      return rejectStoryboard(error.message);
+    throw error;
+  }
+
+  let pointIndex = 0;
+  let shapeIndex = 0;
+  const shots: StoryboardShot[] = durations.map((durationMs, index) => {
+    const seed = hashSentence(`${sentence}#${index}`);
+    const isMiddle = index > 0 && index < shotCount - 1;
+    const useShapes = isMiddle && (index - 1) % 2 === 1;
+    let label: string;
+    let params: unknown;
+    let renderHint: string;
+    if (index === 0) {
+      label = "开场";
+      params = {
+        title,
+        titleColor: "#1b2c29",
+        subtitleColor: "#5d7469",
+        entrance: "fade-up",
+        enterMs: DEFAULT_ENTER_MS,
+      };
+      renderHint = `开场镜头：标题「${title}」进入画面`;
+    } else if (!isMiddle) {
+      label = "结语";
+      params = {
+        title,
+        subtitle: "谢谢观看",
+        titleColor: "#1b2c29",
+        subtitleColor: "#5d7469",
+        entrance: "fade-up",
+        enterMs: DEFAULT_ENTER_MS,
+      };
+      renderHint = `结语镜头：标题「${title}」与副标题「谢谢观看」进入画面`;
+    } else if (useShapes) {
+      shapeIndex += 1;
+      label = `示意 ${shapeIndex}`;
+      params = basicShapesParams(seed);
+      renderHint = `示意镜头：从固定模板库按镜头 seed 抽取模板「${SHAPE_TEMPLATE_LABELS[seed % SHAPE_TEMPLATE_LABELS.length]}」依次入场，不含讲解文字`;
+    } else {
+      pointIndex += 1;
+      label = `要点 ${pointIndex}`;
+      params = {
+        title,
+        subtitle: `要点 ${pointIndex}`,
+        titleColor: "#1b2c29",
+        subtitleColor: "#5d7469",
+        entrance: "fade-up",
+        enterMs: DEFAULT_ENTER_MS,
+      };
+      renderHint = `要点镜头：标题「${title}」与占位副标题「要点 ${pointIndex}」进入画面`;
+    }
+    const spec: SceneSpec = {
+      specVersion: 1,
+      componentId: useShapes ? "basic-shapes" : "text-animation",
+      componentVersion: 1,
+      durationMs,
+      seed,
+      background: DEFAULT_BACKGROUND,
+      params,
+    };
+    validateSceneSpec(spec, defaultRegistry); // 兜底：构造结果必须过注册表校验
+    return { label, plan: { ok: true, spec, title, renderHint } };
+  });
+
+  return { ok: true, title, totalMs, shots };
 }
