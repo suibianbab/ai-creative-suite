@@ -1,0 +1,154 @@
+/* 与 image-studio 同一浅绿工作台配色。 */
+.studio-shell {
+  min-height: 100vh;
+  background: #edf1ee;
+  color: #1b2c29;
+  font-family: Arial, "Microsoft YaHei", sans-serif;
+}
+
+.studio-topbar {
+  height: 66px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 24px;
+  background: #ffffff;
+  border-bottom: 1px solid #dce5df;
+}
+
+.studio-brand {
+  color: #173f3b;
+  text-decoration: none;
+  font-weight: 800;
+  font-size: 15px;
+}
+
+.studio-divider {
+  width: 1px;
+  height: 21px;
+  background: #d7e2db;
+}
+
+.studio-title {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.studio-badge {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #ecf5ee;
+  color: #497a61;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.project-pane,
+.editor-pane {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 28px 24px 48px;
+}
+
+.project-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.project-toolbar h2 {
+  font-size: 18px;
+}
+
+.project-create,
+.project-open,
+.editor-save,
+.project-action {
+  border: 1px solid #cadbd1;
+  border-radius: 8px;
+  background: #fff;
+  color: #1b2c29;
+  padding: 8px 14px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.project-create:hover,
+.project-open:hover,
+.editor-save:hover:not(:disabled),
+.project-action:hover {
+  background: #ecf5ee;
+}
+
+.editor-save {
+  background: #173f3b;
+  border-color: #173f3b;
+  color: #fff;
+  font-weight: 700;
+}
+
+.editor-save:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.project-empty {
+  color: #5d7469;
+}
+
+.project-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border: 1px solid #dce5df;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.project-table th,
+.project-table td {
+  text-align: left;
+  padding: 12px 14px;
+  border-bottom: 1px solid #e7efe9;
+  font-size: 14px;
+}
+
+.project-table th {
+  color: #5d7469;
+  font-size: 12px;
+}
+
+.project-table tr:last-child td {
+  border-bottom: none;
+}
+
+.editor-field {
+  display: grid;
+  gap: 8px;
+  max-width: 420px;
+  margin-bottom: 20px;
+  font-size: 13px;
+  color: #5d7469;
+}
+
+.editor-input {
+  padding: 10px;
+  border: 1px solid #cadbd1;
+  border-radius: 8px;
+  background: #fff;
+  color: #1b2c29;
+  font-size: 14px;
+}
+
+.editor-hint {
+  color: #5d7469;
+  font-size: 13px;
+  margin-bottom: 20px;
+}
+
+.editor-message {
+  margin-top: 14px;
+  font-size: 13px;
+  color: #497a61;
+}

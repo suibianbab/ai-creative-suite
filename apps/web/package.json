@@ -6,11 +6,13 @@
     "dev": "next dev --hostname 0.0.0.0",
     "build": "next build",
     "start": "next start --hostname 0.0.0.0",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --import tsx --test \"src/app/video-studio/*.test.ts\""
   },
   "dependencies": {
     "@acs/image-document": "workspace:*",
     "@acs/shared": "workspace:*",
+    "@acs/video-document": "workspace:*",
     "next": "16.4.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
@@ -19,6 +21,7 @@
     "@types/node": "^22.15.0",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
+    "tsx": "^4.20.0",
     "typescript": "^5.9.3"
   }
 }
