@@ -1169,7 +1169,8 @@
       "cwd": ".",
       "argv": ["pnpm", "qa:video-determinism"],
       "checks": [
-        "The committed text-animation fixture (artifacts/video-studio-smoke/project.json) renders twice with identical PNG bytes for all 72 frames",
+        "The committed text-animation fixture (artifacts/video-studio-smoke/project.json) renders twice with identical decoded pixels for all 72 frames (frame-compare decodeFrameHash, not container bytes)",
+        "The run states its coverage scope: single-fixture spot check; dual-aspect MP4 size/frame counts are covered by the render pipeline output checks",
         "The manifest records spec, component, registry, Remotion, Node, headless browser and font digests for the run"
       ]
     },
@@ -1195,6 +1196,18 @@
         "Same pixels with different PNG metadata (inserted tEXt chunk) hash equal under decodeFrameHash while container-byte hashes differ",
         "Different pixels at the same dimensions hash different",
         "Decode failures surface a readable error naming the frame path"
+      ]
+    },
+    {
+      "id": "VID-007",
+      "tier": "smoke",
+      "title": "Scene component determinism gates and render resource limits",
+      "cwd": ".",
+      "argv": ["pnpm", "--filter", "@acs/video-scene", "test"],
+      "checks": [
+        "Static gate: every built-in component source (src/components/*.ts) is scanned for forbidden wall-clock (Date.now, new Date, performance.now), unseeded randomness (Math.random, crypto.getRandomValues), network (fetch, XMLHttpRequest, WebSocket, EventSource, sendBeacon) and storage (localStorage, sessionStorage, indexedDB) usage per ADR 0003 §2.3, and the scanner self-test proves each class is detected",
+        "Render output budget: assertNodeBudget rejects SvgNode trees beyond MAX_RENDER_NODES (2000) with SceneResourceError naming counts, enforced per frame by both render bridges (remotion composition and workbench preview) per ADR 0003 §2.4",
+        "React SVG attribute adaptation (reactSvgAttrs) is shared by both bridges from one package so kebab-case SvgNode attrs cannot drift between preview and render"
       ]
     }
   ],

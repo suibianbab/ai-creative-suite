@@ -13,16 +13,19 @@
 
 ## 结果（退出码 0）
 
-- 项目 ID `3533c10a-b9f4-47e0-9b51-b6afbc3ca870` 贯穿浏览器↔CLI↔浏览器全程不变；内容版本 `cdbc4242-5440-4379-b34f-86bad123bdc9` 未被改写。
+最新运行（reactSvgAttrs 归一到 @acs/video-scene 之后复验，2026-10-17）：
+
+- 项目 ID `8b71ff54-568f-473a-8d6a-c28dfa112afb` 贯穿浏览器↔CLI↔浏览器全程不变；内容版本 `a6d439bc-ce6f-41f0-a18d-4f1244fad703` 未被改写。
 - 版本链：工作台保存 v2 → CLI 回写 v3（append-only：renderRecords 0→2，shots 不变）→ 导入快进接受，本地 v2 快照保留。
 - 渲染记录在工作台 UI 可见（`render-records` 区块，两条：1280×720 与 720×1280，各 96 帧 @24fps，h264）。
-- 控制台门禁：首次运行失败，暴露真缺陷——`SvgTree` 把 SvgNode 的 kebab-case SVG 属性（`font-size`/`text-anchor`/`dominant-baseline`）原样传给 React `createElement`，每帧刷 Invalid DOM property 错误。修复（`react-svg-attrs.ts`，含单元回归 `react-svg-attrs.test.ts`）后重跑，控制台零错误。
+- 控制台门禁：首次运行失败，暴露真缺陷——`SvgTree` 把 SvgNode 的 kebab-case SVG 属性（`font-size`/`text-anchor`/`dominant-baseline`）原样传给 React `createElement`，每帧刷 Invalid DOM property 错误。修复（`react-svg-attrs`，含单元回归）后重跑，控制台零错误；归一重构（属性转换移入 `@acs/video-scene`，两座桥共用）后再次复验，仍零错误。
+- 输出不变性：同一句话→同一种子→同一 spec，重构前后两次运行的 landscape/portrait MP4 与截图 SHA-256 逐字节一致（见下表）——React 驼峰属性与 kebab 透传落到 DOM 是同一个 `font-size`，渲染结果不因适配层归一而改变。配套确定性双渲染检查（`pnpm qa:video-determinism`）亦复验通过（72/72 帧解码像素逐帧一致）。
 - 命令输出（`run.log`，本地）：
 
 ```
-[e2e-closed-loop] 去程完成: 项目 3533c10a-b9f4-47e0-9b51-b6afbc3ca870 v2
+[e2e-closed-loop] 去程完成: 项目 8b71ff54-568f-473a-8d6a-c28dfa112afb v2
 [e2e-closed-loop] CLI 完成: v3，RenderRecord ×2
-[e2e-closed-loop] OK: 项目 3533c10a-b9f4-47e0-9b51-b6afbc3ca870 贯穿全程，工作台 v2 → 导入 v3，渲染记录可见
+[e2e-closed-loop] OK: 项目 8b71ff54-568f-473a-8d6a-c28dfa112afb 贯穿全程，工作台 v2 → 导入 v3，渲染记录可见
 ```
 
 ## 产物与可复核性（如实声明）
