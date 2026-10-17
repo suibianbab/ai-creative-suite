@@ -20,6 +20,25 @@ type TextAnimationParams = {
 
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
 const SUBTITLE_DELAY_MS = 400;
+// 文本行两侧留白：字号钳制后行宽 ≤ 画布宽 × 该系数。
+const TEXT_SAFE_WIDTH = 0.88;
+
+// 估算一行文本的 em 宽：CJK/全角类字符按 1em，其余（拉丁/数字/空格）按 0.6em。
+function emWidth(text: string): number {
+  let width = 0;
+  for (const char of text) {
+    width += char.codePointAt(0)! >= 0x2e80 ? 1 : 0.6;
+  }
+  return width;
+}
+
+// 字号钳制：base 是按高度推的期望字号；若文本行会超出画布宽（竖版长标题），
+// 等比缩到安全宽度内。空文本不渲染字形，直接返回 base。
+function fitFontSize(base: number, text: string, canvasWidth: number): number {
+  const em = emWidth(text);
+  if (em === 0) return base;
+  return Math.min(base, (canvasWidth * TEXT_SAFE_WIDTH) / em);
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -87,8 +106,13 @@ function render(spec: SceneSpecLike, ctx: FrameContext): SvgNode {
   const subtitleProgress = easeOutCubic(
     clamp01((tMs - SUBTITLE_DELAY_MS) / params.enterMs),
   );
-  const titleSize = ctx.height / 8;
-  const subtitleSize = ctx.height / 14;
+  // 字号按高度推，再按文本行宽钳制（竖版画布 height 大 width 小，长标题会横向溢出裁切）
+  const titleSize = fitFontSize(ctx.height / 8, params.title, ctx.width);
+  const subtitleSize = fitFontSize(
+    ctx.height / 14,
+    params.subtitle ?? "",
+    ctx.width,
+  );
   const titleY = ctx.height / 2;
   const subtitleY = ctx.height / 2 + titleSize * 0.9;
 

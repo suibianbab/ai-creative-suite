@@ -101,6 +101,50 @@ test("标题字号 = height/8、水平居中锚点", () => {
   assert.equal(node.attrs.x, 640); // width/2
 });
 
+test("竖版画布长标题/副标题字号钳制到画布宽内，横版字号不变", () => {
+  // 审片发现的缺陷：字号只按 height 推，720×1280 竖版下 6 字标题
+  // 160px×6=960px > 720px 画布宽，左右双侧裁切。
+  const spec = specWith({
+    ...BASE,
+    subtitle: "Video Studio P0",
+    title: "云制造发布会",
+  });
+  const portrait = makeCtx({ width: 720, height: 1280, durationFrames: 288 });
+  const title = requireText(
+    textAnimation.render(spec, portrait),
+    "云制造发布会",
+  );
+  const titleSize = title.attrs["font-size"] as number;
+  assert.ok(
+    titleSize * 6 <= 720 * 0.9,
+    `竖版标题 6 字 × ${titleSize}px 超出画布：${titleSize * 6} > ${720 * 0.9}`,
+  );
+  assert.ok(titleSize < 160, "钳制未生效：字号仍为未钳制的 height/8=160");
+  const subtitle = requireText(
+    textAnimation.render(spec, portrait),
+    "Video Studio P0",
+  );
+  const subtitleSize = subtitle.attrs["font-size"] as number;
+  assert.ok(
+    subtitleSize * 9 <= 720, // ASCII ≈ 0.6em/字符 × 15 字符 = 9em
+    `竖版副标题宽 ${subtitleSize * 9} > 720`,
+  );
+  // 横版（clamp 富余）保持原字号：height/8=90、height/14≈91.4
+  const landscape = makeCtx();
+  assert.equal(
+    requireText(textAnimation.render(spec, landscape), "云制造发布会").attrs[
+      "font-size"
+    ],
+    90,
+  );
+  assert.equal(
+    requireText(textAnimation.render(spec, landscape), "Video Studio P0").attrs[
+      "font-size"
+    ],
+    720 / 14,
+  );
+});
+
 test("params 校验：未知 entrance / 空 title / 非法颜色 / enterMs 越界均拒绝", () => {
   assert.throws(
     () => textAnimation.validateParams({ ...BASE, entrance: "spin" }),
