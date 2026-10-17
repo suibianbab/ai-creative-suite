@@ -330,6 +330,11 @@ export default function VideoStudioPage() {
                       <span className="shot-description">
                         {working ? working.description : "（无工作版本）"}
                       </span>
+                      {working?.narrationText ? (
+                        <span className="shot-narration">
+                          旁白：{working.narrationText}
+                        </span>
+                      ) : null}
                       <span className="shot-duration">
                         {working ? `${working.durationMs / 1000}s` : ""} ·{" "}
                         {pieceTimeline!.shots[index]!.frames} 帧

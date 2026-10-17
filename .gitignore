@@ -20,6 +20,7 @@ artifacts/**
 !artifacts/**/*.md
 !artifacts/**/*.json
 qa/reports/
+.superpowers/
 .DS_Store
 # Dev-only credentials (never commit).
 info.txt

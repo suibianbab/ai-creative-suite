@@ -1,0 +1,50 @@
+{
+  "requestId": "423ad992-7485-99a6-9ec2-f77bc9322741",
+  "model": "cosyvoice-v3-flash",
+  "voice": "longanyang",
+  "usage": {
+    "characters": 9
+  },
+  "sentences": [
+    {
+      "index": 0,
+      "words": [
+        {
+          "end_time": 520,
+          "begin_time": 320,
+          "end_index": 1,
+          "begin_index": 0,
+          "text": "谢"
+        },
+        {
+          "end_time": 640,
+          "begin_time": 520,
+          "end_index": 2,
+          "begin_index": 1,
+          "text": "谢"
+        },
+        {
+          "end_time": 760,
+          "begin_time": 640,
+          "end_index": 3,
+          "begin_index": 2,
+          "text": "观"
+        },
+        {
+          "end_time": 920,
+          "begin_time": 760,
+          "end_index": 4,
+          "begin_index": 3,
+          "text": "看"
+        },
+        {
+          "end_time": 1320,
+          "begin_time": 920,
+          "end_index": 5,
+          "begin_index": 4,
+          "text": "。"
+        }
+      ]
+    }
+  ]
+}

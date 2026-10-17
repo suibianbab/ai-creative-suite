@@ -1,7 +1,6 @@
 {
-  "generatedAt": "2026-10-17T15:05:08.670Z",
-  "projectId": "8b71ff54-568f-473a-8d6a-c28dfa112afb",
-  "versionId": "a6d439bc-ce6f-41f0-a18d-4f1244fad703",
+  "generatedAt": "2026-10-17T18:06:24.001Z",
+  "projectId": "c5ffa9c1-3e5a-449d-8b8c-6cecf3bf4aa0",
   "remotion": "4.0.534",
   "browser": "Google Chrome 155.0.8059.41",
   "fontDigests": {
@@ -9,26 +8,42 @@
   },
   "aspects": {
     "landscape": {
-      "specDigest": "6622e0d3110d204136dca3b3b6f1248ff64b17239b1eb6e1607ec41b3ba9f317",
       "registryVersion": 1,
-      "componentId": "text-animation",
-      "componentVersion": 1,
       "fps": 24,
       "width": 1280,
       "height": 720,
       "frames": 96,
-      "output": "landscape.mp4"
+      "output": "landscape.mp4",
+      "frameMap": [
+        {
+          "shotIndex": 0,
+          "shotId": "60840fd0-6b44-4100-aa3d-ef4226396afc",
+          "versionId": "fb9e7d39-c847-4324-8487-4259378bb945",
+          "componentId": "text-animation",
+          "startFrame": 0,
+          "frames": 96,
+          "contentDigest": "b148250f0e873a9c7ca8a0a9aa77684135d96597ad64325ae4fb6de26bcca88c"
+        }
+      ]
     },
     "portrait": {
-      "specDigest": "6622e0d3110d204136dca3b3b6f1248ff64b17239b1eb6e1607ec41b3ba9f317",
       "registryVersion": 1,
-      "componentId": "text-animation",
-      "componentVersion": 1,
       "fps": 24,
       "width": 720,
       "height": 1280,
       "frames": 96,
-      "output": "portrait.mp4"
+      "output": "portrait.mp4",
+      "frameMap": [
+        {
+          "shotIndex": 0,
+          "shotId": "60840fd0-6b44-4100-aa3d-ef4226396afc",
+          "versionId": "fb9e7d39-c847-4324-8487-4259378bb945",
+          "componentId": "text-animation",
+          "startFrame": 0,
+          "frames": 96,
+          "contentDigest": "b148250f0e873a9c7ca8a0a9aa77684135d96597ad64325ae4fb6de26bcca88c"
+        }
+      ]
     }
   }
 }

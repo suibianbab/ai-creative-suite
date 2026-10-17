@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "id": "8b71ff54-568f-473a-8d6a-c28dfa112afb",
+  "id": "c5ffa9c1-3e5a-449d-8b8c-6cecf3bf4aa0",
   "title": "闭环验收",
   "brief": {
     "sentence": "做一个4秒的文字动画，标题是闭环验收，副标题是E2E",
@@ -11,14 +11,14 @@
   },
   "shots": [
     {
-      "shotId": "4f664368-c179-44b8-9047-de7e13e803ed",
+      "shotId": "60840fd0-6b44-4100-aa3d-ef4226396afc",
       "order": 0,
       "locked": false,
-      "workingVersionId": "a6d439bc-ce6f-41f0-a18d-4f1244fad703",
+      "workingVersionId": "fb9e7d39-c847-4324-8487-4259378bb945",
       "contentVersions": [
         {
-          "versionId": "a6d439bc-ce6f-41f0-a18d-4f1244fad703",
-          "createdAt": "2026-10-17T15:05:08.074Z",
+          "versionId": "fb9e7d39-c847-4324-8487-4259378bb945",
+          "createdAt": "2026-10-17T18:06:23.357Z",
           "durationMs": 4000,
           "description": "文字动画：闭环验收",
           "narrationText": "",
@@ -50,8 +50,8 @@
       "events": [
         {
           "kind": "submitted",
-          "versionId": "a6d439bc-ce6f-41f0-a18d-4f1244fad703",
-          "at": "2026-10-17T15:05:08.074Z",
+          "versionId": "fb9e7d39-c847-4324-8487-4259378bb945",
+          "at": "2026-10-17T18:06:23.357Z",
           "actor": "human"
         }
       ]
@@ -59,9 +59,9 @@
   ],
   "renderRecords": [
     {
-      "renderId": "05d7b928-b810-48ef-bd60-f1856f64a755",
-      "versionId": "a6d439bc-ce6f-41f0-a18d-4f1244fad703",
-      "contentDigest": "7a7c65a1db3587098ae2fe79d4d99413db0c916acf91b39075f5aa7e15ef5538",
+      "renderId": "f1092c36-ee25-47ac-90f7-b2674514462a",
+      "versionId": "fb9e7d39-c847-4324-8487-4259378bb945",
+      "contentDigest": "b148250f0e873a9c7ca8a0a9aa77684135d96597ad64325ae4fb6de26bcca88c",
       "engineId": "remotion",
       "engineVersion": "1",
       "rendererVersion": "4.0.534",
@@ -77,9 +77,9 @@
       "outputAssetRef": "render/landscape.mp4"
     },
     {
-      "renderId": "ba5910c8-3979-4ab0-84ba-4ee381ed7bb1",
-      "versionId": "a6d439bc-ce6f-41f0-a18d-4f1244fad703",
-      "contentDigest": "7a7c65a1db3587098ae2fe79d4d99413db0c916acf91b39075f5aa7e15ef5538",
+      "renderId": "b48f0437-a546-4b12-a50b-d63969a9db35",
+      "versionId": "fb9e7d39-c847-4324-8487-4259378bb945",
+      "contentDigest": "b148250f0e873a9c7ca8a0a9aa77684135d96597ad64325ae4fb6de26bcca88c",
       "engineId": "remotion",
       "engineVersion": "1",
       "rendererVersion": "4.0.534",

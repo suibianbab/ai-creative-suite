@@ -8,15 +8,28 @@
       "!**/node_modules",
       "!**/.tools",
       "!**/public/vendor/photocraft",
+      "!**/.superpowers",
       "!**/artifacts",
       "!**/qa/reports",
       "!**/pnpm-lock.yaml"
     ]
   },
-  "formatter": { "indentStyle": "space", "indentWidth": 2 },
-  "javascript": {
-    "formatter": { "quoteStyle": "double" },
-    "parser": { "unsafeParameterDecoratorsEnabled": true }
+  "formatter": {
+    "indentStyle": "space",
+    "indentWidth": 2
   },
-  "linter": { "enabled": true, "rules": { "preset": "none" } }
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "double"
+    },
+    "parser": {
+      "unsafeParameterDecoratorsEnabled": true
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "none"
+    }
+  }
 }

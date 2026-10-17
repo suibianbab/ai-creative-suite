@@ -419,6 +419,13 @@
   flex: 1;
 }
 
+.shot-narration {
+  color: #46584f;
+  background: #f2f7f4;
+  border-radius: 6px;
+  padding: 2px 8px;
+}
+
 .shot-duration {
   color: #5d7469;
   font-size: 12px;

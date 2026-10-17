@@ -1222,6 +1222,25 @@
         "The dry-run adapter (spec-frame-renderer) reuses the same registry validation, seeded random and node-budget assertion as the real render path",
         "render-scene.mjs runs the dry-run gate over every frame before any Remotion invocation unless --skip-dryrun is passed"
       ]
+    },
+    {
+      "id": "VID-010",
+      "tier": "smoke",
+      "title": "DashScope TTS SSE parsing, cost estimation and narration assembly pure functions",
+      "cwd": ".",
+      "argv": [
+        "node",
+        "--test",
+        "scripts/video/tts-sse.test.mjs",
+        "scripts/video/render-scene.narration.test.mjs"
+      ],
+      "checks": [
+        "parseTtsSse decodes sentence-synthesis audio chunks per chunk (base64 to Buffer) and prefers complete sentence-end words over the sentence-begin prefix, exposing requestId/usage/finishReason",
+        "estimateTtsCostCny prices cosyvoice-v3-flash at the documented CNY rate and refuses unknown models instead of guessing",
+        "buildNarrationJobs filters empty narrationText and refuses shots over the 2000-character TTS limit, naming the shot",
+        "buildNarrationEntries maps <shotId>-<versionId>.wav assets onto timeline spans: missing wav is a notice (no track), audio longer than the span is flagged overflow, and span duration is computed from frames/fps",
+        "Unit tests make zero network calls; billing is exercised only by the opted-in e2e run"
+      ]
     }
   ],
   "manual": [
@@ -1958,6 +1977,24 @@
         "The same project id and all four content version ids survive browser to CLI to browser without rewrite",
         "CLI lands on v3 with 8 render records (4 shots x 2 aspects) whose per-record frames match the quantized spans (48+48+48+48 at 8s/24fps)",
         "Import shows the shot timeline (4 shot cards), both aspect records and the whole-piece preview; browser console stays free of errors"
+      ]
+    },
+    {
+      "id": "VID-011",
+      "title": "Video Studio narrated closed loop with billed TTS",
+      "fixture": "Dev server on :3210, Playwright Chromium, DASHSCOPE_API_KEY in env (billed ~0.004 CNY per run, cumulative cap 50 CNY with per-call ledger in artifacts/tts-usage.jsonl); scripted run documented in artifacts/video-studio-narrated/E2E_NARRATED.md (rerun: node scripts/video/e2e-narrated.mjs)",
+      "steps": [
+        "Create a project in the browser and plan 做一个8秒的STEM解说视频，主题是水循环，分4个镜头, then apply the storyboard",
+        "Check each shot card shows its narration text (opening 水循环。, point shot 水循环，要点 1。, closing 谢谢观看。), then save and export the project JSON",
+        "Run scripts/video/tts-narration.mjs over the export (DashScope cosyvoice-v3-flash/longanyang): per-shot <shotId>-<versionId>.wav plus word-timestamp .words.json",
+        "Run scripts/video/render-scene.mjs --narration over the same export (dry-run gate included) and ffprobe both aspect MP4s",
+        "Back in the browser list view, import the CLI-returned JSON and reopen the editor"
+      ],
+      "passCriteria": [
+        "All four narrationText fields survive browser to CLI to browser; imported shot cards echo the narration text",
+        "Both aspect MP4s carry an aac audio track and container duration within 0.1s of the 8.00s video; render-manifest.json lists narration entries for all shots (audioBytes/durationMs/wordsFile)",
+        "A no-narration rerender of the same project is frame-identical (sampled decoded-pixel hashes) in both aspects - audio assembly never touches video frames",
+        "Browser console stays free of errors during the whole loop; billing ledger shows the run's characters and stays within the 50 CNY cap"
       ]
     },
     {
