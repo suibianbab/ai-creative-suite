@@ -1161,6 +1161,17 @@
         "Promises that need real-user telemetry (confirm-UI 95% interception, average confirmations, abandon rate, online loop) are declared unmeasured with the telemetry-infrastructure caveat instead of being claimed",
         "Rate math and null-safe promise verdicts live in section7-rates.mjs with unit tests (section7-rates.test.mjs); the assembled table lands in .tools/photocraft-serve-qa/section7-report.json and the case is skipped until its upstream report files exist"
       ]
+    },
+    {
+      "id": "VID-002",
+      "tier": "smoke",
+      "title": "Video Studio double-render determinism",
+      "cwd": ".",
+      "argv": ["pnpm", "qa:video-determinism"],
+      "checks": [
+        "The pinned text-animation fixture renders twice with identical PNG bytes for all 72 frames",
+        "The manifest records spec, component, registry, Remotion, Node and font digests for the run"
+      ]
     }
   ],
   "manual": [
@@ -1847,6 +1858,22 @@
         "Correct size, frame count and audio",
         "No clipped text, missing frames or visible scene seam",
         "Shot timing matches approved storyboard"
+      ]
+    },
+    {
+      "id": "VID-003",
+      "title": "Video Studio P0 single-scene closed loop sample",
+      "fixture": "Dev server on :3210; planner sentences 做一个12秒的文字动画，标题是云制造发布会，副标题是Video Studio P0 and 做一个8秒的线描动画，标题是山水发布; see artifacts/video-p0-sample-2026-10-17/REVIEW.md",
+      "steps": [
+        "Create a project in the browser, run the planner on each sentence and apply the confirmation card",
+        "Save the project, export the stored-side JSON and render landscape plus portrait MP4s via scripts/video/render-scene.mjs",
+        "Reload the browser, reopen the project and verify the title, sentence, scene spec and events round-trip",
+        "Extract mid-frames from both MP4s and review landscape and portrait separately (portrait is centered scale for line-drawing, native portrait layout plus width clamp for text)"
+      ],
+      "passCriteria": [
+        "Reopen restores the title, one-line request, sceneSource type spec and submitted event field by field",
+        "ffprobe confirms 1280x720 and 720x1280 outputs at 24 fps with the planned durations and render records are written back",
+        "No text clipping in either aspect: landscape margins symmetric, portrait title and subtitle inside the canvas with clear side margins"
       ]
     },
     {

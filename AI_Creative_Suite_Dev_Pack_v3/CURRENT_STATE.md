@@ -1,5 +1,9 @@
 # Current State v2
 
+## 2026-10-17 Video Studio P0 单场景闭环
+
+`docs/superpowers/plans/2026-10-17-video-studio-p0.md` 十个任务全部完成。新增 `@acs/video-scene`（SceneSpec v1 声明式场景 + 文字/线描/基础图形三个纯函数组件、播种随机、本地字体）与 `@acs/remotion-engine` SceneSpec 合成；`apps/web` `/video-studio` 工作台壳支持规则规划器（句式 → 计划确认卡 → 分镜）、IndexedDB 本地项目保存与刷新重开；`scripts/video/render-scene.mjs` 按 aspectTargets 出 1280×720 / 720×1280 双尺寸并回写 RenderRecord。端到端样片（VID-003）两轮真实浏览器闭环 + 双尺寸出片 + 逐字段重开校验通过，审片记录见 `../artifacts/video-p0-sample-2026-10-17/REVIEW.md`；确定性双跑校验登记为 VID-002（72 帧逐帧一致）。审片发现并修复竖版文字标题双侧裁切缺陷（字号现按文本 em 宽钳制到画布 88%，横版像素不变）；竖版行为如实分述：线描/图形为设计空间等比居中缩放，文字为原生竖版排版 + 宽度钳制。注意：qa/registry.json 中 VID-001 已被 FilmCraft 遗留 manual 条目占用，本计划的新用例编号顺延为 VID-002/VID-003。P0 为本地优先；服务端 video_projects 迁移与 LLM 规划属 P1。
+
 ## 2026-10-17 PhotoCraft D/E 复审修复
 
 画框候选现为服务端硬限域，并过滤明显由整物体被小框截断形成的候选；网格默认与自动选中关闭状态不变。IMG-055 新契约下 12/12 执行成功，box top-1 mask IoU mean 0.6916（模拟标注框）。浏览器验收脚本已入仓，IMG-057 四条真实页面链路执行成功；花瓣误染花蕊经 PhotoCraft 现有蒙版笔刷接力后，花蕊平均 RGB 变化由 94.87 降至 0.261/255；左耳框外隔离 0.021/255，但耳根仍有硬边，UI-038 全尺寸视觉验收未通过，不能宣称自动部件精修达标。IMG-056 生成 A/B 改为四个计划臂全部成功才算完整比较，未重新付费运行。见 `../docs/PHOTOCRAFT_E1_REVIEW_FIXES_2026-10-17.md` 与 `../qa/UI-038-2026-10-17.md`。

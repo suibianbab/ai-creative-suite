@@ -1,0 +1,98 @@
+{
+  "schemaVersion": 1,
+  "id": "c28553cf-6146-49ba-b6fb-f2d8a1429d24",
+  "title": "云制造发布会",
+  "brief": {
+    "sentence": "做一个12秒的文字动画，标题是云制造发布会，副标题是Video Studio P0",
+    "aspectTargets": [
+      "landscape",
+      "portrait"
+    ]
+  },
+  "shots": [
+    {
+      "shotId": "6fc68c04-4a92-4821-a3f3-1cc5c1c4dd4b",
+      "order": 0,
+      "locked": false,
+      "workingVersionId": "f5d053d3-34f4-4817-8d85-ed8cfbe8892c",
+      "contentVersions": [
+        {
+          "versionId": "f5d053d3-34f4-4817-8d85-ed8cfbe8892c",
+          "createdAt": "2026-10-17T12:26:47.303Z",
+          "durationMs": 12000,
+          "description": "文字动画：云制造发布会",
+          "narrationText": "",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 12000,
+              "seed": 3923019344,
+              "background": "#ffffff",
+              "params": {
+                "title": "云制造发布会",
+                "subtitle": "Video Studio P0",
+                "titleColor": "#1b2c29",
+                "subtitleColor": "#5d7469",
+                "entrance": "fade-up",
+                "enterMs": 900
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-rules",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "f5d053d3-34f4-4817-8d85-ed8cfbe8892c",
+          "at": "2026-10-17T12:26:47.303Z",
+          "actor": "human"
+        }
+      ]
+    }
+  ],
+  "renderRecords": [
+    {
+      "renderId": "42dc2207-149a-4f43-9f1a-e97b92f5e2cc",
+      "versionId": "f5d053d3-34f4-4817-8d85-ed8cfbe8892c",
+      "contentDigest": "0d349a94e4455f3e293b2a12b18a8849f634b15ab5b14be0bf85de170e8ab0df",
+      "engineId": "remotion",
+      "engineVersion": "1",
+      "rendererVersion": "4.0.534",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 288,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render-text/landscape.mp4"
+    },
+    {
+      "renderId": "a5b3c322-dc2d-4a4b-9a07-4eb61e36e11d",
+      "versionId": "f5d053d3-34f4-4817-8d85-ed8cfbe8892c",
+      "contentDigest": "0d349a94e4455f3e293b2a12b18a8849f634b15ab5b14be0bf85de170e8ab0df",
+      "engineId": "remotion",
+      "engineVersion": "1",
+      "rendererVersion": "4.0.534",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 288,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render-text/portrait.mp4"
+    }
+  ],
+  "deliveries": [],
+  "savedVersion": 3
+}

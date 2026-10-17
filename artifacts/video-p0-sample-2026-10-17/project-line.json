@@ -1,0 +1,98 @@
+{
+  "schemaVersion": 1,
+  "id": "bca8233f-1424-4d4a-b091-9ca2b4e014f2",
+  "title": "山水发布",
+  "brief": {
+    "sentence": "做一个8秒的线描动画，标题是山水发布",
+    "aspectTargets": [
+      "landscape",
+      "portrait"
+    ]
+  },
+  "shots": [
+    {
+      "shotId": "6e20fa66-6abb-4b1a-a801-1870b71ea8fd",
+      "order": 0,
+      "locked": false,
+      "workingVersionId": "43cfce79-13b2-4c84-97ca-e0d9c626c2fb",
+      "contentVersions": [
+        {
+          "versionId": "43cfce79-13b2-4c84-97ca-e0d9c626c2fb",
+          "createdAt": "2026-10-17T12:17:43.140Z",
+          "durationMs": 8000,
+          "description": "线描动画：山水发布",
+          "narrationText": "",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "line-drawing",
+              "componentVersion": 1,
+              "durationMs": 8000,
+              "seed": 3166478433,
+              "background": "#ffffff",
+              "params": {
+                "paths": [
+                  "M300,200 L300,800 M700,200 L700,800 M300,500 L700,500"
+                ],
+                "strokeColor": "#1b2c29",
+                "strokeWidth": 4,
+                "revealMs": 4000
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-rules",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "43cfce79-13b2-4c84-97ca-e0d9c626c2fb",
+          "at": "2026-10-17T12:17:43.140Z",
+          "actor": "human"
+        }
+      ]
+    }
+  ],
+  "renderRecords": [
+    {
+      "renderId": "51aefa21-c494-498f-9540-350b172a7bc5",
+      "versionId": "43cfce79-13b2-4c84-97ca-e0d9c626c2fb",
+      "contentDigest": "0bf7b6dc63c08a7b08c03a6690b2f51e2e922a2e17f2c0058d1dc3545f8dec95",
+      "engineId": "remotion",
+      "engineVersion": "1",
+      "rendererVersion": "4.0.534",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 192,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render-line/landscape.mp4"
+    },
+    {
+      "renderId": "17e11195-3a69-44f5-9956-4084782bcb37",
+      "versionId": "43cfce79-13b2-4c84-97ca-e0d9c626c2fb",
+      "contentDigest": "0bf7b6dc63c08a7b08c03a6690b2f51e2e922a2e17f2c0058d1dc3545f8dec95",
+      "engineId": "remotion",
+      "engineVersion": "1",
+      "rendererVersion": "4.0.534",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 192,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render-line/portrait.mp4"
+    }
+  ],
+  "deliveries": [],
+  "savedVersion": 3
+}

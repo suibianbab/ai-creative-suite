@@ -1,0 +1,1 @@
+{"spec":{"specVersion":1,"componentId":"line-drawing","componentVersion":1,"durationMs":8000,"seed":3166478433,"background":"#ffffff","params":{"paths":["M300,200 L300,800 M700,200 L700,800 M300,500 L700,500"],"strokeColor":"#1b2c29","strokeWidth":4,"revealMs":4000}}}
