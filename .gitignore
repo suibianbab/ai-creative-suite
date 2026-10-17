@@ -21,5 +21,7 @@ artifacts/**
 !artifacts/**/*.json
 qa/reports/
 .DS_Store
+# Dev-only credentials (never commit).
+info.txt
 AI_Creative_Suite_Dev_Pack_v3/info.txt
 AI_Creative_Suite_Dev_Pack_v3.zip

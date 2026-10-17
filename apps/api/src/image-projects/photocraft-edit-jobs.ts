@@ -33,6 +33,182 @@ export const PHOTOCRAFT_JOB_OPERATIONS = {
   levels: "layer.newAdjustmentLayer.levels",
 } as const;
 export type PhotoCraftJobOperation = keyof typeof PHOTOCRAFT_JOB_OPERATIONS;
+// batch-recipe 不是单命令操作（params.steps 展开为多条原生命令），单独放行。
+export type PhotoCraftJobOperationWithRecipe =
+  | PhotoCraftJobOperation
+  | "batch-recipe";
+
+// M4 批量配方（方案 §12.3）允许进入配方的整图操作：跨目录复用的动作列表
+// 不能携带单图选区（masked-*）、生成（generate-local）或当前图层上下文
+// （duplicate/hide/show）——这些与具体图片绑定，复制到别的图上必然错位。
+export const PHOTOCRAFT_BATCH_STEP_OPERATIONS = [
+  "rotate-cw",
+  "rotate-ccw",
+  "rotate-180",
+  "flip-horizontal",
+  "flip-vertical",
+  "adjust-brightness",
+  "adjust-contrast",
+  "adjust-saturation",
+  "adjust-exposure",
+  "adjust-vibrance",
+  "adjust-shadows",
+  "adjust-highlights",
+  "levels",
+] as const;
+export type PhotoCraftBatchStepOperation =
+  (typeof PHOTOCRAFT_BATCH_STEP_OPERATIONS)[number];
+export type PhotoCraftBatchStep = {
+  operation: PhotoCraftBatchStepOperation;
+  params: Record<string, unknown>;
+};
+const BATCH_CANVAS_OPERATIONS = new Set([
+  "rotate-cw",
+  "rotate-ccw",
+  "rotate-180",
+  "flip-horizontal",
+  "flip-vertical",
+]);
+
+export function validatedBatchRecipeSteps(
+  input: unknown,
+): PhotoCraftBatchStep[] {
+  if (!Array.isArray(input) || input.length < 1 || input.length > 4)
+    throw new PhotoCraftJobValidationError("批量配方需要 1 至 4 个步骤");
+  const steps: PhotoCraftBatchStep[] = [];
+  for (const item of input) {
+    if (!item || typeof item !== "object" || Array.isArray(item))
+      throw new PhotoCraftJobValidationError("批量配方步骤无效");
+    if (
+      !Object.keys(item).every((key) =>
+        ["operation", "params"].includes(key),
+      ) ||
+      typeof (item as { operation?: unknown }).operation !== "string"
+    )
+      throw new PhotoCraftJobValidationError("批量配方步骤无效");
+    const operation = (item as { operation: string }).operation;
+    if (
+      !(PHOTOCRAFT_BATCH_STEP_OPERATIONS as readonly string[]).includes(
+        operation,
+      )
+    )
+      throw new PhotoCraftJobValidationError(
+        "批量配方包含不可用于整目录的操作",
+      );
+    const typed = operation as PhotoCraftBatchStepOperation;
+    steps.push({
+      operation: typed,
+      params: validatedPhotoCraftJobParams(
+        typed,
+        (item as { params?: unknown }).params ?? {},
+      ),
+    });
+  }
+  // 画布/方向操作只允许在最后一步（与单图序列约束同款：先调效果，最后动画布）。
+  if (
+    steps
+      .slice(0, -1)
+      .some((step) => BATCH_CANVAS_OPERATIONS.has(step.operation))
+  )
+    throw new PhotoCraftJobValidationError(
+      "画布、图片尺寸或方向变更请放在最后一步",
+    );
+  return steps;
+}
+
+// P2-2 来源确认闭环（codex 审核 2026-10-16；R1 第二轮复审后收紧）：批量配方
+// 必须绑定「在哪张图、哪个不可变版本上、由谁在何时确认过什么步骤」。确认
+// 发生在单图确认环，服务端落不可变确认快照（0016）；批量入队只引用该记录
+// 并核验其仍有效，不再接受随请求提交的任意 steps+source。
+export type PhotoCraftBatchRecipeSource = Readonly<{
+  projectId: string;
+  version: number;
+}>;
+
+export function validatedBatchRecipeSource(
+  input: unknown,
+): PhotoCraftBatchRecipeSource {
+  if (
+    !input ||
+    typeof input !== "object" ||
+    Array.isArray(input) ||
+    !Object.keys(input).every((key) => ["projectId", "version"].includes(key))
+  )
+    throw new PhotoCraftJobValidationError(
+      "Invalid PhotoCraft batch recipe source",
+    );
+  const value = input as { projectId?: unknown; version?: unknown };
+  if (
+    typeof value.projectId !== "string" ||
+    !UUID.test(value.projectId) ||
+    !Number.isInteger(value.version) ||
+    (value.version as number) < 1
+  )
+    throw new PhotoCraftJobValidationError(
+      "Invalid PhotoCraft batch recipe source",
+    );
+  return { projectId: value.projectId, version: value.version as number };
+}
+
+// R1：规范化步骤的稳定摘要。确认快照与批次记录各存一份，GET 状态可核对
+// 「实际执行的配方」与「确认时的配方」一致。
+export function batchStepsDigest(steps: unknown): string {
+  return createHash("sha256").update(canonicalJson(steps)).digest("hex");
+}
+
+export type PhotoCraftBatchConfirmation = Readonly<{
+  id: string;
+  source: PhotoCraftBatchRecipeSource;
+  steps: PhotoCraftBatchStep[];
+  stepsDigest: string;
+  status: "active" | "revoked";
+  confirmedBy: string;
+  confirmedAt: string;
+}>;
+
+function mappedConfirmation(row: {
+  id: string;
+  source_project_id: string;
+  source_version: number;
+  steps: PhotoCraftBatchStep[];
+  steps_digest: string;
+  status: string;
+  confirmed_by: string;
+  confirmed_at: Date;
+}): PhotoCraftBatchConfirmation {
+  return {
+    id: row.id,
+    source: { projectId: row.source_project_id, version: row.source_version },
+    steps: row.steps,
+    stepsDigest: row.steps_digest,
+    status: row.status === "revoked" ? "revoked" : "active",
+    confirmedBy: row.confirmed_by,
+    confirmedAt: new Date(row.confirmed_at).toISOString(),
+  };
+}
+
+// 质量门抽样复检（方案 §12.3）：确定性抽样——按作业 id 排序后每 stride 个取
+// 1 个（rate=0.2 → 每 5 张复检 1 张，至少 1 张）。worker 与状态查询共用同一
+// 函数，保证「哪几张被复检」在任何一侧可复算。
+export const PHOTOCRAFT_BATCH_SAMPLE_RATE = 0.2;
+// 单次批量配方的项目数上限（电商目录一批的量级）。
+export const PHOTOCRAFT_BATCH_PROJECT_LIMIT = 200;
+export function sampleBatchJobIds(
+  jobIds: string[],
+  rate = PHOTOCRAFT_BATCH_SAMPLE_RATE,
+): string[] {
+  if (!Array.isArray(jobIds) || jobIds.length === 0) return [];
+  const bounded = Math.min(Math.max(rate, 0.01), 1);
+  const stride = Math.max(1, Math.round(1 / bounded));
+  return [...jobIds].sort().filter((_, index) => index % stride === 0);
+}
+
+function billableOperation(
+  operation: PhotoCraftJobOperationWithRecipe,
+): boolean {
+  // 计费作业：generate-local（生成）与 batch-recipe（批量配方按张计费 §12.3）。
+  return operation === "generate-local" || operation === "batch-recipe";
+}
 
 export type PhotoCraftSelection =
   | { kind: "existing" }
@@ -115,7 +291,7 @@ function validatedSelection(input: unknown): PhotoCraftSelection {
 }
 
 export function validatedPhotoCraftJobParams(
-  operation: PhotoCraftJobOperation,
+  operation: PhotoCraftJobOperationWithRecipe,
   input: unknown,
 ): Record<string, unknown> {
   const params = input ?? {};
@@ -123,6 +299,13 @@ export function validatedPhotoCraftJobParams(
     throw new PhotoCraftJobValidationError("Invalid PhotoCraft job parameters");
   const keys = Object.keys(params);
   const values = params as Record<string, unknown>;
+  if (operation === "batch-recipe") {
+    if (!keys.every((key) => key === "steps"))
+      throw new PhotoCraftJobValidationError(
+        "Invalid PhotoCraft batch recipe parameters",
+      );
+    return { steps: validatedBatchRecipeSteps(values.steps) };
+  }
   if (operation === "generate-local") {
     if (
       !validKeys(
@@ -262,12 +445,13 @@ export type PhotoCraftEditJob = Readonly<{
   projectId: string;
   expectedVersion: number;
   inputSourceAssetId: string;
-  operation: PhotoCraftJobOperation;
+  operation: PhotoCraftJobOperationWithRecipe;
   params: Record<string, unknown>;
   status: "queued" | "running" | "succeeded" | "failed";
   attempts: number;
   outputVersion: number | null;
   errorCode: string | null;
+  requestKey: string;
 }>;
 
 export type ClaimedPhotoCraftJob = PhotoCraftEditJob &
@@ -276,6 +460,15 @@ export type ClaimedPhotoCraftJob = PhotoCraftEditJob &
     leaseToken: string;
   }>;
 
+// 批量配方入队结果：成功的按张作业 + 因项目缺失被跳过的清单（额度整批预检）。
+export type PhotoCraftBatchEnqueueResult = Readonly<{
+  jobs: readonly PhotoCraftEditJob[];
+  skipped: ReadonlyArray<{
+    projectId: string;
+    reason: "project-unavailable";
+  }>;
+}>;
+
 type Row = {
   id: string;
   organization_id: string;
@@ -283,15 +476,26 @@ type Row = {
   project_id: string;
   expected_version: number;
   input_source_asset_id: string;
-  operation: PhotoCraftJobOperation;
+  operation: PhotoCraftJobOperationWithRecipe;
   params: Record<string, unknown>;
   status: PhotoCraftEditJob["status"];
   attempts: number;
   output_version: number | null;
   error_code: string | null;
   lease_token: string | null;
+  request_key: string;
   request_sha256?: string;
 };
+
+// jsonb 不保留键序：重放比对前先做键序无关的规范化序列化。
+function canonicalJson(value: unknown): string {
+  if (value === null || typeof value !== "object") return JSON.stringify(value);
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(",")}]`;
+  return `{${Object.entries(value as Record<string, unknown>)
+    .map(([key, item]) => `${JSON.stringify(key)}:${canonicalJson(item)}`)
+    .sort()
+    .join(",")}}`;
+}
 
 function mapped(row: Row): PhotoCraftEditJob {
   return {
@@ -305,6 +509,7 @@ function mapped(row: Row): PhotoCraftEditJob {
     attempts: row.attempts,
     outputVersion: row.output_version,
     errorCode: row.error_code,
+    requestKey: row.request_key,
   };
 }
 
@@ -400,7 +605,7 @@ export class PhotoCraftEditJobStore {
     input: {
       projectId: string;
       expectedVersion: number;
-      operation: PhotoCraftJobOperation;
+      operation: PhotoCraftJobOperationWithRecipe;
       params?: unknown;
       requestKey: string;
     },
@@ -409,7 +614,8 @@ export class PhotoCraftEditJobStore {
       !UUID.test(input.projectId) ||
       !Number.isInteger(input.expectedVersion) ||
       input.expectedVersion < 1 ||
-      !Object.hasOwn(PHOTOCRAFT_JOB_OPERATIONS, input.operation) ||
+      (!Object.hasOwn(PHOTOCRAFT_JOB_OPERATIONS, input.operation) &&
+        input.operation !== "batch-recipe") ||
       !REQUEST_KEY.test(input.requestKey)
     )
       throw new PhotoCraftJobValidationError("Invalid PhotoCraft edit job");
@@ -438,6 +644,29 @@ export class PhotoCraftEditJobStore {
         await client.query("COMMIT");
         return mapped(prior.rows[0]);
       }
+      // R4（codex 第二轮复审）：所有会同时触及额度账户与项目的入队统一
+      // 「先锁账户行、再锁项目行」，与批量入队同序——反向锁序在单图计费
+      // 作业与批量作业并发触及同一工作区+项目时构成死锁（40P01）。
+      if (billableOperation(input.operation)) {
+        const account = await client.query<{ available: number }>(
+          `SELECT available FROM workspace_credit_accounts WHERE organization_id=$1 AND workspace_id=$2 FOR UPDATE`,
+          [scope.organizationId, scope.workspaceId],
+        );
+        if (!account.rows[0] || account.rows[0].available < 1)
+          throw new PhotoCraftInsufficientCreditsError("Insufficient credits");
+        // 并发闸只限生成：批量配方逐张排队，账本行锁已串行化扣减。
+        if (input.operation === "generate-local") {
+          const active = await client.query<{ count: string }>(
+            `SELECT count(*) FROM photocraft_edit_jobs WHERE organization_id=$1 AND workspace_id=$2
+             AND operation='generate-local' AND status IN ('queued','running')`,
+            [scope.organizationId, scope.workspaceId],
+          );
+          if (Number(active.rows[0]?.count ?? 0) >= 2)
+            throw new PhotoCraftJobConflictError(
+              "Too many active generation jobs",
+            );
+        }
+      }
       const head = await client.query<{
         current_version: number;
         source_asset_id: string;
@@ -452,25 +681,6 @@ export class PhotoCraftEditJobStore {
         throw new PhotoCraftJobConflictError("Project is unavailable");
       if (head.rows[0].current_version !== input.expectedVersion)
         throw new PhotoCraftJobConflictError("Project version has changed");
-      if (input.operation === "generate-local") {
-        const account = await client.query<{ available: number }>(
-          `SELECT available FROM workspace_credit_accounts WHERE organization_id=$1 AND workspace_id=$2 FOR UPDATE`,
-          [scope.organizationId, scope.workspaceId],
-        );
-        if (!account.rows[0] || account.rows[0].available < 1)
-          throw new PhotoCraftInsufficientCreditsError(
-            "Insufficient generation credits",
-          );
-        const active = await client.query<{ count: string }>(
-          `SELECT count(*) FROM photocraft_edit_jobs WHERE organization_id=$1 AND workspace_id=$2
-           AND operation='generate-local' AND status IN ('queued','running')`,
-          [scope.organizationId, scope.workspaceId],
-        );
-        if (Number(active.rows[0]?.count ?? 0) >= 2)
-          throw new PhotoCraftJobConflictError(
-            "Too many active generation jobs",
-          );
-      }
       const added = await client.query<Row>(
         `INSERT INTO photocraft_edit_jobs
          (id, organization_id, workspace_id, project_id, request_key, request_sha256,
@@ -489,7 +699,7 @@ export class PhotoCraftEditJobStore {
           params,
         ],
       );
-      if (input.operation === "generate-local") {
+      if (billableOperation(input.operation)) {
         await client.query(
           `UPDATE workspace_credit_accounts SET available=available-1,updated_at=now()
            WHERE organization_id=$1 AND workspace_id=$2`,
@@ -522,6 +732,383 @@ export class PhotoCraftEditJobStore {
     }
   }
 
+  // R1（codex 第二轮复审）：登记单图确认环通过的配方——不可变服务端确认
+  // 快照。源项目必须存在于本工作区且确认版本即当前版本；确认与并发保存以
+  // FOR SHARE 串行，确认时间取自服务端时钟（谁、何时、在哪张图哪个版本上
+  // 确认了哪些步骤）。
+  async confirmBatchRecipe(
+    scope: TenantScope,
+    confirmedBy: string,
+    input: { source: unknown; steps: unknown },
+  ): Promise<PhotoCraftBatchConfirmation> {
+    if (!UUID.test(confirmedBy))
+      throw new PhotoCraftJobValidationError("Invalid confirming user");
+    const source = validatedBatchRecipeSource(input.source);
+    const steps = validatedPhotoCraftJobParams("batch-recipe", {
+      steps: input.steps,
+    }).steps;
+    const stepsDigest = batchStepsDigest(steps);
+    const client = await this.db.connect();
+    try {
+      await client.query("BEGIN");
+      const head = await client.query<{ current_version: number }>(
+        `SELECT current_version FROM photocraft_projects
+         WHERE organization_id=$1 AND workspace_id=$2 AND id=$3 FOR SHARE`,
+        [scope.organizationId, scope.workspaceId, source.projectId],
+      );
+      if (!head.rows[0])
+        throw new PhotoCraftJobConflictError(
+          "Recipe source project is unavailable; confirm the recipe on the current version first",
+        );
+      if (head.rows[0].current_version !== source.version)
+        throw new PhotoCraftJobConflictError(
+          "Recipe source version changed; confirm the recipe on the current version first",
+        );
+      const inserted = await client.query(
+        `INSERT INTO photocraft_batch_confirmations
+         (id, organization_id, workspace_id, source_project_id, source_version,
+          steps, steps_digest, status, confirmed_by, confirmed_at)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,'active',$8,now()) RETURNING *`,
+        [
+          randomUUID(),
+          scope.organizationId,
+          scope.workspaceId,
+          source.projectId,
+          source.version,
+          JSON.stringify(steps),
+          stepsDigest,
+          confirmedBy,
+        ],
+      );
+      await client.query("COMMIT");
+      return mappedConfirmation(inserted.rows[0]!);
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  async batchConfirmationById(
+    scope: TenantScope,
+    id: string,
+  ): Promise<PhotoCraftBatchConfirmation | null> {
+    if (!UUID.test(id))
+      throw new PhotoCraftJobValidationError("Invalid confirmation id");
+    const found = await this.db.query(
+      `SELECT * FROM photocraft_batch_confirmations
+       WHERE organization_id=$1 AND workspace_id=$2 AND id=$3`,
+      [scope.organizationId, scope.workspaceId, id],
+    );
+    return found.rows[0] ? mappedConfirmation(found.rows[0]) : null;
+  }
+
+  async enqueueBatch(
+    scope: TenantScope,
+    input: {
+      projectIds: unknown;
+      requestKey: string;
+      confirmationId: unknown;
+    },
+  ): Promise<PhotoCraftBatchEnqueueResult> {
+    if (
+      !Array.isArray(input.projectIds) ||
+      input.projectIds.length === 0 ||
+      input.projectIds.length > PHOTOCRAFT_BATCH_PROJECT_LIMIT ||
+      input.projectIds.some((id) => typeof id !== "string" || !UUID.test(id)) ||
+      !REQUEST_KEY.test(input.requestKey) ||
+      typeof input.confirmationId !== "string" ||
+      !UUID.test(input.confirmationId)
+    )
+      throw new PhotoCraftJobValidationError("Invalid PhotoCraft batch recipe");
+    const projectIds = [...new Set(input.projectIds)];
+    // R4：目标项目按 id 升序加锁（requestedProjects 同时是落库的规范化清单）。
+    const requestedProjects = [...projectIds].sort();
+    const client = await this.db.connect();
+    try {
+      await client.query("BEGIN");
+      // R4 统一锁序：先锁额度行——同工作区的批量入队（含同键并发重试）与
+      // 单图计费入队在此串行化，后到者读到先到者已提交的批次记录。
+      const account = await client.query<{ available: number }>(
+        `SELECT available FROM workspace_credit_accounts WHERE organization_id=$1 AND workspace_id=$2 FOR UPDATE`,
+        [scope.organizationId, scope.workspaceId],
+      );
+      // R1：配方与来源只来自不可变确认快照（0016）——直接随请求提交的
+      // steps+source 不再被认作已确认配方；记录缺失或已撤销都整批拒绝。
+      const confirmed = await client.query<{
+        source_project_id: string;
+        source_version: number;
+        steps: PhotoCraftBatchStep[];
+        steps_digest: string;
+        status: string;
+        confirmed_by: string;
+        confirmed_at: Date;
+      }>(
+        `SELECT * FROM photocraft_batch_confirmations
+         WHERE organization_id=$1 AND workspace_id=$2 AND id=$3`,
+        [scope.organizationId, scope.workspaceId, input.confirmationId],
+      );
+      const confirmation = confirmed.rows[0];
+      if (!confirmation)
+        throw new PhotoCraftJobConflictError(
+          "Recipe confirmation not found; confirm the recipe on a single image first",
+        );
+      if (confirmation.status === "revoked")
+        throw new PhotoCraftJobConflictError(
+          "Recipe confirmation was revoked; reconfirm the recipe",
+        );
+      const params = validatedPhotoCraftJobParams("batch-recipe", {
+        steps: confirmation.steps,
+      });
+      if (batchStepsDigest(params.steps) !== confirmation.steps_digest)
+        throw new PhotoCraftJobValidationError(
+          "Recipe confirmation digest mismatch",
+        );
+      const source = {
+        projectId: confirmation.source_project_id,
+        version: confirmation.source_version,
+      };
+      // P2-1 整改：完整请求内容（规范化项目清单 + 配方 + 确认引用）与跳过
+      // 结果持久化在批次记录里；重放按批次记录比对，返回与首次一致的结果、
+      // 不再 reserve。
+      const priorBatch = await client.query<{
+        project_ids: string[];
+        params: Record<string, unknown>;
+        skipped: { projectId: string; reason: "project-unavailable" }[];
+        confirmation_id: string | null;
+      }>(
+        `SELECT project_ids, params, skipped, confirmation_id
+         FROM photocraft_batch_requests
+         WHERE organization_id=$1 AND workspace_id=$2 AND request_key=$3`,
+        [scope.organizationId, scope.workspaceId, input.requestKey],
+      );
+      if (priorBatch.rows[0]) {
+        const prior = priorBatch.rows[0];
+        const same =
+          canonicalJson(prior.project_ids) ===
+            canonicalJson(requestedProjects) &&
+          canonicalJson(prior.params) === canonicalJson(params) &&
+          prior.confirmation_id === input.confirmationId;
+        if (!same)
+          throw new PhotoCraftJobConflictError(
+            "Request key reused with different batch recipe",
+          );
+        const priorJobs = await client.query<Row>(
+          `SELECT * FROM photocraft_edit_jobs WHERE organization_id=$1 AND workspace_id=$2
+           AND operation='batch-recipe' AND request_key=$3 ORDER BY created_at, id`,
+          [scope.organizationId, scope.workspaceId, input.requestKey],
+        );
+        await client.query("COMMIT");
+        return { jobs: priorJobs.rows.map(mapped), skipped: prior.skipped };
+      }
+      // 遗留数据兼容：0014 之前建的批次没有批次记录，重放仍按已建作业行比对
+      // （跳过清单无法还原，只能确认配方与项目一致后按空清单返回）。
+      const legacy = await client.query<Row>(
+        `SELECT * FROM photocraft_edit_jobs WHERE organization_id=$1 AND workspace_id=$2
+         AND operation='batch-recipe' AND request_key=$3`,
+        [scope.organizationId, scope.workspaceId, input.requestKey],
+      );
+      if (legacy.rows.length > 0) {
+        const priorProjects = legacy.rows.map((row) => row.project_id).sort();
+        const sameProjects =
+          priorProjects.length === requestedProjects.length &&
+          priorProjects.every((id, index) => id === requestedProjects[index]);
+        const sameRecipe = legacy.rows.every(
+          (row) => canonicalJson(row.params) === canonicalJson(params),
+        );
+        if (!sameProjects || !sameRecipe)
+          throw new PhotoCraftJobConflictError(
+            "Request key reused with different batch recipe",
+          );
+        await client.query("COMMIT");
+        return { jobs: legacy.rows.map(mapped), skipped: [] };
+      }
+      // R1/R4：源项目版本以 FOR SHARE 复核——确认与批量提交之间的并发保存
+      // 不得让过期确认静默通过；FOR SHARE 与保存侧的版本更新互斥。
+      const sourceProject = await client.query<{ current_version: number }>(
+        `SELECT current_version FROM photocraft_projects
+         WHERE organization_id=$1 AND workspace_id=$2 AND id=$3 FOR SHARE`,
+        [scope.organizationId, scope.workspaceId, source.projectId],
+      );
+      if (!sourceProject.rows[0])
+        throw new PhotoCraftJobConflictError(
+          "Recipe source project is unavailable; reconfirm the recipe",
+        );
+      if (sourceProject.rows[0].current_version !== source.version)
+        throw new PhotoCraftJobConflictError(
+          "Recipe source version changed; reconfirm the recipe on the current version",
+        );
+      // 额度按张预检：不足则整批拒绝，不产生部分扣费。
+      const available = account.rows[0]?.available ?? 0;
+      if (available < projectIds.length)
+        throw new PhotoCraftInsufficientCreditsError(
+          "Insufficient credits for batch",
+        );
+      const jobs: Row[] = [];
+      const skipped: { projectId: string; reason: "project-unavailable" }[] =
+        [];
+      for (const projectId of requestedProjects) {
+        const head = await client.query<{
+          current_version: number;
+          source_asset_id: string;
+        }>(
+          `SELECT p.current_version, v.source_asset_id FROM photocraft_projects p
+           JOIN photocraft_project_versions v ON v.organization_id=p.organization_id
+            AND v.workspace_id=p.workspace_id AND v.project_id=p.id AND v.version=p.current_version
+           WHERE p.organization_id=$1 AND p.workspace_id=$2 AND p.id=$3 FOR UPDATE OF p`,
+          [scope.organizationId, scope.workspaceId, projectId],
+        );
+        if (!head.rows[0]) {
+          skipped.push({ projectId, reason: "project-unavailable" });
+          continue;
+        }
+        const expectedVersion = head.rows[0].current_version;
+        const fingerprint = createHash("sha256")
+          .update(JSON.stringify([expectedVersion, "batch-recipe", params]))
+          .digest("hex");
+        const added = await client.query<Row>(
+          `INSERT INTO photocraft_edit_jobs
+           (id, organization_id, workspace_id, project_id, request_key, request_sha256,
+            expected_version, input_source_asset_id, operation, params)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'batch-recipe',$9) RETURNING *`,
+          [
+            randomUUID(),
+            scope.organizationId,
+            scope.workspaceId,
+            projectId,
+            input.requestKey,
+            fingerprint,
+            expectedVersion,
+            head.rows[0].source_asset_id,
+            params,
+          ],
+        );
+        await client.query(
+          `UPDATE workspace_credit_accounts SET available=available-1,updated_at=now()
+           WHERE organization_id=$1 AND workspace_id=$2`,
+          [scope.organizationId, scope.workspaceId],
+        );
+        await client.query(
+          `INSERT INTO workspace_credit_ledger
+           (id,organization_id,workspace_id,job_id,kind,amount,reference)
+           VALUES ($1,$2,$3,$4,'reserve',-1,$5)`,
+          [
+            randomUUID(),
+            scope.organizationId,
+            scope.workspaceId,
+            added.rows[0]!.id,
+            `job-${added.rows[0]!.id}`,
+          ],
+        );
+        jobs.push(added.rows[0]!);
+      }
+      if (jobs.length === 0)
+        throw new PhotoCraftJobConflictError("No projects available for batch");
+      // 批次记录与作业同事务写入：重放依据完整请求内容比对并原样返回
+      // skipped（P2-1）；来源快照与确认人/确认时间复制自确认快照（R1）——
+      // 是单图确认发生的真实时间，不是批量入队时间；confirmation_id 使 GET
+      // 状态可回溯到同一条确认记录与配方摘要。全跳过批次已拒绝、无记录可写。
+      await client.query(
+        `INSERT INTO photocraft_batch_requests
+         (id, organization_id, workspace_id, request_key, project_ids, params, skipped,
+          source_project_id, source_version, confirmation_id, confirmed_by, confirmed_at)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
+        [
+          randomUUID(),
+          scope.organizationId,
+          scope.workspaceId,
+          input.requestKey,
+          JSON.stringify(requestedProjects),
+          params,
+          JSON.stringify(skipped),
+          source.projectId,
+          source.version,
+          input.confirmationId,
+          confirmation.confirmed_by,
+          confirmation.confirmed_at,
+        ],
+      );
+      await client.query("COMMIT");
+      return { jobs: jobs.map(mapped), skipped };
+    } catch (error) {
+      await client.query("ROLLBACK");
+      if ((error as { code?: string }).code === "23505")
+        throw new PhotoCraftJobConflictError(
+          "Concurrent batch submission; retry with same key",
+        );
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  async listByRequestKey(
+    scope: TenantScope,
+    requestKey: string,
+  ): Promise<PhotoCraftEditJob[]> {
+    if (!REQUEST_KEY.test(requestKey))
+      throw new PhotoCraftJobValidationError("Invalid request key");
+    const found = await this.db.query<Row>(
+      `SELECT * FROM photocraft_edit_jobs WHERE organization_id=$1 AND workspace_id=$2
+       AND operation='batch-recipe' AND request_key=$3 ORDER BY created_at, id`,
+      [scope.organizationId, scope.workspaceId, requestKey],
+    );
+    return found.rows.map(mapped);
+  }
+
+  // P2-2/R1：按 requestKey 取批次记录里的来源快照与确认追溯——确认引用、
+  // 配方摘要（与确认快照内的摘要同一算法）和原始确认时间；0015 之前的批次
+  // 没有来源，返回 null（状态查询仍可用，只是无来源可展示）。
+  async batchRequestByRequestKey(
+    scope: TenantScope,
+    requestKey: string,
+  ): Promise<
+    | (PhotoCraftBatchRecipeSource & {
+        confirmationId: string | null;
+        stepsDigest: string | null;
+        confirmedBy: string;
+        confirmedAt: string;
+      })
+    | null
+  > {
+    if (!REQUEST_KEY.test(requestKey))
+      throw new PhotoCraftJobValidationError("Invalid request key");
+    const found = await this.db.query<{
+      source_project_id: string | null;
+      source_version: number | null;
+      confirmation_id: string | null;
+      params: { steps?: unknown } | null;
+      confirmed_by: string | null;
+      confirmed_at: Date | null;
+    }>(
+      `SELECT source_project_id, source_version, confirmation_id, params,
+              confirmed_by, confirmed_at
+       FROM photocraft_batch_requests
+       WHERE organization_id=$1 AND workspace_id=$2 AND request_key=$3`,
+      [scope.organizationId, scope.workspaceId, requestKey],
+    );
+    const row = found.rows[0];
+    if (
+      !row ||
+      !row.source_project_id ||
+      row.source_version === null ||
+      !row.confirmed_by ||
+      !row.confirmed_at
+    )
+      return null;
+    return {
+      projectId: row.source_project_id,
+      version: row.source_version,
+      confirmationId: row.confirmation_id,
+      stepsDigest: row.params?.steps
+        ? batchStepsDigest(row.params.steps)
+        : null,
+      confirmedBy: row.confirmed_by,
+      confirmedAt: new Date(row.confirmed_at).toISOString(),
+    };
+  }
+
   async claimNext(): Promise<ClaimedPhotoCraftJob | null> {
     const recovery = await this.db.connect();
     try {
@@ -536,7 +1123,7 @@ export class PhotoCraftEditJobStore {
            lease_token=NULL,lease_until=NULL,updated_at=now(),finished_at=now() WHERE id=$1`,
           [row.id],
         );
-        if (row.operation === "generate-local")
+        if (billableOperation(row.operation))
           await this.refund(recovery, {
             id: row.id,
             scope: {
@@ -593,7 +1180,7 @@ export class PhotoCraftEditJobStore {
       );
       if (changed.rowCount !== 1)
         throw new PhotoCraftJobConflictError("Job lease was lost");
-      if (job.operation === "generate-local")
+      if (billableOperation(job.operation))
         await client.query(
           `INSERT INTO workspace_credit_ledger(id,organization_id,workspace_id,job_id,kind,amount,reference)
        VALUES ($1,$2,$3,$4,'commit',0,$5)`,
@@ -640,7 +1227,7 @@ export class PhotoCraftEditJobStore {
       );
       if (changed.rowCount !== 1)
         throw new PhotoCraftJobConflictError("Job lease was lost");
-      if (final && job.operation === "generate-local")
+      if (final && billableOperation(job.operation))
         await this.refund(client, job);
       await client.query("COMMIT");
     } catch (error) {

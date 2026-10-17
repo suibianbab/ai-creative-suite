@@ -1,12 +1,57 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
+/**
+ * 蒙版→原生选区共用机制（C 项从 provider 分支抽出，两种来源同一条链）：
+ * CLI info 强校验蒙版尺寸==文档（错位选区不如干净失败），探针 run 确认
+ * select.loadSelection 后选区非空，再返回原生命令三连 placeEmbedded →
+ * loadSelection(红通道) → layer.delete。PhotoCraft 的 loadSelection 只接受
+ * 文件路径——这是外部像素蒙版进原生选区的唯一通道（ADR-0012：画布/像素
+ * 操作归原生引擎，桥只编排命令）。
+ */
+async function loadMaskSelection({
+  run,
+  input,
+  mask,
+  width,
+  height,
+  sizeError,
+  emptyError,
+}) {
+  const maskInfo = JSON.parse(await run(["info", mask, "--compact"]));
+  if (maskInfo.width !== width || maskInfo.height !== height)
+    throw new Error(sizeError);
+  const maskProbe = await run([
+    "run",
+    input,
+    "--cmd",
+    "file.placeEmbedded",
+    "--params",
+    JSON.stringify({ path: mask, fit: false }),
+    "--cmd",
+    "select.loadSelection",
+    "--params",
+    JSON.stringify({ channel: "red", operation: "new" }),
+  ]);
+  const maskSelection = JSON.parse(maskProbe.trim().split("\n").at(-1));
+  if (maskSelection.result?.selected !== true) throw new Error(emptyError);
+  return [
+    { id: "file.placeEmbedded", params: { path: mask, fit: false } },
+    {
+      id: "select.loadSelection",
+      params: { channel: "red", operation: "new" },
+    },
+    { id: "layer.delete", params: {} },
+  ];
+}
+
 // Selection is prepared before any effect. The actual selection commands are PhotoCraft commands.
 export async function prepareSelection({
   plan,
   infoInput,
   requiresSelection,
   selectionMethod,
+  maskPath = null,
   input,
   folder,
   extension,
@@ -20,7 +65,7 @@ export async function prepareSelection({
   protectRect,
   providerScopeFeather,
   run,
-  maskProvider,
+  fetchMask,
   maxBytes,
   objectSelection,
   selectionIsLargeEnough,
@@ -71,54 +116,40 @@ export async function prepareSelection({
     const providerInput = join(folder, "provider-input.png");
     if (extension === "pcraft" || extension === "psd")
       await run(["convert", input, providerInput]);
-    const maskResponse = await fetch(maskProvider, {
-      method: "POST",
-      headers: {
-        "content-type":
-          extension === "pcraft" || extension === "psd" ? "image/png" : mime,
-      },
-      body: await readFile(
+    const maskResponse = await fetchMask(
+      await readFile(
         extension === "pcraft" || extension === "psd" ? providerInput : input,
       ),
-      signal: AbortSignal.timeout(70_000),
-    });
+      extension === "pcraft" || extension === "psd" ? "image/png" : mime,
+    );
     if (!maskResponse.ok)
       throw new Error(`AI 分割服务不可用（HTTP ${maskResponse.status}）`);
-    if (!maskResponse.headers.get("content-type")?.startsWith("image/png"))
+    if (!maskResponse.contentType.startsWith("image/png"))
       throw new Error("AI 分割服务未返回 PNG 蒙版");
-    const maskBytes = Buffer.from(await maskResponse.arrayBuffer());
-    if (maskBytes.length === 0 || maskBytes.length > maxBytes)
+    const maskBytes = maskResponse.bytes;
+    if (!maskBytes || maskBytes.length === 0 || maskBytes.length > maxBytes)
       throw new Error("AI 蒙版大小无效");
     const mask = join(folder, "provider-mask.png");
     await writeFile(mask, maskBytes);
-    const maskInfo = JSON.parse(await run(["info", mask, "--compact"]));
-    if (
-      maskInfo.width !== infoInput.width ||
-      maskInfo.height !== infoInput.height
-    )
-      throw new Error("AI 蒙版尺寸与原图不一致");
-    const maskProbe = await run([
-      "run",
-      input,
-      "--cmd",
-      "file.placeEmbedded",
-      "--params",
-      JSON.stringify({ path: mask, fit: false }),
-      "--cmd",
-      "select.loadSelection",
-      "--params",
-      JSON.stringify({ channel: "red", operation: "new" }),
-    ]);
-    const maskSelection = JSON.parse(maskProbe.trim().split("\n").at(-1));
-    if (maskSelection.result?.selected !== true)
-      throw new Error("AI 蒙版没有选中主体，请换图或使用 PhotoCraft 手工选区");
-    command("file.placeEmbedded", { path: mask, fit: false });
-    command("select.loadSelection", {
-      channel: "red",
-      operation: "new",
-    });
-    command("layer.delete", {});
-    if (outline.length >= 3)
+    commands.push(
+      ...(await loadMaskSelection({
+        run,
+        input,
+        mask,
+        width: infoInput.width,
+        height: infoInput.height,
+        sizeError: "AI 蒙版尺寸与原图不一致",
+        emptyError: "AI 蒙版没有选中主体，请换图或使用 PhotoCraft 手工选区",
+      })),
+    );
+    // subject/background targets resolve from the mask alone on any image; a
+    // drawn scope stays available as an optional refinement, not a requirement.
+    const subjectLevelTarget =
+      plan.target === "subject" || plan.target === "background";
+    if (plan.target === "background") command("select.inverse", {});
+    if (subjectLevelTarget && outline.length < 3 && !rect) {
+      // mask-only selection: nothing to intersect
+    } else if (outline.length >= 3)
       command("select.lasso", {
         points: outline,
         mode: "intersect",
@@ -133,6 +164,22 @@ export async function prepareSelection({
         mode: "intersect",
         feather: providerScopeFeather,
       });
+  } else if (requiresSelection && selectionMethod === "mask") {
+    // C 项：候选真实像素蒙版 → PhotoCraft 原生选区，与 provider 蒙版同一条
+    // 命令链；蒙版即精确范围，不做范围交集（outline 仅作套索降级的数据，
+    // 此处不再叠加）。edgeShift/edgeFeather/patches/protectRect 公共尾部
+    // 照常叠加在选区之上。
+    commands.push(
+      ...(await loadMaskSelection({
+        run,
+        input,
+        mask: maskPath,
+        width: infoInput.width,
+        height: infoInput.height,
+        sizeError: "候选蒙版尺寸与文档不一致，请重新确认候选",
+        emptyError: "候选蒙版没有选中任何像素，请重新确认候选或改用轮廓套索",
+      })),
+    );
   } else if (requiresSelection && outline.length >= 3)
     command("select.lasso", {
       points: outline,
@@ -221,10 +268,14 @@ export function verifySelection({
     );
   if (
     requiresSelection &&
-    selectionMethod === "provider" &&
+    ["provider", "mask"].includes(selectionMethod) &&
     !info.selectionBounds
   )
     throw new Error(
-      "AI 蒙版与局部范围没有交集，无法产生可见编辑。请调整轮廓点或画框后重新预览。",
+      selectionMethod === "mask"
+        ? "候选蒙版选区在编辑后丢失，请重新确认候选或改用轮廓套索。"
+        : plan.target === "background"
+          ? "主体蒙版几乎覆盖整张图，没有可编辑的背景区域。请改用画框指定局部范围。"
+          : "AI 蒙版与局部范围没有交集，无法产生可见编辑。请调整轮廓点或画框后重新预览。",
     );
 }

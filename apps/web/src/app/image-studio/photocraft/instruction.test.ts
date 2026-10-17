@@ -44,12 +44,13 @@ test("whole-image orientation plans preserve direction and reject mismatches", (
     parsePhotoCraftModelPlan({ ...clockwise, unsupported: "" }),
     clockwise,
   );
+  // reconcile 输出可直接进 parse：模型省略的信封字段被补上（任务②契约）。
   assert.deepEqual(
     reconcilePhotoCraftModelPlan("把整张照片顺时针旋转90度", {
       ...clockwise,
       mode: "rotate-ccw",
     }),
-    clockwise,
+    { ...clockwise, unsupported: "" },
   );
   validatePhotoCraftInstructionAgainstText(
     "把整张照片顺时针旋转90度",
@@ -97,7 +98,7 @@ test("current-layer plans stay bounded to one explicit action", () => {
       ...duplicate,
       action: "hide",
     }),
-    { ...duplicate, action: "show" },
+    { ...duplicate, action: "show", unsupported: "" },
   );
   validatePhotoCraftInstructionAgainstText("复制当前图层", duplicate);
   assert.throws(
@@ -251,10 +252,34 @@ test("model plans require exact numeric and textual evidence", () => {
     "请给当前图层加阴影，距离8像素、大小10像素、不透明度55%",
     shadow,
   );
+  // M2 默认策略表（§5）：「加一点阴影」没写参数 → 表默认（8/10/55）合法，
+  // 不再向用户追问数字；滑杆随后接管。
+  validatePhotoCraftInstructionAgainstText("给当前图层加一点阴影", shadow);
+  // 原话没写参数时，模型自报的非默认数值不作数。
   assert.throws(
     () =>
-      validatePhotoCraftInstructionAgainstText("给当前图层加一点阴影", shadow),
-    /投影需要明确/,
+      validatePhotoCraftInstructionAgainstText(
+        "给当前图层加一点阴影",
+        parsePhotoCraftModelPlan({
+          operation: "drop-shadow",
+          target: "whole-image",
+          protectLabel: false,
+          unsupported: "",
+          distance: 12,
+          size: 10,
+          opacity: 55,
+        }),
+      ),
+    /默认值/,
+  );
+  // 原话写明的值必须逐一匹配。
+  assert.throws(
+    () =>
+      validatePhotoCraftInstructionAgainstText(
+        "给当前图层加阴影，距离9像素、大小10像素、不透明度55%",
+        shadow,
+      ),
+    /投影参数/,
   );
   assert.throws(
     () =>
@@ -682,5 +707,210 @@ test("model output can only name supported PhotoCraft effects and bounded values
       target: "hat",
       protectLabel: false,
     }),
+  );
+});
+
+test("subject and background targets resolve from the provider mask on any image", () => {
+  const subjectGray = {
+    operation: "recolor" as const,
+    color: "gray" as const,
+    target: "subject" as const,
+    protectLabel: false as const,
+  };
+  const backgroundPlan = (amount: number) => ({
+    operation: "adjust" as const,
+    adjustment: "brightness" as const,
+    amount,
+    target: "background" as const,
+    protectLabel: false as const,
+  });
+  assert.deepEqual(planPhotoCraftInstruction("把主体换成灰色"), subjectGray);
+  assert.deepEqual(planPhotoCraftInstruction("请将商品的颜色改成红色"), {
+    ...subjectGray,
+    color: "red",
+  });
+  assert.deepEqual(planPhotoCraftInstruction("把这个产品的面料涂成蓝色"), {
+    ...subjectGray,
+    color: "blue",
+  });
+  assert.deepEqual(planPhotoCraftInstruction("把前景改成黑色"), {
+    ...subjectGray,
+    color: "black",
+  });
+  assert.deepEqual(planPhotoCraftInstruction("把背景调成绿色"), {
+    ...subjectGray,
+    target: "background",
+    color: "green",
+  });
+  assert.match(describePhotoCraftPlan(subjectGray), /主体蒙版自动选区/);
+  assert.match(
+    describePhotoCraftPlan({ ...subjectGray, target: "background" }),
+    /主体以外的区域/,
+  );
+
+  assert.deepEqual(planPhotoCraftInstruction("主体亮度降低10"), {
+    operation: "adjust",
+    adjustment: "brightness",
+    amount: -10,
+    target: "subject",
+    protectLabel: false,
+  });
+  assert.deepEqual(planPhotoCraftInstruction("背景稍微提亮一些"), {
+    operation: "adjust",
+    adjustment: "brightness",
+    amount: 10,
+    target: "background",
+    protectLabel: false,
+  });
+  assert.deepEqual(planPhotoCraftInstruction("背景更鲜艳一点"), {
+    operation: "adjust",
+    adjustment: "saturation",
+    amount: 10,
+    target: "background",
+    protectLabel: false,
+  });
+  assert.deepEqual(planPhotoCraftInstruction("前景对比度提高20"), {
+    operation: "adjust",
+    adjustment: "contrast",
+    amount: 20,
+    target: "subject",
+    protectLabel: false,
+  });
+  // 整张图片/照片 as a modifier of a subject-level head noun must not
+  // silently widen the edit to whole-image.
+  assert.equal(planPhotoCraftInstruction("整张图片的背景提亮一些"), null);
+  assert.equal(planPhotoCraftInstruction("把照片的背景亮度提高20"), null);
+
+  assert.deepEqual(
+    parsePhotoCraftModelPlan({ ...subjectGray, unsupported: "" }),
+    subjectGray,
+  );
+  const modelBackground = parsePhotoCraftModelPlan({
+    ...backgroundPlan(-10),
+    unsupported: "",
+  });
+  validatePhotoCraftInstructionAgainstText("背景亮度降低10", modelBackground);
+  validatePhotoCraftInstructionAgainstText("把主体换成灰色", subjectGray);
+  validatePhotoCraftInstructionAgainstText(
+    "整张图片的背景稍微提亮一些",
+    backgroundPlan(10),
+  );
+  assert.throws(
+    () =>
+      validatePhotoCraftInstructionAgainstText("把背景换成灰色", subjectGray),
+    /背景目标/,
+  );
+  assert.throws(
+    () =>
+      validatePhotoCraftInstructionAgainstText("把主体换成灰色", {
+        ...subjectGray,
+        target: "background",
+      }),
+    /主体目标/,
+  );
+  assert.throws(
+    () =>
+      validatePhotoCraftInstructionAgainstText("把帽子换成灰色", subjectGray),
+    /帽子目标/,
+  );
+  assert.throws(
+    () =>
+      validatePhotoCraftInstructionAgainstText("整张图片的背景提亮", {
+        operation: "adjust",
+        adjustment: "brightness",
+        amount: 10,
+        target: "whole-image",
+        protectLabel: false,
+      }),
+    /背景目标/,
+  );
+  assert.throws(() =>
+    parsePhotoCraftModelPlan({
+      operation: "recolor",
+      color: "red",
+      target: "whole-image",
+      protectLabel: false,
+      unsupported: "",
+    }),
+  );
+
+  assert.deepEqual(
+    planPhotoCraftSequence("把主体改成红色，然后整张图稍微提亮"),
+    [
+      {
+        operation: "recolor",
+        color: "red",
+        target: "subject",
+        protectLabel: false,
+      },
+      {
+        operation: "adjust",
+        adjustment: "brightness",
+        amount: 10,
+        target: "whole-image",
+        protectLabel: false,
+      },
+    ],
+  );
+  assert.deepEqual(
+    planPhotoCraftSequence("把主体改成红色、保留标签、整张图稍微提亮"),
+    [
+      {
+        operation: "recolor",
+        color: "red",
+        target: "subject",
+        protectLabel: true,
+      },
+      {
+        operation: "adjust",
+        adjustment: "brightness",
+        amount: 10,
+        target: "whole-image",
+        protectLabel: false,
+      },
+    ],
+  );
+  assert.throws(
+    () => planPhotoCraftSequence("把主体改成红色，再把背景调成蓝色"),
+    /一个局部选区/,
+  );
+});
+
+// 任务②实测（2026-10-16，qwen-plus + json_object）：云端模型返回精确计划但
+// 省略信封字段 unsupported。reconcile 对「具体能力操作」补空信封放行；
+// operation=unsupported 时绝不补——缺失的拒绝理由必须原样交给 parse 报错，
+// 不能被静默洗成「完全支持」。
+test("reconcile fills the missing envelope only for concrete capability plans", () => {
+  const repaired = reconcilePhotoCraftModelPlan("make the subject brighter", {
+    operation: "adjust",
+    adjustment: "brightness",
+    amount: 15,
+    target: "subject",
+  }) as { unsupported?: unknown };
+  assert.equal(repaired.unsupported, "");
+  // 原话无数字 → 幅度按默认策略表归一（模型自报 15 不作数）。
+  const plan = parsePhotoCraftModelPlan(repaired);
+  if (plan.operation !== "adjust") throw new Error("expected adjust plan");
+  assert.equal(plan.amount, 10);
+  // 拒绝计划缺信封：不补默认，parse 照样报「不完整」。
+  assert.throws(
+    () =>
+      parsePhotoCraftModelPlan(
+        reconcilePhotoCraftModelPlan("把背景里的杂物去掉", {
+          operation: "unsupported",
+        }),
+      ),
+    /模型未返回完整的编辑计划/,
+  );
+  // 已带非空拒绝理由的输出不被洗白（parse 把理由原样抛出）。
+  assert.throws(
+    () =>
+      parsePhotoCraftModelPlan(
+        reconcilePhotoCraftModelPlan("把背景里的杂物去掉", {
+          operation: "unsupported",
+          unsupported: "去除杂物属于生成式编辑，当前能力不支持",
+        }),
+      ),
+    /生成式编辑/,
   );
 });

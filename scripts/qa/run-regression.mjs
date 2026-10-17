@@ -7,11 +7,18 @@ import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const registryPath = resolve(root, "qa/registry.json");
-const tiers = new Set(["smoke", "integration", "oidc", "image-qa"]);
+const tiers = new Set([
+  "smoke",
+  "integration",
+  "oidc",
+  "image-qa",
+  "live-model",
+  "live-grounding",
+]);
 const mode = process.argv[2] ?? "validate";
 if (![...tiers, "all", "validate"].includes(mode) || process.argv.length > 3) {
   throw new Error(
-    "Usage: run-regression.mjs <validate|smoke|integration|oidc|image-qa|all>",
+    "Usage: run-regression.mjs <validate|smoke|integration|oidc|image-qa|live-model|live-grounding|all>",
   );
 }
 
@@ -129,17 +136,19 @@ async function checkPostgres() {
 
 async function checkPort(port) {
   if (port === 5432) return await checkPostgres();
-  if ([9000, 8180, 4112, 3000, 11435].includes(port)) {
+  if ([9000, 8180, 4112, 3000, 4104, 11435].includes(port)) {
     const url =
       port === 9000
         ? "http://127.0.0.1:9000/health"
         : port === 4112
           ? "http://127.0.0.1:4112/health"
-          : port === 3000
-            ? "http://localhost:3000/image-studio/photocraft"
-            : port === 11435
-              ? "http://127.0.0.1:11435/health"
-              : "http://127.0.0.1:8180/realms/acs-dev/.well-known/openid-configuration";
+          : port === 4104
+            ? "http://127.0.0.1:4104/health"
+            : port === 3000
+              ? "http://localhost:3000/image-studio/photocraft"
+              : port === 11435
+                ? "http://127.0.0.1:11435/health"
+                : "http://127.0.0.1:8180/realms/acs-dev/.well-known/openid-configuration";
     try {
       return (await fetch(url, { signal: AbortSignal.timeout(3000) })).ok;
     } catch {

@@ -5,6 +5,7 @@ import {
   type PointerEvent as ReactPointerEvent,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -15,24 +16,44 @@ import {
   finishCloudLogin,
 } from "../cloud-auth";
 import {
+  batchStepsFromConfirmedPlans,
+  deriveBatchRequestKey,
+  describePhotoCraftBatchStep,
+  PHOTO_CRAFT_BATCH_PROJECT_LIMIT,
+  type PhotoCraftBatchStep,
+} from "./batch-recipe";
+import {
+  binarizeMaskPixels,
+  decodeMaskPng,
+  shouldRetryCandidateMaskAsOutline,
+} from "./candidate-mask";
+import * as CANDIDATE_RING from "./candidate-ring";
+import {
   appendPhotoCraftCloudQualityReview,
+  createPhotoCraftBatchConfirmation,
+  enqueuePhotoCraftBatchRecipe,
+  getPhotoCraftBatchRecipeStatus,
   getPhotoCraftCloudCredits,
   getPhotoCraftCloudEditJob,
   listPhotoCraftCloudProjects,
   listPhotoCraftCloudQualityReviews,
   loadPhotoCraftCloudSource,
+  type PhotoCraftBatchConfirmation,
+  type PhotoCraftBatchRecipeStatus,
   type PhotoCraftCloudEditJob,
   type PhotoCraftCloudProject,
   type PhotoCraftCloudQualityReview,
   savePhotoCraftCloudProject,
   submitPhotoCraftCloudEditJob,
 } from "./cloud-projects";
+import type { DefaultedSlot } from "./default-strategy";
 import {
   describePhotoCraftPlan,
   type PhotoCraftInstructionPlan,
   parsePhotoCraftModelPlan,
   planPhotoCraftInstruction,
   planPhotoCraftSequence,
+  protectPhraseOf,
 } from "./instruction";
 import {
   cachePhotoCraftCloudProject,
@@ -63,6 +84,88 @@ type EditResult = {
   layers: number;
   previewUrl: string;
   sourceUrl: string;
+  selectionFallback?: "outline";
+};
+// M2 滑杆交接：数值表与 scripts/photocraft/live-adjustments.mjs 同源（桥端按
+// 同一张表硬校验），这里只负责给 <input type="range"> 提供边界和中文标签。
+const liveAdjustmentRanges: Record<string, Record<string, [number, number]>> = {
+  BrightnessContrast: { brightness: [-150, 150], contrast: [-50, 100] },
+  HueSaturation: {
+    hue: [-180, 180],
+    saturation: [-100, 100],
+    lightness: [-100, 100],
+  },
+  Exposure: { exposure: [-20, 20], offset: [-0.5, 0.5], gamma: [0.01, 9.99] },
+  Vibrance: { vibrance: [-100, 100], saturation: [-100, 100] },
+  Levels: {
+    inBlack: [0, 253],
+    inWhite: [2, 255],
+    gamma: [0.01, 9.99],
+    outBlack: [0, 255],
+    outWhite: [0, 255],
+  },
+};
+// M3 §5 τ_auto 决策（含补充A 的默认关闭门控）抽在 candidate-ring.ts，
+// 与自动选中/override 遥测分桶共用同一份纯函数。
+const TAU_AUTO = CANDIDATE_RING.TAU_AUTO;
+// M4 §7 线上回流（方案 §10 τ 校准）：确认环点击率 / 滑杆修改幅度 / 撤销率
+// 按解析器分桶。事件只发本机桥接的 JSONL sink（dev 拓扑，.tools 本机目录），
+// fire-and-forget——遥测失败绝不影响编辑本身；scripts/photocraft/calibrate-tau.mjs
+// 离线汇总后月度调 TAU_AUTO。
+function trackPhotoCraftTelemetry(
+  event:
+    | "interpret"
+    | "ring-open"
+    | "ring-outcome"
+    | "slider"
+    | "undo"
+    | "apply",
+  fields: Record<string, string | number | boolean | null>,
+) {
+  void fetch(`${bridge}/v1/telemetry`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ event, ...fields }),
+  }).catch(() => undefined);
+}
+const liveAdjustmentLabels: Record<string, string> = {
+  BrightnessContrast: "亮度/对比度",
+  HueSaturation: "色相/饱和度",
+  Exposure: "曝光",
+  Vibrance: "自然饱和度",
+  Levels: "色阶",
+};
+const liveParamLabels: Record<string, string> = {
+  brightness: "亮度",
+  contrast: "对比度",
+  hue: "色相",
+  saturation: "饱和度",
+  lightness: "明度",
+  exposure: "曝光",
+  offset: "偏移",
+  gamma: "伽马",
+  vibrance: "自然饱和度",
+  inBlack: "黑场",
+  inWhite: "白场",
+  outBlack: "输出黑场",
+  outWhite: "输出白场",
+};
+type LiveLayerInfo = {
+  id: number;
+  name: string;
+  kind: string;
+  visible: boolean;
+  hasMask: boolean;
+  adjustment: Record<string, Record<string, number>> | null;
+};
+type LiveTuningSession = {
+  id: string;
+  job: string;
+  layer: number;
+  layerName: string;
+  kind: string;
+  params: Record<string, number>;
+  previewUrl: string;
 };
 type SourceInfo = {
   width: number;
@@ -216,6 +319,21 @@ export default function PhotoCraftStudio() {
     project: PhotoCraftCloudProject;
     localVersion: number;
   } | null>(null);
+  // P2-2 批量配方确认工作流：单图确认过的计划 → 选目标目录 → 明确一次提交，
+  // 之后轮询整批状态（含跳过清单、抽样复检与失败明细）。
+  // R1：确认动作在服务端落不可变确认快照（batchConfirmation）；R3：请求键由
+  // 确认引用+目标清单+批次序号派生，同一内容重试不换键（防丢响应双计费）。
+  const [batchTargets, setBatchTargets] = useState<string[]>([]);
+  const [batchAck, setBatchAck] = useState(false);
+  const [batchConfirmation, setBatchConfirmation] =
+    useState<PhotoCraftBatchConfirmation | null>(null);
+  const [batchAttempt, setBatchAttempt] = useState(0);
+  const [batchBusy, setBatchBusy] = useState(false);
+  const [batchSkipped, setBatchSkipped] = useState<
+    { projectId: string; reason: string }[] | null
+  >(null);
+  const [batchStatus, setBatchStatus] =
+    useState<PhotoCraftBatchRecipeStatus | null>(null);
   const [instruction, setInstruction] = useState("将帽子的颜色换成黑色");
   const [generationPrompt, setGenerationPrompt] = useState("");
   const [generationMode, setGenerationMode] = useState<"local" | "background">(
@@ -235,6 +353,64 @@ export default function PhotoCraftStudio() {
   const [steps, setSteps] = useState<PhotoCraftInstructionPlan[]>([]);
   const [planConfirmed, setPlanConfirmed] = useState(false);
   const [completedSteps, setCompletedSteps] = useState(0);
+  // M2 §6-2 解释确认：云解析 round-trip 不蕴含时，先「我理解为…对吗？」再落地。
+  const [explainConfirm, setExplainConfirm] = useState<{
+    description: string;
+    issues: string[];
+    steps: PhotoCraftInstructionPlan[];
+  } | null>(null);
+  // M2 §5 默认策略溯源：哪些数值是表代填的（原话没有依据），预览旁聚焦滑杆。
+  const [planDefaults, setPlanDefaults] = useState<DefaultedSlot[]>([]);
+  // M2 §5 滑杆交接：常驻 live 会话直改 PhotoCraft 原生调整层。
+  const [liveTuning, setLiveTuning] = useState<LiveTuningSession | null>(null);
+  const [liveTuningBusy, setLiveTuningBusy] = useState(false);
+  const [previewVersion, setPreviewVersion] = useState(0);
+  // M2 目标审核提议-确认环：蒙版审核升级——候选区域编号描边叠在画布上，
+  // 点一下（或说「第二个」）确认/换目标；蒙版画笔仍可手工修。
+  const [targetReview, setTargetReview] = useState<{
+    confirmed: boolean;
+    maskUrl: string;
+  } | null>(null);
+  const [maskBounds, setMaskBounds] = useState<{
+    subject: [number, number, number, number];
+    background: [number, number, number, number];
+  } | null>(null);
+  // M3 grounding L3：目标缺口名词（屋顶/花瓣…）与本地 SAM+CLIP 开放词汇候选。
+  // 坐标已换算回原图分辨率；chosen=null 表示提议-确认环打开待确认。
+  // mode=protect 时同一环圈的是 protect 清单的保护框（§4 protect 走同一环）。
+  const [targetGap, setTargetGap] = useState<{ phrase: string } | null>(null);
+  const [protectGap, setProtectGap] = useState<{ phrase: string } | null>(null);
+  const [partCandidates, setPartCandidates] = useState<{
+    mode: "target" | "protect";
+    phrase: string;
+    // C 项：服务返回图尺寸（mask_png_b64 的像素空间，bounds/outline 同空间，
+    // 坐标按 sampleSize/服务尺寸换算——与候选坐标同一次换算）。
+    serviceWidth: number;
+    serviceHeight: number;
+    candidates: Array<{
+      index: number;
+      score: number;
+      clipScore: number;
+      bounds: [number, number, number, number];
+      outline: Array<[number, number]>;
+      // 服务端 mask_png_b64（正常候选必带）；缺失/损坏时确认环退回轮廓套索。
+      maskPngB64: string;
+      areaRatio: number;
+    }>;
+    chosen: number | null;
+    // M4 τ 校准：top-1 是否曾被 τ_auto 自动选中（后续手动换候选 = override，
+    // 是 τ 校准回流里最要紧的负样本）。
+    autoTop?: boolean;
+  } | null>(null);
+  const [candidateBusy, setCandidateBusy] = useState(false);
+  const candidateConfirmationPending = useRef(false);
+  // C 项：已上传候选蒙版的 id（POST /v1/selection-mask 返回）。仅目标模式确认
+  // 候选时置位；蒙版不可用或切换选区来源时清空，executeInstructionStep 只在
+  // selectionMethod==="mask" 且 id 在场时带蒙版头（outline 恒为套索兜底数据）。
+  const [candidateMaskId, setCandidateMaskId] = useState<string | null>(null);
+  // 补充B 整改：换色缺目标色（语义必需槽）时打开的选色行——点色块以
+  // 「原话 + 改成X色」重解析，未选色不出预览、不生成计划。
+  const [colorChoice, setColorChoice] = useState(false);
   const [qualityChecks, setQualityChecks] = useState([
     false,
     false,
@@ -255,7 +431,7 @@ export default function PhotoCraftStudio() {
   const [savedChecks, setSavedChecks] = useState([false, false, false, false]);
   const [points, setPoints] = useState<Array<[number, number]>>([]);
   const [selectionMethod, setSelectionMethod] = useState<
-    "manual" | "object" | "provider" | "existing"
+    "manual" | "object" | "provider" | "existing" | "mask"
   >("object");
   const [selectionMode, setSelectionMode] = useState<
     | "sample"
@@ -303,6 +479,18 @@ export default function PhotoCraftStudio() {
   const [showOriginal, setShowOriginal] = useState(false);
   const canvasNeedsSync = useRef(false);
   const contextRevision = useRef(0);
+  // M4 τ 校准回流：当前指令走的是哪条解析道（sequence/express/model/gap），
+  // 以及滑杆会话打开时的计划初值——修改幅度 = 定稿值 − 初值。
+  const nlLaneRef = useRef(
+    "none" as
+      | "none"
+      | "sequence"
+      | "express"
+      | "model"
+      | "gap-target"
+      | "gap-param",
+  );
+  const liveBaselineRef = useRef<Record<string, number> | null>(null);
   const sourceOpenRequest = useRef(0);
   const [canvasOutOfSync, setCanvasOutOfSync] = useState(false);
   const syncBeforePreview = useRef(false);
@@ -340,6 +528,12 @@ export default function PhotoCraftStudio() {
     setCloudReview(null);
     setCloudConflict(null);
     setCloudJob(null);
+    setBatchTargets([]);
+    setBatchAck(false);
+    setBatchConfirmation(null);
+    setBatchAttempt(0);
+    setBatchSkipped(null);
+    setBatchStatus(null);
     setForegroundStage(false);
     setGenerativePreview(false);
     setShowOriginal(false);
@@ -356,6 +550,7 @@ export default function PhotoCraftStudio() {
     setRectCorner(null);
     setProtectRect(null);
     setSelectionMethod("object");
+    setCandidateMaskId(null);
     canvasNeedsSync.current = false;
     setCanvasOutOfSync(false);
   }
@@ -380,6 +575,204 @@ export default function PhotoCraftStudio() {
     setCloudCredits(credits.available);
     setCloudReady(true);
   }, []);
+
+  // P2-2：单图确认环通过的计划序列 → 可跨目录复用的批量配方（纯转换，
+  // 与单图绑定的操作在此给出可读拒绝原因）。
+  const batchRecipeDraft = useMemo(
+    () => batchStepsFromConfirmedPlans(steps.length > 0 ? steps : []),
+    [steps],
+  );
+
+  // R3（codex 第二轮复审）：配方确认或目标清单变化即撤销已勾选的批量确认
+  // ——确认勾选必须针对当前展示的内容，内容变了旧确认不得残留。
+  useEffect(() => {
+    setBatchAck(false);
+  }, [batchConfirmation, batchTargets]);
+
+  /**
+   * R1（codex 第二轮复审）：把用户确认的计划登记为服务端确认快照（谁、
+   * 何时、在哪张图哪个版本上确认了哪些步骤）。只在源项目已保存云端时登记；
+   * 登记失败则回退确认勾选——没有服务端确认记录不得发起批量。
+   */
+  async function ensureBatchConfirmation(
+    stepsForRecipe: PhotoCraftBatchStep[],
+  ) {
+    const config = cloudConfig();
+    const session = cloudSession();
+    if (
+      !config ||
+      !session ||
+      !cloudSourceReady ||
+      !currentId.current ||
+      !currentCloudVersion.current
+    )
+      return;
+    const revision = contextRevision.current;
+    try {
+      const confirmation = await createPhotoCraftBatchConfirmation(
+        config,
+        session.accessToken,
+        {
+          source: {
+            projectId: currentId.current,
+            version: currentCloudVersion.current,
+          },
+          steps: stepsForRecipe,
+        },
+      );
+      if (revision !== contextRevision.current) return;
+      setBatchConfirmation(confirmation);
+    } catch (error) {
+      if (revision === contextRevision.current) {
+        setPlanConfirmed(false);
+        setMessage(`配方确认登记失败：${String(error)}`);
+      }
+    }
+  }
+
+  /** 计划确认勾选（R1）：勾上时若有云端来源，同步登记服务端确认快照。 */
+  function togglePlanConfirmed(checked: boolean) {
+    setPlanConfirmed(checked);
+    if (!checked) {
+      setBatchConfirmation(null);
+      return;
+    }
+    const draft = batchStepsFromConfirmedPlans(steps);
+    if (draft.steps && cloudSourceReady && currentCloudVersion.current > 0)
+      void ensureBatchConfirmation(draft.steps);
+  }
+
+  /**
+   * P2-2 批量确认提交：目标/积分/跳过语义都展示给用户、勾选确认后一次性
+   * 入队，随后轮询整批状态直到收敛（成功/失败/超时），失败项如实列出。
+   * R3：requestKey 由确认引用+目标清单+批次序号派生——网络失败后重试、
+   * 刷新后恢复都用同一键，服务端同键幂等返回原批次，不重复扣费；只有用户
+   * 明确「再跑一批」（batchAttempt+1）或内容变化才产生新键。
+   */
+  async function submitBatchRecipe() {
+    const config = cloudConfig();
+    const session = cloudSession();
+    if (!config || !session) {
+      setMessage("云端登录会话已失效，请重新登录后再提交批量任务。");
+      return;
+    }
+    if (!batchRecipeDraft.steps) {
+      setMessage(batchRecipeDraft.error);
+      return;
+    }
+    if (
+      !cloudSourceReady ||
+      !currentId.current ||
+      !currentCloudVersion.current
+    ) {
+      setMessage("请先打开已保存到云端的 PhotoCraft 项目，再发起批量套用。");
+      return;
+    }
+    if (
+      batchTargets.length === 0 ||
+      batchTargets.length > PHOTO_CRAFT_BATCH_PROJECT_LIMIT
+    ) {
+      setMessage(
+        `请选择 1~${PHOTO_CRAFT_BATCH_PROJECT_LIMIT} 个目标项目后再提交。`,
+      );
+      return;
+    }
+    if (cloudCredits !== null && cloudCredits < batchTargets.length) {
+      setMessage(
+        `工作区积分不足：批量按张计费需 ${batchTargets.length}，当前可用 ${cloudCredits}。`,
+      );
+      return;
+    }
+    if (!batchConfirmation) {
+      setMessage(
+        "尚未登记配方确认记录：请先在单图上勾选确认编辑计划，再提交批量。",
+      );
+      return;
+    }
+    if (
+      batchConfirmation.source.projectId !== currentId.current ||
+      batchConfirmation.source.version !== currentCloudVersion.current
+    ) {
+      // 源项目在确认后产生了新版本：本地确认快照已过期，交回用户重新确认。
+      setBatchConfirmation(null);
+      setPlanConfirmed(false);
+      setMessage("配方确认记录已过期（源项目版本变化），请重新确认后再提交。");
+      return;
+    }
+    if (batchBusy || cloudJobBusy) {
+      setMessage("已有云端任务在执行，请等它完成后再提交批量。");
+      return;
+    }
+    const revision = contextRevision.current;
+    const requestKey = deriveBatchRequestKey({
+      confirmationId: batchConfirmation.id,
+      projectIds: batchTargets,
+      attempt: batchAttempt,
+    });
+    setBatchBusy(true);
+    setBatchStatus(null);
+    setBatchSkipped(null);
+    try {
+      const enqueue = await enqueuePhotoCraftBatchRecipe(
+        config,
+        session.accessToken,
+        {
+          requestKey,
+          projectIds: batchTargets,
+          confirmationId: batchConfirmation.id,
+        },
+      );
+      if (revision !== contextRevision.current) return;
+      setBatchSkipped(enqueue.skipped);
+      setCloudCredits((value) =>
+        value === null ? null : value - enqueue.jobs.length,
+      );
+      let status = await getPhotoCraftBatchRecipeStatus(
+        config,
+        session.accessToken,
+        requestKey,
+      );
+      if (revision !== contextRevision.current) return;
+      setBatchStatus(status);
+      for (
+        let attempt = 0;
+        attempt < 240 &&
+        (status.statuses.queued ?? 0) + (status.statuses.running ?? 0) > 0;
+        attempt++
+      ) {
+        await new Promise((resolveWait) => setTimeout(resolveWait, 2000));
+        if (revision !== contextRevision.current) return;
+        status = await getPhotoCraftBatchRecipeStatus(
+          config,
+          session.accessToken,
+          requestKey,
+        );
+        if (revision !== contextRevision.current) return;
+        setBatchStatus(status);
+      }
+      const succeeded = status.statuses.succeeded ?? 0;
+      const failed = status.statuses.failed ?? 0;
+      const pending = status.total - succeeded - failed;
+      if (pending > 0)
+        setMessage(
+          `批量任务仍在执行：成功 ${succeeded}、失败 ${failed}、未完成 ${pending}；可稍后在本面板刷新查看。`,
+        );
+      else if (failed > 0)
+        setMessage(
+          `批量完成：成功 ${succeeded}、失败 ${failed}。失败项目保持原版本，积分已退回；请逐张检查失败原因。`,
+        );
+      else
+        setMessage(
+          `批量完成：${succeeded} 张全部成功；抽样复检 ${status.sampledJobIds.length} 张（清单见下方）。`,
+        );
+      await refreshCloud();
+    } catch (error) {
+      if (revision === contextRevision.current) setMessage(String(error));
+    } finally {
+      setBatchBusy(false);
+      setBatchAck(false);
+    }
+  }
 
   const storeCanvasSave = useCallback(
     async (name: string, bytes: ArrayBuffer) => {
@@ -526,6 +919,7 @@ export default function PhotoCraftStudio() {
     setDraftPatch([]);
     setRectCorner(null);
     setProtectRect(null);
+    setCandidateMaskId(null);
   }
 
   async function exportCurrentImage() {
@@ -835,6 +1229,13 @@ export default function PhotoCraftStudio() {
         },
       );
       currentCloudVersion.current = saved.version;
+      // R1：版本前进使旧的服务端确认快照过期——清掉；若计划仍处于已确认
+      // 态，立即在新版本上补登记（确认时间以服务端记录为准）。
+      setBatchConfirmation(null);
+      if (planConfirmed) {
+        const draft = batchStepsFromConfirmedPlans(steps);
+        if (draft.steps) void ensureBatchConfirmation(draft.steps);
+      }
       setCloudReview(null);
       const sourceStillCurrent = await markPhotoCraftCloudVersion(
         saved.id,
@@ -1164,7 +1565,10 @@ export default function PhotoCraftStudio() {
     }
   }
 
-  async function interpretInstruction() {
+  async function interpretInstruction(forcedText?: string) {
+    // forcedText（补充B 选色重解析等程序化重试）直接作为本次要解析的原话，
+    // 不依赖异步的 setInstruction 重渲染——闭包里的 instruction 还是旧值。
+    const text = forcedText ?? instruction;
     if (canvasNeedsSync.current) {
       setMessage("画布有未同步的操作。请先保存画布，再解析编辑要求。");
       return;
@@ -1173,23 +1577,132 @@ export default function PhotoCraftStudio() {
       setMessage("请先导入图片或打开项目");
       return;
     }
+    // 提议-确认环打开时，「第二个」式口语直接映射到编号候选（§4）。
+    const review = targetReview;
+    if (review && !review.confirmed) {
+      const ordinalCandidate = candidateFromOrdinal(instruction);
+      if (ordinalCandidate) {
+        selectTargetCandidate(ordinalCandidate);
+        return;
+      }
+    }
+    const parts = partCandidates;
+    if (parts && parts.chosen === null) {
+      const ordinal = ordinalIndex(instruction);
+      if (ordinal !== null && parts.candidates[ordinal]) {
+        choosePartCandidate(ordinal, false, parts);
+        return;
+      }
+    }
     const revision = contextRevision.current;
     try {
       setBusy(true);
       setPending(null);
       setMaskHistory([]);
-      const directSequence = planPhotoCraftSequence(instruction);
-      const direct =
-        directSequence?.[0] ?? planPhotoCraftInstruction(instruction);
+      setTargetReview(null);
+      setMaskBounds(null);
+      void closeLiveTuning(true);
+      setExplainConfirm(null);
+      setPlanDefaults([]);
+      setTargetGap(null);
+      setProtectGap(null);
+      setPartCandidates(null);
+      setColorChoice(false);
+      const directSequence = planPhotoCraftSequence(text);
+      const direct = directSequence?.[0] ?? planPhotoCraftInstruction(text);
       let nextSteps = directSequence ?? (direct ? [direct] : []);
+      let explain: { description: string; issues: string[] } | null = null;
+      let defaults: DefaultedSlot[] = [];
       if (!nextSteps.length) {
         const response = await fetch("/api/photocraft-instruction", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ instruction }),
+          body: JSON.stringify({ instruction: text }),
         });
         const data = await response.json();
-        if (!response.ok) throw new Error(data.error ?? "无法理解编辑要求");
+        if (!response.ok) {
+          // M3 L3a：目标缺口不报死了事——留下名词，交给开放词汇候选环。
+          const gaps: Array<{
+            kind?: string;
+            slot?: string;
+            phrase?: unknown;
+          }> = Array.isArray(data.gaps) ? data.gaps : [];
+          const gap = gaps.find(
+            (item) =>
+              item.kind === "target" &&
+              typeof item.phrase === "string" &&
+              item.phrase.trim().length > 0,
+          );
+          if (response.status === 422 && gap) {
+            if (revision !== contextRevision.current) return;
+            const phrase = String(gap.phrase).trim();
+            // M4 分桶：目标名词走开放词汇候选环（本地快轨解析不出目标）。
+            nlLaneRef.current = "gap-target";
+            trackPhotoCraftTelemetry("interpret", {
+              lane: "gap-target",
+              outcome: "gap",
+              instruction: text,
+              phrase,
+            });
+            setPlan(null);
+            setSteps([]);
+            setPlanConfirmed(false);
+            setTargetGap({ phrase });
+            setMessage(
+              `${String(data.error ?? "目标未能自动识别")}。可点「智能找目标」让本机视觉模型圈出「${phrase}」候选，或继续手动画框/套索。`,
+            );
+            return;
+          }
+          // P1-2 整改：目标缺口提不出名词（句式不在句框/主谓式内）时不能只报
+          // 422 死路——给出明确的改写建议与手画路径，能力边界不变。
+          if (
+            response.status === 422 &&
+            gaps.some((item) => item.kind === "target")
+          ) {
+            if (revision !== contextRevision.current) return;
+            nlLaneRef.current = "gap-target";
+            trackPhotoCraftTelemetry("interpret", {
+              lane: "gap-target",
+              outcome: "gap-no-phrase",
+              instruction: text,
+            });
+            setPlan(null);
+            setSteps([]);
+            setPlanConfirmed(false);
+            setMessage(
+              `${String(data.error ?? "目标未能自动识别")}。可改成「把屋顶提亮一点」式的说法让目标名词可提取（点「智能找目标」圈选），或直接用蒙版工具画框/套索指定范围。`,
+            );
+            return;
+          }
+          // 补充B 整改：换色缺目标色是语义必需槽——不再默认灰色预览，界面
+          // 点选目标色后以补全原话重解析。
+          if (
+            response.status === 422 &&
+            gaps.some((item) => item.kind === "param" && item.slot === "color")
+          ) {
+            if (revision !== contextRevision.current) return;
+            nlLaneRef.current = "gap-param";
+            trackPhotoCraftTelemetry("interpret", {
+              lane: "gap-param",
+              outcome: "gap",
+              instruction: text,
+            });
+            setPlan(null);
+            setSteps([]);
+            setPlanConfirmed(false);
+            setColorChoice(true);
+            setMessage(
+              `${String(data.error ?? "未说明目标颜色")}；请点选目标色后再预览。`,
+            );
+            return;
+          }
+          trackPhotoCraftTelemetry("interpret", {
+            lane: "model",
+            outcome: "reject",
+            instruction: text,
+          });
+          throw new Error(data.error ?? "无法理解编辑要求");
+        }
         nextSteps = Array.isArray(data.steps)
           ? data.steps.map((step: unknown) =>
               parsePhotoCraftModelPlan({
@@ -1198,57 +1711,55 @@ export default function PhotoCraftStudio() {
               }),
             )
           : [parsePhotoCraftModelPlan({ ...data.plan, unsupported: "" })];
+        if (
+          data.explainConfirm &&
+          typeof data.explainConfirm.description === "string"
+        )
+          explain = {
+            description: data.explainConfirm.description,
+            issues: Array.isArray(data.explainConfirm.issues)
+              ? data.explainConfirm.issues
+                  .filter(
+                    (issue: unknown): issue is string =>
+                      typeof issue === "string",
+                  )
+                  .slice(0, 6)
+              : [],
+          };
+        if (Array.isArray(data.defaults)) defaults = data.defaults;
       }
       const nextPlan = nextSteps[0];
       if (revision !== contextRevision.current) return;
       if (!nextPlan) throw new Error("编辑计划为空");
-      setSteps(nextSteps);
-      setPlanConfirmed(nextSteps.length === 1);
-      setPlan(nextPlan);
-      if (
-        sourceInfo?.hasSelection &&
-        nextPlan.target === "selected-area" &&
-        (nextPlan.operation === "recolor" || nextPlan.operation === "adjust")
-      )
-        setSelectionMethod("existing");
-      if (
-        nextPlan.operation === "recolor" &&
-        nextPlan.target === "selected-area" &&
-        /(?:耳朵|猫耳|左耳|右耳)/.test(instruction)
-      ) {
-        setSelectionMethod("provider");
-        setSelectionMode("outline");
-        setProviderScopeFeather(60);
+      // M4 双轨遥测：本地快轨（sequence/express）与模型轨分桶记录路由结果。
+      const lane = directSequence ? "sequence" : direct ? "express" : "model";
+      nlLaneRef.current = lane;
+      trackPhotoCraftTelemetry("interpret", {
+        lane,
+        outcome: explain ? "explain-confirm" : "plan",
+        steps: nextSteps.length,
+        instruction: text,
+      });
+      if (explain) {
+        // round-trip 蕴含核对未通过（§6-2）：不直接落地，先解释确认。
+        setPlanDefaults(defaults);
+        setExplainConfirm({ ...explain, steps: nextSteps });
+        trackPhotoCraftTelemetry("ring-open", {
+          ring: "explain",
+          lane: "model",
+        });
+        setMessage("模型对这句话的理解需要确认：请核对下方的解释。");
+        return;
       }
-      if (nextPlan.target === "whole-image") {
-        setPoints([]);
-        setOutline([]);
-        setPatches([]);
-        setDraftPatch([]);
-        setScopeRect(null);
-        setProtectRect(null);
+      applyParsedSteps(nextSteps, text);
+      if (defaults.length > 0) {
+        setPlanDefaults(defaults);
+        setMessage(
+          `${describePhotoCraftPlan(nextPlan)}（${defaults
+            .map((slot) => `${slot.slot} 按默认 ${slot.value} 代填`)
+            .join("、")}；预览后可微调）`,
+        );
       }
-      if (nextPlan.operation === "crop") setSelectionMode("scope");
-      if (nextPlan.operation === "heal") {
-        setSelectionMode("heal-point");
-        setPoints([]);
-        setOutline([]);
-        setPatches([]);
-        setDraftPatch([]);
-        setScopeRect(null);
-        setProtectRect(null);
-        setEdgeShift(0);
-        setEdgeFeather(0);
-      }
-      if (nextPlan.operation === "text") {
-        setSelectionMode("text-point");
-        setPoints([]);
-        setOutline([]);
-        setPatches([]);
-        setScopeRect(null);
-        setProtectRect(null);
-      }
-      setMessage(describePhotoCraftPlan(nextPlan));
     } catch (error) {
       if (revision === contextRevision.current) {
         setPlan(null);
@@ -1261,10 +1772,619 @@ export default function PhotoCraftStudio() {
     }
   }
 
+  /** 解析结果落地为待预览计划：登记步骤并按目标重置选区工具。 */
+  function applyParsedSteps(
+    nextSteps: PhotoCraftInstructionPlan[],
+    sourceText: string = instruction,
+  ) {
+    const nextPlan = nextSteps[0];
+    if (!nextPlan) throw new Error("编辑计划为空");
+    setSteps(nextSteps);
+    // R1（codex 第二轮复审）：单步计划同样需要用户明确确认——单纯解析成功
+    // 不能自动变成「用户已确认」。新计划落地同时作废旧的服务端确认快照。
+    setPlanConfirmed(false);
+    setBatchConfirmation(null);
+    setPlan(nextPlan);
+    if (
+      sourceInfo?.hasSelection &&
+      nextPlan.target === "selected-area" &&
+      (nextPlan.operation === "recolor" || nextPlan.operation === "adjust")
+    )
+      setSelectionMethod("existing");
+    if (
+      nextPlan.operation === "recolor" &&
+      nextPlan.target === "selected-area" &&
+      /(?:耳朵|猫耳|左耳|右耳)/.test(sourceText)
+    ) {
+      setSelectionMethod("provider");
+      setSelectionMode("outline");
+      setProviderScopeFeather(60);
+    }
+    if (nextPlan.target === "whole-image") {
+      setPoints([]);
+      setOutline([]);
+      setPatches([]);
+      setDraftPatch([]);
+      setScopeRect(null);
+      setProtectRect(null);
+    }
+    if (nextPlan.target === "subject" || nextPlan.target === "background") {
+      // The provider mask fully defines these targets, so no drawn scope is
+      // required; clear stale scope so the first preview is the mask alone.
+      setSelectionMethod("provider");
+      setSelectionMode("scope");
+      setPoints([]);
+      setOutline([]);
+      setPatches([]);
+      setDraftPatch([]);
+      setScopeRect(null);
+      setProtectRect(null);
+    }
+    if (nextPlan.operation === "crop") setSelectionMode("scope");
+    if (nextPlan.operation === "heal") {
+      setSelectionMode("heal-point");
+      setPoints([]);
+      setOutline([]);
+      setPatches([]);
+      setDraftPatch([]);
+      setScopeRect(null);
+      setProtectRect(null);
+      setEdgeShift(0);
+      setEdgeFeather(0);
+    }
+    if (nextPlan.operation === "text") {
+      setSelectionMode("text-point");
+      setPoints([]);
+      setOutline([]);
+      setPatches([]);
+      setScopeRect(null);
+      setProtectRect(null);
+    }
+    // M3 protect 清单：计划带保护名词时打开同一提议-确认环圈保护框。
+    const protectPhrase = protectPhraseOf(nextPlan);
+    if (protectPhrase) {
+      setProtectGap({ phrase: protectPhrase });
+      setMessage(
+        `${describePhotoCraftPlan(nextPlan)} 保护范围「${protectPhrase}」待圈定：点下方「智能找保护框」，或用蒙版笔刷手画。`,
+      );
+      return;
+    }
+    setMessage(describePhotoCraftPlan(nextPlan));
+  }
+
+  /** §6-2 解释确认：用户点头后才把云端计划落地为待预览计划。 */
+  function confirmExplain() {
+    if (!explainConfirm) return;
+    const confirmed = explainConfirm.steps;
+    setExplainConfirm(null);
+    trackPhotoCraftTelemetry("ring-outcome", {
+      ring: "explain",
+      lane: "model",
+      outcome: "confirm",
+    });
+    applyParsedSteps(confirmed);
+    setMessage("已按确认的理解生成计划；预览后可继续微调。");
+  }
+
+  /** §6-2 解释确认：纠正 = 丢弃该计划，引导用户换一种说法。 */
+  function correctExplain() {
+    contextRevision.current += 1;
+    trackPhotoCraftTelemetry("ring-outcome", {
+      ring: "explain",
+      lane: "model",
+      outcome: "reject",
+    });
+    setExplainConfirm(null);
+    setPlan(null);
+    setSteps([]);
+    setPlanConfirmed(false);
+    setPlanDefaults([]);
+    setMessage(
+      "已丢弃该理解。请换一种说法描述要求（例如「把主体换成红色」），或直接写明数值。",
+    );
+  }
+
+  /**
+   * M2 目标审核提议-确认环：主体/背景预览后打开。取作业里已有的 rembg
+   * 蒙版（无二次推理），在浏览器里算主体包围盒，把 ①主体 ②背景 编号描边
+   * 叠到预览上；用户点选确认，识别不准时仍可蒙版画笔修边或手动画框。
+   */
+  async function openTargetReview(jobId: string) {
+    setTargetReview(null);
+    setMaskBounds(null);
+    try {
+      const maskUrl = `/v1/jobs/${jobId}/provider-mask`;
+      const response = await fetch(`${bridge}${maskUrl}`);
+      if (!response.ok) return; // 该作业没有 provider 蒙版（如整图操作）
+      const blob = await response.blob();
+      const bitmap = await createImageBitmap(blob);
+      const canvas = document.createElement("canvas");
+      canvas.width = bitmap.width;
+      canvas.height = bitmap.height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      ctx.drawImage(bitmap, 0, 0);
+      bitmap.close();
+      // rembg 蒙版：主体白（红通道 ≥128）、背景黑。全量扫一遍取主体包围盒；
+      // 背景候选的描边就是整幅画框。
+      const { data, width, height } = ctx.getImageData(
+        0,
+        0,
+        canvas.width,
+        canvas.height,
+      );
+      let minX = width;
+      let minY = height;
+      let maxX = -1;
+      let maxY = -1;
+      for (let y = 0; y < height; y++) {
+        const row = y * width;
+        for (let x = 0; x < width; x++) {
+          if ((data[(row + x) * 4] ?? 0) >= 128) {
+            if (x < minX) minX = x;
+            if (x > maxX) maxX = x;
+            if (y < minY) minY = y;
+            if (y > maxY) maxY = y;
+          }
+        }
+      }
+      if (maxX < 0) return;
+      setMaskBounds({
+        subject: [minX, minY, maxX - minX + 1, maxY - minY + 1],
+        background: [0, 0, width, height],
+      });
+      setTargetReview({ confirmed: false, maskUrl });
+      trackPhotoCraftTelemetry("ring-open", {
+        ring: "target-review",
+        lane: nlLaneRef.current,
+      });
+    } catch {
+      // 蒙版不可读时提议-确认环退化为纯文字提示，不阻塞编辑本身。
+    }
+  }
+
+  /** 点选候选：①主体 ②背景 ③手动画框。当前目标 → 确认；其它 → 换目标重预览。 */
+  function selectTargetCandidate(
+    candidate: "subject" | "background" | "manual",
+  ) {
+    if (!plan) return;
+    trackPhotoCraftTelemetry("ring-outcome", {
+      ring: "target-review",
+      lane: nlLaneRef.current,
+      outcome:
+        candidate === "manual"
+          ? "manual"
+          : plan.target === candidate
+            ? "confirm"
+            : "retarget",
+    });
+    if (candidate === "manual") {
+      setTargetReview(null);
+      setMaskBounds(null);
+      setPending(null);
+      setSelectionMethod("object");
+      setSelectionMode("scope");
+      setMessage(
+        "已切换为手动画框：在图片上拖框包住目标，然后点「预览编辑」。",
+      );
+      return;
+    }
+    if (plan.target === candidate) {
+      setTargetReview((review) =>
+        review ? { ...review, confirmed: true } : review,
+      );
+      setMessage(
+        `已确认目标：${candidate === "subject" ? "① 主体" : "② 背景"}。可继续微调或应用。`,
+      );
+      return;
+    }
+    const nextPlan = {
+      ...plan,
+      target: candidate,
+    } as PhotoCraftInstructionPlan;
+    const nextSteps = steps.map((step, index) =>
+      index === steps.length - 1 ? nextPlan : step,
+    );
+    setPlan(nextPlan);
+    setSteps(nextSteps);
+    setTargetReview(null);
+    setMaskBounds(null);
+    setPending(null);
+    setCompletedSteps(0);
+    setMessage(
+      `目标已切换为${candidate === "subject" ? "① 主体" : "② 背景"}；点「预览编辑」查看新目标效果。`,
+    );
+  }
+
+  /** 「第X个」式口语 → 编号（0/1/2）；两个提议环共用。 */
+  function ordinalIndex(text: string): number | null {
+    const match = text
+      .replace(/\s+/g, "")
+      .match(/^(?:就|选|要|用)?第([一二两2三3])个/u);
+    if (!match) return null;
+    if (match[1] === "一") return 0;
+    if (match[1] === "二" || match[1] === "两" || match[1] === "2") return 1;
+    return 2;
+  }
+
+  /** 「第二个」式口语确认：提议环打开时直接映射到编号候选。 */
+  function candidateFromOrdinal(
+    text: string,
+  ): "subject" | "background" | "manual" | null {
+    const ordinal = ordinalIndex(text);
+    if (ordinal === null) return null;
+    if (ordinal === 0) return "subject";
+    if (ordinal === 1) return "background";
+    return "manual";
+  }
+
+  /** M3 grounding L3：当前图片 + 名词 → 桥接 → 本机 SAM+CLIP 候选服务。 */
+  /** 补充B：目标色点选——原话补「改成X色」后重走完整解析链（快车道优先）。 */
+  function chooseRecolorColor(color: string) {
+    const base = instruction.replace(/[，。,、!！?？\s]+$/u, "");
+    const next = `${base}，改成${color}色`;
+    setColorChoice(false);
+    setInstruction(next);
+    void interpretInstruction(next);
+  }
+
+  async function findPartCandidates(mode: "target" | "protect") {
+    const gap = mode === "target" ? targetGap : protectGap;
+    if (!gap) return;
+    const source = activeSource.current ?? file;
+    if (!source) {
+      setMessage("请先导入图片或打开项目");
+      return;
+    }
+    const revision = contextRevision.current;
+    try {
+      setCandidateBusy(true);
+      // 原生格式（.pcraft/.psd）先经桥接栅格化为全尺寸 PNG 再送候选服务；
+      // 栅格化图与 samplePreview 同尺寸，候选坐标换算仍然一致。
+      let upload: Blob = source;
+      let uploadMime = mime(source);
+      if (/\.(pcraft|psd)$/i.test(source.name)) {
+        if (!samplePreview) throw new Error("项目尚未栅格化，无法圈选候选");
+        const raster = await fetch(samplePreview);
+        if (!raster.ok) throw new Error("无法把项目栅格化用于候选识别");
+        upload = await raster.blob();
+        uploadMime = "image/png";
+      }
+      const response = await fetch(`${bridge}/v1/candidates`, {
+        method: "POST",
+        headers: {
+          "content-type": uploadMime,
+          "x-acs-phrase-b64": btoa(
+            String.fromCharCode(...new TextEncoder().encode(gap.phrase)),
+          ),
+        },
+        body: upload,
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "开放词汇候选服务不可用");
+      if (revision !== contextRevision.current) return;
+      const width = typeof data.width === "number" ? data.width : 0;
+      const height = typeof data.height === "number" ? data.height : 0;
+      if (!width || !height) throw new Error("候选服务返回的尺寸无效");
+      // 服务按 ≤1024 分析，候选坐标换算回原图分辨率再叠加/套索。
+      const scaleX = sampleSize[0] / width;
+      const scaleY = sampleSize[1] / height;
+      const raw = Array.isArray(data.candidates) ? data.candidates : [];
+      const candidates = raw
+        .map((item: Record<string, unknown>) => {
+          const bounds = item.bounds;
+          const outline = item.outline;
+          if (
+            !Array.isArray(bounds) ||
+            bounds.length !== 4 ||
+            !Array.isArray(outline)
+          )
+            return null;
+          const scaledOutline = outline
+            .map((point) =>
+              Array.isArray(point) &&
+              typeof point[0] === "number" &&
+              typeof point[1] === "number"
+                ? ([
+                    Math.round(point[0] * scaleX),
+                    Math.round(point[1] * scaleY),
+                  ] as [number, number])
+                : null,
+            )
+            .filter((point): point is [number, number] => point !== null);
+          if (scaledOutline.length < 3) return null;
+          return {
+            index: typeof item.index === "number" ? item.index : 0,
+            score: typeof item.score === "number" ? item.score : 0,
+            clipScore:
+              typeof item.clip_score === "number" ? item.clip_score : 0,
+            bounds: [
+              Math.round((bounds[0] ?? 0) * scaleX),
+              Math.round((bounds[1] ?? 0) * scaleY),
+              Math.round((bounds[2] ?? 0) * scaleX),
+              Math.round((bounds[3] ?? 0) * scaleY),
+            ] as [number, number, number, number],
+            outline: scaledOutline,
+            // C 项：真实像素蒙版随候选透传（不解码，确认时才按需解码缩放）；
+            // 缺失时留空串，确认环自然退回轮廓套索。
+            maskPngB64:
+              typeof item.mask_png_b64 === "string" ? item.mask_png_b64 : "",
+            areaRatio:
+              typeof item.area_ratio === "number" ? item.area_ratio : 0,
+          };
+        })
+        .filter(
+          (
+            item: {
+              index: number;
+              score: number;
+              clipScore: number;
+              bounds: [number, number, number, number];
+              outline: Array<[number, number]>;
+              areaRatio: number;
+            } | null,
+          ): item is NonNullable<typeof item> => item !== null,
+        )
+        .slice(0, 3);
+      if (!candidates.length) {
+        setMessage(
+          mode === "target"
+            ? `本机视觉模型没有圈出明显的「${gap.phrase}」区域；请手动画框或套索指定范围。`
+            : `本机视觉模型没有圈出明显的「${gap.phrase}」保护区域；请用蒙版笔刷的手画保护框模式圈出。`,
+        );
+        return;
+      }
+      const nextCandidates = {
+        mode,
+        phrase: gap.phrase,
+        serviceWidth: width,
+        serviceHeight: height,
+        candidates,
+        chosen: null,
+      };
+      setPartCandidates(nextCandidates);
+      trackPhotoCraftTelemetry("ring-open", {
+        ring: "open-vocab",
+        lane: nlLaneRef.current,
+        mode,
+        count: candidates.length,
+        topScore: Number(candidates[0].score.toFixed(4)),
+      });
+      const top = candidates[0];
+      if (CANDIDATE_RING.shouldAutoSelectCandidate(mode, candidates)) {
+        // τ_auto：top-1 高分 + 计划单步可撤销（预览即提议）→ 直接选中。
+        // protect 不自动：保护框选错的代价是静默漏保护，始终走确认环。
+        // 候选数据直传（P1-1）：此刻 state 尚未重渲染，闭包里还是旧值。
+        // await：choosePartCandidate 现在含蒙版上传（C 项），让 finally 的
+        // candidateBusy 在蒙版备完后才清，避免按钮提前解禁。
+        await choosePartCandidate(0, true, nextCandidates);
+      } else {
+        setMessage(
+          `${mode === "target" ? "目标" : "保护范围"}「${gap.phrase}」找到 ${candidates.length} 个候选，已编号叠在图片上（最高匹配分数 ${Math.round(top.score * 100)}%，分数是本批候选的相对排名，非正确率）。点编号框、下方按钮，或直接说「第几个」确认。`,
+        );
+      }
+    } catch (error) {
+      if (revision === contextRevision.current) setMessage(String(error));
+    } finally {
+      setCandidateBusy(false);
+    }
+  }
+
+  /**
+   * 目标落地共用路径：原句名词替换成「选区」后重走本地解析道，拿回同一
+   * 操作与参数（目标变为已选区域）。选区来源由 caller 决定（SAM 轮廓 /
+   * 已保存原生选区）。返回是否成功。
+   */
+  function landRewrittenSelectionPlan(
+    phrase: string,
+    prepare: () => void,
+  ): boolean {
+    const rewritten = instruction.split(phrase).join("选区");
+    const sequence = planPhotoCraftSequence(rewritten);
+    const nextPlan =
+      sequence?.[0] ?? planPhotoCraftInstruction(rewritten) ?? null;
+    if (!nextPlan || nextPlan.target !== "selected-area") return false;
+    prepare();
+    setSteps(sequence ?? [nextPlan]);
+    setPlan(nextPlan);
+    // R1：与 applyParsedSteps 同款——落地新计划一律回到未确认态。
+    setPlanConfirmed(false);
+    setBatchConfirmation(null);
+    const protectPhrase = protectPhraseOf(nextPlan);
+    if (protectPhrase) setProtectGap({ phrase: protectPhrase });
+    return true;
+  }
+
+  /** M3 grounding 级联 L1：图片里已保存的原生选区直接作目标（零模型）。 */
+  function useExistingSelectionForGap() {
+    const gap = targetGap;
+    if (!gap) return;
+    const landed = landRewrittenSelectionPlan(gap.phrase, () => {
+      setTargetGap(null);
+      setPartCandidates(null);
+      setSelectionMethod("existing");
+      setSelectionMode("scope");
+      setPoints([]);
+      setOutline([]);
+      setPatches([]);
+      setDraftPatch([]);
+      setScopeRect(null);
+      setProtectRect(null);
+      setCandidateMaskId(null);
+    });
+    setMessage(
+      landed
+        ? `已改用图片中保存的原生选区作「${gap.phrase}」目标；点「预览编辑」查看效果。`
+        : "这条要求的操作仍解析不出来；请改成「把选区提亮一点」式的说法再解析。",
+    );
+  }
+
+  /**
+   * 候选确认：目标模式把 SAM 轮廓作为套索选区落地（原句名词替换成「选区」
+   * 后重走本地解析道拿回同一操作与参数）；protect 模式把候选框设为保护框。
+   * P1-1 整改：候选数据经 parts 参数传入——自动选中发生在 setPartCandidates
+   * 的同一异步函数里，读渲染闭包里的旧 state（首拍为 null）永远选不上；人工
+   * 点击路径不传 parts，沿用当前 state。
+   */
+  /**
+   * C 项：把候选真实像素蒙版备成原生选区数据——解码 mask_png_b64（服务
+   * 空间，须与响应宽高一致）→ sampleSize 画布平滑重采样（=文档尺寸）→
+   * 红通道 ≥MASK_THRESHOLD 二值化并确认非空 → 上传 /v1/selection-mask 拿
+   * id（后续 instruction 以 x-acs-selection-mask-id 引用）。任何一步失败
+   * 返回 null（永不 reject）：确认环退回已存的轮廓套索，坏蒙版不阻塞预览。
+   */
+  async function prepareCandidateMask(
+    chosen: { maskPngB64: string },
+    parts: NonNullable<typeof partCandidates>,
+  ): Promise<string | null> {
+    try {
+      if (parts.mode !== "target") return null;
+      const decoded = decodeMaskPng(chosen.maskPngB64);
+      if (
+        !decoded ||
+        decoded.width !== parts.serviceWidth ||
+        decoded.height !== parts.serviceHeight
+      )
+        return null;
+      const bitmap = await createImageBitmap(
+        new Blob([decoded.bytes], { type: "image/png" }),
+      );
+      // 坐标契约浏览器侧：画布即文档尺寸（与 bounds/outline 同一次换算的
+      // sampleSize），平滑插值重采样后按红通道阈值二值化（0/255 蒙版线性
+      // 插值在 128 处边界稳定）。桥端会对文档尺寸再强校验，失配 400 退套索。
+      const canvas = document.createElement("canvas");
+      canvas.width = sampleSize[0];
+      canvas.height = sampleSize[1];
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return null;
+      ctx.imageSmoothingEnabled = true;
+      ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      bitmap.close();
+      const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const selected = binarizeMaskPixels(pixels.data);
+      if (selected === 0) return null; // 空蒙版：桥端探针也会拒，提前退回
+      ctx.putImageData(pixels, 0, 0);
+      const blob = await new Promise<Blob | null>((resolve) =>
+        canvas.toBlob(resolve, "image/png"),
+      );
+      if (!blob) return null;
+      const response = await fetch(`${bridge}/v1/selection-mask`, {
+        method: "POST",
+        headers: { "content-type": "image/png" },
+        body: blob,
+      });
+      if (!response.ok) return null; // 含桥单请求门 429：下次确认重试即可
+      const payload = await response.json();
+      return typeof payload?.id === "string" ? payload.id : null;
+    } catch {
+      return null;
+    }
+  }
+
+  async function choosePartCandidate(
+    ordinal: number,
+    auto: boolean,
+    parts: typeof partCandidates,
+  ) {
+    if (!parts || candidateConfirmationPending.current) return;
+    const chosen = parts.candidates[ordinal];
+    if (!chosen) return;
+    const revision = contextRevision.current;
+    const source = activeSource.current ?? file;
+    if (parts.mode === "target") candidateConfirmationPending.current = true;
+    // M4 τ 校准回流：auto = τ_auto 自动选中；override = 自动选中后被手动换掉
+    // （τ 定得过低的直接证据）。topScore 一起记录，便于按置信度分桶。
+    trackPhotoCraftTelemetry("ring-outcome", {
+      ring: "open-vocab",
+      lane: nlLaneRef.current,
+      mode: parts.mode,
+      outcome: CANDIDATE_RING.ringOutcome(
+        auto,
+        parts.autoTop,
+        parts.chosen,
+        ordinal,
+      ),
+      ordinal,
+      prevOrdinal: parts.chosen ?? -1,
+      score: Number(chosen.score.toFixed(4)),
+      topScore: Number((parts.candidates[0]?.score ?? 0).toFixed(4)),
+      tauAuto: TAU_AUTO,
+      auto,
+    });
+    const nextAutoTop = parts.autoTop || auto;
+    if (parts.mode === "protect") {
+      setPartCandidates({ ...parts, chosen: ordinal, autoTop: nextAutoTop });
+      setProtectRect(chosen.bounds);
+      setProtectGap(null);
+      setTargetGap(null);
+      setMessage(
+        `保护框已按候选 ${ordinal + 1}（「${parts.phrase}」）设定；预览时该区域保持原样。点其它编号可更换。`,
+      );
+      return;
+    }
+    const landed = landRewrittenSelectionPlan(parts.phrase, () => {
+      setPartCandidates({ ...parts, chosen: ordinal, autoTop: nextAutoTop });
+      setTargetGap(null);
+      setOutline(chosen.outline);
+      setSelectionMethod("manual");
+      setSelectionMode("outline");
+      setPoints([]);
+      setPatches([]);
+      setDraftPatch([]);
+      setScopeRect(null);
+      setProtectRect(null);
+    });
+    if (!landed) {
+      candidateConfirmationPending.current = false;
+      setPartCandidates({ ...parts, chosen: ordinal, autoTop: nextAutoTop });
+      setMessage(
+        `候选 ${ordinal + 1} 已圈出，但这条要求的操作仍解析不出来；请改成「把选区提亮一点」式的说法再解析。`,
+      );
+      return;
+    }
+    setMessage(
+      auto
+        ? `「${parts.phrase}」候选①匹配分数 ${Math.round(chosen.score * 100)}% ≥ τ_auto，已自动选中并生成计划；点「预览编辑」查看效果（预览即提议，可撤销/微调）。`
+        : `目标「${parts.phrase}」已按候选 ${ordinal + 1} 的轮廓选中；点「预览编辑」查看效果。`,
+    );
+    // C 项：计划已落地（套索兜底就位）后异步备真实像素蒙版；成功切 mask
+    // 选区法，失败保持 manual+outline 退回套索。candidateBusy 期间候选按钮
+    // 禁用，防蒙版上传中双确认。
+    setCandidateMaskId(null);
+    setCandidateBusy(true);
+    let maskReady = false;
+    try {
+      const maskId = await prepareCandidateMask(chosen, parts);
+      if (
+        revision !== contextRevision.current ||
+        source !== (activeSource.current ?? file)
+      )
+        return;
+      if (maskId) {
+        setCandidateMaskId(maskId);
+        setSelectionMethod("mask");
+        maskReady = true;
+      } else {
+        setCandidateMaskId(null);
+      }
+    } finally {
+      candidateConfirmationPending.current = false;
+      setCandidateBusy(false);
+    }
+    setMessage(
+      maskReady
+        ? auto
+          ? `「${parts.phrase}」候选①匹配分数 ${Math.round(chosen.score * 100)}% ≥ τ_auto，已自动选中（像素蒙版选区）并生成计划；点「预览编辑」查看效果（预览即提议，可撤销/微调）。`
+          : `目标「${parts.phrase}」已按候选 ${ordinal + 1} 的像素蒙版选中；点「预览编辑」查看效果。`
+        : `候选像素蒙版不可用，已退回轮廓套索选区；点「预览编辑」查看效果。`,
+    );
+  }
+
   async function executeInstructionStep(
     source: File,
     step: PhotoCraftInstructionPlan,
     index: number,
+    selectionOverride?: "manual",
   ): Promise<EditResult> {
     const side = Math.min(sampleSize[0], sampleSize[1]);
     const squareRect: [number, number, number, number] = [
@@ -1278,54 +2398,102 @@ export default function PhotoCraftStudio() {
       step.operation !== "text" &&
       step.operation !== "canvas-size" &&
       step.target !== "whole-image";
-    const response = await fetch(`${bridge}/v1/instruction`, {
-      method: "POST",
-      headers: {
-        "content-type": mime(source),
-        "x-acs-plan": JSON.stringify(
-          step.operation === "text-style" ||
-            step.operation === "drop-shadow" ||
-            step.operation === "layer-action"
-            ? { ...step, expectedLayerId: sourceInfo?.activeLayer }
-            : step,
-        ),
-        "x-acs-points": JSON.stringify(
-          local || step.operation === "text" ? points : [],
-        ),
-        "x-acs-rect": JSON.stringify(
-          step.operation === "crop"
-            ? step.square
-              ? squareRect
-              : scopeRect
-            : local
-              ? scopeRect
-              : null,
-        ),
-        "x-acs-outline": JSON.stringify(local ? outline : []),
-        "x-acs-patches": JSON.stringify(local ? patches : []),
-        "x-acs-edge-shift": String(local ? edgeShift : 0),
-        "x-acs-edge-feather": String(local ? edgeFeather : 0),
-        "x-acs-protect-rect": JSON.stringify(
-          step.protectLabel ? protectRect : null,
-        ),
-        "x-acs-selection-method": local ? selectionMethod : "manual",
-        "x-acs-heal-size": String(healSize),
-        "x-acs-provider-scope-feather": String(providerScopeFeather),
-      },
-      body: source,
-    });
-    const data = await response.json();
-    if (!response.ok)
+    // 计划可能携带中文（文案内容、保护名词）而 HTTP 头只收 latin1：
+    // 非 ASCII 计划走 base64 头，bridge 端按 UTF-8 解回（同候选词约定）。
+    const planJson = JSON.stringify(
+      step.operation === "text-style" ||
+        step.operation === "drop-shadow" ||
+        step.operation === "layer-action"
+        ? { ...step, expectedLayerId: sourceInfo?.activeLayer }
+        : step,
+    );
+    const planHeaders: Record<string, string> = /^[\u0000-ÿ]*$/.test(planJson)
+      ? { "x-acs-plan": planJson }
+      : {
+          "x-acs-plan-b64": btoa(
+            String.fromCharCode(...new TextEncoder().encode(planJson)),
+          ),
+        };
+    const method = selectionOverride ?? selectionMethod;
+    const selectedMask = local && method === "mask" && candidateMaskId;
+    const sendInstruction = async (method: string, maskId: string | null) => {
+      const response = await fetch(`${bridge}/v1/instruction`, {
+        method: "POST",
+        headers: {
+          "content-type": mime(source),
+          ...planHeaders,
+          "x-acs-points": JSON.stringify(
+            local || step.operation === "text" ? points : [],
+          ),
+          "x-acs-rect": JSON.stringify(
+            step.operation === "crop"
+              ? step.square
+                ? squareRect
+                : scopeRect
+              : local
+                ? scopeRect
+                : null,
+          ),
+          "x-acs-outline": JSON.stringify(local ? outline : []),
+          "x-acs-patches": JSON.stringify(local ? patches : []),
+          "x-acs-edge-shift": String(local ? edgeShift : 0),
+          "x-acs-edge-feather": String(local ? edgeFeather : 0),
+          "x-acs-protect-rect": JSON.stringify(
+            step.protectLabel ? protectRect : null,
+          ),
+          // C 项：蒙版选区法仅在有已上传蒙版 id 时生效（id 由确认候选时
+          // /v1/selection-mask 返回；base64 蒙版超头上限所以走 body 路由）。
+          // id 缺失/失效时静默退回原方法（outline/rect 恒为兜底数据）。
+          ...(maskId ? { "x-acs-selection-mask-id": maskId } : {}),
+          "x-acs-selection-method": method,
+          "x-acs-heal-size": String(healSize),
+          "x-acs-provider-scope-feather": String(providerScopeFeather),
+        },
+        body: source,
+      });
+      return { response, data: await response.json() };
+    };
+    const first = await sendInstruction(
+      selectedMask
+        ? "mask"
+        : local
+          ? method === "mask"
+            ? "manual"
+            : method
+          : "manual",
+      selectedMask || null,
+    );
+    if (
+      !first.response.ok &&
+      selectedMask &&
+      shouldRetryCandidateMaskAsOutline(first.data.error, outline.length)
+    ) {
+      const retry = await sendInstruction("manual", null);
+      if (!retry.response.ok)
+        throw new Error(
+          `第 ${index + 1} 步候选蒙版不可用，套索重试也失败：${retry.data.error ?? "PhotoCraft 编辑失败"}；原项目未改变`,
+        );
+      return { ...(retry.data as EditResult), selectionFallback: "outline" };
+    }
+    if (!first.response.ok)
       throw new Error(
-        `第 ${index + 1} 步失败：${data.error ?? "PhotoCraft 编辑失败"}；原项目未改变`,
+        `第 ${index + 1} 步失败：${first.data.error ?? "PhotoCraft 编辑失败"}；原项目未改变`,
       );
-    return data as EditResult;
+    return first.data as EditResult;
   }
 
   async function previewInstruction() {
+    if (candidateConfirmationPending.current) {
+      setMessage("候选蒙版仍在准备，请等待选区确认完成后再预览。");
+      return;
+    }
     const source = activeSource.current ?? file;
     if (!source) {
       setMessage("请先导入图片或打开项目");
+      return;
+    }
+    if (explainConfirm) {
+      setMessage("请先确认或纠正上方的解释，再预览编辑。");
       return;
     }
     if (canvasNeedsSync.current) {
@@ -1343,8 +2511,9 @@ export default function PhotoCraftStudio() {
     const revision = contextRevision.current;
     try {
       if (!plan) throw new Error("请先解析编辑要求");
-      if (steps.length > 1 && !planConfirmed)
-        throw new Error("请先检查并确认全部编辑步骤");
+      // R1：应用前的确认检查不再只限多步——单步计划同样需要用户确认。
+      if (!planConfirmed)
+        throw new Error("请先检查并勾选确认当前编辑计划（步骤与保护范围）");
       if (plan.operation === "heal" && points.length !== 1)
         throw new Error("请先点击一处要修复的小污点");
       if (plan.operation === "text" && points.length !== 1)
@@ -1372,6 +2541,8 @@ export default function PhotoCraftStudio() {
         plan.operation !== "heal" &&
         plan.operation !== "text" &&
         plan.target !== "whole-image" &&
+        plan.target !== "subject" &&
+        plan.target !== "background" &&
         ((selectionMethod === "object" && !scopeRect) ||
           (selectionMethod === "provider" && !scopeRect && outline.length < 3))
       )
@@ -1410,29 +2581,197 @@ export default function PhotoCraftStudio() {
         throw new Error("请先画出要编辑的区域");
       if (draftPatch.length > 0)
         throw new Error("请先完成或撤销当前补选/剔除轮廓");
-      if (plan.protectLabel && !protectRect)
-        throw new Error("请先画出标签保护框");
+      if (plan.protectLabel && !protectRect) {
+        const protectPhrase = protectPhraseOf(plan);
+        throw new Error(
+          protectPhrase
+            ? `请先圈定「${protectPhrase}」保护框（智能找保护框或手画）`
+            : "请先画出标签保护框",
+        );
+      }
       setBusy(true);
       setMessage(describePhotoCraftPlan(plan));
       setPending(null);
       setCompletedSteps(0);
       setQualityChecks([false, false, false, false]);
       setMaskHistory([]);
+      // 旧预览作业作废，挂着的滑杆会话一并关闭（桥端常驻会话不残留）。
+      void closeLiveTuning(true);
       const first = await executeInstructionStep(source, plan, 0);
       if (revision !== contextRevision.current)
         throw new Error("画布或编辑要求已改变；旧预览已取消，请重新预览");
+      if (first.selectionFallback === "outline") {
+        setSelectionMethod("manual");
+        setCandidateMaskId(null);
+      }
       setPending(first);
       setCompletedSteps(1);
       setShowOriginal(false);
+      if (plan.target === "subject" || plan.target === "background")
+        void openTargetReview(first.id);
       setMessage(
-        steps.length > 1
-          ? `第 1/${steps.length} 步已预览。先检查并用 PhotoCraft 蒙版修正局部边缘，确认后再执行余下步骤。`
-          : "编辑预览已生成。请检查目标、边缘、标签和背景，确认后应用。",
+        `${first.selectionFallback === "outline" ? "候选像素蒙版不可用，已用轮廓套索重新生成预览；" : ""}${
+          steps.length > 1
+            ? `第 1/${steps.length} 步已预览。先检查并用 PhotoCraft 蒙版修正局部边缘，确认后再执行余下步骤。`
+            : "编辑预览已生成。请检查目标、边缘、标签和背景，确认后应用。"
+        }`,
       );
     } catch (error) {
       if (revision === contextRevision.current) setMessage(String(error));
     } finally {
       setBusy(false);
+    }
+  }
+
+  /** M2 §5 滑杆交接：把已预览作业挂成常驻 live 会话，滑杆直改原生调整层。 */
+  /** M4 §7 滑杆修改幅度：会话打开时的计划初值（每个参数的 delta 基线）。 */
+  function sliderDeltas(session: LiveTuningSession): string {
+    const baseline = liveBaselineRef.current ?? {};
+    const deltas: Record<string, number> = {};
+    for (const key of Object.keys(session.params))
+      deltas[key] =
+        Math.round(((session.params[key] ?? 0) - (baseline[key] ?? 0)) * 100) /
+        100;
+    return JSON.stringify(deltas);
+  }
+
+  async function openLiveTuning() {
+    if (!pending) return;
+    setLiveTuningBusy(true);
+    try {
+      if (liveTuning) await closeLiveTuning(true);
+      const response = await fetch(`${bridge}/v1/live/open`, {
+        method: "POST",
+        headers: { "x-acs-source-job": pending.id },
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "预览会话打开失败");
+      const layers = (data.layers ?? []) as LiveLayerInfo[];
+      // 指令管线新建的调整层就是激活层；否则退回文档里第一个调整层。
+      const target =
+        layers.find(
+          (layer) => layer.id === data.activeLayer && layer.adjustment,
+        ) ?? layers.find((layer) => layer.adjustment);
+      if (!target?.adjustment)
+        throw new Error("当前预览没有带数值参数的调整层");
+      const kind = Object.keys(target.adjustment)[0] ?? "";
+      if (!liveAdjustmentRanges[kind])
+        throw new Error(`该调整层（${kind}）暂不支持滑杆连续调整`);
+      liveBaselineRef.current = { ...target.adjustment[kind] };
+      setLiveTuning({
+        id: data.id,
+        job: data.job,
+        layer: target.id,
+        layerName: target.name,
+        kind,
+        params: { ...target.adjustment[kind] },
+        previewUrl: data.previewUrl,
+      });
+      setMessage(
+        `滑杆已接管「${target.name}」（${liveAdjustmentLabels[kind] ?? kind}）：拖动实时更新预览。`,
+      );
+    } catch (error) {
+      setMessage(String(error));
+    } finally {
+      setLiveTuningBusy(false);
+    }
+  }
+
+  /**
+   * 提交单个滑杆值：一次 layer.setAdjustment + 全尺寸预览重渲。上一笔仍在
+   * 引擎里时跳过本次提交——滑杆松手后的下一笔会带上最新值，不排队。
+   */
+  async function adjustLiveParam(key: string, value: number) {
+    if (!liveTuning || liveTuningBusy) return;
+    setLiveTuningBusy(true);
+    try {
+      const response = await fetch(
+        `${bridge}/v1/live/${liveTuning.id}/adjust`,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            layer: liveTuning.layer,
+            params: { [key]: value },
+          }),
+        },
+      );
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "滑杆调整失败");
+      setPreviewVersion((version) => version + 1);
+      const kind = Object.keys(data.adjustment ?? {})[0];
+      if (kind)
+        setLiveTuning((session) =>
+          session
+            ? {
+                ...session,
+                params: { ...session.params, ...data.adjustment[kind] },
+              }
+            : session,
+        );
+    } catch (error) {
+      setMessage(String(error));
+    } finally {
+      setLiveTuningBusy(false);
+    }
+  }
+
+  /** 关闭滑杆会话但不保存（丢弃微调）；silent 供内部清理路径复用。 */
+  async function closeLiveTuning(silent = false) {
+    const session = liveTuning;
+    if (!session) return;
+    setLiveTuning(null);
+    trackPhotoCraftTelemetry("slider", {
+      lane: nlLaneRef.current,
+      outcome: "discard",
+      kind: session.kind,
+      deltas: sliderDeltas(session),
+    });
+    liveBaselineRef.current = null;
+    try {
+      const response = await fetch(`${bridge}/v1/live/${session.id}/close`, {
+        method: "POST",
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        throw new Error(data?.error ?? "预览会话关闭失败");
+      }
+    } catch (error) {
+      if (!silent) setMessage(String(error));
+    }
+  }
+
+  /** 滑杆微调定稿：save 原地写回可编辑源文件后关闭会话（预览即最终效果）。 */
+  async function finishLiveTuning() {
+    const session = liveTuning;
+    if (!session) return;
+    setLiveTuningBusy(true);
+    try {
+      const saved = await fetch(`${bridge}/v1/live/${session.id}/save`, {
+        method: "POST",
+      });
+      const saveData = await saved.json();
+      if (!saved.ok) throw new Error(saveData.error ?? "滑杆微调保存失败");
+      await fetch(`${bridge}/v1/live/${session.id}/close`, {
+        method: "POST",
+      });
+      trackPhotoCraftTelemetry("slider", {
+        lane: nlLaneRef.current,
+        outcome: "save",
+        kind: session.kind,
+        deltas: sliderDeltas(session),
+      });
+      liveBaselineRef.current = null;
+      setLiveTuning(null);
+      setPreviewVersion((version) => version + 1);
+      setQualityChecks([false, false, false, false]);
+      setMessage(
+        "滑杆微调已写回可编辑源文件；当前预览即最终效果，请检查后应用。",
+      );
+    } catch (error) {
+      setMessage(String(error));
+    } finally {
+      setLiveTuningBusy(false);
     }
   }
 
@@ -1691,13 +3030,20 @@ export default function PhotoCraftStudio() {
         },
       );
       let last: EditResult | null = null;
+      let outlineFallback = false;
       for (let index = completedSteps; index < steps.length; index++) {
         const step = steps[index];
         if (!step) throw new Error("编辑计划缺少步骤");
         setMessage(
           `PhotoCraft 正在执行第 ${index + 1}/${steps.length} 步：${describePhotoCraftPlan(step)}`,
         );
-        last = await executeInstructionStep(current, step, index);
+        last = await executeInstructionStep(
+          current,
+          step,
+          index,
+          outlineFallback ? "manual" : undefined,
+        );
+        if (last.selectionFallback === "outline") outlineFallback = true;
         if (index < steps.length - 1) {
           const nextSource = await fetch(`${bridge}${last.sourceUrl}`);
           if (!nextSource.ok)
@@ -1713,13 +3059,23 @@ export default function PhotoCraftStudio() {
       }
       if (!last) throw new Error("PhotoCraft 未生成最终预览");
       if (revision !== contextRevision.current) return;
+      if (outlineFallback) {
+        setSelectionMethod("manual");
+        setCandidateMaskId(null);
+      }
       setPending(last);
       setCompletedSteps(steps.length);
       setMaskTool("off");
       setMaskHistory([]);
       setShowOriginal(false);
+      const finalStep = steps[steps.length - 1];
+      if (
+        finalStep &&
+        (finalStep.target === "subject" || finalStep.target === "background")
+      )
+        void openTargetReview(last.id);
       setMessage(
-        `全部 ${steps.length} 步已完成。请在原尺寸检查最终预览并完成质量确认。`,
+        `${outlineFallback ? "候选像素蒙版不可用，后续步骤已用轮廓套索完成；" : ""}全部 ${steps.length} 步已完成。请在原尺寸检查最终预览并完成质量确认。`,
       );
     } catch (error) {
       if (revision === contextRevision.current) setMessage(String(error));
@@ -1790,6 +3146,29 @@ export default function PhotoCraftStudio() {
     const sourceBeforeApply = activeSource.current;
     setBusy(true);
     try {
+      // 应用读取的是作业的可编辑源文件；先确保滑杆微调已落盘（live 会话的
+      // save 原地写回同一 source），再关闭会话，避免读到微调前的版本。
+      if (liveTuning) {
+        const tuned = await fetch(`${bridge}/v1/live/${liveTuning.id}/save`, {
+          method: "POST",
+        });
+        if (!tuned.ok) {
+          const data = await tuned.json().catch(() => null);
+          throw new Error(data?.error ?? "滑杆微调保存失败");
+        }
+        await fetch(`${bridge}/v1/live/${liveTuning.id}/close`, {
+          method: "POST",
+        });
+        trackPhotoCraftTelemetry("slider", {
+          lane: nlLaneRef.current,
+          outcome: "save",
+          kind: liveTuning.kind,
+          deltas: sliderDeltas(liveTuning),
+        });
+        liveBaselineRef.current = null;
+        setLiveTuning(null);
+        setPreviewVersion((version) => version + 1);
+      }
       const response = await fetch(`${bridge}${pending.sourceUrl}`);
       if (!response.ok) throw new Error("无法读取 PhotoCraft 可编辑源");
       const bytes = await response.arrayBuffer();
@@ -1817,6 +3196,12 @@ export default function PhotoCraftStudio() {
       );
       currentId.current = saved.id;
       title.current = saved.title;
+      trackPhotoCraftTelemetry("apply", {
+        lane: nlLaneRef.current,
+        grade,
+        steps: steps.length || 1,
+        uploadCloud,
+      });
       activeSource.current = new File([bytes], `${saved.title}.pcraft`, {
         type: "application/x-photocraft",
       });
@@ -1840,6 +3225,7 @@ export default function PhotoCraftStudio() {
       setScopeRect(null);
       setProtectRect(null);
       setRectCorner(null);
+      setCandidateMaskId(null);
       setSelectionMode("scope");
       setSelectionMethod("object");
       setPlan(null);
@@ -2196,12 +3582,24 @@ export default function PhotoCraftStudio() {
             maxLength={240}
             value={instruction}
             onChange={(event) => {
+              const next = event.target.value;
               contextRevision.current += 1;
-              setInstruction(event.target.value);
+              setInstruction(next);
               setPlan(null);
               setSteps([]);
               setPlanConfirmed(false);
               setPending(null);
+              setExplainConfirm(null);
+              setPlanDefaults([]);
+              // 「第X个」是对打开中提议环的口语确认，不当作新要求清场。
+              if (ordinalIndex(next) === null) {
+                setTargetReview(null);
+                setMaskBounds(null);
+                setTargetGap(null);
+                setProtectGap(null);
+                setPartCandidates(null);
+              }
+              void closeLiveTuning(true);
               setMessage("");
             }}
           />
@@ -2214,6 +3612,197 @@ export default function PhotoCraftStudio() {
           >
             {busy ? "正在处理…" : "解析编辑要求"}
           </button>
+          {explainConfirm && (
+            <div className="pc-explain-confirm">
+              <strong>我理解为：{explainConfirm.description}，对吗？</strong>
+              {explainConfirm.issues.length > 0 && (
+                <ul>
+                  {explainConfirm.issues.map((issue) => (
+                    <li key={issue}>{issue}</li>
+                  ))}
+                </ul>
+              )}
+              <div className="pc-explain-actions">
+                <button type="button" onClick={confirmExplain}>
+                  对，按此理解执行
+                </button>
+                <button type="button" onClick={correctExplain}>
+                  不对，我重新描述
+                </button>
+              </div>
+              <p>
+                云端解析与你的原话未完全对上（round-trip
+                蕴含核对未通过），因此不直接执行，先由你确认。
+              </p>
+            </div>
+          )}
+          {colorChoice && !busy && (
+            <div className="pc-target-review">
+              <strong>未说明目标颜色</strong>
+              <p>
+                「换个颜色」缺少想换成什么颜色——这是语义必需项，不再默认灰色
+                预览。点选目标色后按原要求重解析：
+              </p>
+              <div className="pc-target-actions">
+                {["红", "蓝", "绿", "黑", "灰"].map((color) => (
+                  <button
+                    key={color}
+                    type="button"
+                    onClick={() => chooseRecolorColor(color)}
+                  >
+                    {color}色
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {targetGap && !candidateBusy && !partCandidates && (
+            <div className="pc-target-review">
+              <strong>目标「{targetGap.phrase}」需要指定范围</strong>
+              <p>
+                本机视觉模型（SAM 分割 + 中文 CLIP
+                对齐，全部在本机运行）可以在图上圈出「{targetGap.phrase}
+                」的候选区域，编号后由你确认。
+              </p>
+              <div className="pc-target-actions">
+                <button
+                  type="button"
+                  disabled={busy || !(activeSource.current ?? file)}
+                  onClick={() => void findPartCandidates("target")}
+                >
+                  智能找目标：{targetGap.phrase}
+                </button>
+                {sourceInfo?.hasSelection && (
+                  <button type="button" onClick={useExistingSelectionForGap}>
+                    用已保存的原生选区
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTargetGap(null);
+                    setMessage(
+                      "请直接在图片上画框或套索，再点「解析编辑要求」。",
+                    );
+                  }}
+                >
+                  改用手动画框
+                </button>
+              </div>
+              {(() => {
+                // M3 grounding 级 1（文档上下文）：PSD/.pcraft 命名图层命中提示。
+                const named =
+                  sourceInfo?.layerDetails?.find((layer) => {
+                    const name = layer.name?.trim() ?? "";
+                    return (
+                      name.length > 0 &&
+                      (name.includes(targetGap.phrase) ||
+                        targetGap.phrase.includes(name))
+                    );
+                  })?.name ?? null;
+                return named ? (
+                  <p>
+                    提示：这个文件里有名为「{named}
+                    」的图层。引擎注册表没有图层范围查询命令，圈定范围仍需下面的候选/画框；若只要编辑该图层，可在
+                    PhotoCraft 里把它单独选中后用「使用原生选区」。
+                  </p>
+                ) : null;
+              })()}
+            </div>
+          )}
+          {protectGap && !candidateBusy && !partCandidates && (
+            <div className="pc-target-review">
+              <strong>保护范围「{protectGap.phrase}」需要圈定</strong>
+              <p>
+                这条要求保护「{protectGap.phrase}
+                」不被改动。可用同一视觉模型圈出候选保护框（编号确认），或用蒙版笔刷手画保护框。
+              </p>
+              <div className="pc-target-actions">
+                <button
+                  type="button"
+                  disabled={busy || !(activeSource.current ?? file)}
+                  onClick={() => void findPartCandidates("protect")}
+                >
+                  智能找保护框：{protectGap.phrase}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setProtectGap(null);
+                    setMessage(
+                      "请用蒙版笔刷切到「画保护框」模式手画保护区域。",
+                    );
+                  }}
+                >
+                  改用手画保护框
+                </button>
+              </div>
+            </div>
+          )}
+          {candidateBusy && (
+            <div className="pc-target-review">
+              <p>
+                本机视觉模型正在圈选「
+                {(targetGap ?? protectGap)?.phrase ?? ""}
+                」候选区域…（SAM 网格分割约需一两分钟）
+              </p>
+            </div>
+          )}
+          {partCandidates && (
+            <div className="pc-target-review">
+              <strong>
+                {partCandidates.mode === "target" ? "目标" : "保护范围"}
+                审核（提议
+                {partCandidates.chosen === null ? "待确认" : "已确认"}）：「"
+                {partCandidates.phrase}」
+                {partCandidates.chosen !== null &&
+                  `（候选 ${partCandidates.chosen + 1}）`}
+              </strong>
+              {partCandidates.chosen === null ? (
+                <>
+                  <p>
+                    候选区域已编号叠在图片上，匹配分数由中文 CLIP
+                    对齐打分（本批候选的相对排名，非正确率）。点编号框、下方按钮，或把要求改成「第几个」再解析即可确认。
+                  </p>
+                  <div className="pc-target-actions">
+                    {partCandidates.candidates.map((item, position) => (
+                      <button
+                        key={item.index}
+                        type="button"
+                        disabled={candidateBusy}
+                        onClick={() =>
+                          choosePartCandidate(position, false, partCandidates)
+                        }
+                      >
+                        候选{position + 1}（{Math.round(item.score * 100)}%）
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      disabled={candidateBusy}
+                      onClick={() => {
+                        setPartCandidates(null);
+                        setMessage(
+                          partCandidates.mode === "target"
+                            ? "请直接在图片上画框或套索指定范围。"
+                            : "请用蒙版笔刷切到「画保护框」模式手画保护区域。",
+                        );
+                      }}
+                    >
+                      都不对，手动画
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <p className="pc-candidate-current">
+                  已选候选 {partCandidates.chosen + 1}，
+                  {partCandidates.mode === "target"
+                    ? "其轮廓已作为套索选区生效；点其它编号可更换，或直接点「预览编辑」。"
+                    : "已设为保护框；点其它编号可更换。"}
+                </p>
+              )}
+            </div>
+          )}
           <h3>生成式局部编辑</h3>
           <label htmlFor="pc-generation-mode">生成任务</label>
           <select
@@ -2437,14 +4026,37 @@ export default function PhotoCraftStudio() {
                   <input
                     type="checkbox"
                     checked={planConfirmed}
-                    onChange={(event) => setPlanConfirmed(event.target.checked)}
+                    onChange={(event) =>
+                      togglePlanConfirmed(event.target.checked)
+                    }
                   />
                   我已检查全部步骤、标签保护和方图构图
                 </label>
               </div>
             ) : (
-              <p className="pc-plan">计划：{describePhotoCraftPlan(plan)}</p>
+              <div className="pc-plan">
+                <p>计划：{describePhotoCraftPlan(plan)}</p>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={planConfirmed}
+                    onChange={(event) =>
+                      togglePlanConfirmed(event.target.checked)
+                    }
+                  />
+                  我已检查该计划（操作、幅度与保护范围）——确认后才可应用或发起批量
+                </label>
+              </div>
             ))}
+          {planDefaults.length > 0 && plan && (
+            <p className="pc-plan-defaults">
+              默认值已代填：
+              {planDefaults
+                .map((slot) => `${slot.slot}=${slot.value}（${slot.rule}）`)
+                .join("；")}
+              。预览后可直接微调——数字的职责交给滑杆。
+            </p>
+          )}
           <p>
             {plan?.operation === "crop"
               ? "裁切由 PhotoCraft 执行：在图片上拖动画框指定保留区域，预览后再应用。"
@@ -2468,7 +4080,10 @@ export default function PhotoCraftStudio() {
                                 ? "点击图片上的文字放置位置；PhotoCraft 将创建可编辑文字图层。"
                                 : plan?.target === "whole-image"
                                   ? "整图调整由 PhotoCraft 的可编辑调整层执行，无需画选区。"
-                                  : `优先用 PhotoCraft 智能选物体：${plan?.target === "hat" ? "要改整顶帽子，请画框完整包住帽身和帽沿。" : plan?.target === "brim" ? "只改帽沿，请画框完整包住帽沿。" : "在目标周围画框。"}复杂边界可切换手动套索、补选和剔除。需要保留标签时，另画标签保护框。`}
+                                  : plan?.target === "subject" ||
+                                      plan?.target === "background"
+                                    ? `已用 AI 主体蒙版自动选定${plan?.target === "subject" ? "主体" : "背景"}，无需画框，可直接预览。需要把效果限制在局部时，可另画框或轮廓；边缘不理想时用 PhotoCraft 蒙版画笔修整。`
+                                    : `优先用 PhotoCraft 智能选物体：${plan?.target === "hat" ? "要改整顶帽子，请画框完整包住帽身和帽沿。" : plan?.target === "brim" ? "只改帽沿，请画框完整包住帽沿。" : "在目标周围画框。"}复杂边界可切换手动套索、补选和剔除。需要保留标签时，另画标签保护框。`}
           </p>
           {plan?.operation !== "heal" &&
             plan?.operation !== "text" &&
@@ -2484,6 +4099,7 @@ export default function PhotoCraftStudio() {
                 <select
                   id="pc-selection-method"
                   value={selectionMethod}
+                  disabled={candidateBusy}
                   onChange={(event) => {
                     const method = event.target.value as
                       | "manual"
@@ -2502,6 +4118,9 @@ export default function PhotoCraftStudio() {
                   </option>
                   <option value="manual">手动取样 / 套索</option>
                   <option value="provider">AI 边缘蒙版 → PhotoCraft</option>
+                  {selectionMethod === "mask" && (
+                    <option value="mask">已确认候选像素蒙版</option>
+                  )}
                 </select>
                 {selectionMethod === "provider" &&
                   plan?.target !== "whole-image" &&
@@ -2509,7 +4128,11 @@ export default function PhotoCraftStudio() {
                     <>
                       <p>
                         用本机分割 Provider 提供主体边缘，再由 PhotoCraft
-                        创建可编辑蒙版。画框或点击轮廓点限定要完整换色的部位；轮廓更适合耳朵等不规则局部，请检查边缘和耳根连接。
+                        创建可编辑蒙版。
+                        {plan?.target === "subject" ||
+                        plan?.target === "background"
+                          ? "主体/背景目标无需画框即可直接预览；画框或轮廓只用来把效果进一步限制在局部。"
+                          : "画框或点击轮廓点限定要完整换色的部位；轮廓更适合耳朵等不规则局部，请检查边缘和耳根连接。"}
                       </p>
                       <label htmlFor="pc-provider-scope-feather">
                         范围内侧过渡：{providerScopeFeather} 像素
@@ -2753,6 +4376,10 @@ export default function PhotoCraftStudio() {
                         type="button"
                         disabled={busy}
                         onClick={() => {
+                          trackPhotoCraftTelemetry("undo", {
+                            lane: nlLaneRef.current,
+                            kind: "mask-refine",
+                          });
                           setPending(maskHistory.at(-1) ?? null);
                           setMaskHistory(maskHistory.slice(0, -1));
                           setMessage("已撤销上一笔蒙版精修。");
@@ -2771,7 +4398,7 @@ export default function PhotoCraftStudio() {
                   <img
                     src={
                       pending && !showOriginal
-                        ? `${bridge}${pending.previewUrl}`
+                        ? `${bridge}${pending.previewUrl}?v=${previewVersion}`
                         : samplePreview
                     }
                     alt={
@@ -2788,6 +4415,7 @@ export default function PhotoCraftStudio() {
                       ]);
                     }}
                     onPointerDown={(event) => {
+                      if (candidateBusy) return;
                       if (pending) {
                         if (
                           maskTool === "off" ||
@@ -2813,6 +4441,7 @@ export default function PhotoCraftStudio() {
                       event.currentTarget.setPointerCapture(event.pointerId);
                     }}
                     onPointerMove={(event) => {
+                      if (candidateBusy) return;
                       if (pending) {
                         if (strokePoints.current.length === 0) return;
                         const next = imagePoint(event);
@@ -2867,6 +4496,12 @@ export default function PhotoCraftStudio() {
                       ]);
                     }}
                     onPointerUp={(event) => {
+                      if (candidateBusy) {
+                        pointerStart.current = null;
+                        freehandPoints.current = [];
+                        setDragRect(null);
+                        return;
+                      }
                       if (pending) {
                         if (strokePoints.current.length > 0) {
                           const points = strokePoints.current;
@@ -3081,6 +4716,71 @@ export default function PhotoCraftStudio() {
                       }}
                     />
                   )}
+                  {targetReview && maskBounds && pending && !showOriginal && (
+                    <>
+                      <div
+                        className={`pc-sample-box candidate${plan?.target === "subject" ? " active" : ""}${maskTool === "off" ? " interactive" : ""}`}
+                        style={{
+                          left: `${(maskBounds.subject[0] / sampleSize[0]) * 100}%`,
+                          top: `${(maskBounds.subject[1] / sampleSize[1]) * 100}%`,
+                          width: `${(maskBounds.subject[2] / sampleSize[0]) * 100}%`,
+                          height: `${(maskBounds.subject[3] / sampleSize[1]) * 100}%`,
+                        }}
+                        onClick={(event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          selectTargetCandidate("subject");
+                        }}
+                      >
+                        <span className="pc-candidate-badge">1 主体</span>
+                      </div>
+                      <div
+                        className={`pc-sample-box candidate background${plan?.target === "background" ? " active" : ""}${maskTool === "off" ? " interactive" : ""}`}
+                        style={{
+                          left: `${(maskBounds.background[0] / sampleSize[0]) * 100}%`,
+                          top: `${(maskBounds.background[1] / sampleSize[1]) * 100}%`,
+                          width: `${(maskBounds.background[2] / sampleSize[0]) * 100}%`,
+                          height: `${(maskBounds.background[3] / sampleSize[1]) * 100}%`,
+                        }}
+                        onClick={(event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          selectTargetCandidate("background");
+                        }}
+                      >
+                        <span className="pc-candidate-badge background">
+                          2 背景
+                        </span>
+                      </div>
+                    </>
+                  )}
+                  {partCandidates &&
+                    !showOriginal &&
+                    partCandidates.candidates.map((item, position) => (
+                      <div
+                        key={`part-${item.index}-${partCandidates.mode}`}
+                        className={`pc-sample-box candidate${partCandidates.chosen === position ? " active" : ""}${maskTool === "off" && !candidateBusy ? " interactive" : ""}`}
+                        style={{
+                          left: `${(item.bounds[0] / sampleSize[0]) * 100}%`,
+                          top: `${(item.bounds[1] / sampleSize[1]) * 100}%`,
+                          width: `${(item.bounds[2] / sampleSize[0]) * 100}%`,
+                          height: `${(item.bounds[3] / sampleSize[1]) * 100}%`,
+                        }}
+                        onClick={(event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          if (candidateBusy) return;
+                          choosePartCandidate(position, false, partCandidates);
+                        }}
+                      >
+                        <span className="pc-candidate-badge">
+                          {position + 1}{" "}
+                          {partCandidates.mode === "protect" ? "保护" : ""}
+                          {partCandidates.phrase} {Math.round(item.score * 100)}
+                          %
+                        </span>
+                      </div>
+                    ))}
                 </div>
               </div>
             </>
@@ -3093,6 +4793,7 @@ export default function PhotoCraftStudio() {
             protectRect) && (
             <button
               type="button"
+              disabled={candidateBusy}
               onClick={() => {
                 setPoints([]);
                 setOutline([]);
@@ -3102,6 +4803,7 @@ export default function PhotoCraftStudio() {
                 setRectCorner(null);
                 setScopeRect(null);
                 setProtectRect(null);
+                setCandidateMaskId(null);
                 setPending(null);
                 setForegroundStage(false);
                 setCompletedSteps(0);
@@ -3118,6 +4820,7 @@ export default function PhotoCraftStudio() {
               !samplePreview ||
               !plan ||
               canvasOutOfSync ||
+              candidateBusy ||
               busy ||
               (steps.length > 1 && !planConfirmed)
             }
@@ -3125,6 +4828,143 @@ export default function PhotoCraftStudio() {
           >
             预览编辑
           </button>
+          {pending &&
+            !foregroundStage &&
+            completedSteps === (steps.length || 1) &&
+            (plan?.operation === "adjust" || plan?.operation === "levels") && (
+              <div className="pc-live-tuning">
+                {liveTuning ? (
+                  <>
+                    <strong>
+                      滑杆微调：{liveTuning.layerName}（
+                      {liveAdjustmentLabels[liveTuning.kind] ?? liveTuning.kind}
+                      ）
+                    </strong>
+                    {Object.entries(
+                      liveAdjustmentRanges[liveTuning.kind] ?? {},
+                    ).map(([key, [min, max]]) => (
+                      <label key={key} htmlFor={`pc-live-${key}`}>
+                        {liveParamLabels[key] ?? key}：
+                        {liveTuning.params[key] ?? 0}
+                        <input
+                          id={`pc-live-${key}`}
+                          type="range"
+                          min={min}
+                          max={max}
+                          step={max - min > 60 ? 1 : 0.01}
+                          value={liveTuning.params[key] ?? 0}
+                          disabled={liveTuningBusy}
+                          onChange={(event) =>
+                            setLiveTuning((session) =>
+                              session
+                                ? {
+                                    ...session,
+                                    params: {
+                                      ...session.params,
+                                      [key]: Number(event.target.value),
+                                    },
+                                  }
+                                : session,
+                            )
+                          }
+                          onPointerUp={(event) =>
+                            void adjustLiveParam(
+                              key,
+                              Number(event.currentTarget.value),
+                            )
+                          }
+                          onKeyUp={(event) =>
+                            void adjustLiveParam(
+                              key,
+                              Number(event.currentTarget.value),
+                            )
+                          }
+                        />
+                      </label>
+                    ))}
+                    <div className="pc-live-actions">
+                      <button
+                        type="button"
+                        disabled={liveTuningBusy}
+                        onClick={() => void finishLiveTuning()}
+                      >
+                        保存微调并结束
+                      </button>
+                      <button
+                        type="button"
+                        disabled={liveTuningBusy}
+                        onClick={() => void closeLiveTuning()}
+                      >
+                        放弃微调
+                      </button>
+                    </div>
+                    <p>
+                      每次拖动都直接修改 PhotoCraft
+                      原生调整层并重渲全尺寸预览（预览即最终效果）；保存后写回可编辑源文件。
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      disabled={liveTuningBusy}
+                      onClick={() => void openLiveTuning()}
+                    >
+                      {liveTuningBusy ? "正在打开…" : "滑杆微调此预览"}
+                    </button>
+                    <p>
+                      预览由可编辑调整层生成；点这里改用滑杆直接调数值，无需重新解析。
+                    </p>
+                  </>
+                )}
+              </div>
+            )}
+          {targetReview &&
+            pending &&
+            (plan?.target === "subject" || plan?.target === "background") && (
+              <div className="pc-target-review">
+                <strong>
+                  目标审核
+                  {targetReview.confirmed ? "（已确认）" : "（提议待确认）"}
+                </strong>
+                <p>
+                  候选区域已编号叠在预览上：① 主体 ②
+                  背景。点编号框或下方按钮确认；
+                  识别不准时可用蒙版画笔修边，或改用手动画框。
+                </p>
+                <div className="pc-target-actions">
+                  <button
+                    type="button"
+                    disabled={busy}
+                    className={
+                      plan?.target === "subject" ? "pc-candidate-current" : ""
+                    }
+                    onClick={() => selectTargetCandidate("subject")}
+                  >
+                    ① 主体
+                  </button>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    className={
+                      plan?.target === "background"
+                        ? "pc-candidate-current"
+                        : ""
+                    }
+                    onClick={() => selectTargetCandidate("background")}
+                  >
+                    ② 背景
+                  </button>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => selectTargetCandidate("manual")}
+                  >
+                    ③ 手动画框
+                  </button>
+                </div>
+              </div>
+            )}
           {pending && (
             <div className="pc-spike-result">
               {completedSteps < steps.length ? (
@@ -3493,6 +5333,200 @@ export default function PhotoCraftStudio() {
                   )}
                 </div>
               )}
+              <div className="pc-batch-recipe">
+                <h3>批量配方（确认一次，套全目录）</h3>
+                {!cloudSourceReady || !currentCloudVersion.current ? (
+                  <p>
+                    先打开已保存到云端的单图项目并确认编辑计划，再从这里把同一配方套到整个目录。
+                  </p>
+                ) : !planConfirmed ? (
+                  <p>请先在单图上勾选确认当前编辑计划，再发起批量套用。</p>
+                ) : !batchRecipeDraft.steps ? (
+                  <p>{batchRecipeDraft.error}</p>
+                ) : !batchConfirmation ? (
+                  <p>
+                    正在服务端登记配方确认记录；若长时间停留在此，请取消并重新勾选确认计划。
+                  </p>
+                ) : batchConfirmation.source.version !==
+                  currentCloudVersion.current ? (
+                  <p>
+                    配方确认记录已过期（源项目产生了新版本），请重新勾选确认计划。
+                  </p>
+                ) : (
+                  <>
+                    <p>
+                      配方来源：项目「{title.current}」云端第{" "}
+                      {batchConfirmation.source.version} 版，服务端已登记确认（
+                      {new Date(batchConfirmation.confirmedAt).toLocaleString()}
+                      ）；来源版本变化会整批拒绝并要求重新确认。同一确认与目标
+                      清单的重试/刷新恢复复用同一请求键，不会重复扣费。
+                    </p>
+                    <ol>
+                      {batchRecipeDraft.steps.map((step, index) => (
+                        <li key={index}>{describePhotoCraftBatchStep(step)}</li>
+                      ))}
+                    </ol>
+                    <div className="pc-batch-targets">
+                      <button
+                        type="button"
+                        disabled={batchBusy || cloudProjects.length === 0}
+                        onClick={() =>
+                          setBatchTargets(cloudProjects.map((item) => item.id))
+                        }
+                      >
+                        全选目录
+                      </button>
+                      <button
+                        type="button"
+                        disabled={batchBusy || batchTargets.length === 0}
+                        onClick={() => setBatchTargets([])}
+                      >
+                        清空
+                      </button>
+                      <span>
+                        已选 {batchTargets.length}/{cloudProjects.length}{" "}
+                        张（单批上限 {PHOTO_CRAFT_BATCH_PROJECT_LIMIT}）
+                      </span>
+                    </div>
+                    <ul className="pc-batch-project-list">
+                      {cloudProjects.map((project) => (
+                        <li key={project.id}>
+                          <label>
+                            <input
+                              type="checkbox"
+                              disabled={batchBusy}
+                              checked={batchTargets.includes(project.id)}
+                              onChange={(event) =>
+                                setBatchTargets((current) =>
+                                  event.target.checked
+                                    ? [...current, project.id]
+                                    : current.filter((id) => id !== project.id),
+                                )
+                              }
+                            />
+                            {project.title} · 云端第 {project.version} 版
+                            {project.id === currentId.current
+                              ? "（配方来源：勾选会在源图上再执行一次）"
+                              : ""}
+                          </label>
+                        </li>
+                      ))}
+                    </ul>
+                    <p>
+                      按张计费：本次预计消耗 {batchTargets.length}{" "}
+                      积分；当前可用 {cloudCredits ?? "—"}
+                      {cloudCredits !== null &&
+                      cloudCredits < batchTargets.length
+                        ? "（不足：整批不会入队，不产生扣费）"
+                        : ""}
+                      。不可用的项目会被跳过并列出，跳过项不扣费。
+                    </p>
+                    <label className="pc-quality-check">
+                      <input
+                        type="checkbox"
+                        disabled={batchBusy || batchTargets.length === 0}
+                        checked={batchAck}
+                        onChange={(event) => setBatchAck(event.target.checked)}
+                      />
+                      我已核对以上配方与目标清单，确认提交批量任务。
+                    </label>
+                    <button
+                      type="button"
+                      disabled={
+                        !batchAck ||
+                        batchBusy ||
+                        cloudJobBusy ||
+                        batchTargets.length === 0 ||
+                        batchTargets.length > PHOTO_CRAFT_BATCH_PROJECT_LIMIT ||
+                        (cloudCredits !== null &&
+                          cloudCredits < batchTargets.length)
+                      }
+                      onClick={() => void submitBatchRecipe()}
+                    >
+                      {batchBusy ? "批量任务执行中…" : "确认并提交批量任务"}
+                    </button>
+                    {batchStatus && !batchBusy && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          // R3：明确发起一次新批次才换请求键（attempt+1）；
+                          // 重跑前清空上轮结果并撤销确认勾选。
+                          setBatchAttempt((value) => value + 1);
+                          setBatchStatus(null);
+                          setBatchSkipped(null);
+                          setBatchAck(false);
+                        }}
+                      >
+                        对同一配方与目标再跑一批（新批次、按张计费）
+                      </button>
+                    )}
+                    {batchSkipped && batchSkipped.length > 0 && (
+                      <div role="status">
+                        <strong>
+                          跳过 {batchSkipped.length} 项（项目不可用，未扣费）
+                        </strong>
+                        <ul>
+                          {batchSkipped.map((item) => (
+                            <li key={item.projectId}>
+                              {cloudProjects.find(
+                                (project) => project.id === item.projectId,
+                              )?.title ?? item.projectId}
+                              ：{item.reason}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {batchStatus && (
+                      <div role="status">
+                        <strong>批次进度（{batchStatus.requestKey}）</strong>
+                        <p>
+                          共 {batchStatus.total} 张：排队{" "}
+                          {batchStatus.statuses.queued ?? 0} · 执行中{" "}
+                          {batchStatus.statuses.running ?? 0} · 成功{" "}
+                          {batchStatus.statuses.succeeded ?? 0} · 失败{" "}
+                          {batchStatus.statuses.failed ?? 0}
+                        </p>
+                        <p>
+                          质量门抽样复检 {batchStatus.sampledJobIds.length}{" "}
+                          张（确定性抽样，与执行侧同一函数）
+                          {batchStatus.source
+                            ? `；来源：项目 ${
+                                cloudProjects.find(
+                                  (project) =>
+                                    project.id ===
+                                    batchStatus.source!.projectId,
+                                )?.title ?? batchStatus.source.projectId
+                              } 第 ${batchStatus.source.version} 版，确认于 ${new Date(
+                                batchStatus.source.confirmedAt,
+                              ).toLocaleString()}（配方摘要 ${
+                                batchStatus.source.stepsDigest?.slice(0, 8) ??
+                                "—"
+                              }）`
+                            : "；本批次为 0015 之前的历史批次，无来源记录"}
+                        </p>
+                        {batchStatus.jobs.some(
+                          (job) => job.status === "failed",
+                        ) && (
+                          <ul>
+                            {batchStatus.jobs
+                              .filter((job) => job.status === "failed")
+                              .map((job) => (
+                                <li key={job.id}>
+                                  {cloudProjects.find(
+                                    (project) => project.id === job.projectId,
+                                  )?.title ?? job.projectId}
+                                  （{job.errorCode ?? "UNKNOWN"}
+                                  ，原版本未被替换，积分退回）
+                                </li>
+                              ))}
+                          </ul>
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
               {cloudProjects.length === 0 && (
                 <p>当前工作区暂无 PhotoCraft 项目。</p>
               )}

@@ -21,11 +21,10 @@ export function nativeCatalog(cli) {
   return cachedCatalog;
 }
 
-export async function executeNativePlan({ cli, input, output, commands, run }) {
+export function validateNativeSteps(cli, commands) {
   if (!Array.isArray(commands) || commands.length < 1 || commands.length > 64)
     throw new Error("PhotoCraft 命令步骤数无效");
   const catalog = nativeCatalog(cli);
-  const args = ["run", input];
   for (const step of commands) {
     if (
       !step ||
@@ -35,6 +34,13 @@ export async function executeNativePlan({ cli, input, output, commands, run }) {
       Array.isArray(step.params)
     )
       throw new Error(`PhotoCraft 命令无效：${step?.id ?? "unknown"}`);
+  }
+}
+
+export async function executeNativePlan({ cli, input, output, commands, run }) {
+  validateNativeSteps(cli, commands);
+  const args = ["run", input];
+  for (const step of commands) {
     args.push("--cmd", step.id, "--params", JSON.stringify(step.params));
   }
   args.push("--out", output);
@@ -50,6 +56,7 @@ export function supportedCapabilities(cli) {
       "select.rect",
       "select.refineEdge",
       "select.colorRange",
+      "select.inverse",
       "select.modify.expand",
       "select.modify.contract",
       "select.modify.feather",

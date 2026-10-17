@@ -1,15 +1,27 @@
-import { execFileSync, spawn } from "node:child_process";
+import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import {
+  appendFile,
+  mkdir,
+  readFile,
+  rename,
+  stat,
+  writeFile,
+} from "node:fs/promises";
 import { createServer } from "node:http";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { capabilityFor } from "./capability-manifest.mjs";
+import { parseImageSize } from "./grounding-contract.mjs";
+import { validateLiveAdjustment } from "./live-adjustments.mjs";
+import { cachedSubjectMask } from "./mask-cache.mjs";
 import {
   executeNativePlan,
   supportedCapabilities,
+  validateNativeSteps,
 } from "./native-command-adapter.mjs";
 import { prepareSelection, verifySelection } from "./selection-adapter.mjs";
+import { createServeTransport } from "./serve-session.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const cli = join(
@@ -17,11 +29,30 @@ const cli = join(
   ".tools/photocraft-0.6.0/desktop/photocraft-0.6.0-windows-x64-portable/photocraft-cli.exe",
 );
 const jobs = join(root, ".tools/photocraft-bridge/jobs");
+// M4 §7 线上回流（τ 校准，方案 §10）：确认环点击率 / 滑杆修改幅度 / 撤销率
+// 按解析器分桶。事件只落本地 JSONL（.tools 为 gitignored 本机目录），
+// scripts/photocraft/calibrate-tau.mjs 离线汇总；桥是 dev 拓扑里浏览器唯一
+// 可达的本机入口（与 ADR-0011 的 MCP-as-QA 边界同构），不连任何外部服务。
+const telemetryFile = join(root, ".tools/photocraft-serve-qa/telemetry.jsonl");
+const telemetryEvents = new Set([
+  "interpret", // 解析路由：双轨（sequence/express/model）与 gap 分道
+  "ring-open", // 提议-确认环打开（target-review / open-vocab / explain）
+  "ring-outcome", // 环结果：confirm / reject / retarget / manual / auto / override
+  "slider", // 滑杆交接定稿/放弃 + 各参数相对计划初值的修改幅度
+  "undo", // 撤销（蒙版精修回退）
+  "apply", // 质量门通过后的最终应用
+]);
 const port = Number(process.env.PHOTOCRAFT_BRIDGE_PORT ?? 4112);
 const pinnedVersion = "0.6.0";
 const maxActiveRequests = 1;
 let activeRequests = 0;
 const maskProvider = "http://127.0.0.1:4101/v1/masks/remove-background";
+// M3 grounding level 3: local SAM+Chinese-CLIP parts service (see
+// scripts/photocraft/parts-candidates.py). Port-shifted like the mask
+// provider: the shim topology keeps 4101/4102 for rembg.
+const partsCandidateProvider =
+  process.env.PHOTOCRAFT_PARTS_PROVIDER ??
+  "http://127.0.0.1:4104/v1/candidates";
 const maxBytes = 20 * 1024 * 1024;
 const origins = new Set([
   "http://localhost:3000",
@@ -45,6 +76,47 @@ function json(response, status, value) {
   response.end(JSON.stringify(value));
 }
 
+// Rejecting a request from its headers answers before the (potentially
+// multi-hundred-KB) body has been consumed; destroying the socket mid-upload
+// makes proxies report ECONNRESET/ECONNABORTED instead of the 4xx they should
+// forward. Drain whatever is still in flight, then answer.
+function jsonAfterBody(request, response, status, value) {
+  if (request.readableEnded || request.destroyed) {
+    json(response, status, value);
+    return;
+  }
+  let answered = false;
+  const answer = () => {
+    if (answered) return;
+    answered = true;
+    json(response, status, value);
+  };
+  request.on("error", answer);
+  request.on("close", answer);
+  request.on("end", answer);
+  request.resume();
+}
+
+// 204 must stay body-less; reuse the drain-then-answer pattern of jsonAfterBody.
+function noContentAfterBody(request, response) {
+  if (request.readableEnded || request.destroyed) {
+    response.writeHead(204);
+    response.end();
+    return;
+  }
+  let answered = false;
+  const answer = () => {
+    if (answered) return;
+    answered = true;
+    response.writeHead(204);
+    response.end();
+  };
+  request.on("error", answer);
+  request.on("close", answer);
+  request.on("end", answer);
+  request.resume();
+}
+
 async function body(request, limit = maxBytes) {
   const chunks = [];
   let size = 0;
@@ -58,33 +130,14 @@ async function body(request, limit = maxBytes) {
   return Buffer.concat(chunks);
 }
 
+// Persistent serve session: same CLI argv surface as the previous cold-start
+// spawn, without per-request process launches (ADR: serve transport, M2).
+const transport = createServeTransport({ cli, root });
+const liveJobs = new Map(); // liveId -> jobId
+const fetchSubjectMask = cachedSubjectMask(maskProvider);
+
 function run(args) {
-  return new Promise((resolveRun, rejectRun) => {
-    const child = spawn(cli, args, { cwd: root, windowsHide: true });
-    let stdout = "";
-    let stderr = "";
-    let timedOut = false;
-    const timer = setTimeout(() => {
-      timedOut = true;
-      child.kill();
-    }, 120_000);
-    child.stdout.on("data", (data) => {
-      stdout = (stdout + data.toString()).slice(-64_000);
-    });
-    child.stderr.on("data", (data) => {
-      stderr = (stderr + data.toString()).slice(-64_000);
-    });
-    child.on("error", rejectRun);
-    child.on("close", (code) => {
-      clearTimeout(timer);
-      if (timedOut) rejectRun(new Error("PhotoCraft 任务超时，请重试"));
-      else if (code === 0) resolveRun(stdout);
-      else
-        rejectRun(
-          new Error(stderr.slice(0, 500) || `PhotoCraft 退出码 ${code}`),
-        );
-    });
-  });
+  return transport.runCli(args);
 }
 
 async function objectSelection(input, rect) {
@@ -126,7 +179,7 @@ async function handleRequest(request, response) {
   response.setHeader("access-control-allow-methods", "GET, POST, OPTIONS");
   response.setHeader(
     "access-control-allow-headers",
-    "content-type, x-acs-hue, x-acs-plan, x-acs-points, x-acs-rect, x-acs-outline, x-acs-patches, x-acs-edge-shift, x-acs-edge-feather, x-acs-protect-rect, x-acs-selection-method, x-acs-heal-size, x-acs-provider-scope-feather, x-acs-source-job, x-acs-generation-rect, x-acs-generation-selection, x-acs-generation-outline, x-acs-foreground-selection, x-acs-foreground-outline, x-acs-foreground-patches, x-acs-foreground-rect, x-acs-background-shadow",
+    "content-type, x-acs-hue, x-acs-plan, x-acs-plan-b64, x-acs-points, x-acs-rect, x-acs-outline, x-acs-patches, x-acs-edge-shift, x-acs-edge-feather, x-acs-protect-rect, x-acs-selection-method, x-acs-selection-mask-id, x-acs-heal-size, x-acs-provider-scope-feather, x-acs-source-job, x-acs-generation-rect, x-acs-generation-selection, x-acs-generation-outline, x-acs-foreground-selection, x-acs-foreground-outline, x-acs-foreground-patches, x-acs-foreground-rect, x-acs-background-shadow",
   );
   response.setHeader("cache-control", "no-store");
   if (request.method === "OPTIONS") {
@@ -143,7 +196,52 @@ async function handleRequest(request, response) {
       version: pinnedVersion,
       activeRequests,
       maxActiveRequests,
+      ...transport.state(),
     });
+    return;
+  }
+  if (request.method === "POST" && url.pathname === "/v1/telemetry") {
+    try {
+      const payload = JSON.parse(
+        (await body(request, 8 * 1024)).toString("utf8"),
+      );
+      if (!payload || typeof payload !== "object" || Array.isArray(payload))
+        throw new Error("遥测事件无效");
+      const { event, ...fields } = payload;
+      if (typeof event !== "string" || !telemetryEvents.has(event))
+        throw new Error("遥测事件类型未知");
+      const keys = Object.keys(fields);
+      if (keys.length > 12) throw new Error("遥测事件字段过多");
+      for (const key of keys) {
+        const value = fields[key];
+        if (typeof value === "string") {
+          if (value.length > 400) throw new Error("遥测字段过长");
+        } else if (typeof value === "number") {
+          if (!Number.isFinite(value)) throw new Error("遥测数值无效");
+        } else if (typeof value !== "boolean" && value !== null) {
+          throw new Error("遥测字段类型无效");
+        }
+      }
+      // 单文件滚动：超过 8 MB 保留一代旧档，避免长期 dev 会话无限增长。
+      try {
+        const fileStat = await stat(telemetryFile);
+        if (fileStat.size > 8 * 1024 * 1024)
+          await rename(telemetryFile, `${telemetryFile}.1`);
+      } catch {
+        // 首次写入前文件不存在，直接落盘。
+      }
+      await mkdir(dirname(telemetryFile), { recursive: true });
+      await appendFile(
+        telemetryFile,
+        `${JSON.stringify({ ts: new Date().toISOString(), event, ...fields })}\n`,
+        "utf8",
+      );
+      response.writeHead(204);
+      response.end();
+    } catch {
+      // 遥测绝不阻塞编辑：校验失败也按 204 静默丢弃（调用方 fire-and-forget）。
+      noContentAfterBody(request, response);
+    }
     return;
   }
   if (request.method === "GET" && url.pathname === "/v1/capabilities") {
@@ -342,21 +440,19 @@ async function handleRequest(request, response) {
       if (selectionSource === "provider") {
         const providerInput = join(folder, "provider-input.png");
         await run(["convert", input, providerInput]);
-        const maskResponse = await fetch(maskProvider, {
-          method: "POST",
-          headers: { "content-type": "image/png" },
-          body: await readFile(providerInput),
-          signal: AbortSignal.timeout(70_000),
-        });
+        const maskResponse = await fetchSubjectMask(
+          await readFile(providerInput),
+          "image/png",
+        );
         if (
           !maskResponse.ok ||
-          !maskResponse.headers.get("content-type")?.startsWith("image/png")
+          !maskResponse.contentType.startsWith("image/png")
         )
           throw new Error(
             "主体分割服务不可用，请改用 PhotoCraft 选区或手工轮廓",
           );
-        const maskBytes = Buffer.from(await maskResponse.arrayBuffer());
-        if (maskBytes.length === 0 || maskBytes.length > maxBytes)
+        const maskBytes = maskResponse.bytes;
+        if (!maskBytes || maskBytes.length === 0 || maskBytes.length > maxBytes)
           throw new Error("主体边缘蒙版无效");
         providerMask = join(folder, "provider-mask.png");
         await writeFile(providerMask, maskBytes);
@@ -578,21 +674,19 @@ async function handleRequest(request, response) {
       if (selectionSource === "provider") {
         const providerInput = join(folder, "provider-input.png");
         await run(["convert", input, providerInput]);
-        const maskResponse = await fetch(maskProvider, {
-          method: "POST",
-          headers: { "content-type": "image/png" },
-          body: await readFile(providerInput),
-          signal: AbortSignal.timeout(70_000),
-        });
+        const maskResponse = await fetchSubjectMask(
+          await readFile(providerInput),
+          "image/png",
+        );
         if (
           !maskResponse.ok ||
-          !maskResponse.headers.get("content-type")?.startsWith("image/png")
+          !maskResponse.contentType.startsWith("image/png")
         )
           throw new Error(
             "主体边缘分割服务不可用，请在 PhotoCraft 中建立主体选区后重试",
           );
-        const maskBytes = Buffer.from(await maskResponse.arrayBuffer());
-        if (maskBytes.length === 0 || maskBytes.length > maxBytes)
+        const maskBytes = maskResponse.bytes;
+        if (!maskBytes || maskBytes.length === 0 || maskBytes.length > maxBytes)
           throw new Error("主体边缘蒙版无效");
         providerMask = join(folder, "provider-mask.png");
         await writeFile(providerMask, maskBytes);
@@ -1026,10 +1120,18 @@ async function handleRequest(request, response) {
         edgeFeather,
         protectRect,
         selectionMethod,
+        selectionMaskId,
         healSize,
         providerScopeFeather;
       try {
-        plan = JSON.parse(request.headers["x-acs-plan"] ?? "");
+        // 计划可能携带中文（文案内容、保护名词）：HTTP 头只允许 latin1，
+        // 非 ASCII 计划一律走 base64（UTF-8），与 x-acs-phrase-b64 同约定。
+        const planB64 = request.headers["x-acs-plan-b64"];
+        plan = JSON.parse(
+          planB64
+            ? Buffer.from(String(planB64), "base64").toString("utf8")
+            : (request.headers["x-acs-plan"] ?? ""),
+        );
         points = JSON.parse(request.headers["x-acs-points"] ?? "");
         rect = JSON.parse(request.headers["x-acs-rect"] ?? "null");
         outline = JSON.parse(request.headers["x-acs-outline"] ?? "[]");
@@ -1040,6 +1142,7 @@ async function handleRequest(request, response) {
           request.headers["x-acs-protect-rect"] ?? "null",
         );
         selectionMethod = request.headers["x-acs-selection-method"] ?? "manual";
+        selectionMaskId = request.headers["x-acs-selection-mask-id"] ?? null;
         healSize = Number(request.headers["x-acs-heal-size"] ?? 32);
         providerScopeFeather = Number(
           request.headers["x-acs-provider-scope-feather"] ?? 80,
@@ -1066,12 +1169,17 @@ async function handleRequest(request, response) {
         value.points.every(validPoint);
       const capability = capabilityFor(plan);
       if (
-        !["manual", "object", "provider", "existing"].includes(
+        !["manual", "object", "provider", "existing", "mask"].includes(
           selectionMethod,
         ) ||
-        !["hat", "brim", "selected-area", "whole-image"].includes(
-          plan.target,
-        ) ||
+        ![
+          "hat",
+          "brim",
+          "selected-area",
+          "whole-image",
+          "subject",
+          "background",
+        ].includes(plan.target) ||
         typeof plan.protectLabel !== "boolean" ||
         !Array.isArray(points) ||
         points.length > 6 ||
@@ -1102,11 +1210,20 @@ async function handleRequest(request, response) {
         throw new Error("请先画出标签保护框");
       const requiresSelection =
         capability.selection === "mask" && plan.target !== "whole-image";
+      const subjectLevelTarget =
+        plan.target === "subject" || plan.target === "background";
+      if (
+        requiresSelection &&
+        subjectLevelTarget &&
+        selectionMethod !== "provider"
+      )
+        throw new Error("主体或背景编辑需要 AI 主体蒙版选区来源");
       if (requiresSelection && selectionMethod === "object" && !rect)
         throw new Error("PhotoCraft 智能选物体需要先画出包含目标的矩形");
       if (
         requiresSelection &&
         selectionMethod === "provider" &&
+        !subjectLevelTarget &&
         !rect &&
         outline.length < 3
       )
@@ -1134,6 +1251,17 @@ async function handleRequest(request, response) {
         points.length < 2
       )
         throw new Error("补选或剔除前请先建立主选区");
+      // C 项 mask 选区：候选像素蒙版在确认时经 /v1/selection-mask 上传落盘，
+      // instruction 只带小 id 头（base64 蒙版超 node 头上限）；尺寸与文档的
+      // 强校验在 prepareSelection 内与 provider 蒙版同口径执行。
+      let maskPath = null;
+      if (selectionMethod === "mask") {
+        if (!/^[0-9a-f-]{36}$/.test(String(selectionMaskId)))
+          throw new Error("候选蒙版引用无效，请重新确认候选或改用轮廓套索");
+        maskPath = join(jobs, String(selectionMaskId), "candidate-mask.png");
+        if (!(await stat(maskPath).catch(() => null)))
+          throw new Error("候选蒙版已失效，请重新确认候选或改用轮廓套索");
+      }
       capability.validate({
         plan,
         points,
@@ -1197,6 +1325,7 @@ async function handleRequest(request, response) {
         infoInput,
         requiresSelection,
         selectionMethod,
+        maskPath,
         input,
         folder,
         extension,
@@ -1210,7 +1339,7 @@ async function handleRequest(request, response) {
         protectRect,
         providerScopeFeather,
         run,
-        maskProvider,
+        fetchMask: fetchSubjectMask,
         maxBytes,
         objectSelection,
         selectionIsLargeEnough,
@@ -1225,8 +1354,16 @@ async function handleRequest(request, response) {
         selectionMethod,
       }))
         commands.push(step);
-      await executeNativePlan({ cli, input, output: source, commands, run });
-      const info = JSON.parse(await run(["info", source, "--compact"]));
+      validateNativeSteps(cli, commands);
+      // One persistent-session document runs the whole pipeline: selection,
+      // effect, editable-source save, in-memory preview render and inspect.
+      const edited = await transport.runEditPlan({
+        input,
+        output: source,
+        preview: true,
+        steps: commands,
+      });
+      const info = edited.inspect;
       await capability.verify({
         plan,
         rect,
@@ -1243,7 +1380,8 @@ async function handleRequest(request, response) {
         plan,
         selectionIsLargeEnough,
       });
-      await run(["convert", source, preview]);
+      if (!edited.previewBuffer) throw new Error("预览渲染失败");
+      await writeFile(preview, edited.previewBuffer);
       json(response, 200, {
         id,
         width: info.width,
@@ -1252,10 +1390,221 @@ async function handleRequest(request, response) {
         selectionBounds: info.selectionBounds ?? null,
         previewUrl: `/v1/jobs/${id}/preview`,
         sourceUrl: `/v1/jobs/${id}/source`,
+        transport: "serve",
       });
     } catch (error) {
-      json(response, 400, {
+      jsonAfterBody(request, response, 400, {
         error: error instanceof Error ? error.message : "局部编辑失败",
+      });
+    }
+    return;
+  }
+  // ---- candidate pixel mask upload (C 项: 真实像素蒙版 → 原生选区) -------
+  // 浏览器把候选 mask_png_b64 解码并缩放到文档尺寸后，以 raw PNG body 上传
+  // （base64 超出 node 头上限，走不了 x-acs-* 头；select.loadSelection 只接
+  // 受文件路径，所以蒙版必须先落盘——与 provider-mask 同机制）。此处只做
+  // 格式/上限校验；与文档的尺寸强校验留在 instruction 阶段执行，失败即 400
+  // → 浏览器退回轮廓套索，绝不产生错位选区。
+  if (request.method === "POST" && url.pathname === "/v1/selection-mask") {
+    try {
+      const mime = (request.headers["content-type"] ?? "").split(";")[0];
+      if (mime !== "image/png") throw new Error("候选蒙版必须是 PNG");
+      const bytes = await body(request);
+      if (
+        !bytes
+          .subarray(0, 8)
+          .equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))
+      )
+        throw new Error("候选蒙版不是 PNG");
+      const size = parseImageSize(bytes);
+      if (!size) throw new Error("候选蒙版尺寸无法解析");
+      const id = randomUUID();
+      const folder = join(jobs, id);
+      await mkdir(folder, { recursive: true });
+      await writeFile(join(folder, "candidate-mask.png"), bytes);
+      json(response, 200, { id, width: size.width, height: size.height });
+    } catch (error) {
+      jsonAfterBody(request, response, 400, {
+        error: error instanceof Error ? error.message : "候选蒙版上传失败",
+      });
+    }
+    return;
+  }
+  // ---- open-vocabulary part candidates (M3 grounding level 3) ----------
+  // SAM grid + Chinese-CLIP ranking live in a local provider service; the
+  // bridge is its only caller (the browser never talks to model services
+  // directly, same rule as the mask provider). Response passes through so
+  // the proposal-confirm ring gets ranked candidates + τ-ready scores.
+  if (request.method === "POST" && url.pathname === "/v1/candidates") {
+    try {
+      const phraseB64 = String(request.headers["x-acs-phrase-b64"] ?? "");
+      if (!/^[A-Za-z0-9+/=]{4,340}$/.test(phraseB64))
+        throw new Error("缺少目标名词（x-acs-phrase-b64 头无效）");
+      const contentType = String(
+        request.headers["content-type"] ?? "image/png",
+      ).split(";")[0];
+      const image = await body(request);
+      let upstream;
+      try {
+        upstream = await fetch(partsCandidateProvider, {
+          method: "POST",
+          headers: {
+            "content-type": contentType,
+            "x-acs-phrase-b64": phraseB64,
+          },
+          body: image,
+          signal: AbortSignal.timeout(120_000),
+        });
+      } catch {
+        jsonAfterBody(request, response, 502, {
+          error: "开放词汇目标服务不可用（无法连接本地候选服务）",
+        });
+        return;
+      }
+      const payload = await upstream.text();
+      if (!upstream.ok) {
+        jsonAfterBody(request, response, 502, {
+          error: `开放词汇目标服务不可用（HTTP ${upstream.status}）`,
+        });
+        return;
+      }
+      response.writeHead(200, {
+        "content-type": "application/json; charset=utf-8",
+        "cache-control": "no-store",
+      });
+      response.end(payload);
+    } catch (error) {
+      jsonAfterBody(request, response, 400, {
+        error: error instanceof Error ? error.message : "目标候选获取失败",
+      });
+    }
+    return;
+  }
+  // ---- live document sessions (M2 slider handoff) ----------------------
+  // A live session keeps the previewed .pcraft open inside the persistent
+  // serve session: each slider move is one layer.setAdjustment + full-size
+  // save-as-PNG preview instead of a full edit pipeline, and the preview is
+  // the engine's own composite of the real adjustment layer (preview =
+  // final).
+  if (request.method === "POST" && url.pathname === "/v1/live/open") {
+    try {
+      const sourceJob = request.headers["x-acs-source-job"];
+      let jobId;
+      let source;
+      if (typeof sourceJob === "string" && /^[0-9a-f-]{36}$/.test(sourceJob)) {
+        jobId = sourceJob;
+        source = join(jobs, jobId, "edited.pcraft");
+        await readFile(source).catch(() => {
+          throw new Error("引用的原生源不存在，请重新预览");
+        });
+      } else {
+        const mime = (request.headers["content-type"] ?? "").split(";")[0];
+        const extension = formats.get(mime);
+        if (!extension) throw new Error("不支持的图片格式");
+        jobId = randomUUID();
+        const folder = join(jobs, jobId);
+        await mkdir(folder, { recursive: true });
+        const input = join(folder, `input.${extension}`);
+        source = join(folder, "edited.pcraft");
+        await writeFile(
+          input,
+          await body(
+            request,
+            extension === "pcraft" ? 64 * 1024 * 1024 : maxBytes,
+          ),
+        );
+        await run(["convert", input, source]);
+      }
+      const { liveId } = await transport.openLive(source);
+      liveJobs.set(liveId, jobId);
+      const inspect = await transport.inspectLive(liveId);
+      const preview = join(jobs, jobId, "preview.png");
+      await writeFile(preview, await transport.renderLive(liveId));
+      json(response, 200, {
+        id: liveId,
+        job: jobId,
+        width: inspect.width,
+        height: inspect.height,
+        activeLayer: inspect.activeLayer,
+        layers: inspect.layers.map((layer) => ({
+          id: layer.id,
+          name: layer.name,
+          kind: layer.kind,
+          visible: layer.visible,
+          hasMask: layer.hasMask === true,
+          adjustment: layer.adjustment ?? null,
+        })),
+        previewUrl: `/v1/jobs/${jobId}/preview`,
+        sourceUrl: `/v1/jobs/${jobId}/source`,
+      });
+    } catch (error) {
+      jsonAfterBody(request, response, 400, {
+        error: error instanceof Error ? error.message : "预览会话打开失败",
+      });
+    }
+    return;
+  }
+  const liveMatch =
+    /^\/v1\/live\/([0-9a-f-]{36})\/(adjust|render|save|close)$/.exec(
+      url.pathname,
+    );
+  if (request.method === "POST" && liveMatch) {
+    const liveId = liveMatch[1];
+    const action = liveMatch[2];
+    const jobId = liveJobs.get(liveId);
+    if (!jobId) {
+      jsonAfterBody(request, response, 404, {
+        error: "预览会话不存在或已过期",
+      });
+      return;
+    }
+    try {
+      const preview = join(jobs, jobId, "preview.png");
+      if (action === "adjust") {
+        const payload = JSON.parse((await body(request)).toString("utf8"));
+        const layerId = payload.layer;
+        const params = payload.params;
+        if (layerId !== undefined && !Number.isInteger(layerId))
+          throw new Error("图层引用无效");
+        const before = await transport.inspectLive(liveId);
+        const target =
+          (Number.isInteger(layerId)
+            ? before.layers.find((layer) => layer.id === layerId)
+            : before.layers.find((layer) => layer.id === before.activeLayer)) ??
+          null;
+        const kind = target?.adjustment
+          ? Object.keys(target.adjustment)[0]
+          : null;
+        if (!target || !kind) throw new Error("目标图层不是可调参数的调整层");
+        validateLiveAdjustment(kind, params);
+        const after = await transport.adjustLive(liveId, {
+          layer: target.id,
+          params,
+        });
+        await writeFile(preview, await transport.renderLive(liveId));
+        json(response, 200, {
+          adjustment: after.layers.find((layer) => layer.id === target.id)
+            ?.adjustment,
+          previewUrl: `/v1/jobs/${jobId}/preview`,
+        });
+        return;
+      }
+      if (action === "render") {
+        await writeFile(preview, await transport.renderLive(liveId));
+        json(response, 200, { previewUrl: `/v1/jobs/${jobId}/preview` });
+        return;
+      }
+      if (action === "save") {
+        await transport.saveLive(liveId);
+        json(response, 200, { sourceUrl: `/v1/jobs/${jobId}/source` });
+        return;
+      }
+      await transport.closeLive(liveId);
+      liveJobs.delete(liveId);
+      json(response, 200, { closed: true });
+    } catch (error) {
+      json(response, 400, {
+        error: error instanceof Error ? error.message : "预览会话操作失败",
       });
     }
     return;
@@ -1309,9 +1658,13 @@ async function handleRequest(request, response) {
     }
     return;
   }
-  const match = /^\/v1\/jobs\/([0-9a-f-]{36})\/(preview|source|export)$/.exec(
-    url.pathname,
-  );
+  // provider-mask serves the job's rembg subject mask so the 目标审核
+  // ring (M2) can draw numbered candidate overlays client-side without a
+  // second inference round-trip.
+  const match =
+    /^\/v1\/jobs\/([0-9a-f-]{36})\/(preview|source|export|provider-mask)$/.exec(
+      url.pathname,
+    );
   if (request.method === "GET" && match) {
     try {
       const folder = join(jobs, match[1]);
@@ -1329,14 +1682,16 @@ async function handleRequest(request, response) {
           ? join(folder, "preview.png")
           : match[2] === "source"
             ? join(folder, "edited.pcraft")
-            : exportFormat
-              ? join(folder, `export.${exportFormat}`)
-              : null;
+            : match[2] === "provider-mask"
+              ? join(folder, "provider-mask.png")
+              : exportFormat
+                ? join(folder, `export.${exportFormat}`)
+                : null;
       if (!file) throw new Error("导出文件不存在");
       const data = await readFile(file);
       response.writeHead(200, {
         "content-type":
-          match[2] === "preview"
+          match[2] === "preview" || match[2] === "provider-mask"
             ? "image/png"
             : match[2] === "export"
               ? {
@@ -1375,7 +1730,8 @@ if (!detectedVersion.startsWith(`photocraft-cli ${pinnedVersion} (`))
   throw new Error(`PhotoCraft 版本不匹配：${detectedVersion}`);
 
 const server = createServer((request, response) => {
-  const counted = request.method === "POST";
+  // 遥测是轻量本地追加，不计入引擎并发闸（否则编辑进行中的环事件会被 429）。
+  const counted = request.method === "POST" && request.url !== "/v1/telemetry";
   if (counted && activeRequests >= maxActiveRequests) {
     response.setHeader("retry-after", "3");
     json(response, 429, { error: "PhotoCraft 任务繁忙，请稍后重试" });
@@ -1393,6 +1749,14 @@ const server = createServer((request, response) => {
     .finally(() => {
       if (counted) activeRequests--;
     });
+});
+
+// Silent exits lose the failure cause; log anything that kills the process.
+process.on("uncaughtException", (error) => {
+  process.stderr.write(`uncaughtException: ${error?.stack ?? error}\n`);
+});
+process.on("unhandledRejection", (reason) => {
+  process.stderr.write(`unhandledRejection: ${reason?.stack ?? reason}\n`);
 });
 
 server.listen(port, "127.0.0.1", () => {

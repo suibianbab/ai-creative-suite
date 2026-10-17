@@ -15,10 +15,12 @@ import {
 import {
   type ClaimedPhotoCraftJob,
   PHOTOCRAFT_JOB_OPERATIONS,
+  type PhotoCraftBatchStep,
   PhotoCraftEditJobStore,
   type PhotoCraftGenerateParams,
   PhotoCraftJobValidationError,
   type PhotoCraftMaskedParams,
+  sampleBatchJobIds,
 } from "./photocraft-edit-jobs.js";
 import {
   PhotoCraftConflictError,
@@ -164,6 +166,14 @@ export function photoCraftJobSteps(
 ): NativeStep[] {
   if (operation === "generate-local")
     throw new Error("Generation requires the image Provider pipeline");
+  if (operation === "batch-recipe") {
+    // 批量配方只含整图操作（入队侧白名单），逐条复用单操作的步骤映射；
+    // 整图操作不读取 before（无选区/图层上下文），递归安全。
+    const steps = (params.steps as PhotoCraftBatchStep[] | undefined) ?? [];
+    return steps.flatMap((step) =>
+      photoCraftJobSteps(step.operation, before, step.params),
+    );
+  }
   if (
     operation === "duplicate-layer" ||
     operation === "hide-layer" ||
@@ -229,6 +239,73 @@ export function photoCraftJobSteps(
   return [{ id: PHOTOCRAFT_JOB_OPERATIONS[operation], params: {} }];
 }
 
+// 核对单条 levels / 调整操作的参数值是否落在结果文档的调整图层上；
+// 返回错误消息或 null（单操作与批量配方共用的值检查）。
+function adjustmentValueError(
+  operation: string,
+  params: Record<string, unknown>,
+  adjustment: Record<string, unknown> | undefined,
+): string | null {
+  if (operation === "levels") {
+    const master = (
+      adjustment?.Levels as
+        | {
+            master?: {
+              in_black?: number;
+              in_white?: number;
+              gamma?: number;
+            };
+          }
+        | undefined
+    )?.master;
+    if (
+      !master ||
+      Math.abs((master.in_black ?? -1) * 255 - (params.inBlack as number)) >
+        0.02 ||
+      Math.abs((master.in_white ?? -1) * 255 - (params.inWhite as number)) >
+        0.02 ||
+      Math.abs((master.gamma ?? -1) - (params.gamma as number)) > 0.001
+    )
+      return "PhotoCraft did not preserve requested levels";
+    return null;
+  }
+  const amount = params.amount as number;
+  const baseOperation = operation;
+  const branch =
+    baseOperation === "adjust-brightness" || baseOperation === "adjust-contrast"
+      ? "BrightnessContrast"
+      : baseOperation === "adjust-saturation"
+        ? "HueSaturation"
+        : baseOperation === "adjust-exposure"
+          ? "Exposure"
+          : baseOperation === "adjust-vibrance"
+            ? "Vibrance"
+            : "Curves";
+  const data = adjustment?.[branch] as Record<string, unknown> | undefined;
+  const field = baseOperation.slice("adjust-".length);
+  const expected = baseOperation === "adjust-exposure" ? amount / 20 : amount;
+  if (!data) return "PhotoCraft adjustment type is missing";
+  if (field === "shadows" || field === "highlights") {
+    const curve = data.master as
+      | { input?: number; output?: number }[]
+      | undefined;
+    const index = field === "shadows" ? 1 : 2;
+    const anchor = field === "shadows" ? 64 : 192;
+    if (
+      !Array.isArray(curve) ||
+      curve.length !== 4 ||
+      Math.abs((curve[index]?.input ?? -1) * 255 - anchor) > 0.02 ||
+      Math.abs((curve[index]?.output ?? -1) * 255 - (anchor + amount)) > 0.02
+    )
+      return "PhotoCraft did not preserve requested curve";
+    return null;
+  }
+  const value = data[field];
+  if (typeof value !== "number" || Math.abs(value - expected) > 0.001)
+    return "PhotoCraft did not preserve requested adjustment amount";
+  return null;
+}
+
 export function verifyPhotoCraftJobResult(
   operation: ClaimedPhotoCraftJob["operation"],
   before: NativeInfo,
@@ -288,69 +365,12 @@ export function verifyPhotoCraftJobResult(
       throw new PhotoCraftJobValidationError(
         "PhotoCraft did not preserve a local selection",
       );
-    if (operation === "levels") {
-      const master = (
-        layer.adjustment?.Levels as
-          | {
-              master?: {
-                in_black?: number;
-                in_white?: number;
-                gamma?: number;
-              };
-            }
-          | undefined
-      )?.master;
-      if (
-        !master ||
-        Math.abs((master.in_black ?? -1) * 255 - (params.inBlack as number)) >
-          0.02 ||
-        Math.abs((master.in_white ?? -1) * 255 - (params.inWhite as number)) >
-          0.02 ||
-        Math.abs((master.gamma ?? -1) - (params.gamma as number)) > 0.001
-      )
-        throw new Error("PhotoCraft did not preserve requested levels");
-    } else {
-      const amount = params.amount as number;
-      const adjustment = layer.adjustment;
-      const baseOperation = operation.replace(/^masked-/, "");
-      const branch =
-        baseOperation === "adjust-brightness" ||
-        baseOperation === "adjust-contrast"
-          ? "BrightnessContrast"
-          : baseOperation === "adjust-saturation"
-            ? "HueSaturation"
-            : baseOperation === "adjust-exposure"
-              ? "Exposure"
-              : baseOperation === "adjust-vibrance"
-                ? "Vibrance"
-                : "Curves";
-      const data = adjustment?.[branch] as Record<string, unknown> | undefined;
-      const field = baseOperation.slice("adjust-".length);
-      const expected =
-        baseOperation === "adjust-exposure" ? amount / 20 : amount;
-      if (!data) throw new Error("PhotoCraft adjustment type is missing");
-      if (field === "shadows" || field === "highlights") {
-        const curve = data.master as
-          | { input?: number; output?: number }[]
-          | undefined;
-        const index = field === "shadows" ? 1 : 2;
-        const anchor = field === "shadows" ? 64 : 192;
-        if (
-          !Array.isArray(curve) ||
-          curve.length !== 4 ||
-          Math.abs((curve[index]?.input ?? -1) * 255 - anchor) > 0.02 ||
-          Math.abs((curve[index]?.output ?? -1) * 255 - (anchor + amount)) >
-            0.02
-        )
-          throw new Error("PhotoCraft did not preserve requested curve");
-      } else {
-        const value = data[field];
-        if (typeof value !== "number" || Math.abs(value - expected) > 0.001)
-          throw new Error(
-            "PhotoCraft did not preserve requested adjustment amount",
-          );
-      }
-    }
+    const message = adjustmentValueError(
+      operation.replace(/^masked-/, ""),
+      params,
+      layer.adjustment,
+    );
+    if (message) throw new Error(message);
   } else if (operation === "duplicate-layer") {
     if (after.layers.length !== (before.layers?.length ?? 0) + 1)
       throw new Error("PhotoCraft did not duplicate the layer");
@@ -362,6 +382,46 @@ export function verifyPhotoCraftJobResult(
       after.layers.length !== before.layers?.length
     )
       throw new Error("PhotoCraft did not update layer visibility");
+  } else if (operation === "batch-recipe") {
+    const steps = (params.steps as PhotoCraftBatchStep[] | undefined) ?? [];
+    const quarterTurns = steps.filter(
+      (step) =>
+        step.operation === "rotate-cw" || step.operation === "rotate-ccw",
+    ).length;
+    const adjustments = steps.filter(
+      (step) =>
+        step.operation.startsWith("adjust-") || step.operation === "levels",
+    );
+    const swapped = quarterTurns % 2 === 1;
+    if (
+      after.width !== (swapped ? before.height : before.width) ||
+      after.height !== (swapped ? before.width : before.height) ||
+      after.layers.length !==
+        (before.layers?.length ?? 0) + adjustments.length ||
+      !before.layers?.every((old) =>
+        after.layers?.some((current) => current.id === old.id),
+      )
+    )
+      throw new Error(
+        "PhotoCraft did not preserve canvas and layers for batch recipe",
+      );
+    // 新增的调整图层按值多重集匹配：应用顺序与堆叠顺序解耦，同值步骤可互换。
+    const added = after.layers.slice(0, adjustments.length);
+    if (added.some((layer) => layer.kind !== "Adjustment" || !layer.hasMask))
+      throw new Error("PhotoCraft did not preserve editable adjustment layers");
+    const remaining = [...adjustments];
+    for (const layer of added) {
+      const index = remaining.findIndex((step) => {
+        const stepParams = step.params as Record<string, unknown>;
+        return (
+          adjustmentValueError(step.operation, stepParams, layer.adjustment) ===
+          null
+        );
+      });
+      if (index < 0)
+        throw new Error("PhotoCraft did not preserve requested batch steps");
+      remaining.splice(index, 1);
+    }
   } else {
     const quarterTurn = operation === "rotate-cw" || operation === "rotate-ccw";
     if (
@@ -438,6 +498,23 @@ function run(cli: string, args: string[], cwd: string): Promise<string> {
         );
     });
   });
+}
+
+// 抽样像素复检：128×128 网格上任一通道差 >2 即视为配方真实生效。
+// （对称图像的翻转会在此误报——抽样质量门的既定取舍，人工复核即可。）
+async function rasterChanged(before: Buffer, after: Buffer): Promise<boolean> {
+  const toGrid = (png: Buffer) =>
+    sharp(png).resize(128, 128, { fit: "fill" }).removeAlpha().raw().toBuffer();
+  const [beforeGrid, afterGrid] = await Promise.all([
+    toGrid(before),
+    toGrid(after),
+  ]);
+  if (beforeGrid.length !== afterGrid.length) return true;
+  for (let index = 0; index < beforeGrid.length; index += 1) {
+    if (Math.abs((beforeGrid[index] ?? 0) - (afterGrid[index] ?? 0)) > 2)
+      return true;
+  }
+  return false;
 }
 
 export async function executePhotoCraftJob(
@@ -594,6 +671,39 @@ export async function executePhotoCraftJob(
         await run(dependencies.cli, ["info", output, "--compact"], folder),
       ) as NativeInfo;
       verifyPhotoCraftJobResult(job.operation, before, info, job.params);
+      if (job.operation === "batch-recipe") {
+        // 质量门抽样复检：同批作业按确定性抽样（排序后等距取样），
+        // 抽中的作业额外做一次像素级对比，防止批量跑完但图未变。
+        const siblings = await dependencies.jobs.listByRequestKey(
+          job.scope,
+          job.requestKey,
+        );
+        const sampled = sampleBatchJobIds(
+          siblings.map((sibling) => sibling.id),
+        ).includes(job.id);
+        if (sampled) {
+          const beforePngPath = join(folder, "recheck-before.png");
+          const afterPngPath = join(folder, "recheck-after.png");
+          await run(
+            dependencies.cli,
+            ["convert", input, beforePngPath],
+            folder,
+          );
+          await run(
+            dependencies.cli,
+            ["convert", output, afterPngPath],
+            folder,
+          );
+          const changed = await rasterChanged(
+            await readFile(beforePngPath),
+            await readFile(afterPngPath),
+          );
+          if (!changed)
+            throw new GenerationQualityError(
+              "Batch recipe did not change the image",
+            );
+        }
+      }
       if (job.operation === "generate-local" && generationRect && originalPng) {
         const previewPath = join(folder, "preview.png");
         await run(dependencies.cli, ["convert", output, previewPath], folder);

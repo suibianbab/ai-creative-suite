@@ -65,11 +65,16 @@
         "exec",
         "tsx",
         "--test",
-        "../web/src/app/image-studio/photocraft/instruction.test.ts"
+        "../web/src/app/image-studio/photocraft/instruction.test.ts",
+        "../web/src/app/image-studio/photocraft/instruction-ir.test.ts",
+        "../web/src/app/image-studio/photocraft/instruction-eval.test.ts",
+        "../web/src/app/image-studio/photocraft/batch-recipe.test.ts",
+        "../web/src/app/image-studio/photocraft/candidate-mask.test.ts"
       ],
       "checks": [
         "Direct phrase plans retain object and protection constraints",
-        "Model plans reject unsupported commands, unsafe amounts and partial requests"
+        "Model plans reject unsupported commands, unsafe amounts and partial requests",
+        "Candidate mask PNG decode validates strict base64, PNG magic and IHDR dims before any selection upload"
       ]
     },
     {
@@ -201,7 +206,9 @@
         "Import replay preserves source bytes and asset identity",
         "Incremental asset upload is idempotent; stale saves conflict; revocation takes effect",
         "PhotoCraft source files save as immutable versions, replay returns the saved version, and original image identity remains fixed",
-        "Native whole-image adjustment jobs create verified editable layers and sequential cloud versions"
+        "Native whole-image adjustment jobs create verified editable layers and sequential cloud versions",
+        "Batch recipes enqueue per-project jobs that reference an immutable server-registered confirmation snapshot (source version pinned at confirm time, steps digest re-verified, revocable) with whole-batch credit precheck, per-image ledger billing, idempotent requestKey replay, worker step flattening with canvas-last verify, and deterministic 20% sampled pixel recheck",
+        "Concurrent single and batch enqueues share one workspace account-first lock order without double billing any created job"
       ]
     },
     {
@@ -266,6 +273,24 @@
       "checks": [
         "Signed image output from the trusted Qwen OSS host is accepted; foreign hosts are rejected",
         "Obvious rectangular paste seams are rejected and soft local changes pass"
+      ]
+    },
+    {
+      "id": "IMG-044",
+      "tier": "image-qa",
+      "title": "PhotoCraft subject and background targets from the provider mask",
+      "cwd": ".",
+      "argv": [
+        "python",
+        "scripts/photocraft/test_subject_background_targets.py"
+      ],
+      "requiresFiles": ["qa/fixtures/photocraft-fluffy-cat-cc0.jpg"],
+      "requiresPorts": [4101, 4112],
+      "checks": [
+        "Subject recolor and background brightness execute with no drawn scope, only the AI subject mask",
+        "An optional rect intersects the mask instead of replacing it, keeping outside subject pixels unchanged",
+        "Subject/background edits with a non-provider selection source are rejected with guidance",
+        "Sources reopen with editable masked adjustment layers and disabling them restores the original"
       ]
     },
     {
@@ -538,6 +563,9 @@
       "argv": ["node", "scripts/photocraft/test_instruction_rules.mjs"],
       "checks": [
         "Direct plans preserve target, direction and numeric amount",
+        "Subject/background targets resolve from the provider mask and never widen a scoped edit",
+        "L1 IR keeps the user's target words; L2 gap analysis classifies misses by slot",
+        "The 212-case eval set routes every instruction to express, sequence, model or gap lanes",
         "Unsupported combined effects and conflicting model plans fail closed"
       ]
     },
@@ -816,6 +844,172 @@
         "A native .pcraft source retains selection bounds after reopen",
         "The same document saved as PSD has no active selection after reopen",
         "The workbench must not advertise Web-saved PSD selections as reusable native selections"
+      ]
+    },
+    {
+      "id": "IMG-045",
+      "tier": "smoke",
+      "title": "Instruction telemetry aggregation and tau calibration",
+      "cwd": ".",
+      "argv": ["node", "--test", "scripts/photocraft/test_calibrate_tau.mjs"],
+      "checks": [
+        "Telemetry aggregates lanes, confidence rings, tau and slider deltas per bucket",
+        "Tau suggestions require bucket evidence and a low manual override rate",
+        "Scores below the calibrated floor and above 1.0 fall outside every bucket"
+      ]
+    },
+    {
+      "id": "IMG-046",
+      "tier": "image-qa",
+      "title": "PhotoCraft native batch recipe directory replay",
+      "cwd": ".",
+      "argv": ["python", "scripts/photocraft/test_batch_recipe.py"],
+      "requiresFiles": ["qa/fixtures/photocraft-hat-teal.png"],
+      "checks": [
+        "batch --actions refuses an output directory equal to the input without --in-place",
+        "Mixed adjustment and orientation steps replay over a directory while original files stay byte-identical",
+        "Output geometry equals the mirrored and rotated source and mean luminance visibly increases"
+      ]
+    },
+    {
+      "id": "IMG-047",
+      "tier": "smoke",
+      "title": "Command registry extraction and deterministic diff",
+      "cwd": ".",
+      "argv": [
+        "node",
+        "--test",
+        "scripts/photocraft/test_sync_command_registry.mjs"
+      ],
+      "checks": [
+        "Command-id extraction skips filenames and classifies missing, disabled and candidate commands",
+        "Candidate expansion groups render in deterministic sorted order"
+      ]
+    },
+    {
+      "id": "IMG-048",
+      "tier": "image-qa",
+      "title": "Pinned PhotoCraft command registry covers every in-use native id",
+      "cwd": ".",
+      "argv": ["node", "scripts/photocraft/sync-command-registry.mjs"],
+      "requiresFiles": [
+        ".tools/photocraft-0.6.0/desktop/photocraft-0.6.0-windows-x64-portable/photocraft-cli.exe"
+      ],
+      "checks": [
+        "commands --json exports the pinned PhotoCraft 0.6.0 catalog for diffing",
+        "Every native command id referenced by the bridge, adapters, jobs and worker exists and stays enabled",
+        "A dropped or disabled in-use command exits nonzero; unused candidates list expansion groups"
+      ]
+    },
+    {
+      "id": "IMG-049",
+      "tier": "image-qa",
+      "title": "Live-engine instruction eval through the dev bridge",
+      "cwd": ".",
+      "argv": ["node", "scripts/photocraft/live-eval.mjs"],
+      "requiresFiles": [
+        "qa/fixtures/photocraft-hat-teal.png",
+        ".tools/photocraft-tests/probe-text-style-shadow.pcraft"
+      ],
+      "requiresPorts": [4101, 4104, 4112],
+      "checks": [
+        "Express and model lane cases execute their eval-set preset plans on the real PhotoCraft engine through the versioned bridge; the model lane does not exercise the runtime cloud parse + judge round-trip",
+        "Parser-pinned lanes (gap / model-reject / sequence-reject) run the same assertions as instruction-eval.test.ts inside the script before being counted",
+        "Sequence cases thread each step's .pcraft source into the next request",
+        "Provider targets resolve through AI masks while manual targets use fixed geometry, with capabilities verified per request",
+        "The report separates engine-executed and parser-pinned counts and lists not-run coverage items explicitly; layer totals are summarized from Map lane entries and reconciled against the case-filtered eval-set counts, and any failure fails the run with a labeled failure list"
+      ]
+    },
+    {
+      "id": "IMG-051",
+      "tier": "smoke",
+      "title": "Live-eval coverage summary reconciliation",
+      "cwd": ".",
+      "argv": [
+        "node",
+        "--test",
+        "scripts/photocraft/live-eval-coverage.test.mjs"
+      ],
+      "checks": [
+        "Engine/parser coverage totals are summarized from Map lane entries, not Object.entries(Map) which is always empty for a Map",
+        "Layer totals must equal per-lane sums; unclassified lanes, invalid counters and diverging summary paths throw instead of writing a wrong report",
+        "Full-run denominators reconcile against the case-filtered eval-set counts; any mismatch fails the live-eval run"
+      ]
+    },
+    {
+      "id": "IMG-052",
+      "tier": "live-model",
+      "title": "Runtime cloud parse + judge round-trip on a real model",
+      "cwd": ".",
+      "argv": [
+        "node",
+        "--env-file=.env",
+        "scripts/photocraft/cloud-roundtrip.mjs"
+      ],
+      "checks": [
+        "All 13 model-lane and 10 model-reject eval instructions run through the production route dispatch: gate stages route without any model call, remaining cases exercise the real qwen-plus parse and the judge entailment round-trip",
+        "Cloud parse must produce an executable plan (reconcile fills the json_object envelope, hard validation still rejects out-of-capability values) for every model case that reaches the cloud; a model case ending cloud-rejected fails the run",
+        "The judge gate holds: model-reject cases are never entailed; not-entailed plans downgrade to explainConfirm instead of auto-applying",
+        "Exit is non-zero on any failure or when zero cases exercised the cloud; the report lands in .tools/photocraft-serve-qa/cloud-roundtrip-report.json with per-case rows"
+      ]
+    },
+    {
+      "id": "IMG-053",
+      "tier": "live-grounding",
+      "title": "Cross-domain real-image grounding quality and tau_auto gate evidence",
+      "cwd": ".",
+      "argv": ["node", "scripts/photocraft/grounding-eval.mjs"],
+      "requiresFiles": [
+        "qa/fixtures/photocraft-grounding/annotations.json",
+        "qa/fixtures/photocraft-grounding/provenance.json",
+        "qa/fixtures/photocraft-hat-teal.png",
+        "qa/fixtures/photocraft-fluffy-cat-cc0.jpg",
+        "scripts/photocraft/grounding-contract.mjs"
+      ],
+      "requiresPorts": [4104],
+      "checks": [
+        "All annotated targets across 11 real photos (flower / interior / building / product / pet, 5 domains) query the live SAM + Chinese-CLIP open-vocab candidate service on :4104 — the same service the product open-vocab ring uses — one POST per (image, phrase)",
+        "Fixture integrity is validated before any service call (annotation boxes within [0,1], image/target counts, provenance coverage, real pixel dimensions parsed from PNG/JPEG headers); missing or corrupted fixtures exit non-zero",
+        "Per-domain top-1/top-3 hit rates (IoU >= 0.5) and no-correct-candidate rates are recomputed against annotations.json; responses are strictly validated per the shared contract (finite positive width/height, per-candidate score in [0,1], bounds within the returned image, valid outline) — non-2xx, malformed payloads or missing fields exit non-zero; only reason=no-regions with candidates=[] counts as a legal no-candidate (low hit rates are findings, not failures)",
+        "The tau sweep 0.50-0.95 reports auto-selected count, false-auto rate and manual-confirm count at every threshold; the prewritten gate (every domain >= 30 targets AND >= 30 actual auto events at that tau AND false-auto rate <= 10%) leaves TAU_AUTO_ENABLED=false unless met — zero/low auto events mean insufficient evidence, never safe-to-enable — with the confirmation ring still completing edits",
+        "The report lands in .tools/photocraft-serve-qa/grounding-report.json with the /health service version string; --case subset runs are marked and written to grounding-report.subset.json so a full report is never overwritten by a subset; metric semantics are pinned by grounding-metrics.test.mjs and the response/fixture contract by grounding-contract.test.mjs (mock-service injection)"
+      ]
+    },
+    {
+      "id": "IMG-054",
+      "tier": "live-grounding",
+      "title": "Candidate pixel-mask quality vs human-reviewed GT and end-to-end mask selection",
+      "cwd": ".",
+      "argv": ["node", "scripts/photocraft/mask-quality-eval.mjs"],
+      "requiresFiles": [
+        "qa/fixtures/photocraft-grounding/annotations.json",
+        "qa/fixtures/photocraft-grounding/masks/manifest.json",
+        "qa/fixtures/photocraft-hat-teal.png",
+        "scripts/photocraft/mask-quality-eval.mjs",
+        "scripts/photocraft/grounding-contract.mjs"
+      ],
+      "requiresPorts": [4104, 4112],
+      "checks": [
+        "Human-reviewed pixel-mask GT integrity is validated before any service call: every manifest target must exist in annotations.json as a single-instance phrase, each mask PNG must match the annotation width x height exactly and be strictly binary 0/255 grayscale (decode-level check, not header-only); any violation exits non-zero",
+        "For each GT target the live :4104 candidate service is queried via the shared contract (fetchCandidates also re-validates the required mask_png_b64 field per candidate); the top-3 candidate masks are decoded, resized to GT resolution with bilinear interpolation (approximating the browser canvas path) and binarized at >=128, then scored per candidate for mask IoU, miss rate |G&~C|/|G| and spill rate |C&~G|/|C| against the GT, with the best candidate by IoU summarized per target",
+        "Box IoU and mask IoU are reported side by side per candidate; boxHitMaskFail counts every target whose candidates include boxIoU >= 0.5 while the best mask IoU < 0.5 — box IoU >= 0.5 is never read as refinement-ready; area_ratio is cross-checked against the measured service-space mask white-pixel ratio within 0.01 (violation = infrastructure error, non-zero exit)",
+        "End-to-end over the real bridge :4112: the hat-teal GT mask is uploaded via POST /v1/selection-mask, a brim-target brightness edit runs through /v1/instruction with selection-method=mask (subject-level targets are provider-only by bridge design), the response must carry non-null selectionBounds, the saved .pcraft reopened via /v1/inspect must show hasSelection=true (PSD non-persistence is a recorded engine boundary), and the rendered preview must keep out-of-mask pixels (>6px Chebyshev from the mask) byte-identical with boundary diffs <= 2/255 while in-mask pixels actually change",
+        "Honest PASS semantics: fixture, service or assertion failures exit non-zero; low mask quality (weak IoU, high miss/spill, many boxHitMaskFail targets) is a reported finding, not a failure; the report records the manifest method string and /health version and lands in .tools/photocraft-serve-qa/mask-quality-report.json, with --case subset runs written to mask-quality-report.subset.json and marked subset so a full report is never overwritten; TAU_AUTO_ENABLED stays false and is not modified"
+      ]
+    },
+    {
+      "id": "IMG-050",
+      "tier": "image-qa",
+      "title": "Preview vs save-reopen vs export pixel consistency",
+      "cwd": ".",
+      "argv": ["node", "scripts/photocraft/preview-consistency.mjs"],
+      "requiresFiles": ["qa/fixtures/photocraft-hat-teal.png"],
+      "requiresPorts": [4112, 4101],
+      "checks": [
+        "Whole-image and provider-masked brightness cases with one slider modification (12 to 37) render byte-identical across the live slider preview, a reopened saved document and a cold CLI convert export",
+        "Reopened documents expose the slider value on the editable adjustment layer, and masked layers keep their mask after save and reopen",
+        "Pixels farther than 6px outside the provider mask stay byte-identical to the original; boundary spill is bounded to 2/255",
+        "An sRGB ICC-embedded input covers the profile path; any tolerance violation fails the run with a JSON report"
       ]
     }
   ],

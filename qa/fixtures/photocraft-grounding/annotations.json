@@ -1,0 +1,284 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-10-16",
+  "method": "初标由视觉模型（analyze_image MCP，GLM-4.5V）给出归一化框；随后基于叠加图（render-grounding-overlay.py）做两轮独立逐框复核（verdict+修正读数），读数截断或矛盾时按目标单独重发，最终由单一标注者（开发者）裁决定稿，读数分歧 ≤3% 时取中位。非多人独立标注；框误差约 ±5%。命中判定 IoU≥0.5 以容忍该量级误差。二轮复核共修改 10 框、确认 27 框、移除 1 个无法标注目标（sunflowers-01 绿叶：画面仅有花后碎叶）。",
+  "hitIoUThreshold": 0.5,
+  "domains": {
+    "flower": "花",
+    "interior": "家具/室内",
+    "building": "房屋",
+    "product": "商品",
+    "pet": "宠物"
+  },
+  "images": [
+    {
+      "image": "close-up-photographs-of-sunflowers-01.jpg",
+      "domain": "flower",
+      "width": 1280,
+      "height": 960,
+      "notes": "复核后移除原『绿叶』目标：画面仅有花后碎叶（约 [0.36,0.07,0.11,0.09]），无完整可标注叶片",
+      "targets": [
+        {
+          "phrase": "向日葵",
+          "boxes": [[0.16, 0.1, 0.66, 0.82]],
+          "notes": "画面唯一向日葵花头（含全部花瓣）；两轮复核逐步剔除框入的背景白菊"
+        }
+      ]
+    },
+    {
+      "image": "close-up-photographs-of-sunflowers-02.jpg",
+      "domain": "flower",
+      "width": 1280,
+      "height": 960,
+      "targets": [
+        {
+          "phrase": "向日葵",
+          "boxes": [[0.16, 0.02, 0.65, 0.9]],
+          "notes": "近满幅大花头，bbox 面积比 0.585，接近服务端 MAX_AREA_RATIO=0.6"
+        },
+        {
+          "phrase": "绿叶",
+          "boxes": [[0.72, 0.28, 0.26, 0.28]],
+          "notes": "右侧叶片；两轮复核修正（原框偏左上，含花瓣）"
+        }
+      ]
+    },
+    {
+      "image": "hibiscus-brilliant.jpg",
+      "domain": "flower",
+      "width": 1280,
+      "height": 937,
+      "targets": [
+        {
+          "phrase": "花朵",
+          "boxes": [[0.07, 0.11, 0.52, 0.84]],
+          "notes": "左侧主花（含全部花瓣）；复核修正（原框右侧含背景叶片）"
+        },
+        {
+          "phrase": "花蕊",
+          "boxes": [[0.09, 0.4, 0.27, 0.17]],
+          "notes": "花心+向右伸出的雌蕊柱（二轮两次读数一致指出原框截断柱体），小目标"
+        },
+        {
+          "phrase": "绿叶",
+          "boxes": [[0.55, 0.46, 0.29, 0.28]],
+          "notes": "右侧实焦大叶；二轮复核修正（原框落在虚化背景上）"
+        }
+      ]
+    },
+    {
+      "image": "dinner-table-and-chairs.jpg",
+      "domain": "interior",
+      "width": 1280,
+      "height": 969,
+      "targets": [
+        {
+          "phrase": "餐桌",
+          "boxes": [[0.2, 0.4, 0.57, 0.6]],
+          "notes": "带桌布的餐桌"
+        },
+        {
+          "phrase": "椅子",
+          "boxes": [[0.15, 0.3, 0.29, 0.7], [0.5, 0.3, 0.3, 0.7]],
+          "notes": "桌两侧各一把前景椅，多实例；两轮复核读数均指出原框含餐桌/相邻椅背，取中位定稿"
+        },
+        {
+          "phrase": "窗户",
+          "boxes": [[0.26, 0.0, 0.29, 0.44]],
+          "notes": "桌后方的窗户"
+        }
+      ]
+    },
+    {
+      "image": "cabin-14-living-room-sofa-fireplace-microwave-do.jpg",
+      "domain": "interior",
+      "width": 1280,
+      "height": 847,
+      "targets": [
+        {
+          "phrase": "沙发",
+          "boxes": [[0.0, 0.36, 0.29, 0.63]],
+          "notes": "左侧木框沙发；复核修正（原框右侧超出沙发轮廓）"
+        },
+        {
+          "phrase": "壁炉",
+          "boxes": [[0.68, 0.35, 0.32, 0.4]],
+          "notes": "右侧石砌壁炉"
+        },
+        {
+          "phrase": "微波炉",
+          "boxes": [[0.65, 0.28, 0.11, 0.1]],
+          "notes": "壁炉上方置物架的微波炉，小目标"
+        },
+        {
+          "phrase": "门",
+          "boxes": [[0.58, 0.13, 0.07, 0.33]],
+          "notes": "画面中部木门"
+        },
+        {
+          "phrase": "地板",
+          "boxes": [[0.3, 0.4, 0.45, 0.45]],
+          "notes": "木地板区域"
+        }
+      ]
+    },
+    {
+      "image": "living-room-cabin-14-two-bedroom-cabin-at-doutha.jpg",
+      "domain": "interior",
+      "width": 1280,
+      "height": 848,
+      "targets": [
+        {
+          "phrase": "沙发",
+          "boxes": [[0.4, 0.46, 0.26, 0.33]],
+          "notes": "中部沙发；复核修正（原框偏矮，不含沙发靠背下部）"
+        },
+        {
+          "phrase": "窗户",
+          "boxes": [[0.0, 0.24, 0.16, 0.3]],
+          "notes": "左侧窗"
+        },
+        {
+          "phrase": "地毯",
+          "boxes": [[0.32, 0.63, 0.23, 0.23]],
+          "notes": "沙发前地毯；二轮复核修正（原框不含地毯下缘）"
+        }
+      ]
+    },
+    {
+      "image": "meigs-house-front-street-marietta-oh.jpg",
+      "domain": "building",
+      "width": 1280,
+      "height": 960,
+      "targets": [
+        {
+          "phrase": "房子",
+          "boxes": [[0.17, 0.12, 0.68, 0.85]],
+          "notes": "整栋建筑（含屋顶到地基）"
+        },
+        {
+          "phrase": "屋顶",
+          "boxes": [[0.17, 0.28, 0.64, 0.18]],
+          "notes": "主坡屋顶（不含天空/烟囱/墙面）；三轮读数两次收敛于此"
+        },
+        {
+          "phrase": "门",
+          "boxes": [[0.41, 0.59, 0.06, 0.18]],
+          "notes": "门廊立柱间的门扇（灯笼下、台阶上）；二轮复核修正（原框含台阶/灌木）"
+        },
+        {
+          "phrase": "窗户",
+          "boxes": [[0.62, 0.59, 0.13, 0.22]],
+          "notes": "右侧大窗"
+        },
+        {
+          "phrase": "门廊",
+          "boxes": [[0.29, 0.55, 0.19, 0.27]],
+          "notes": "门廊（甲板+支撑立柱）；二轮复核收缩（原框含草地/台阶/灌木）"
+        }
+      ]
+    },
+    {
+      "image": "plas-newydd-llangollen-2010.jpg",
+      "domain": "building",
+      "width": 1280,
+      "height": 960,
+      "targets": [
+        {
+          "phrase": "房子",
+          "boxes": [[0.09, 0.53, 0.67, 0.36]],
+          "notes": "石砌主楼"
+        },
+        {
+          "phrase": "屋顶",
+          "boxes": [[0.09, 0.56, 0.65, 0.1]],
+          "notes": "深色屋面"
+        },
+        {
+          "phrase": "门",
+          "boxes": [[0.5, 0.79, 0.06, 0.09]],
+          "notes": "中央小门，接近 MIN_AREA_RATIO=0.002"
+        },
+        {
+          "phrase": "窗户",
+          "boxes": [[0.51, 0.66, 0.07, 0.13]],
+          "notes": "门上方窗"
+        },
+        {
+          "phrase": "烟囱",
+          "boxes": [[0.66, 0.5, 0.05, 0.09]],
+          "notes": "右侧烟囱，小目标"
+        }
+      ]
+    },
+    {
+      "image": "l-beck-an-der-mauer-150-152-2017-0454.jpg",
+      "domain": "building",
+      "width": 1280,
+      "height": 1280,
+      "targets": [
+        {
+          "phrase": "房屋",
+          "boxes": [[0.0, 0.0, 1.0, 0.72]],
+          "notes": "整幅砖砌立面；bbox 面积比 0.72 超服务端 MAX_AREA_RATIO=0.6。IMG-053 实测推翻「预期无候选」：服务返回 top-1 IoU 0.96 命中（面积过滤按候选蒙版而非标注框计算），压力侧行为已按实测记录"
+        },
+        {
+          "phrase": "门",
+          "boxes": [[0.19, 0.12, 0.23, 0.53]],
+          "notes": "左侧拱顶门洞（编号 150）"
+        },
+        {
+          "phrase": "窗户",
+          "boxes": [[0.53, 0.11, 0.11, 0.42]],
+          "notes": "右侧窄长窗"
+        }
+      ]
+    },
+    {
+      "image": "../photocraft-hat-teal.png",
+      "domain": "product",
+      "width": 1254,
+      "height": 1254,
+      "targets": [
+        {
+          "phrase": "帽子",
+          "boxes": [[0.09, 0.16, 0.85, 0.68]],
+          "notes": "整顶帽（含帽沿）；侧视"
+        },
+        {
+          "phrase": "帽顶",
+          "boxes": [[0.09, 0.16, 0.72, 0.44]],
+          "notes": "帽冠部分"
+        },
+        {
+          "phrase": "帽沿",
+          "boxes": [[0.22, 0.57, 0.72, 0.28]],
+          "notes": "帽沿部分"
+        }
+      ]
+    },
+    {
+      "image": "../photocraft-fluffy-cat-cc0.jpg",
+      "domain": "pet",
+      "width": 1920,
+      "height": 2560,
+      "targets": [
+        {
+          "phrase": "猫",
+          "boxes": [[0.02, 0.12, 0.92, 0.76]],
+          "notes": "侧躺摊开的整只猫（含尾、爪）"
+        },
+        {
+          "phrase": "猫头",
+          "boxes": [[0.47, 0.13, 0.42, 0.26]],
+          "notes": "抬头看镜头的头部（含耳）"
+        },
+        {
+          "phrase": "猫脸",
+          "boxes": [[0.54, 0.21, 0.27, 0.16]],
+          "notes": "面部（眼鼻，不含耳）"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,112 @@
+{
+  "close-up-photographs-of-sunflowers-01.jpg": {
+    "sourceTitle": "File:Close-up photographs of sunflowers 01.jpg",
+    "sourcePage": "https://commons.wikimedia.org/wiki/Close-up_photographs_of_sunflowers_01.jpg",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "artist": "SwarmCheng",
+    "downloadedWidth": 1280,
+    "downloadedHeight": 960,
+    "reviewConclusion": "二轮复核：向日葵框收紧（剔除背景白菊）；绿叶目标因仅花后碎叶移除"
+  },
+  "close-up-photographs-of-sunflowers-02.jpg": {
+    "sourceTitle": "File:Close-up photographs of sunflowers 02.jpg",
+    "sourcePage": "https://commons.wikimedia.org/wiki/Close-up_photographs_of_sunflowers_02.jpg",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "artist": "SwarmCheng",
+    "downloadedWidth": 1280,
+    "downloadedHeight": 960,
+    "reviewConclusion": "二轮复核：向日葵 TIGHT；绿叶框下移收紧到叶身"
+  },
+  "dinner-table-and-chairs.jpg": {
+    "sourceTitle": "File:Dinner table and chairs.jpg",
+    "sourcePage": "https://commons.wikimedia.org/wiki/Dinner_table_and_chairs.jpg",
+    "license": "CC BY-SA 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+    "artist": "Rick Harris",
+    "downloadedWidth": 1280,
+    "downloadedHeight": 969,
+    "reviewConclusion": "二轮复核：餐桌/窗户 TIGHT；椅子双框按三次读数中位改定"
+  },
+  "l-beck-an-der-mauer-150-152-2017-0454.jpg": {
+    "sourceTitle": "File:Lübeck, An der Mauer 150-152 -- 2017 -- 0454.jpg",
+    "sourcePage": "https://commons.wikimedia.org/wiki/L%C3%BCbeck%2C_An_der_Mauer_150-152_--_2017_--_0454.jpg",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "artist": "Dietmar Rabich",
+    "downloadedWidth": 1280,
+    "downloadedHeight": 1280,
+    "reviewConclusion": "二轮复核：门/窗 TIGHT；房屋读数矛盾（修正值=现值）保持；IMG-053 实测 top-1 IoU 0.96 命中"
+  },
+  "meigs-house-front-street-marietta-oh.jpg": {
+    "sourceTitle": "File:Meigs House, Front Street, Marietta, OH.jpg",
+    "sourcePage": "https://commons.wikimedia.org/wiki/Meigs_House%2C_Front_Street%2C_Marietta%2C_OH.jpg",
+    "license": "CC BY-SA 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+    "artist": "w_lemay",
+    "downloadedWidth": 1280,
+    "downloadedHeight": 960,
+    "reviewConclusion": "二轮复核：房子/窗户 TIGHT；屋顶/门/门廊三框收缩改定"
+  },
+  "plas-newydd-llangollen-2010.jpg": {
+    "sourceTitle": "File:Plas Newydd, Llangollen, 2010.JPG",
+    "sourcePage": "https://commons.wikimedia.org/wiki/Plas_Newydd%2C_Llangollen%2C_2010.JPG",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "artist": "Rachel White",
+    "downloadedWidth": 1280,
+    "downloadedHeight": 960,
+    "reviewConclusion": "二轮复核：5 框全部 TIGHT，无改动"
+  },
+  "cabin-14-living-room-sofa-fireplace-microwave-do.jpg": {
+    "sourceTitle": "File:Cabin 14 living room sofa fireplace microwave Douthat State Park Virginia (27698134543).jpg",
+    "sourcePage": "https://commons.wikimedia.org/wiki/Cabin_14_living_room_sofa_fireplace_microwave_Douthat_State_Park_Virginia_%2827698134543%29.jpg",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+    "artist": "vastateparksstaff",
+    "downloadedWidth": 1280,
+    "downloadedHeight": 847,
+    "reviewConclusion": "二轮复核：5 框全部 TIGHT（含一轮修正后的沙发框）"
+  },
+  "hibiscus-brilliant.jpg": {
+    "sourceTitle": "File:Hibiscus Brilliant.jpg",
+    "sourcePage": "https://commons.wikimedia.org/wiki/Hibiscus_Brilliant.jpg",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+    "artist": "Andy / Andrew Fogg from near Cambridge, UK",
+    "downloadedWidth": 1280,
+    "downloadedHeight": 937,
+    "reviewConclusion": "二轮复核：花朵确认（噪声带内）；花蕊扩框含雌蕊柱；绿叶改框到实焦叶片"
+  },
+  "living-room-cabin-14-two-bedroom-cabin-at-doutha.jpg": {
+    "sourceTitle": "File:Living Room cabin 14 two bedroom cabin at Douthat State Park Virginia (28029060100).jpg",
+    "sourcePage": "https://commons.wikimedia.org/wiki/Living_Room_cabin_14_two_bedroom_cabin_at_Douthat_State_Park_Virginia_%2828029060100%29.jpg",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+    "artist": "vastateparksstaff",
+    "downloadedWidth": 1280,
+    "downloadedHeight": 848,
+    "reviewConclusion": "二轮复核：沙发/窗户 TIGHT；地毯扩到下缘"
+  },
+  "../photocraft-hat-teal.png": {
+    "sourceTitle": "本仓库自有合成渲染图（qa/fixtures/photocraft-hat-teal.png）",
+    "sourcePage": null,
+    "license": "项目自有（本仓库生成，无外部版权约束）",
+    "licenseUrl": null,
+    "artist": "本项目",
+    "downloadedWidth": 1254,
+    "downloadedHeight": 1254,
+    "reviewConclusion": "二轮复核：帽子/帽顶 TIGHT；帽沿修正读数与现值差 ≤2%（噪声带内）保持"
+  },
+  "../photocraft-fluffy-cat-cc0.jpg": {
+    "sourceTitle": "CC0 猫照片（qa/fixtures/photocraft-fluffy-cat-cc0.jpg）",
+    "sourcePage": null,
+    "license": "CC0 1.0（文件名/入库档案记载；库内未保留来源页 URL，如实记录）",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0",
+    "artist": "佚名",
+    "downloadedWidth": 1920,
+    "downloadedHeight": 2560,
+    "reviewConclusion": "二轮复核：猫/猫头/猫脸 3 框全部 TIGHT，无改动"
+  }
+}

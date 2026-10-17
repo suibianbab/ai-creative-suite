@@ -1,9 +1,26 @@
+/** Subject-level targets work on any image: the provider subject mask selects them. */
+import {
+  adjustDirectionFromText,
+  degreeAmountFromText,
+  degreeAmounts,
+  strategyFor,
+} from "./default-strategy";
+import {
+  stepAcceptsProtect,
+  validateOperationSequence,
+} from "./operation-constraints";
+
+export type PhotoCraftSubjectTarget = "subject" | "background";
+
 export type PhotoCraftInstructionPlan = (
   | {
       operation: "recolor";
       color: "black" | "red" | "blue" | "green" | "gray";
-      target: "hat" | "brim" | "selected-area";
+      target: "hat" | "brim" | "selected-area" | PhotoCraftSubjectTarget;
       protectLabel: boolean;
+      // M3 protect 清单 grounding：原话里的保护名词（天空/水面…），交给
+      // 提议-确认环圈出保护框；标签/商标仍走手画保护框（无 phrase）。
+      protectPhrase?: string;
     }
   | {
       operation: "adjust";
@@ -16,8 +33,14 @@ export type PhotoCraftInstructionPlan = (
         | "shadows"
         | "highlights";
       amount: number;
-      target: "hat" | "brim" | "selected-area" | "whole-image";
+      target:
+        | "hat"
+        | "brim"
+        | "selected-area"
+        | "whole-image"
+        | PhotoCraftSubjectTarget;
       protectLabel: boolean;
+      protectPhrase?: string;
     }
   | {
       operation: "crop";
@@ -111,6 +134,11 @@ const targets = {
   猫耳: "selected-area",
   左耳: "selected-area",
   右耳: "selected-area",
+  主体: "subject",
+  前景: "subject",
+  商品: "subject",
+  产品: "subject",
+  背景: "background",
   图片: "whole-image",
   照片: "whole-image",
   画面: "whole-image",
@@ -121,26 +149,39 @@ const targets = {
   整张照片: "whole-image",
   整张图片: "whole-image",
   整个画面: "whole-image",
+  // M4 口语扩容：整幅× 措辞与整张× 同义，快车道不再因措辞差异落到句式引导。
+  整幅图片: "whole-image",
+  整幅画面: "whole-image",
+  整幅图: "whole-image",
 } as const;
 
 function orientationFromText(
   text: string,
 ): Extract<PhotoCraftInstructionPlan, { operation: "orient" }>["mode"] | null {
   const clean = text.replace(/\s+/g, "").replace(/[。！!]$/u, "");
+  // M4 口语扩容：方向词自带整图语义，允许省略「图片/照片」主语
+  // （顺时针旋转 / 旋转180度 / 水平翻转）；局部目标（背景/帽子…）仍拒绝。
   const match = clean.match(
-    /^(?:请)?(?:把|将)?(?:整张|整个|整幅)?(?:图片|照片|图像|画面)(?:整体)?(顺时针旋转90度|逆时针旋转90度|旋转180度|水平翻转|垂直翻转)$/u,
+    /^(?:请)?(?:把|将|让)?(?:这|这一?个|这张)?(?:整张|整个|整幅|全图)?(?:图片|照片|图像|画面)?(?:整体)?(顺时针(?:旋转|转)(?:90度|九十度|一下)?|逆时针(?:旋转|转)(?:90度|九十度|一下)?|(?:旋转|转)180度|水平翻转|垂直翻转)$/u,
   );
-  return match
-    ? (
-        {
-          顺时针旋转90度: "rotate-cw",
-          逆时针旋转90度: "rotate-ccw",
-          旋转180度: "rotate-180",
-          水平翻转: "flip-horizontal",
-          垂直翻转: "flip-vertical",
-        } as const
-      )[match[1] as "顺时针旋转90度"]
-    : null;
+  if (match) {
+    const word = match[1] ?? "";
+    if (word.startsWith("顺")) return "rotate-cw";
+    if (word.startsWith("逆")) return "rotate-ccw";
+    if (word.includes("180")) return "rotate-180";
+    if (word.startsWith("水平")) return "flip-horizontal";
+    return "flip-vertical";
+  }
+  // M2 默认策略表：「旋转一下/转一下」没说明方向 → 顺时针 90 度（默认可
+  // 一步撤销）；「旋转90度」同样未说明方向，按表默认顺时针。只接受整图
+  // 措辞；带局部目标（背景/帽子…）的旋转依然拒绝。
+  if (
+    /^(?:请)?(?:把|将|让)?(?:这|这一?个|这张)?(?:整张|整个|整幅|全图)?(?:图片|照片|图像|画面|整张图?)?(?:旋转|转)(?:一下|90度)?$/.test(
+      clean,
+    )
+  )
+    return "rotate-cw";
+  return null;
 }
 
 function layerActionFromText(
@@ -156,19 +197,55 @@ function layerActionFromText(
     : null;
 }
 
+/**
+ * M4：保护要求的唯一截尾解析点。快车道、模型对账（reconcile）与独立法官
+ * （validate）共用，杜绝三处正则漂移导致的静默丢保护——此前「并保留标签」
+ * （无逗号）、「保护标签」「保持Logo」等措辞在部分通道被剥离却未被识别。
+ * 标签/商标/Logo/文字 归手画保护框（label），其余名词交提议-确认环（phrase）。
+ */
+export function protectTailOf(clean: string): {
+  label: boolean;
+  phrase?: string;
+} | null {
+  const match = clean.match(
+    /，?(?:并|再)?(?:保留|不要改变|保护|不要动|别动|保持)([一-鿿]{1,8}|Logo|LOGO)$|，?([一-鿿]{1,8}|Logo|LOGO)(?:不要变|保持不变|不要动)$/u,
+  );
+  const noun = match ? (match[1] ?? match[2]) : undefined;
+  if (!noun) return null;
+  if (/^(?:标签|商标|Logo|LOGO|文字)$/.test(noun)) return { label: true };
+  return { label: false, phrase: noun };
+}
+
+/** 模型通道的 protectPhrase 归一化：1-8 个汉字名词；标签/商标归标签流程。 */
+function normalizeModelProtectPhrase(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  if (!/^[一-鿿]{1,8}$/u.test(trimmed) || /^(?:标签|商标)$/.test(trimmed))
+    throw new Error("模型返回的保护范围无效");
+  return trimmed;
+}
+
 export function planPhotoCraftInstruction(
   instruction: string,
 ): PhotoCraftInstructionPlan | null {
   const clean = instruction.trim().replace(/[。！!\s]+$/g, "");
-  const protection =
-    /(?:保留|不要改变)(?:标签|商标)|(?:标签|商标)(?:不要变|保持不变)/;
-  const protectedLabel = protection.test(clean);
+  // M3 protect 清单 + M4 统一截尾解析（protectTailOf）：保护名词（保护
+  // 天空/水面不要动）随计划下发，由提议-确认环圈出保护框；标签/商标/Logo
+  // 保持手画流程。解析、剥离、对账、法官共用一处，杜绝通道间正则漂移。
+  const protectTail = protectTailOf(clean);
+  const protectedLabel = protectTail?.label === true;
+  const protectPhrase = protectTail?.phrase;
+  // 带保护要求的指令只有能挂保护框的局部步骤可承接；其余操作照旧不解析。
+  const hasProtect = protectTail !== null;
+  // 先剥带连接词的清单式（并保留天空/，标签不要变），再剥标签式——顺序
+  // 反了会把「并保留标签」剥成残留的「并」，让核心句解析失败。
   const core = clean.replace(
-    /，?(?:(?:保留|不要改变)(?:标签|商标)|(?:标签|商标)(?:不要变|保持不变))$/,
+    /，?(?:并|再)?(?:保留|不要改变|保护|不要动|别动|保持)(?:[一-鿿]{1,8}|Logo|LOGO)$|，?(?:[一-鿿]{1,8}|Logo|LOGO)(?:不要变|保持不变|不要动)$/u,
     "",
   );
   const orientation = orientationFromText(core);
-  if (orientation && !protectedLabel)
+  if (orientation && !hasProtect)
     return {
       operation: "orient",
       target: "whole-image",
@@ -176,7 +253,7 @@ export function planPhotoCraftInstruction(
       mode: orientation,
     };
   const layerAction = layerActionFromText(core);
-  if (layerAction && !protectedLabel)
+  if (layerAction && !hasProtect)
     return {
       operation: "layer-action",
       target: "whole-image",
@@ -186,7 +263,7 @@ export function planPhotoCraftInstruction(
   const shadowMatch = core.match(
     /^(?:请)?(?:给|为)(?:当前|选中(?:的)?)(?:文字|商品|图层)(?:图层)?添加投影[，,]?距离(\d{1,3})像素[，,]?大小(\d{1,3})像素[，,]?不透明度(\d{1,3})%$/u,
   );
-  if (shadowMatch && !protectedLabel) {
+  if (shadowMatch && !hasProtect) {
     const distance = Number(shadowMatch[1]);
     const size = Number(shadowMatch[2]);
     const opacity = Number(shadowMatch[3]);
@@ -201,21 +278,46 @@ export function planPhotoCraftInstruction(
       opacity,
     };
   }
-  const styleMatch = core.match(
-    /^(?:请)?(?:把|将)?当前文字(?:设为|改为)(粗体|常规)(?:并(加上|去掉)下划线)?$/u,
+  const styleSetMatch = core.match(
+    /^(?:请)?(?:把|将)?当前文字(?:图层)?(?:设为|改为)(粗体|常规)(?:并(加上|去掉)下划线)?$/u,
   );
-  if (styleMatch && !protectedLabel)
+  // M4 口语扩容：动词式文字样式（把当前文字图层加粗/加下划线）与「设为
+  // 粗体」同义；只改用户点名的属性，未提及的字样不下发。
+  const styleVerbMatch = core.match(
+    /^(?:请)?(?:把|将|给)?当前文字图层?(加粗|取消加粗|设为常规|改为常规|加上下划线|加下划线|添加下划线|去掉下划线|取消下划线|移除下划线)$/u,
+  );
+  if ((styleSetMatch || styleVerbMatch) && !hasProtect) {
+    const verb = styleVerbMatch?.[1] ?? "";
+    const weight = styleSetMatch
+      ? styleSetMatch[1] === "粗体"
+        ? 700
+        : 400
+      : verb === "加粗"
+        ? 700
+        : /^(?:取消加粗|设为常规|改为常规)$/.test(verb)
+          ? 400
+          : undefined;
+    const underline = styleSetMatch
+      ? styleSetMatch[2]
+        ? styleSetMatch[2] === "加上"
+        : undefined
+      : /^(?:加上?|添加)下划线$/.test(verb)
+        ? true
+        : /^(?:去掉|取消|移除)下划线$/.test(verb)
+          ? false
+          : undefined;
     return {
       operation: "text-style",
       target: "whole-image",
       protectLabel: false,
-      weight: styleMatch[1] === "粗体" ? 700 : 400,
-      ...(styleMatch[2] ? { underline: styleMatch[2] === "加上" } : {}),
+      ...(weight !== undefined ? { weight } : {}),
+      ...(underline !== undefined ? { underline } : {}),
     };
+  }
   const imageSizeMatch = core.match(
-    /^(?:请)?(?:把|将)?(?:图片|照片|图像)(?:的)?(?:尺寸|大小)(?:调整为|改成|改为|设为|设置为)(\d{1,4})\s*[×xX*＊]\s*(\d{1,4})(?:像素)?$/u,
+    /^(?:请)?(?:把|将)?(?:图片|照片|图像)(?:的)?(?:尺寸|大小)?(?:调整为|改成|改为|设为|设置为|重采样为|重采样到|缩放为|缩放到)(\d{1,4})\s*[×xX*＊]\s*(\d{1,4})(?:像素)?$/u,
   );
-  if (imageSizeMatch && !protectedLabel) {
+  if (imageSizeMatch && !hasProtect) {
     const width = Number(imageSizeMatch[1]);
     const height = Number(imageSizeMatch[2]);
     if (
@@ -235,9 +337,9 @@ export function planPhotoCraftInstruction(
     };
   }
   const levelsMatch = core.match(
-    /^(?:请)?(?:把|将)?(?:整图|全图|整张图|图片|照片)(?:的)?色阶(?:设为|调整为|改为)黑场(\d{1,3})\s*[,，、]?\s*白场(\d{1,3})(?:\s*[,，、]?\s*伽马(\d(?:\.\d{1,2})?))?$/u,
+    /^(?:请)?(?:把|将)?(?:整图|全图|整张图|整幅图|图片|照片)?(?:的)?色阶(?:设为|调整为|改为)黑场(\d{1,3})\s*[,，、]?\s*白场(\d{1,3})(?:\s*[,，、]?\s*伽马(\d(?:\.\d{1,2})?))?$/u,
   );
-  if (levelsMatch && !protectedLabel) {
+  if (levelsMatch && !hasProtect) {
     const inBlack = Number(levelsMatch[1]);
     const inWhite = Number(levelsMatch[2]);
     const gamma = levelsMatch[3] ? Number(levelsMatch[3]) : 1;
@@ -261,7 +363,7 @@ export function planPhotoCraftInstruction(
   const canvasMatch = core.match(
     /^(?:请)?(?:把|将)?(?:图片|照片|画面|图像)?(?:的)?画布(?:尺寸)?(?:扩展(?:为|到)?|改成|改为|调整为|设为|设置为)(\d{1,4})\s*[×xX*＊]\s*(\d{1,4})(?:像素)?$/u,
   );
-  if (canvasMatch && !protectedLabel) {
+  if (canvasMatch && !hasProtect) {
     const width = Number(canvasMatch[1]);
     const height = Number(canvasMatch[2]);
     if (width < 1 || height < 1 || width > 8192 || height > 8192) return null;
@@ -273,10 +375,16 @@ export function planPhotoCraftInstruction(
       height,
     };
   }
-  const textMatch = core.match(
-    /^(?:请)?(?:在(?:图片|照片|画面)上)?(?:添加|加上|写上|加入)(?:文字|文本)?[「“"](.{1,80})[」”"](?:(?:，|,)?(?:字号|大小)(\d{1,3}))?(?:(?:，|,)?(黑色|白色|红色))?$/u,
-  );
-  if (textMatch?.[1] && !protectedLabel) {
+  // M4 口语扩容：未加引号的「加上文字HELLO/添加文字SALE」也解析——仅限
+  // 「文字/文本」标记后紧跟的短内容（≤20 字符），引号形式保持原快照。
+  const textMatch =
+    core.match(
+      /^(?:请)?(?:在(?:图片|照片|画面)上)?(?:添加|加上|写上|加入)(?:文字|文本)?[「“"](.{1,80})[」”"](?:(?:，|,)?(?:字号|大小)(\d{1,3}))?(?:(?:，|,)?(黑色|白色|红色))?$/u,
+    ) ??
+    core.match(
+      /^(?:请)?(?:在(?:图片|照片|画面)上)?(?:添加|加上|写上|加入)文字([A-Za-z0-9一-鿿][A-Za-z0-9一-鿿 ]{0,19})$/u,
+    );
+  if (textMatch?.[1] && !hasProtect) {
     const size = textMatch[2] ? Number(textMatch[2]) : 48;
     if (size < 8 || size > 160) return null;
     return {
@@ -295,7 +403,7 @@ export function planPhotoCraftInstruction(
     };
   }
   if (
-    !protectedLabel &&
+    !hasProtect &&
     /^(?:(?:把|将)?(?:图片|照片|画面|图像)?)(?:裁成|裁为|裁剪成|裁剪为)(?:正方形|方图|1:1)$/u.test(
       core,
     )
@@ -307,14 +415,14 @@ export function planPhotoCraftInstruction(
       square: true,
     };
   if (
-    !protectedLabel &&
+    !hasProtect &&
     /^(?:请帮我|帮我|请)?(?:把|将)?(?:这张)?(?:图片|照片|画面|图像)?(?:裁剪|剪裁|裁切)(?:到|为)?(?:选区|画框|框选区域|所选区域)$/u.test(
       core,
     )
   )
     return { operation: "crop", target: "selected-area", protectLabel: false };
   if (
-    !protectedLabel &&
+    !hasProtect &&
     (/^(?:请帮我|帮我|请)?(?:把|将)?(?:这个|这处|选中的|点击的)?(?:污点|瑕疵|小斑点|痘印)(?:去掉|去除|清除|修复)$/u.test(
       core,
     ) ||
@@ -324,7 +432,7 @@ export function planPhotoCraftInstruction(
   )
     return { operation: "heal", target: "selected-area", protectLabel: false };
   const match = core.match(
-    /^(?:请)?(?:把|将)?(?:这顶|这个)?(帽子|帽身|帽沿|选区|区域|耳朵|猫耳|左耳|右耳)(?:的)?(?:面料|毛发|颜色|色彩)?(?:换成|改成|改为|调成|调整为|变成|涂成)(黑色|红色|蓝色|绿色|灰色)$/,
+    /^(?:请帮我|帮我|请)?(?:把|将)?(?:这顶|这个|这张)?(帽子|帽身|帽沿|选区|区域|耳朵|猫耳|左耳|右耳|主体|前景|商品|产品|背景)(?:的)?(?:面料|毛发|颜色|色彩)?(?:(?:换成|改成|改为|调成|调整为|变成|涂成)|(?:换个?颜色|换个?色|变个?颜色|换色)[，,。]?(?:再|然后)?(?:换成|改成|改为|调成|变成|涂成))(黑色|红色|蓝色|绿色|灰色)$/,
   );
   if (match)
     return {
@@ -333,8 +441,11 @@ export function planPhotoCraftInstruction(
       target: targets[match[1] as keyof typeof targets] as
         | "hat"
         | "brim"
-        | "selected-area",
-      protectLabel: protectedLabel,
+        | "selected-area"
+        | "subject"
+        | "background",
+      protectLabel: protectedLabel || Boolean(protectPhrase),
+      ...(protectPhrase ? { protectPhrase } : {}),
     };
   if (
     /^(?:请)?(?:只)?(?:把|将)(?:画面|图片|照片)?(?:右侧|左侧|右边|左边)?(?:的)?(?:猫的)?(?:左耳|右耳|耳朵|猫耳)(?:的)?(?:橙色)?(?:毛发|颜色)?(?:换成|改成|改为|调成|变成)灰色$/.test(
@@ -345,10 +456,11 @@ export function planPhotoCraftInstruction(
       operation: "recolor",
       color: "gray",
       target: "selected-area",
-      protectLabel: protectedLabel,
+      protectLabel: protectedLabel || Boolean(protectPhrase),
+      ...(protectPhrase ? { protectPhrase } : {}),
     };
   const numeric = core.match(
-    /^(?:请帮我|帮我|请)?(?:把|将|让)?(?:这顶|这个|这张)?(帽子|帽身|帽沿|选区|区域|整张图片|整张照片|整个画面|图片|照片|画面|图像|全图|整体|整张图)(?:的)?(亮度|对比度|饱和度|曝光|自然饱和度|暗部|高光)(提高|降低|增加|减少)([1-5]?\d)$/,
+    /^(?:请帮我|帮我|请)?(?:把|将|让)?(?:这顶|这个|这张)?(帽子|帽身|帽沿|选区|区域|整张图片|整张照片|整个画面|整幅图片|整幅画面|整幅图|图片|照片|画面|图像|全图|整体|整张图|主体|前景|商品|产品|背景)(?!的?(?:主体|前景|商品|产品|背景))(?:的)?(亮度|对比度|饱和度|曝光|自然饱和度|暗部|高光)(提高|降低|增加|减少)([1-5]?\d)$/,
   );
   if (
     numeric &&
@@ -356,7 +468,7 @@ export function planPhotoCraftInstruction(
     Number(numeric[4]) <= 50 &&
     !(
       targets[numeric[1] as keyof typeof targets] === "whole-image" &&
-      protectedLabel
+      hasProtect
     )
   )
     return {
@@ -385,10 +497,11 @@ export function planPhotoCraftInstruction(
         Number(numeric[4]) *
         (["提高", "增加"].includes(numeric[3] ?? "") ? 1 : -1),
       target: targets[numeric[1] as keyof typeof targets],
-      protectLabel: protectedLabel,
+      protectLabel: protectedLabel || Boolean(protectPhrase),
+      ...(protectPhrase ? { protectPhrase } : {}),
     };
   const tonal = core.match(
-    /^(?:请帮我|帮我|请)?(?:把|将)?(?:整张图|图片|照片|画面|图像|全图)?(?:的)?(暗部|高光)(提高|降低|增加|减少|提亮|调亮|压低|调低)([1-5]?\d)$/,
+    /^(?:请帮我|帮我|请)?(?:把|将)?(?:整张图|整幅图|整幅画面|图片|照片|画面|图像|全图)?(?:的)?(暗部|高光)(提高|降低|增加|减少|提亮|调亮|压低|调低)([1-5]?\d)$/,
   );
   if (tonal && Number(tonal[3]) >= 1 && Number(tonal[3]) <= 50)
     return {
@@ -401,40 +514,64 @@ export function planPhotoCraftInstruction(
       protectLabel: false,
     };
   const light = core.match(
-    /^(?:请帮我|帮我|请)?(?:把|将|让)?(?:这顶|这个|这张)?(帽子|帽身|帽沿|选区|区域|整张图片|整张照片|整个画面|图片|照片|画面|图像|全图|整体|整张图)(?:的)?(稍微|明显)?(提亮|调亮|变亮|亮|调暗|变暗|暗)(一点|一些)?$/,
+    /^(?:请帮我|帮我|请)?(?:把|将|让)?(?:这顶|这个|这张)?(帽子|帽身|帽沿|选区|区域|整张图片|整张照片|整个画面|整幅图片|整幅画面|整幅图|图片|照片|画面|图像|全图|整体|整张图|主体|前景|商品|产品|背景)(?!的?(?:主体|前景|商品|产品|背景))(?:的)?(稍微|明显)?(提亮|调亮|变亮|亮|调暗|变暗|暗)(一点|一些|起来|下去)?$/,
   );
   if (
     light &&
-    (light[2] || light[4]) &&
-    !(
-      targets[light[1] as keyof typeof targets] === "whole-image" &&
-      protectedLabel
-    )
+    // M2 默认策略表：未说明幅度不再要求程度词，直接按「一点=10、明显=25」
+    // 补默认值出预览（§5 绝不向用户追问数字）。
+    !(targets[light[1] as keyof typeof targets] === "whole-image" && hasProtect)
   )
     return {
       operation: "adjust",
       adjustment: "brightness",
       amount:
-        (light[2] === "明显" ? 25 : 10) *
+        (light[2] === "明显" ? degreeAmounts.obvious : degreeAmounts.slight) *
         (["调暗", "变暗", "暗"].includes(light[3] ?? "") ? -1 : 1),
       target: targets[light[1] as keyof typeof targets],
-      protectLabel: protectedLabel,
+      protectLabel: protectedLabel || Boolean(protectPhrase),
+      ...(protectPhrase ? { protectPhrase } : {}),
     };
   const vivid = core.match(
-    /^(?:我想)?(?:请帮我|帮我|请)?(?:把|将|让)?(?:这顶|这个)?(帽子|帽身|帽沿|选区|区域)(?:弄得|变得|调得)?更鲜艳(一点|一些)?$/,
+    /^(?:我想|我希望|希望)?(?:请帮我|帮我|请)?(?:把|将|让)?(?:这顶|这个|这张)?(帽子|帽身|帽沿|选区|区域|整张图片|整张照片|整个画面|整幅图片|整幅画面|整幅图|图片|照片|画面|图像|全图|整体|整张图|主体|前景|商品|产品|背景)(?:弄得|变得|调得)?更鲜艳(一点|一些)?$/,
   );
-  if (vivid)
+  if (
+    vivid &&
+    !(targets[vivid[1] as keyof typeof targets] === "whole-image" && hasProtect)
+  )
     return {
       operation: "adjust",
       adjustment: "saturation",
-      amount: 10,
-      target: targets[vivid[1] as keyof typeof targets] as
-        | "hat"
-        | "brim"
-        | "selected-area",
-      protectLabel: protectedLabel,
+      amount: degreeAmounts.slight,
+      target: targets[vivid[1] as keyof typeof targets],
+      protectLabel: protectedLabel || Boolean(protectPhrase),
+      ...(protectPhrase ? { protectPhrase } : {}),
     };
   return null;
+}
+
+/** 读取计划上的保护名词（仅 recolor/adjust 携带；其余操作 undefined）。 */
+export function protectPhraseOf(
+  plan: PhotoCraftInstructionPlan,
+): string | undefined {
+  return (plan as { protectPhrase?: string }).protectPhrase;
+}
+
+/**
+ * M3 protect 清单：识别一条独立的保护子句，返回标签（手画保护框）或
+ * 任意名词（提议-确认环圈出）。非保护子句返回 null。
+ */
+function protectClauseNoun(
+  raw: string,
+): { label: boolean; phrase?: string } | null {
+  const match =
+    raw.match(/^(?:并|再)?(?:保留|不要改变|保护|不要动|别动)(.+)$/u) ??
+    raw.match(/^(.+?)(?:不要变|保持不变|不要动)$/u);
+  if (!match) return null;
+  const noun = (match[1] ?? "").trim();
+  if (!noun || noun.length > 8 || !/^[一-鿿]+$/u.test(noun)) return null;
+  if (/^(?:标签|商标)$/.test(noun)) return { label: true };
+  return { label: false, phrase: noun };
 }
 
 /** A sequence is accepted only when every requested action maps to a bounded PhotoCraft command. */
@@ -479,36 +616,25 @@ export function planPhotoCraftSequence(
   if (clauses.length < 2) return null;
   if (
     clauses.length === 2 &&
-    /^(?:并|再)?(?:保留|不要改变)(?:标签|商标)$|^(?:标签|商标)(?:不要变|保持不变)$/u.test(
-      clauses[1] ?? "",
-    ) &&
+    protectClauseNoun(clauses[1] ?? "") !== null &&
     !planPhotoCraftInstruction(clauses[0] ?? "")
   )
     return null;
   const steps: PhotoCraftInstructionPlan[] = [];
+  let protectClauses = 0;
   for (const raw of clauses) {
-    if (
-      /^(?:并|再)?(?:保留|不要改变)(?:标签|商标)$|^(?:标签|商标)(?:不要变|保持不变)$/u.test(
-        raw,
-      )
-    ) {
+    const protect = protectClauseNoun(raw);
+    if (protect !== null) {
       const last = steps.at(-1);
-      if (
-        !last ||
-        last.operation === "crop" ||
-        last.operation === "heal" ||
-        last.operation === "text" ||
-        last.operation === "canvas-size" ||
-        last.operation === "image-size" ||
-        last.operation === "orient" ||
-        last.operation === "layer-action" ||
-        last.operation === "levels" ||
-        last.operation === "text-style" ||
-        last.operation === "drop-shadow" ||
-        last.target === "whole-image"
-      )
+      // protect 清单走约束表：只有仍持有局部选区语义的步骤能挂保护框。
+      if (!last || !stepAcceptsProtect(last))
         throw new Error("标签保护要求必须紧跟局部编辑步骤");
-      steps[steps.length - 1] = { ...last, protectLabel: true };
+      protectClauses += 1;
+      steps[steps.length - 1] = {
+        ...last,
+        protectLabel: true,
+        ...(protect.phrase ? { protectPhrase: protect.phrase } : {}),
+      } as PhotoCraftInstructionPlan;
       continue;
     }
     const clause = raw
@@ -522,49 +648,15 @@ export function planPhotoCraftSequence(
     }
     steps.push(step);
   }
-  if (steps.length === 1) return null;
-  if (steps.length > 4) throw new Error("一次请指定 2 至 4 个明确编辑步骤");
-  if (
-    steps.some((step) => step.operation === "heal" || step.operation === "text")
-  )
-    throw new Error("当前操作请单独执行并检查结果");
-  if (steps.some((step) => step.operation === "layer-action"))
-    throw new Error("图层复制或显隐请单独执行并检查当前图层");
-  if (
-    steps.some(
-      (step) =>
-        step.operation === "text-style" || step.operation === "drop-shadow",
-    ) &&
-    !steps.every(
-      (step) =>
-        step.operation === "text-style" || step.operation === "drop-shadow",
-    )
-  )
-    throw new Error("文字样式和投影只能组合编辑同一个当前选中图层");
-  if (
-    steps.some(
-      (step, index) =>
-        (step.operation === "canvas-size" ||
-          step.operation === "image-size" ||
-          step.operation === "orient") &&
-        index !== steps.length - 1,
-    )
-  )
-    throw new Error("画布、图片尺寸或方向变更请放在最后一步");
-  if (
-    steps.filter(
-      (step) => step.target !== "whole-image" && step.operation !== "crop",
-    ).length > 1
-  )
-    throw new Error(
-      "一次复合编辑只能包含一个局部选区步骤；其他局部编辑请另起一轮",
-    );
-  if (
-    steps.some(
-      (step, index) => step.operation === "crop" && index !== steps.length - 1,
-    )
-  )
-    throw new Error("裁切请放在最后一步，以保留前面步骤的选区坐标");
+  // 单独一条编辑（无 protect 子句）不算复合序列；「编辑 + 保护」两条子句
+  // 落成一个带保护框的步骤，是合法序列（单步无顺序约束可查）。
+  if (steps.length === 1) {
+    if (protectClauses === 0) return null;
+    return steps;
+  }
+  // M3 约束表重构：步骤顺序与组合规则全部来自操作元数据表
+  // （operation-constraints.ts），错误文案与旧手写约束逐字一致。
+  validateOperationSequence(steps);
   return steps;
 }
 
@@ -583,9 +675,14 @@ export function parsePhotoCraftModelPlan(
   )
     throw new Error(raw.unsupported.slice(0, 180));
   if (
-    !["hat", "brim", "selected-area", "whole-image"].includes(
-      String(raw.target),
-    ) ||
+    ![
+      "hat",
+      "brim",
+      "selected-area",
+      "whole-image",
+      "subject",
+      "background",
+    ].includes(String(raw.target)) ||
     typeof raw.protectLabel !== "boolean"
   )
     throw new Error("模型未明确目标或保护要求");
@@ -774,6 +871,7 @@ export function parsePhotoCraftModelPlan(
     };
   }
   if (raw.operation === "recolor") {
+    const protectPhrase = normalizeModelProtectPhrase(raw.protectPhrase);
     if (
       target === "whole-image" ||
       !["black", "red", "blue", "green", "gray"].includes(String(raw.color)) ||
@@ -781,14 +879,17 @@ export function parsePhotoCraftModelPlan(
       ![undefined, 0].includes(raw.amount as number | undefined)
     )
       throw new Error("目前仅支持局部改黑、红、蓝、绿或灰");
+    if (protectPhrase && !protectLabel) throw new Error("模型遗漏了保护要求");
     return {
       operation: "recolor",
       color: raw.color as "black" | "red" | "blue" | "green" | "gray",
       target,
       protectLabel,
+      ...(protectPhrase ? { protectPhrase } : {}),
     };
   }
   if (raw.operation === "adjust") {
+    const protectPhrase = normalizeModelProtectPhrase(raw.protectPhrase);
     if (
       ![
         "brightness",
@@ -806,6 +907,7 @@ export function parsePhotoCraftModelPlan(
       ![undefined, "none"].includes(raw.color as string | undefined)
     )
       throw new Error("调色效果或幅度不支持");
+    if (protectPhrase && !protectLabel) throw new Error("模型遗漏了保护要求");
     return {
       operation: "adjust",
       adjustment: raw.adjustment as
@@ -819,6 +921,7 @@ export function parsePhotoCraftModelPlan(
       amount: raw.amount as number,
       target,
       protectLabel,
+      ...(protectPhrase ? { protectPhrase } : {}),
     };
   }
   throw new Error("该编辑要求暂不支持");
@@ -831,12 +934,58 @@ export function reconcilePhotoCraftModelPlan(
 ): unknown {
   if (!value || typeof value !== "object" || Array.isArray(value)) return value;
   const raw = { ...(value as Record<string, unknown>) };
+  // 任务②实测（2026-10-16，qwen-plus + json_object）：模型返回精确计划但
+  // 省略信封字段 unsupported（云端 json_object 不带 schema，json_schema 又让
+  // 输出劣化）。模型给出具体能力操作即表示「可执行」，此处补空信封；
+  // operation=unsupported 时不补——缺失的拒绝理由原样交给 parse 报错，
+  // 不得被静默洗成「完全支持」。
+  if (
+    typeof raw.operation === "string" &&
+    raw.operation !== "unsupported" &&
+    typeof raw.unsupported !== "string"
+  )
+    raw.unsupported = "";
   const clean = instruction.replace(/\s+/g, "");
   const colorAfterVerb = clean
     .replace(/[「“"][^」”"]*[」”"]/gu, "")
     .match(/(?:换成|换为|改成|改为|涂成|变成)([^，。]{1,8}?色)/u)?.[1];
   if (colorAfterVerb && !/^(?:黑|红|蓝|绿|灰)色$/u.test(colorAfterVerb))
     throw new Error("目标颜色不在当前 PhotoCraft 换色能力范围内");
+  // M2 默认策略表（§5）：数值/颜色缺失或无文字依据时不阻塞、不追问——按
+  // 领域默认策略表补默认值出预览，滑杆接管后续调整。「数值必须来自用户
+  // 原话」因此收紧为：原话没有任何独立数字时，幅度一律取表默认，模型自报
+  // 数值不作数；原话有数字（哪怕超出 -50~50）都以原话为准，由 parse 拒绝
+  // 超范围值，绝不静默改写用户明说的幅度。
+  const explicitAmount = /(?<!\d)\d{1,3}(?!\d)/.test(clean);
+  if (
+    raw.operation === "adjust" &&
+    (!explicitAmount || !Number.isInteger(raw.amount))
+  )
+    raw.amount =
+      degreeAmountFromText(instruction).amount *
+      adjustDirectionFromText(instruction);
+  if (raw.operation === "recolor" && !raw.color) raw.color = "gray";
+  if (raw.operation === "drop-shadow") {
+    const shadow = strategyFor("drop-shadow")?.defaults as {
+      distance: number;
+      size: number;
+      opacity: number;
+    };
+    if (!shadow) throw new Error("投影默认策略缺失");
+    const distance = clean.match(/距离(\d{1,3})(?:像素|px)?/i);
+    const size = clean.match(/(?:大小|模糊|柔和)(\d{1,3})(?:像素|px)?/i);
+    const opacity = clean.match(/不透明度(\d{1,3})%/);
+    if (distance) raw.distance = Number(distance[1]);
+    else if (!Number.isInteger(raw.distance)) raw.distance = shadow.distance;
+    if (size) raw.size = Number(size[1]);
+    else if (!Number.isInteger(raw.size)) raw.size = shadow.size;
+    if (opacity) raw.opacity = Number(opacity[1]);
+    else if (!Number.isInteger(raw.opacity)) raw.opacity = shadow.opacity;
+  }
+  if (raw.operation === "orient" && !raw.mode)
+    raw.mode =
+      (strategyFor("orient")?.defaults as { mode?: string } | undefined)
+        ?.mode ?? "rotate-cw";
   if (
     [
       "canvas-size",
@@ -851,10 +1000,12 @@ export function reconcilePhotoCraftModelPlan(
     raw.target = "whole-image";
   if (["crop", "heal", "text"].includes(String(raw.operation)))
     raw.target = "selected-area";
-  raw.protectLabel =
-    /(?:保留|不要改变|保持)(?:标签|商标|Logo|LOGO|文字)|(?:标签|商标|Logo|LOGO|文字)(?:不要变|保持不变)/i.test(
-      clean,
-    );
+  // M4：保护要求从原话截尾提取（与快车道同一 protectTailOf）——标签/商标/
+  // Logo 归 protectLabel，其余名词作为 protectPhrase 随计划下发，模型通道
+  // 不再静默丢弃「保护天空」类要求。
+  const protectTail = protectTailOf(clean);
+  raw.protectLabel = protectTail !== null;
+  if (protectTail?.phrase) raw.protectPhrase = protectTail.phrase;
   if (raw.operation === "image-size" || raw.operation === "canvas-size") {
     const dimensions = clean.match(/(\d{1,4})[×xX*＊](\d{1,4})(?:像素)?/u);
     if (dimensions) {
@@ -877,14 +1028,6 @@ export function reconcilePhotoCraftModelPlan(
     if (black) raw.inBlack = Number(black[1]);
     if (white) raw.inWhite = Number(white[1]);
     raw.gamma = gamma ? Number(gamma[1]) : 1;
-  }
-  if (raw.operation === "drop-shadow") {
-    const distance = clean.match(/距离(\d{1,3})(?:像素|px)?/i);
-    const size = clean.match(/(?:大小|模糊|柔和)(\d{1,3})(?:像素|px)?/i);
-    const opacity = clean.match(/不透明度(\d{1,3})%/);
-    if (distance) raw.distance = Number(distance[1]);
-    if (size) raw.size = Number(size[1]);
-    if (opacity) raw.opacity = Number(opacity[1]);
   }
   if (raw.operation === "text") {
     const quoted = clean.match(/[「“"]([^」”"]{1,80})[」”"]/u);
@@ -926,13 +1069,16 @@ export function validatePhotoCraftInstructionAgainstText(
     .match(/(?:换成|换为|改成|改为|涂成|变成)([^，。]{1,8}?色)/u)?.[1];
   if (colorAfterVerb && !/^(?:黑|红|蓝|绿|灰)色$/u.test(colorAfterVerb))
     throw new Error("目标颜色不在当前 PhotoCraft 换色能力范围内");
-  if (
-    /(?:保留|不要改变|保持)(?:标签|商标|Logo|LOGO|文字)|(?:标签|商标|Logo|LOGO|文字)(?:不要变|保持不变)/i.test(
-      clean,
-    ) &&
-    !plan.protectLabel
-  )
+  // M4：保护要求判定与快车道同源（protectTailOf）；标签式缺框、清单式
+  // 名字对不上都直接否决，杜绝法官放走「静默丢保护」的模型计划。
+  const protectTail = protectTailOf(clean);
+  if (protectTail && !plan.protectLabel)
     throw new Error("模型遗漏了标签或文字保护要求");
+  if (
+    protectTail?.phrase &&
+    (plan as { protectPhrase?: string }).protectPhrase !== protectTail.phrase
+  )
+    throw new Error("模型未正确识别保护范围");
   const requested = [
     /(?:换成|改成|改为|涂成|变成)(?:黑|红|蓝|绿|灰|白)色?/.test(clean)
       ? "recolor"
@@ -977,6 +1123,8 @@ export function validatePhotoCraftInstructionAgainstText(
     return;
   }
   if (plan.operation === "orient") {
+    // 原话写明方向（或「旋转一下」裸短语→表默认顺时针）必须逐一匹配；
+    // 目标错配（如「把背景旋转」）解析为 null，依然拒绝。
     if (orientationFromText(instruction) !== plan.mode)
       throw new Error("模型未正确识别整图旋转或翻转方向");
     return;
@@ -1018,18 +1166,42 @@ export function validatePhotoCraftInstructionAgainstText(
     return;
   }
   if (plan.operation === "drop-shadow") {
+    // 默认策略表（§5）：原话写明的值必须逐一匹配；未写明的值必须等于表
+    // 默认（距离 8、大小 10、不透明度 55），模型自报数值不作数。
+    const shadow = strategyFor("drop-shadow")?.defaults as {
+      distance: number;
+      size: number;
+      opacity: number;
+    };
+    if (!shadow) throw new Error("投影默认策略缺失");
     const distance = clean.match(/距离(\d{1,3})(?:像素|px)?/i);
     const size = clean.match(/(?:大小|模糊|柔和)(\d{1,3})(?:像素|px)?/i);
     const opacity = clean.match(/不透明度(\d{1,3})%/);
-    if (
-      !distance ||
-      !size ||
-      !opacity ||
-      Number(distance[1]) !== plan.distance ||
-      Number(size[1]) !== plan.size ||
-      Number(opacity[1]) !== plan.opacity
-    )
-      throw new Error("投影需要明确距离、大小和不透明度");
+    const checks = [
+      [distance, plan.distance, shadow.distance] as [
+        RegExpMatchArray | null,
+        number,
+        number,
+      ],
+      [size, plan.size, shadow.size] as [
+        RegExpMatchArray | null,
+        number,
+        number,
+      ],
+      [opacity, plan.opacity, shadow.opacity] as [
+        RegExpMatchArray | null,
+        number,
+        number,
+      ],
+    ];
+    for (const [match, planned, fallback] of checks) {
+      if (match ? Number(match[1]) !== planned : planned !== fallback)
+        throw new Error(
+          match
+            ? "模型未正确识别投影参数"
+            : "投影参数未写明时应取默认值（距离 8、大小 10、不透明度 55）",
+        );
+    }
     return;
   }
   if (plan.operation === "text") {
@@ -1130,10 +1302,21 @@ export function validatePhotoCraftInstructionAgainstText(
     throw new Error("模型未正确识别帽沿目标");
   if (/帽子|帽身/.test(clean) && !/帽沿/.test(clean) && plan.target !== "hat")
     throw new Error("模型未正确识别帽子目标");
+  if (
+    /主体|前景|商品|产品/.test(clean) &&
+    !/帽沿|帽子|帽身|背景/.test(clean) &&
+    plan.target !== "subject"
+  )
+    throw new Error("模型未正确识别主体目标");
+  if (/背景/.test(clean) && plan.target !== "background")
+    throw new Error("模型未正确识别背景目标");
   if (/(?:耳朵|猫耳|左耳|右耳)/.test(clean) && plan.target !== "selected-area")
     throw new Error("耳朵需要画定局部范围");
   if (
     /(?:整张|整体|全图|整幅|整个画面)/.test(clean) &&
+    !/(?:整张|整体|全图|整幅|整个画面)(?:图片|照片|画面|图像|图)?的(?:主体|前景|商品|产品|背景)/.test(
+      clean,
+    ) &&
     plan.target !== "whole-image"
   )
     throw new Error("模型未正确识别整图范围");
@@ -1151,13 +1334,6 @@ export function validatePhotoCraftInstructionAgainstText(
     (plan.operation !== "adjust" || plan.adjustment !== "highlights")
   )
     throw new Error("模型未正确识别高光调整");
-  if (
-    /(?:保留|不要改变|保持)(?:标签|商标|Logo|LOGO|文字)|(?:标签|商标|Logo|LOGO|文字)(?:不要变|保持不变)/i.test(
-      clean,
-    ) &&
-    !plan.protectLabel
-  )
-    throw new Error("模型遗漏了标签或文字保护要求");
 }
 
 export function describePhotoCraftPlan(
@@ -1197,11 +1373,17 @@ export function describePhotoCraftPlan(
     hat: "帽子面料",
     brim: "帽沿",
     "selected-area": "画定区域",
+    subject: "主体（AI 主体蒙版自动选区）",
+    background: "背景（主体以外的区域）",
     "whole-image": "整张图片",
   }[plan.target];
   const effect =
     plan.operation === "recolor"
       ? `改为${{ black: "黑色", red: "红色", blue: "蓝色", green: "绿色", gray: "灰色" }[plan.color]}`
       : `${{ brightness: "亮度", contrast: "对比度", saturation: "饱和度", exposure: "曝光", vibrance: "自然饱和度", shadows: "暗部", highlights: "高光" }[plan.adjustment]}${plan.amount > 0 ? "提高" : "降低"}${Math.abs(plan.amount)}${plan.adjustment === "exposure" ? `（约${Math.abs(plan.amount / 20)}档）` : ""}`;
-  return `${target}${effect}；${plan.protectLabel ? "须画出标签保护框；" : ""}请检查预览中的边缘、纹理和背景。`;
+  return `${target}${effect}；${
+    plan.protectLabel
+      ? `须画出${plan.protectPhrase ? `「${plan.protectPhrase}」` : "标签"}保护框；`
+      : ""
+  }请检查预览中的边缘、纹理和背景。`;
 }

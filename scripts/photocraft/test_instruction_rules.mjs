@@ -13,7 +13,15 @@ await mkdir(output, { recursive: true });
 for (const name of [
   "planner-catalog.ts",
   "instruction.ts",
+  "instruction-ir.ts",
+  "default-strategy.ts",
+  "operation-constraints.ts",
   "instruction.test.ts",
+  "instruction-ir.test.ts",
+  "default-strategy.test.ts",
+  "operation-constraints.test.ts",
+  "instruction-eval-cases.ts",
+  "instruction-eval.test.ts",
 ]) {
   const text = await readFile(join(source, name), "utf8");
   const compiled = ts.transpileModule(text, {
@@ -38,7 +46,14 @@ assert.deepEqual(
 );
 const result = spawnSync(
   process.execPath,
-  ["--test", join(output, "instruction.test.js")],
+  [
+    "--test",
+    join(output, "instruction.test.js"),
+    join(output, "instruction-ir.test.js"),
+    join(output, "default-strategy.test.js"),
+    join(output, "operation-constraints.test.js"),
+    join(output, "instruction-eval.test.js"),
+  ],
   {
     cwd: root,
     stdio: "inherit",

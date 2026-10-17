@@ -1,0 +1,24 @@
+{
+  "method": "SAM 家族起草（10 目标=标注框中心点提示；猫头/猫脸=标注框 box 提示+框内几何派生正点，因纯点提示在该图退化成半图团块）+ 两轮 VLM 叠加图复核（analyze_image，红区/黄框对照，逐目标越界漏选坐标）+ 人工笔刷 patch（归一化矩形/椭圆，add/remove，记录于 .tools/photocraft-grounding-work/patches*）+ 开发者终审（第三轮对改动项局部确认）。严格二值 0/255 灰度 PNG，尺寸=annotations.json 对应图的 width×height。非多人独立标注，不声称与被测服务独立：被测服务用 8×8 网格提示+CLIP 排序，本 GT 起草用点/框提示——提示通道不同，模型家族相同（缓解：VLM 复核+人工 patch+终审均独立于被测管线）。",
+  "reviewedPasses": 2,
+  "coordinateSpace": "原图像素（exif_transpose 后、未缩放），与 annotations.json 的 width/height 一致；mask 内 255=目标像素，0=背景",
+  "knownLimitations": [
+    "猫头双耳由椭圆 patch 近似补涂，耳外缘含少量背景像素（蓬毛渐变边界固有歧义）",
+    "帽顶/帽沿交界（y≈0.57-0.62）存在 ±0.02 视觉歧义，GT 统一取帽沿侧",
+    "l-beck 窗户、plas 窗户右下角 ≤3% 面积的轻微压线未再裁剪（幅度在 VLM 坐标噪声级，继续裁会切到真实窗框）"
+  ],
+  "targets": [
+    { "image": "../photocraft-hat-teal.png", "phrase": "帽顶" },
+    { "image": "../photocraft-hat-teal.png", "phrase": "帽沿" },
+    { "image": "../photocraft-fluffy-cat-cc0.jpg", "phrase": "猫头" },
+    { "image": "../photocraft-fluffy-cat-cc0.jpg", "phrase": "猫脸" },
+    { "image": "meigs-house-front-street-marietta-oh.jpg", "phrase": "屋顶" },
+    { "image": "plas-newydd-llangollen-2010.jpg", "phrase": "屋顶" },
+    { "image": "plas-newydd-llangollen-2010.jpg", "phrase": "窗户" },
+    { "image": "l-beck-an-der-mauer-150-152-2017-0454.jpg", "phrase": "窗户" },
+    { "image": "dinner-table-and-chairs.jpg", "phrase": "窗户" },
+    { "image": "l-beck-an-der-mauer-150-152-2017-0454.jpg", "phrase": "门" },
+    { "image": "hibiscus-brilliant.jpg", "phrase": "花朵" },
+    { "image": "hibiscus-brilliant.jpg", "phrase": "花蕊" }
+  ]
+}

@@ -30,6 +30,10 @@ import {
 import { ImageProjectHttpService } from "./image-project-http.service.js";
 import { ImageProjectStore } from "./image-project-store.js";
 import { LocalImageImportService } from "./local-image-import.js";
+import {
+  PhotoCraftBatchConfirmationHttpController,
+  PhotoCraftBatchRecipeHttpController,
+} from "./photocraft-batch-http.controller.js";
 import { PhotoCraftCreditHttpController } from "./photocraft-credit-http.controller.js";
 import { PhotoCraftEditJobHttpController } from "./photocraft-edit-job-http.controller.js";
 import { PhotoCraftEditJobStore } from "./photocraft-edit-jobs.js";
@@ -105,6 +109,10 @@ try {
     "0010_photocraft_masked_adjustment_jobs.sql",
     "0011_photocraft_generation_credits.sql",
     "0012_immutable_credit_ledger.sql",
+    "0013_photocraft_batch_recipes.sql",
+    "0014_photocraft_batch_requests.sql",
+    "0015_photocraft_batch_source.sql",
+    "0016_photocraft_batch_confirmations.sql",
   ]) {
     await db.query(
       await readFile(resolve(process.cwd(), "migrations", file), "utf8"),
@@ -173,6 +181,8 @@ try {
       ImageProjectHttpController,
       PhotoCraftProjectHttpController,
       PhotoCraftEditJobHttpController,
+      PhotoCraftBatchConfirmationHttpController,
+      PhotoCraftBatchRecipeHttpController,
       PhotoCraftCreditHttpController,
       PhotoCraftQualityReviewHttpController,
     ],
@@ -1251,6 +1261,598 @@ try {
       objectResult?.errorCode ?? undefined,
     );
     assert.equal(objectResult.outputVersion, 18);
+
+    // M4 批量配方（方案 §12.3）：整批入队按张扣费、worker 逐张展开、
+    // 状态查询带确定性抽样复检清单。
+    const batchProjects = [randomUUID(), randomUUID(), randomUUID()];
+    for (const [index, projectId] of batchProjects.entries()) {
+      const form = new FormData();
+      form.set("id", projectId);
+      form.set("title", `Batch fixture ${index}`);
+      form.set("expectedVersion", "0");
+      form.set("requestKey", `batch-source-${index}`);
+      form.set(
+        "source",
+        new Blob([jobSource], { type: "application/x-photocraft" }),
+        "source.pcraft",
+      );
+      const created = await fetch(photoBase, {
+        method: "POST",
+        headers,
+        body: form,
+      });
+      assert.equal(created.status, 201, await created.text());
+    }
+    const batchBase = `${await app.getUrl()}/workspaces/${workspaceA}/photocraft-batch-recipes`;
+    const confirmBase = `${await app.getUrl()}/workspaces/${workspaceA}/photocraft-batch-confirmations`;
+    const jsonHeaders = { ...headers, "content-type": "application/json" };
+    // R1（codex 第二轮复审）：先在单图确认环登记服务端确认快照（源项目为已
+    // 执行到第 18 版的项目），批量入队只引用该不可变记录。
+    const confirmBody = JSON.stringify({
+      source: { projectId: jobProjectId, version: 18 },
+      steps: [
+        { operation: "adjust-brightness", params: { amount: 12 } },
+        { operation: "flip-horizontal" },
+      ],
+    });
+    assert.equal(
+      (
+        await fetch(
+          `${await app.getUrl()}/workspaces/${workspaceB}/photocraft-batch-confirmations`,
+          { method: "POST", headers: jsonHeaders, body: confirmBody },
+        )
+      ).status,
+      403,
+      "确认端点同样先过租户闸",
+    );
+    // 确认的来源过期（17 ≠ 当前 18）/ 未知项目 / 非法步骤都在登记时拒绝。
+    const staleConfirmResponse = await fetch(confirmBase, {
+      method: "POST",
+      headers: jsonHeaders,
+      body: JSON.stringify({
+        source: { projectId: jobProjectId, version: 17 },
+        steps: [{ operation: "adjust-brightness", params: { amount: 12 } }],
+      }),
+    });
+    assert.equal(staleConfirmResponse.status, 409);
+    assert.match(
+      await staleConfirmResponse.text(),
+      /confirm the recipe on the current version/,
+      "过期来源须提示在当前版本上确认",
+    );
+    assert.equal(
+      (
+        await fetch(confirmBase, {
+          method: "POST",
+          headers: jsonHeaders,
+          body: JSON.stringify({
+            source: { projectId: randomUUID(), version: 1 },
+            steps: [{ operation: "adjust-brightness", params: { amount: 12 } }],
+          }),
+        })
+      ).status,
+      409,
+    );
+    assert.equal(
+      (
+        await fetch(confirmBase, {
+          method: "POST",
+          headers: jsonHeaders,
+          body: JSON.stringify({
+            source: { projectId: jobProjectId, version: 18 },
+            steps: [
+              {
+                operation: "masked-adjust-brightness",
+                params: { amount: 9, selection: { kind: "existing" } },
+              },
+            ],
+          }),
+        })
+      ).status,
+      400,
+    );
+    const confirmResponse = await fetch(confirmBase, {
+      method: "POST",
+      headers: jsonHeaders,
+      body: confirmBody,
+    });
+    if (confirmResponse.status !== 201)
+      assert.fail(await confirmResponse.text());
+    const confirmation = (await confirmResponse.json()) as {
+      id: string;
+      stepsDigest: string;
+      confirmedAt: string;
+      source: { projectId: string; version: number };
+    };
+    assert.equal(confirmation.source.projectId, jobProjectId);
+    assert.equal(confirmation.source.version, 18);
+    // 确认快照可回读（R1 追溯链）。
+    assert.equal(
+      (await fetch(`${confirmBase}/${confirmation.id}`, { headers })).status,
+      200,
+    );
+    // R1：旧式「直接提交 steps+source」的批量请求不再被接受——不得把任意
+    // 合法步骤冒认成已确认配方。
+    assert.equal(
+      (
+        await fetch(batchBase, {
+          method: "POST",
+          headers: jsonHeaders,
+          body: JSON.stringify({
+            requestKey: "batch-legacy-direct-steps",
+            projectIds: batchProjects.slice(0, 1),
+            steps: [{ operation: "adjust-brightness", params: { amount: 12 } }],
+            source: { projectId: jobProjectId, version: 18 },
+          }),
+        })
+      ).status,
+      400,
+      "批量请求不得再携带 steps/source",
+    );
+    // 从未确认过的配方（随机确认引用）必须拒绝；引用格式非法 400。
+    const unconfirmedResponse = await fetch(batchBase, {
+      method: "POST",
+      headers: jsonHeaders,
+      body: JSON.stringify({
+        requestKey: "batch-unconfirmed",
+        projectIds: batchProjects.slice(0, 1),
+        confirmationId: randomUUID(),
+      }),
+    });
+    assert.equal(unconfirmedResponse.status, 409);
+    assert.match(
+      await unconfirmedResponse.text(),
+      /confirm the recipe on a single image first/,
+      "无确认记录不得入队",
+    );
+    assert.equal(
+      (
+        await fetch(batchBase, {
+          method: "POST",
+          headers: jsonHeaders,
+          body: JSON.stringify({
+            requestKey: "batch-bad-confirm-ref",
+            projectIds: batchProjects.slice(0, 1),
+            confirmationId: "not-a-uuid",
+          }),
+        })
+      ).status,
+      400,
+    );
+    const batchBody = JSON.stringify({
+      requestKey: "batch-hat-brighten",
+      projectIds: batchProjects,
+      confirmationId: confirmation.id,
+    });
+    assert.equal(
+      (
+        await fetch(batchBase, {
+          method: "POST",
+          headers: jsonHeaders,
+          body: batchBody,
+        })
+      ).status,
+      402,
+    );
+    await photocraftJobs.grantCredits(
+      creditScope,
+      3,
+      "integration-batch-grant",
+    );
+    const batchResponse = await fetch(batchBase, {
+      method: "POST",
+      headers: jsonHeaders,
+      body: batchBody,
+    });
+    assert.equal(
+      batchResponse.status,
+      201,
+      batchResponse.status === 201 ? undefined : await batchResponse.text(),
+    );
+    const batch = (await batchResponse.json()) as {
+      jobs: { id: string; operation: string; status: string }[];
+      skipped: unknown[];
+    };
+    assert.equal(batch.jobs.length, 3);
+    assert.equal(batch.skipped.length, 0);
+    assert.equal(
+      await photocraftJobs.creditBalance(creditScope),
+      0,
+      "批量配方必须按张扣费",
+    );
+    const replayBatch = await fetch(batchBase, {
+      method: "POST",
+      headers: jsonHeaders,
+      body: batchBody,
+    });
+    const replayBody = (await replayBatch.json()) as {
+      jobs: { id: string }[];
+    };
+    assert.equal(replayBatch.status, 201);
+    assert.deepEqual(
+      replayBody.jobs.map((job) => job.id).sort(),
+      batch.jobs.map((job) => job.id).sort(),
+    );
+    assert.equal(await photocraftJobs.creditBalance(creditScope), 0);
+    // R1：同键换一份步骤不同的确认（等效于已确认配方被篡改一步参数）→ 409。
+    const tamperedConfirmResponse = await fetch(confirmBase, {
+      method: "POST",
+      headers: jsonHeaders,
+      body: JSON.stringify({
+        source: { projectId: jobProjectId, version: 18 },
+        steps: [
+          { operation: "adjust-brightness", params: { amount: 13 } },
+          { operation: "flip-horizontal" },
+        ],
+      }),
+    });
+    if (tamperedConfirmResponse.status !== 201)
+      assert.fail(await tamperedConfirmResponse.text());
+    const tamperedConfirmation = (await tamperedConfirmResponse.json()) as {
+      id: string;
+    };
+    assert.notEqual(tamperedConfirmation.id, confirmation.id);
+    assert.equal(
+      (
+        await fetch(batchBase, {
+          method: "POST",
+          headers: jsonHeaders,
+          body: JSON.stringify({
+            requestKey: "batch-hat-brighten",
+            projectIds: batchProjects,
+            confirmationId: tamperedConfirmation.id,
+          }),
+        })
+      ).status,
+      409,
+      "同键换确认（步骤被改）必须冲突",
+    );
+    // R1：撤销确认后，新键入队也必须拒绝。
+    await db.query(
+      "UPDATE photocraft_batch_confirmations SET status='revoked' WHERE id=$1",
+      [tamperedConfirmation.id],
+    );
+    assert.equal(
+      (
+        await fetch(batchBase, {
+          method: "POST",
+          headers: jsonHeaders,
+          body: JSON.stringify({
+            requestKey: "batch-revoked-confirmation",
+            projectIds: batchProjects.slice(0, 1),
+            confirmationId: tamperedConfirmation.id,
+          }),
+        })
+      ).status,
+      409,
+      "已撤销的确认不得套目录",
+    );
+    assert.equal(
+      (await fetch(`${batchBase}/batch-unknown`, { headers })).status,
+      404,
+    );
+    for (let index = 0; index < batchProjects.length; index += 1) {
+      const claimed = await photocraftJobs.claimNext();
+      assert.equal(claimed?.operation, "batch-recipe");
+      await executePhotoCraftJob(claimed!, {
+        assets,
+        projects: photocraftProjects,
+        jobs: photocraftJobs,
+        cli: cliPath,
+        workDir: tmpdir(),
+      });
+      const result = await photocraftJobs.get(
+        creditScope,
+        claimed!.projectId,
+        claimed!.id,
+      );
+      assert.equal(result?.status, "succeeded", result?.errorCode ?? undefined);
+      assert.equal(result.outputVersion, 2);
+      assert.equal(
+        (await photocraftProjects.get(creditScope, claimed!.projectId))
+          ?.version,
+        2,
+      );
+    }
+    const statusResponse = await fetch(`${batchBase}/batch-hat-brighten`, {
+      headers,
+    });
+    assert.equal(statusResponse.status, 200);
+    const status = (await statusResponse.json()) as {
+      total: number;
+      statuses: Record<string, number>;
+      sampledJobIds: string[];
+      jobs: { id: string; status: string }[];
+      source: {
+        projectId: string;
+        version: number;
+        confirmationId: string | null;
+        stepsDigest: string | null;
+        confirmedAt: string;
+      } | null;
+    };
+    assert.equal(status.total, 3);
+    assert.deepEqual(status.statuses, { succeeded: 3 });
+    // 状态查询带批次来源与确认追溯（R1）：哪张图、哪个版本上确认的、引用
+    // 哪条确认记录、配方摘要一致、时间戳是原始单图确认时间（非入队时间）。
+    assert.equal(status.source?.projectId, jobProjectId);
+    assert.equal(status.source?.version, 18);
+    assert.equal(status.source?.confirmationId, confirmation.id);
+    assert.equal(status.source?.stepsDigest, confirmation.stepsDigest);
+    assert.equal(status.source?.confirmedAt, confirmation.confirmedAt);
+    // 3 张按 stride 5 确定性抽检 1 张，且该张已通过像素级复检。
+    assert.equal(status.sampledJobIds.length, 1);
+    assert.ok(
+      status.sampledJobIds.every((id) =>
+        status.jobs.some((job) => job.id === id && job.status === "succeeded"),
+      ),
+    );
+    assert.equal(await photocraftJobs.creditBalance(creditScope), 0);
+
+    // R1：确认后源项目版本前进（18 → 19，经一次真实生成作业）——过期确认
+    // 整批拒绝，须在当前版本重新确认。
+    await photocraftJobs.grantCredits(creditScope, 1, "integration-bump-grant");
+    const bumpResponse = await fetch(jobUrl, {
+      method: "POST",
+      headers: jsonHeaders,
+      body: JSON.stringify({
+        expectedVersion: 18,
+        operation: "generate-local",
+        requestKey: "gen-stale-bump",
+        params: {
+          prompt: "Bump source version",
+          selection: { kind: "existing" },
+        },
+      }),
+    });
+    assert.equal(
+      bumpResponse.status,
+      201,
+      bumpResponse.status === 201 ? undefined : await bumpResponse.text(),
+    );
+    const bumpJob = await photocraftJobs.claimNext();
+    await executePhotoCraftJob(bumpJob!, {
+      assets,
+      projects: photocraftProjects,
+      jobs: photocraftJobs,
+      cli: cliPath,
+      workDir: tmpdir(),
+      provider: {
+        generate: async ({ image, rect, width, height }) => {
+          // 与 gen-good-local 相同的相对定位（existing 选区 0.7 处）：固定
+          // 偏移会落到选区边缘，触发「Generated area did not change」。
+          const cx = rect[0] + Math.floor(rect[2] * 0.7),
+            cy = rect[1] + Math.floor(rect[3] * 0.7);
+          const overlay = Buffer.from(
+            `<svg width="${width}" height="${height}"><ellipse cx="${cx}" cy="${cy}" rx="25" ry="22" fill="#63102a"/></svg>`,
+          );
+          return await sharp(image)
+            .composite([{ input: overlay, left: 0, top: 0 }])
+            .png()
+            .toBuffer();
+        },
+      },
+    });
+    assert.equal(
+      (await photocraftProjects.get(creditScope, jobProjectId))?.version,
+      19,
+    );
+    assert.equal(
+      (
+        await fetch(batchBase, {
+          method: "POST",
+          headers: jsonHeaders,
+          body: JSON.stringify({
+            requestKey: "batch-stale-after-bump",
+            projectIds: batchProjects.slice(0, 1),
+            confirmationId: confirmation.id,
+          }),
+        })
+      ).status,
+      409,
+      "确认后源版本前进，同一确认不得再套目录",
+    );
+
+    // P2-1（codex 审核 2026-10-16）：含跳过项目的批量必须可幂等重放——批次
+    // 记录持久化完整请求内容与 skipped，重放返回同一结果、不再扣费；只有同
+    // 键不同内容才 409（R1 后内容包含确认引用）。
+    await photocraftJobs.grantCredits(creditScope, 2, "integration-batch-skip");
+    const skipConfirmResponse = await fetch(confirmBase, {
+      method: "POST",
+      headers: jsonHeaders,
+      body: JSON.stringify({
+        source: { projectId: jobProjectId, version: 19 },
+        steps: [{ operation: "adjust-brightness", params: { amount: 8 } }],
+      }),
+    });
+    if (skipConfirmResponse.status !== 201)
+      assert.fail(await skipConfirmResponse.text());
+    const skipConfirmation = (await skipConfirmResponse.json()) as {
+      id: string;
+    };
+    const missingProject = randomUUID();
+    const skippedBody = JSON.stringify({
+      requestKey: "batch-with-skip",
+      projectIds: [batchProjects[0], missingProject],
+      confirmationId: skipConfirmation.id,
+    });
+    const firstSkip = await fetch(batchBase, {
+      method: "POST",
+      headers: jsonHeaders,
+      body: skippedBody,
+    });
+    // message 实参在断言通过时也会被求值（会消费 body），只在失败时读。
+    if (firstSkip.status !== 201) assert.fail(await firstSkip.text());
+    const skippedBatch = (await firstSkip.json()) as {
+      jobs: { id: string; projectId: string }[];
+      skipped: { projectId: string; reason: string }[];
+    };
+    assert.equal(skippedBatch.jobs.length, 1);
+    assert.equal(skippedBatch.jobs[0]!.projectId, batchProjects[0]);
+    assert.deepEqual(skippedBatch.skipped, [
+      { projectId: missingProject, reason: "project-unavailable" },
+    ]);
+    const balanceAfterSkip = await photocraftJobs.creditBalance(creditScope);
+    assert.equal(balanceAfterSkip, 1, "只有未跳过的那张扣费");
+    const replaySkip = await fetch(batchBase, {
+      method: "POST",
+      headers: jsonHeaders,
+      body: skippedBody,
+    });
+    if (replaySkip.status !== 201) assert.fail(await replaySkip.text());
+    const replaySkipBody = (await replaySkip.json()) as {
+      jobs: { id: string }[];
+      skipped: { projectId: string; reason: string }[];
+    };
+    assert.deepEqual(
+      replaySkipBody.jobs.map((job) => job.id),
+      [skippedBatch.jobs[0]!.id],
+    );
+    assert.deepEqual(replaySkipBody.skipped, skippedBatch.skipped);
+    assert.equal(
+      await photocraftJobs.creditBalance(creditScope),
+      balanceAfterSkip,
+      "重放不得再次扣费",
+    );
+    // 同键换确认引用（等效换配方）必须冲突。
+    const skipConflictConfirmResponse = await fetch(confirmBase, {
+      method: "POST",
+      headers: jsonHeaders,
+      body: JSON.stringify({
+        source: { projectId: jobProjectId, version: 19 },
+        steps: [{ operation: "adjust-contrast", params: { amount: 5 } }],
+      }),
+    });
+    if (skipConflictConfirmResponse.status !== 201)
+      assert.fail(await skipConflictConfirmResponse.text());
+    const skipConflictConfirmation =
+      (await skipConflictConfirmResponse.json()) as { id: string };
+    assert.equal(
+      (
+        await fetch(batchBase, {
+          method: "POST",
+          headers: jsonHeaders,
+          body: JSON.stringify({
+            requestKey: "batch-with-skip",
+            projectIds: [batchProjects[0], missingProject],
+            confirmationId: skipConflictConfirmation.id,
+          }),
+        })
+      ).status,
+      409,
+      "同键不同确认（不同配方）必须冲突",
+    );
+    assert.equal(
+      (
+        await fetch(batchBase, {
+          method: "POST",
+          headers: jsonHeaders,
+          body: JSON.stringify({
+            requestKey: "batch-with-skip",
+            projectIds: [batchProjects[0]],
+            confirmationId: skipConfirmation.id,
+          }),
+        })
+      ).status,
+      409,
+      "同键不同项目集合必须冲突",
+    );
+
+    // R4（codex 第二轮复审）：单图计费入队与批量入队并发触及同一工作区+
+    // 同一项目——统一「先账户后项目」锁序后不得死锁（40P01/500），且每个
+    // 建出的作业恰好对应一条 reserve 账目。
+    const concurrentProject = randomUUID();
+    const concurrentForm = new FormData();
+    concurrentForm.set("id", concurrentProject);
+    concurrentForm.set("title", "Concurrent fixture");
+    concurrentForm.set("expectedVersion", "0");
+    concurrentForm.set("requestKey", "batch-concurrent-source");
+    concurrentForm.set(
+      "source",
+      new Blob([jobSource], { type: "application/x-photocraft" }),
+      "source.pcraft",
+    );
+    assert.equal(
+      (
+        await fetch(photoBase, {
+          method: "POST",
+          headers,
+          body: concurrentForm,
+        })
+      ).status,
+      201,
+    );
+    const concurrentConfirmResponse = await fetch(confirmBase, {
+      method: "POST",
+      headers: jsonHeaders,
+      body: JSON.stringify({
+        source: { projectId: concurrentProject, version: 1 },
+        steps: [{ operation: "adjust-brightness", params: { amount: 6 } }],
+      }),
+    });
+    if (concurrentConfirmResponse.status !== 201)
+      assert.fail(await concurrentConfirmResponse.text());
+    const concurrentConfirmation = (await concurrentConfirmResponse.json()) as {
+      id: string;
+    };
+    const concurrentJobIds: string[] = [];
+    for (let round = 0; round < 3; round += 1) {
+      await photocraftJobs.grantCredits(
+        creditScope,
+        3,
+        `integration-concurrent-${round}`,
+      );
+      const responses = await Promise.all([
+        fetch(jobUrl.replace(jobProjectId, concurrentProject), {
+          method: "POST",
+          headers: jsonHeaders,
+          body: JSON.stringify({
+            expectedVersion: 1,
+            operation: "generate-local",
+            requestKey: `gen-concurrent-${round}`,
+            params: {
+              prompt: "Concurrent billing",
+              selection: { kind: "existing" },
+            },
+          }),
+        }),
+        fetch(batchBase, {
+          method: "POST",
+          headers: jsonHeaders,
+          body: JSON.stringify({
+            requestKey: `batch-concurrent-${round}`,
+            projectIds: [concurrentProject, batchProjects[1]],
+            confirmationId: concurrentConfirmation.id,
+          }),
+        }),
+      ]);
+      for (const response of responses) {
+        if (![201, 402, 409].includes(response.status))
+          assert.fail(
+            `并发入队出现 ${
+              response.status
+            }（死锁/服务器错误）：${await response.text()}`,
+          );
+        if (response.status !== 201) continue;
+        const payload = (await response.json()) as {
+          id?: string;
+          jobs?: { id: string }[];
+        };
+        concurrentJobIds.push(
+          ...(payload.jobs ? payload.jobs.map((job) => job.id) : [payload.id!]),
+        );
+      }
+    }
+    const reserves = await db.query<{ job_id: string; count: string }>(
+      `SELECT job_id, count(*) FROM workspace_credit_ledger
+       WHERE kind='reserve' AND job_id = ANY($1) GROUP BY job_id`,
+      [concurrentJobIds],
+    );
+    assert.equal(reserves.rows.length, concurrentJobIds.length);
+    assert.ok(
+      reserves.rows.every((row) => Number(row.count) === 1),
+      "每个并发建出的作业恰好一条 reserve 账目（不重复预扣）",
+    );
   }
   if (jobFixtureDir) {
     if (
@@ -1273,7 +1875,7 @@ try {
   );
   assert.equal((await fetch(projectUrl, { headers })).status, 403);
   console.log(
-    "PASS: HTTP auth before upload, early size rejection, tenant scope, legacy import, PhotoCraft source/version/replay, edit job auth/idempotency and CLI worker (when installed), original immutability, read-only role, stale write and revocation",
+    "PASS: HTTP auth before upload, early size rejection, tenant scope, legacy import, PhotoCraft source/version/replay, edit job auth/idempotency and CLI worker (when installed), batch recipes billed per image with deterministic sampled recheck, original immutability, read-only role, stale write and revocation",
   );
 } finally {
   await app?.close();
