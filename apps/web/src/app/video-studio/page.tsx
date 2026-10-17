@@ -175,6 +175,7 @@ export default function VideoStudioPage() {
           {plan && plan.ok ? (
             <div className="plan-card">
               <p className="plan-summary">{specSummary(plan.spec)}</p>
+              <p className="plan-render-hint">{plan.renderHint}</p>
               <ScenePreview spec={plan.spec} />
               <div className="plan-actions">
                 <button

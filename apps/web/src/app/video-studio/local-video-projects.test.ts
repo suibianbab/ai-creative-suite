@@ -8,7 +8,7 @@ import type { VideoProject } from "@acs/video-document";
 import {
   saveVideoProject,
   VideoProjectConflictError,
-} from "./local-video-projects.ts";
+} from "./local-video-projects.js";
 
 // 最小合法 VideoProject（validateVideoProject 只深查形状；spec 深校验归 video-scene）。
 function makeProject(overrides: Partial<VideoProject> = {}): VideoProject {

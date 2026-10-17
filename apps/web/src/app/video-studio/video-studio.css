@@ -233,6 +233,12 @@
   margin-bottom: 10px;
 }
 
+.plan-render-hint {
+  font-size: 12px;
+  color: #5d7469;
+  margin: 0 0 10px;
+}
+
 .plan-actions {
   display: flex;
   gap: 10px;

@@ -77,3 +77,29 @@ test("完全不匹配的句子 → fail，不静默猜", () => {
   assert.ok(result.guidance.length > 0);
   assert.ok(result.reason.length > 0);
 });
+
+test("内容预告：文字句 renderHint 点名标题进画面", () => {
+  const result = planFromSentence(
+    "做一个12秒的文字动画，标题是云制造，副标题是Video Studio",
+  );
+  assert.ok(result.ok);
+  assert.match(result.renderHint, /云制造/);
+  assert.doesNotMatch(result.renderHint, /不会出现在画面/);
+});
+
+test("内容预告：线描句点名按句抽取的模板名与「标题不进画面」", () => {
+  const result = planFromSentence("做一个8秒的线描动画，标题是山水发布");
+  assert.ok(result.ok);
+  assert.match(result.renderHint, /模板「[^」]+」/);
+  assert.match(result.renderHint, /标题「山水发布」不会出现在画面/);
+  const again = planFromSentence("做一个8秒的线描动画，标题是山水发布");
+  assert.ok(again.ok); // 同句同模板，预告稳定
+  assert.equal(again.renderHint, result.renderHint);
+});
+
+test("内容预告：图形句同样点名模板名与「标题不进画面」", () => {
+  const result = planFromSentence("做一个6秒的图形动画，标题是发布");
+  assert.ok(result.ok);
+  assert.match(result.renderHint, /模板「[^」]+」/);
+  assert.match(result.renderHint, /标题「发布」不会出现在画面/);
+});

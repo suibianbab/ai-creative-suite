@@ -12,7 +12,7 @@ import {
 // 秒数 3..30；标题必填（1..80、不含逗号）；背景可选（#rrggbb）。
 
 export type PlanResult =
-  | { ok: true; spec: SceneSpec; title: string }
+  | { ok: true; spec: SceneSpec; title: string; renderHint: string }
   | { ok: false; reason: string; guidance: string };
 
 export const PLANNER_GUIDANCE =
@@ -61,6 +61,15 @@ function hashSentence(sentence: string): number {
 }
 
 // —— 线描模板（1000×1000 设计空间，组件契约见 line-drawing.ts）——
+// 下标与 LINE_TEMPLATE_LABELS 一一对应：确认卡如实预告「会画什么」，
+// 不让必填的「标题」暗示画面按题材生成（P1-E）。
+const LINE_TEMPLATE_LABELS = [
+  "单条弧线",
+  "H 形线条",
+  "三角形轮廓",
+  "山形曲线与双竖线",
+] as const;
+
 const LINE_TEMPLATES: string[][] = [
   ["M200,700 Q500,200 800,700"],
   ["M300,200 L300,800 M700,200 L700,800 M300,500 L700,500"],
@@ -72,6 +81,9 @@ const LINE_TEMPLATES: string[][] = [
 ];
 
 // —— 图形模板：归一化包围盒（basic-shapes 组件契约）——
+// 下标与 SHAPE_TEMPLATE_LABELS 一一对应，用途同线描。
+const SHAPE_TEMPLATE_LABELS = ["单个方块", "圆与横条", "三角形、小方块与小圆"] as const;
+
 const SHAPE_TEMPLATES = [
   [{ kind: "rect", x: 0.3, y: 0.3, w: 0.4, h: 0.4, color: "#497a61" }],
   [
@@ -150,6 +162,15 @@ export function planFromSentence(sentence: string): PlanResult {
         ? lineDrawingParams(seed)
         : basicShapesParams(seed);
 
+  // 内容预告（P1-E）：线描/图形的画面来自固定模板库（按句 seed 抽取），
+  // 必填标题不进画面——确认卡必须把这两件事说破，不许让「标题」暗示题材生成。
+  const renderHint =
+    componentId === "text-animation"
+      ? `文字动画：标题「${title}」${subtitle === undefined ? "" : `与副标题「${subtitle}」`}将进入画面`
+      : componentId === "line-drawing"
+        ? `线描动画：从固定模板库按句子抽取模板「${LINE_TEMPLATE_LABELS[seed % LINE_TEMPLATE_LABELS.length]}」描线呈现，标题「${title}」不会出现在画面里`
+        : `图形动画：从固定模板库按句子抽取模板「${SHAPE_TEMPLATE_LABELS[seed % SHAPE_TEMPLATE_LABELS.length]}」依次入场，标题「${title}」不会出现在画面里`;
+
   const spec: SceneSpec = {
     specVersion: 1,
     componentId,
@@ -164,6 +185,7 @@ export function planFromSentence(sentence: string): PlanResult {
     ok: true,
     spec,
     title,
+    renderHint,
   };
 }
 
