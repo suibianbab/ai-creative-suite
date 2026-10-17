@@ -2,11 +2,17 @@
 // 出片脚本：项目 JSON → 整片双尺寸 MP4 + render-manifest.json + RenderRecord 回写。
 // P1 起支持多镜头：量化帧图拼成单文件整片（Timeline-* 合成），单镜头是 N=1 特例。
 // 渲染前先跑逐帧干跑门禁（worker 隔离 + 单帧预算，P2-A 补齐），--skip-dryrun 可跳。
-// 用法: node scripts/video/render-scene.mjs --project <path.json> --out <dir> [--skip-dryrun] [--budget-ms 500]
+// 用法: node scripts/video/render-scene.mjs --project <path.json> --out <dir> [--narration <dir>] [--skip-dryrun] [--budget-ms 500]
 // 依赖: packages/{video-document,video-scene} 已 build（pnpm -r build）；ffprobe 在 PATH。
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
@@ -16,6 +22,7 @@ import {
   DEFAULT_BUDGET_MS,
   dryRunJobs,
 } from "./frame-dryrun.mjs";
+import { buildNarrationEntries } from "./tts-sse.mjs";
 
 const ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -50,6 +57,18 @@ function sha256(data) {
   return createHash("sha256").update(data).digest("hex");
 }
 
+// 旁白 wav 时长（ffprobe 秒 → ms 整数）
+function probeWavMs(wav) {
+  const result = spawnSync(
+    "ffprobe",
+    ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", wav],
+    { encoding: "utf8" },
+  );
+  if (result.status !== 0)
+    fail(`ffprobe 旁白失败: ${result.stderr}\n  wav: ${wav}`);
+  return Math.round(Number(result.stdout.trim()) * 1000);
+}
+
 function probe(video) {
   const result = spawnSync(
     "ffprobe",
@@ -77,13 +96,14 @@ const { values } = parseArgs({
   options: {
     project: { type: "string" },
     out: { type: "string" },
+    narration: { type: "string" },
     "skip-dryrun": { type: "boolean" },
     "budget-ms": { type: "string" },
   },
 });
 if (!values.project || !values.out)
   fail(
-    "用法: node scripts/video/render-scene.mjs --project <path.json> --out <dir> [--skip-dryrun] [--budget-ms 500]",
+    "用法: node scripts/video/render-scene.mjs --project <path.json> --out <dir> [--narration <dir>] [--skip-dryrun] [--budget-ms 500]",
   );
 
 const projectPath = path.resolve(values.project);
@@ -126,6 +146,75 @@ const timeline = quantizeTimeline(
   FPS,
 );
 const totalFrames = timeline.totalFrames;
+
+// D2 旁白装配：--narration <dir> 指向 tts-narration.mjs 的资产目录。
+// 缺资产=该镜头无音轨（提示不阻断）；超 span 的音频 Sequence 自然截断（告警）。
+// narrationServer = 独立进程文件服务（见下方探针裁决注释）。
+let narrationEntries = [];
+let narrationServer = null;
+if (values.narration) {
+  const assembled = buildNarrationEntries(
+    project,
+    path.resolve(values.narration),
+    timeline,
+    FPS,
+    probeWavMs,
+  );
+  narrationEntries = assembled.entries;
+  for (const notice of assembled.notices)
+    console.log(`[render-scene] 旁白提示: ${notice}`);
+  for (const warning of assembled.warnings)
+    console.warn(`[render-scene] 旁白警告: ${warning}`);
+  if (narrationEntries.length > 0) {
+    console.log(
+      `[render-scene] 旁白音轨 ${narrationEntries.length}/${timeline.shots.length} 镜头`,
+    );
+  }
+  // 探针裁决（Task4 Step3）：Remotion CLI 渲染的 <Audio src> 只认 http(s)——
+  //   绝对路径（file:///）→「Can only download URLs starting with http://」；
+  //   data URI → 静默无声（资产未进下载队列，最危险的失败模式）；
+  //   --public-dir → 文件不进 bundle 服务目录，localhost 404。
+  // 解法：独立进程 narration-server.mjs 托管旁白 wav（白名单 + CORS，127.0.0.1
+  // 随机端口）。不能同进程起服务——渲染 spawnSync 会冻住事件循环（探针实测：
+  // TCP 建连但请求永不响应）。props 注入 http URL，失败会响（下载报错）。
+  const names = narrationEntries.map((entry) =>
+    encodeURIComponent(path.basename(entry.audioSrc)),
+  );
+  narrationServer = spawn(
+    process.execPath,
+    [
+      path.join(ROOT, "scripts/video/narration-server.mjs"),
+      "--dir",
+      path.resolve(values.narration),
+      "--files",
+      names.map(decodeURIComponent).join(","),
+    ],
+    { stdio: ["ignore", "pipe", "pipe"] },
+  );
+  let serverOutput = "";
+  narrationServer.stdout.on("data", (chunk) => {
+    serverOutput += chunk;
+  });
+  const serverDead = new Promise((_, reject) => {
+    narrationServer.on("exit", () =>
+      reject(new Error(`narration-server 提前退出: ${serverOutput}`)),
+    );
+  });
+  const portLine = new Promise((resolve, reject) => {
+    narrationServer.stdout.on("data", function onChunk(chunk) {
+      const match = /"port":(\d+)/.exec(`${chunk}`);
+      if (match) {
+        narrationServer.stdout.off("data", onChunk);
+        resolve(Number(match[1]));
+      }
+    });
+    setTimeout(() => reject(new Error("narration-server 端口上报超时")), 10000);
+  });
+  const port = await Promise.race([portLine, serverDead]);
+  for (const [index, entry] of narrationEntries.entries()) {
+    entry.propsSrc = `http://127.0.0.1:${port}/${names[index]}`;
+  }
+}
 const fontDigests = {
   "NotoSansSC-Regular.woff": sha256(readFileSync(path.join(ROOT, FONT_REL))),
 };
@@ -165,12 +254,21 @@ const manifest = {
   fontDigests,
   aspects: {},
 };
-// Timeline props：量化帧图 + 逐镜头 spec（TimelineScene 要求 spans 连续无缝）
+// Timeline props：量化帧图 + 逐镜头 spec（TimelineScene 要求 spans 连续无缝）。
+// 旁白（若有）：audioSrc 用 data URI（探针实测绝对路径被 Remotion 拒收，见装配块注释）。
+const narrationByShot = new Map(
+  narrationEntries.map((entry) => [entry.shotIndex, entry]),
+);
 const timelineProps = {
   shots: timeline.shots.map((span) => ({
     spec: shotEntries[span.shotIndex].spec,
     startFrame: span.startFrame,
     frames: span.frames,
+    ...(narrationByShot.has(span.shotIndex)
+      ? {
+          narration: { audioSrc: narrationByShot.get(span.shotIndex).propsSrc },
+        }
+      : {}),
   })),
 };
 
@@ -197,6 +295,9 @@ for (const aspect of aspects) {
     "--color-space=bt709",
     "--concurrency=2",
   ];
+  // 旁白资产来自本进程的 127.0.0.1 文件服务（跨源）：关掉渲染浏览器的同源策略
+  // （Remotion 官方 CORS 出口）。只影响这次渲染的临时 Chrome，不影响别的。
+  if (narrationEntries.length > 0) command.push("--disable-web-security");
   // 与 render_form01.py 同款回退：系统 Chrome 存在就用它（Remotion 自带 headless shell 需额外下载）
   if (existsSync(CHROME)) {
     command.push(`--browser-executable=${CHROME}`);
@@ -231,6 +332,37 @@ for (const aspect of aspects) {
     );
   }
 
+  // D2：带旁白出片时核对音轨——必须有 aac 流，且容器时长与视频一致（±0.1s）。
+  // 注意 probe() 用了 -select_streams v:0，其 streams 里永远不会出现音频流，
+  // 音轨必须单独探（探针实测：用 probe() 的输出查音频=结构性误报「无音频流」）。
+  if (narrationEntries.length > 0) {
+    const audioProbe = spawnSync(
+      "ffprobe",
+      [
+        "-v",
+        "error",
+        "-select_streams",
+        "a",
+        "-show_entries",
+        "stream=codec_name",
+        "-of",
+        "csv=p=0",
+        videoPath,
+      ],
+      { encoding: "utf8" },
+    );
+    const audioCodec = `${audioProbe.stdout}`.trim();
+    if (audioCodec !== "aac") {
+      fail(`${aspect}.mp4 期望 aac 音轨但得到: ${audioCodec || "无音频流"}`);
+    }
+    // 容器时长 = 视频轨时长；音频流对齐由 Remotion 的混音时移保证
+    if (Math.abs(durationSeconds - totalFrames / FPS) > 0.1) {
+      fail(
+        `${aspect}.mp4 容器时长 ${durationSeconds}s 与视频 ${totalFrames / FPS}s 不一致（>±0.1s）`,
+      );
+    }
+  }
+
   manifest.aspects[aspect] = {
     registryVersion: defaultRegistry.version,
     fps: FPS,
@@ -248,6 +380,20 @@ for (const aspect of aspects) {
       frames: span.frames,
       contentDigest: contentDigests[span.shotIndex],
     })),
+    // D2 旁白证据：逐镜头资产指纹与时长（wordsFile 同命名约定的字级时间戳档案）
+    ...(narrationEntries.length > 0
+      ? {
+          narration: narrationEntries.map((entry) => ({
+            shotIndex: entry.shotIndex,
+            versionId: shotEntries[entry.shotIndex].version.versionId,
+            audioBytes: statSync(entry.audioSrc).size,
+            durationMs: entry.durationMs,
+            wordsFile: path
+              .basename(entry.audioSrc)
+              .replace(/\.wav$/, ".words.json"),
+          })),
+        }
+      : {}),
   };
 
   // RenderRecord 追加：每画幅 × 每镜头一条（frames = 该镜头 span，输出为整片）
@@ -278,6 +424,7 @@ for (const aspect of aspects) {
 }
 
 // 5. 回写项目（追加后重校验 + savedVersion 递增）
+if (narrationServer) narrationServer.kill();
 project.savedVersion += 1;
 validateVideoProject(project);
 writeFileSync(projectPath, `${JSON.stringify(project, null, 2)}\n`);

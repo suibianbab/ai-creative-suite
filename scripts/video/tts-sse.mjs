@@ -5,6 +5,8 @@
 //         "usage":{"characters":34},"request_id":"…"}
 // 纪律：音频必须逐 chunk 解码（output.audio.data）后 Buffer.concat——
 // 把整条流的 base64 先拼再解会得到损坏字节（spike 实测 8KB ≠ 223KB）。
+import { existsSync } from "node:fs";
+import path from "node:path";
 
 // 计费估算：仅供台账预算 sanity，真实计费以服务端 usage.characters 为准
 // （中文按每字 2 计费字符）。已知价目：cosyvoice-v3-flash ¥1/万字符。
@@ -107,4 +109,47 @@ export function buildNarrationJobs(project) {
     });
   });
   return jobs;
+}
+
+// 旁白装配（Task4，render-scene 消费）：项目 + 资产目录 + 量化帧图 → 逐镜头
+// 音轨 entries。纪律：
+//  - 镜头 narrationText 为空 → 不装配（旁白以落档文本为准，目录里有没有 wav 不看）；
+//  - 文本非空但 <shotId>-<versionId>.wav 缺失 → 不装配 + notice（缺资产不阻断出片）；
+//  - wav 时长 > 镜头 span → overflow=true + warning（Sequence 播到 span 末截断）。
+// probeWavMs 由 CLI 注入 ffprobe 实现，单测注入固定值——本函数零外部进程。
+export function buildNarrationEntries(project, dir, timeline, fps, probeWavMs) {
+  const entries = [];
+  const notices = [];
+  const warnings = [];
+  for (const span of timeline.shots) {
+    const shot = project.shots[span.shotIndex];
+    const version = shot.contentVersions.find(
+      (candidate) => candidate.versionId === shot.workingVersionId,
+    );
+    if ((version?.narrationText ?? "").length === 0) continue;
+    const base = `${shot.shotId}-${version.versionId}`;
+    const wav = path.join(dir, `${base}.wav`);
+    if (!existsSync(wav)) {
+      notices.push(
+        `镜头 ${span.shotIndex + 1}（${shot.shotId}）旁白资产缺失：${base}.wav，该镜头无音轨`,
+      );
+      continue;
+    }
+    const durationMs = probeWavMs(wav);
+    const spanMs = (span.frames / fps) * 1000;
+    const overflow = durationMs > spanMs;
+    entries.push({
+      shotIndex: span.shotIndex,
+      audioSrc: wav,
+      durationMs,
+      spanMs,
+      overflow,
+    });
+    if (overflow) {
+      warnings.push(
+        `镜头 ${span.shotIndex + 1} 旁白 ${durationMs}ms 超镜头 span ${spanMs}ms，播放将截断到 span 末`,
+      );
+    }
+  }
+  return { entries, notices, warnings };
 }
