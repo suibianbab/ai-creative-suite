@@ -8,7 +8,13 @@ import {
   validateSceneSpec,
 } from "@acs/video-scene";
 import { createElement, type FC, type JSX } from "react";
-import { AbsoluteFill, useCurrentFrame, useVideoConfig } from "remotion";
+import {
+  AbsoluteFill,
+  Audio,
+  Sequence,
+  useCurrentFrame,
+  useVideoConfig,
+} from "remotion";
 import "./assets/fonts/font.css";
 
 // SvgNode 数据树 → React 元素。组件输出的是纯数据（@acs/video-scene 不依赖 React），
@@ -91,6 +97,9 @@ export type TimelineShotProps = {
   spec: SceneSpec;
   startFrame: number;
   frames: number;
+  // D2：镜头旁白音轨。audioSrc 由装配方给绝对路径（CLI 渲染）；
+  // 无 narration 的镜头不出 Sequence，画面与既有渲染逐字节一致。
+  narration?: { audioSrc: string };
 };
 
 export type TimelineProps = { shots?: TimelineShotProps[] };
@@ -99,6 +108,19 @@ export const TimelineScene: FC<TimelineProps> = ({ shots }) => {
   const { fps, width, height } = useVideoConfig();
   const frame = useCurrentFrame();
   if (!shots || shots.length === 0) return null; // Studio 空预览
+  // 旁白音轨独立于当前帧的镜头归属渲染：Sequence 自己按 from/durationInFrames
+  // 定位与截断（音频长于镜头 span 时只播到 span 末——Task4 装配时对超长告警）。
+  const narrationTracks = shots
+    .filter((shot) => shot.narration)
+    .map((shot, index) => (
+      <Sequence
+        key={`narration-${index}`}
+        from={shot.startFrame}
+        durationInFrames={shot.frames}
+      >
+        <Audio src={shot.narration!.audioSrc} />
+      </Sequence>
+    ));
   for (let index = 1; index < shots.length; index += 1) {
     const prev = shots[index - 1]!;
     const cur = shots[index]!;
@@ -114,11 +136,16 @@ export const TimelineScene: FC<TimelineProps> = ({ shots }) => {
   if (!active) {
     throw new Error(`Timeline 第 ${frame} 帧不属任何镜头（总帧数之外？）`);
   }
-  return renderSpecLayer(active.spec, {
-    frame: frame - active.startFrame,
-    fps,
-    durationFrames: active.frames,
-    width,
-    height,
-  });
+  return (
+    <>
+      {narrationTracks}
+      {renderSpecLayer(active.spec, {
+        frame: frame - active.startFrame,
+        fps,
+        durationFrames: active.frames,
+        width,
+        height,
+      })}
+    </>
+  );
 };
