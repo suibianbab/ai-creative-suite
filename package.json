@@ -17,6 +17,7 @@
     "qa:live-model": "node scripts/qa/run-regression.mjs live-model",
     "qa:grounding": "node scripts/qa/run-regression.mjs live-grounding",
     "qa:browser-image": "node scripts/qa/run-regression.mjs browser-image",
+    "qa:video-determinism": "node scripts/video/verify-determinism.mjs",
     "dev:photocraft-bridge": "node scripts/photocraft/dev-bridge.mjs"
   },
   "devDependencies": {
