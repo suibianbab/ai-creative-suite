@@ -2,8 +2,8 @@ import {
   assertAppendOnlyEvolution,
   canonicalJson,
   type VideoProject,
-  validateVideoProject,
   VideoProjectMutationError,
+  validateVideoProject,
 } from "@acs/video-document";
 
 export { VideoProjectMutationError };
@@ -129,8 +129,11 @@ export async function readVideoProjectVersion(
   try {
     const transaction = database.transaction("versions", "readonly");
     const snapshot = await requestResult(
-      transaction.objectStore("versions").get(`${id}:${savedVersion}`) as
-        IDBRequest<VersionSnapshot | undefined>,
+      transaction
+        .objectStore("versions")
+        .get(`${id}:${savedVersion}`) as IDBRequest<
+        VersionSnapshot | undefined
+      >,
     );
     return snapshot ? snapshot.document : null;
   } finally {
@@ -150,7 +153,10 @@ export async function saveVideoProject(
   validateVideoProject(document);
   const database = await openDatabase();
   try {
-    const transaction = database.transaction(["projects", "versions"], "readwrite");
+    const transaction = database.transaction(
+      ["projects", "versions"],
+      "readwrite",
+    );
     const done = transactionDone(transaction);
     const stored = await requestResult(
       transaction.objectStore("projects").get(document.id) as IDBRequest<
@@ -198,6 +204,77 @@ export async function saveVideoProject(
     } satisfies ProjectRecord);
     await done;
     return next;
+  } finally {
+    database.close();
+  }
+}
+
+// 导入（P1-A 闭环回程）：工作台导出 → CLI 渲染回写 → 导回，同一项目 ID 贯穿。
+// 语义：本地没有 → 原样入库（不递增）；同内容 → 幂等重放；
+// 恰好快进一版且是已存版本的只追加演进 → 接受为新当前版本（快照同样落库）；
+// 落后/跳版/同版本分叉 → 冲突，调用方提示刷新或另存为新项目。
+export async function importVideoProject(
+  document: VideoProject,
+): Promise<VideoProject> {
+  validateVideoProject(document);
+  const database = await openDatabase();
+  try {
+    const transaction = database.transaction(
+      ["projects", "versions"],
+      "readwrite",
+    );
+    const done = transactionDone(transaction);
+    const stored = await requestResult(
+      transaction.objectStore("projects").get(document.id) as IDBRequest<
+        ProjectRecord | undefined
+      >,
+    );
+    const commit = (doc: VideoProject) => {
+      transaction.objectStore("versions").put(
+        {
+          projectId: doc.id,
+          savedVersion: doc.savedVersion,
+          savedAt: Date.now(),
+          document: doc,
+        } satisfies VersionSnapshot,
+        `${doc.id}:${doc.savedVersion}`,
+      );
+      transaction.objectStore("projects").put({
+        id: doc.id,
+        title: doc.title,
+        updatedAt: Date.now(),
+        savedVersion: doc.savedVersion,
+        document: doc,
+      } satisfies ProjectRecord);
+    };
+    if (!stored) {
+      commit(document);
+      await done;
+      return document;
+    }
+    if (canonicalJson(document) === canonicalJson(stored.document)) {
+      await done; // 幂等重放
+      return stored.document;
+    }
+    if (document.savedVersion === stored.document.savedVersion + 1) {
+      try {
+        assertAppendOnlyEvolution(stored.document, document);
+      } catch (error) {
+        done.catch(() => {});
+        transaction.abort();
+        throw error;
+      }
+      commit(document);
+      await done;
+      return document;
+    }
+    done.catch(() => {});
+    transaction.abort();
+    throw new VideoProjectConflictError(
+      document.id,
+      document.savedVersion,
+      stored.document.savedVersion,
+    );
   } finally {
     database.close();
   }

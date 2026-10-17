@@ -7,6 +7,7 @@ import test from "node:test";
 import type { VideoProject } from "@acs/video-document";
 import { IDBFactory } from "fake-indexeddb";
 import {
+  importVideoProject,
   openVideoProject,
   readVideoProjectVersion,
   saveVideoProject,
@@ -153,7 +154,13 @@ test("v1 单记录库升级到 v2：既有记录迁移为快照，可继续保�
         const legacy = makeProject(); // savedVersion 1，v1 时代的存量文档
         transaction
           .objectStore("projects")
-          .put({ id: legacy.id, title: legacy.title, updatedAt: 1, savedVersion: 1, document: legacy });
+          .put({
+            id: legacy.id,
+            title: legacy.title,
+            updatedAt: 1,
+            savedVersion: 1,
+            document: legacy,
+          });
         transaction.oncomplete = () => {
           database.close();
           resolve();
@@ -163,7 +170,9 @@ test("v1 单记录库升级到 v2：既有记录迁移为快照，可继续保�
       request.onerror = () => reject(request.error);
     });
 
-    const reopened = await openVideoProject("11111111-1111-4111-8111-111111111111");
+    const reopened = await openVideoProject(
+      "11111111-1111-4111-8111-111111111111",
+    );
     assert.ok(reopened);
     const next = await saveVideoProject({
       ...reopened,
@@ -172,5 +181,78 @@ test("v1 单记录库升级到 v2：既有记录迁移为快照，可继续保�
     assert.equal(next.savedVersion, 2);
     const migrated = await readVideoProjectVersion(reopened.id, 1);
     assert.ok(migrated, "v1 存量记录升级后成为可读快照");
+  });
+});
+
+// —— P1-A：导入 = 工作台↔CLI 闭环的回程（导出→渲染回写→导回） ——
+
+function makeRenderRecord(versionId: string) {
+  return {
+    renderId: "55555555-5555-4555-8555-555555555555",
+    versionId,
+    contentDigest: "c".repeat(64),
+    engineId: "remotion",
+    engineVersion: "4.0.0",
+    rendererVersion: "scene-spec-composition-1",
+    browser: "Google Chrome 155.0.8059.41",
+    codec: "h264",
+    outputAssetRef: "artifacts/video-studio-smoke/landscape.mp4",
+    fps: 24,
+    width: 1280,
+    height: 720,
+    frames: 192,
+    fontDigests: { "NotoSansSC-Regular.woff": "d".repeat(64) },
+  };
+}
+
+test("导入：新项目原样入库；快进一版（CLI 回写）接受；分叉/落后拒绝", async () => {
+  await withTabs(async () => {
+    // 新项目（其它浏览器/机器导出）：原样落库为当前版本
+    const foreign = makeProject({
+      id: "44444444-4444-4444-8444-444444444444",
+    });
+    const imported = await importVideoProject(foreign);
+    assert.equal(imported.savedVersion, 1, "原样入库不递增");
+    assert.equal((await openVideoProject(foreign.id))!.title, foreign.title);
+
+    // 本地 v2 → CLI 在导出件上追加 RenderRecord 存成 v3 → 导回快进接受
+    const v2 = await saveVideoProject(makeProject());
+    const cliReturned = structuredClone(v2);
+    cliReturned.renderRecords.push(
+      makeRenderRecord(v2.shots[0]!.contentVersions[0]!.versionId),
+    );
+    cliReturned.savedVersion = 3;
+    const accepted = await importVideoProject(cliReturned);
+    assert.equal(accepted.savedVersion, 3);
+    const current = await openVideoProject(v2.id);
+    assert.equal(current!.renderRecords.length, 1, "渲染记录出现在工作台");
+    assert.ok(
+      await readVideoProjectVersion(v2.id, 2),
+      "快进不抹掉本地 v2 快照",
+    );
+
+    // 落后一版（本地已 v3，导入 v2 的旧导出件）→ 冲突
+    const stale = structuredClone(v2);
+    await assert.rejects(
+      () => importVideoProject(stale),
+      VideoProjectConflictError,
+    );
+
+    // 同版本但内容分叉 → 冲突
+    const diverged = structuredClone(v2);
+    diverged.title = "分叉标题";
+    await assert.rejects(
+      () => importVideoProject(diverged),
+      VideoProjectConflictError,
+    );
+
+    // 快进但改写了旧内容 → 拒绝
+    const tamperedFastForward = structuredClone(cliReturned);
+    tamperedFastForward.savedVersion = 4;
+    tamperedFastForward.shots[0]!.contentVersions[0]!.description = "篡改";
+    await assert.rejects(
+      () => importVideoProject(tamperedFastForward),
+      VideoProjectMutationError,
+    );
   });
 });

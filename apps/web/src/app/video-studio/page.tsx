@@ -2,15 +2,17 @@
 
 import type { VideoProject } from "@acs/video-document";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { applyPlan } from "./apply-plan";
 import {
+  importVideoProject,
   listVideoProjects,
   openVideoProject,
   saveVideoProject,
   type VideoProjectSummary,
 } from "./local-video-projects";
 import { type PlanResult, planFromSentence, specSummary } from "./planner";
+import { exportFileName, parseProjectJson } from "./project-io";
 import { ScenePreview } from "./scene-preview";
 import "./video-studio.css";
 
@@ -40,6 +42,8 @@ type EditorState = {
 export default function VideoStudioPage() {
   const [projects, setProjects] = useState<VideoProjectSummary[]>([]);
   const [editor, setEditor] = useState<EditorState | null>(null);
+  const [listMessage, setListMessage] = useState<string | null>(null);
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   const refreshProjects = useCallback(async () => {
     setProjects(await listVideoProjects());
@@ -195,7 +199,45 @@ export default function VideoStudioPage() {
           >
             保存
           </button>
+          <button
+            type="button"
+            className="editor-export"
+            disabled={busy}
+            onClick={() => {
+              // P1-A 去程：导出当前文档（含渲染记录）给 CLI 渲染。
+              // 注意此作用域里 document 是 VideoProject，DOM 走 window.document。
+              const blob = new Blob([JSON.stringify(document, null, 2)], {
+                type: "application/json",
+              });
+              const url = URL.createObjectURL(blob);
+              const anchor = window.document.createElement("a");
+              anchor.href = url;
+              anchor.download = exportFileName(document);
+              anchor.click();
+              URL.revokeObjectURL(url);
+              setEditor({
+                ...editor,
+                message: `已导出 ${anchor.download}。CLI 出片：node scripts/video/render-scene.mjs --project <导出件> --out <目录>，完成后回列表页「导入项目 JSON」`,
+              });
+            }}
+          >
+            导出项目 JSON
+          </button>
           {message ? <p className="editor-message">{message}</p> : null}
+
+          {document.renderRecords.length > 0 ? (
+            <div className="render-records">
+              <h3>渲染记录（{document.renderRecords.length}）</h3>
+              <ul>
+                {document.renderRecords.map((record) => (
+                  <li key={record.renderId}>
+                    {record.width}×{record.height} · {record.frames} 帧 ·{" "}
+                    {record.codec} · {record.outputAssetRef}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
         </section>
       </main>
     );
@@ -229,7 +271,44 @@ export default function VideoStudioPage() {
           >
             新建项目
           </button>
+          <button
+            type="button"
+            className="project-import"
+            onClick={() => importInputRef.current?.click()}
+          >
+            导入项目 JSON
+          </button>
+          <input
+            ref={importInputRef}
+            type="file"
+            accept=".json,application/json"
+            hidden
+            onChange={async (event) => {
+              const file = event.target.files?.[0];
+              event.target.value = ""; // 允许重复选择同一文件
+              if (!file) return;
+              try {
+                // P1-A 回程：CLI 回写件（含 RenderRecord）导回，同一项目 ID 贯穿
+                const imported = await importVideoProject(
+                  parseProjectJson(await file.text()),
+                );
+                await refreshProjects();
+                setEditor({
+                  document: imported,
+                  message: `已导入 ${imported.title}（v${imported.savedVersion}）`,
+                  busy: false,
+                  sentence: imported.brief.sentence,
+                  plan: null,
+                });
+              } catch (error) {
+                setListMessage(
+                  error instanceof Error ? error.message : "导入失败",
+                );
+              }
+            }}
+          />
         </div>
+        {listMessage ? <p className="editor-message">{listMessage}</p> : null}
         {projects.length === 0 ? (
           <p className="project-empty">还没有本地项目，点「新建项目」开始。</p>
         ) : (

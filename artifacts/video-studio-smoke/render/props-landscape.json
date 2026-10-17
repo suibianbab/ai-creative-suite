@@ -1,0 +1,1 @@
+{"spec":{"specVersion":1,"componentId":"text-animation","componentVersion":1,"durationMs":3000,"seed":7,"background":"#10203a","params":{"title":"开盘大涨","subtitle":"沪指高开 1.2%","titleColor":"#ffffff","subtitleColor":"#aabbee","entrance":"fade-up","enterMs":900}}}

@@ -1,0 +1,1 @@
+{"spec":{"specVersion":1,"componentId":"text-animation","componentVersion":1,"durationMs":4000,"seed":3376104437,"background":"#ffffff","params":{"title":"闭环验收","subtitle":"E2E","titleColor":"#1b2c29","subtitleColor":"#5d7469","entrance":"fade-up","enterMs":900}}}

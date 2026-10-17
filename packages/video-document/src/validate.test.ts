@@ -171,10 +171,7 @@ test("跨镜头 versionId 重复 → 拒绝（RenderRecord 引用会产生歧义
     for (const event of shot.events)
       if ("versionId" in event) event.versionId = UUID;
   });
-  assert.throws(
-    () => validateVideoProject(project),
-    /duplicated across shots/,
-  );
+  assert.throws(() => validateVideoProject(project), /duplicated across shots/);
 });
 
 test("跨镜头 order 重复 → 拒绝", () => {

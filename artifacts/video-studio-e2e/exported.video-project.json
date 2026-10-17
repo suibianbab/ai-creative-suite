@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 1,
+  "id": "3533c10a-b9f4-47e0-9b51-b6afbc3ca870",
+  "title": "闭环验收",
+  "brief": {
+    "sentence": "做一个4秒的文字动画，标题是闭环验收，副标题是E2E",
+    "aspectTargets": [
+      "landscape",
+      "portrait"
+    ]
+  },
+  "shots": [
+    {
+      "shotId": "5ac7c557-f54b-4a71-85bd-91313d0a2d79",
+      "order": 0,
+      "locked": false,
+      "workingVersionId": "cdbc4242-5440-4379-b34f-86bad123bdc9",
+      "contentVersions": [
+        {
+          "versionId": "cdbc4242-5440-4379-b34f-86bad123bdc9",
+          "createdAt": "2026-10-17T14:55:30.347Z",
+          "durationMs": 4000,
+          "description": "文字动画：闭环验收",
+          "narrationText": "",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 4000,
+              "seed": 3376104437,
+              "background": "#ffffff",
+              "params": {
+                "title": "闭环验收",
+                "subtitle": "E2E",
+                "titleColor": "#1b2c29",
+                "subtitleColor": "#5d7469",
+                "entrance": "fade-up",
+                "enterMs": 900
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-rules",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "cdbc4242-5440-4379-b34f-86bad123bdc9",
+          "at": "2026-10-17T14:55:30.347Z",
+          "actor": "human"
+        }
+      ]
+    }
+  ],
+  "renderRecords": [
+    {
+      "renderId": "9ed94d63-dac4-415b-aecc-95e079611410",
+      "versionId": "cdbc4242-5440-4379-b34f-86bad123bdc9",
+      "contentDigest": "53bc54a6d15301c7a5fc129dd6fda86065d44e4633a317d4cc3a53062f9f64f9",
+      "engineId": "remotion",
+      "engineVersion": "1",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 96,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "47842c8a-5d7c-4d6b-9f1e-1b5f06402cb3",
+      "versionId": "cdbc4242-5440-4379-b34f-86bad123bdc9",
+      "contentDigest": "53bc54a6d15301c7a5fc129dd6fda86065d44e4633a317d4cc3a53062f9f64f9",
+      "engineId": "remotion",
+      "engineVersion": "1",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 96,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    }
+  ],
+  "deliveries": [],
+  "savedVersion": 3
+}
