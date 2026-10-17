@@ -1901,6 +1901,23 @@
       ]
     },
     {
+      "id": "VID-006",
+      "title": "Video Studio workbench-CLI closed loop via export/import",
+      "fixture": "Dev server on :3210 plus Playwright Chromium; scripted run documented in artifacts/video-studio-e2e/E2E_CLOSED_LOOP.md (rerun: PORT=3210 pnpm --filter @acs/web dev, then node scripts/video/e2e-closed-loop.mjs)",
+      "steps": [
+        "Create a project in the browser, plan 做一个4秒的文字动画，标题是闭环验收，副标题是E2E, apply the confirmation card and save",
+        "Export the project JSON from the workbench, render both aspects via scripts/video/render-scene.mjs on the exported file",
+        "Back in the browser list view, import the CLI-returned JSON and reopen the editor",
+        "Return to the list and check the version column"
+      ],
+      "passCriteria": [
+        "The same project id and content version id survive browser to CLI to browser without rewrite",
+        "Import lands on v3 with two render records visible (1280x720 and 720x1280) while the local v2 snapshot is kept",
+        "Stale, diverged and fast-forward-tampered imports are rejected with a conflict or mutation error",
+        "Browser console stays free of errors during the whole loop"
+      ]
+    },
+    {
       "id": "3D-001",
       "title": "Exact product model advertisement",
       "fixture": "Rights-cleared customer-approved accurate 3D model and product reference photos",
