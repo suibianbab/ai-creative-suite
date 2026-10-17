@@ -130,3 +130,56 @@ test("RenderRecord.browser 可选：缺省与字符串合法，空串拒绝（AD
   (empty.renderRecords[0] as { browser?: string }).browser = "  ";
   assert.throws(() => validateVideoProject(empty), /browser/);
 });
+
+// —— P2-C：跨镜头 ID/顺序在项目层必须全局唯一 ——
+
+const OTHER_SHOT_ID = "0b0b13a2-6c63-4d3d-9a52-a70f6a3b3001";
+const OTHER_VERSION_ID = "0b0b13a2-6c63-4d3d-9a52-a70f6a3b3002";
+
+function withSecondShot(
+  project: VideoProject,
+  mutate?: (shot: VideoProject["shots"][number]) => void,
+): VideoProject {
+  const first = project.shots[0]!;
+  const second = structuredClone(first);
+  second.shotId = OTHER_SHOT_ID;
+  second.order = 1;
+  second.workingVersionId = OTHER_VERSION_ID;
+  second.contentVersions[0]!.versionId = OTHER_VERSION_ID;
+  for (const event of second.events)
+    if ("versionId" in event) event.versionId = OTHER_VERSION_ID;
+  mutate?.(second);
+  return { ...project, shots: [first, second] };
+}
+
+test("双镜头且全局 shotId/versionId/order 唯一 → 通过", () => {
+  const project = withSecondShot(baseProject());
+  assert.equal(validateVideoProject(project).shots.length, 2);
+});
+
+test("跨镜头 shotId 重复 → 拒绝", () => {
+  const project = withSecondShot(baseProject(), (shot) => {
+    shot.shotId = UUID;
+  });
+  assert.throws(() => validateVideoProject(project), /shotId/);
+});
+
+test("跨镜头 versionId 重复 → 拒绝（RenderRecord 引用会产生歧义）", () => {
+  const project = withSecondShot(baseProject(), (shot) => {
+    shot.contentVersions[0]!.versionId = UUID;
+    shot.workingVersionId = UUID;
+    for (const event of shot.events)
+      if ("versionId" in event) event.versionId = UUID;
+  });
+  assert.throws(
+    () => validateVideoProject(project),
+    /duplicated across shots/,
+  );
+});
+
+test("跨镜头 order 重复 → 拒绝", () => {
+  const project = withSecondShot(baseProject(), (shot) => {
+    shot.order = 0;
+  });
+  assert.throws(() => validateVideoProject(project), /order/);
+});

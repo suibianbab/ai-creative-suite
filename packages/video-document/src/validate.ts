@@ -271,11 +271,31 @@ export function validateVideoProject(value: unknown): VideoProject {
   if (!Array.isArray(parsed.shots) || parsed.shots.length > MAX_ARRAY) {
     fail(`shots must be an array of at most ${MAX_ARRAY} entries`);
   }
+  // 项目层全局唯一（P2-C）：shotId、内容 versionId、order 跨镜头也不得重复——
+  // 否则 RenderRecord.versionId / 导出顺序会产生歧义。镜头内查重见 validateShot。
   const knownVersionIds = new Set<string>();
+  const knownShotIds = new Set<string>();
+  const knownOrders = new Set<number>();
   for (const [index, shot] of parsed.shots.entries()) {
     const parsedShot = validateShot(shot, `shots[${index}]`);
-    for (const version of parsedShot.contentVersions)
+    if (knownShotIds.has(parsedShot.shotId)) {
+      fail(`shots[${index}].shotId is duplicated across shots`);
+    }
+    knownShotIds.add(parsedShot.shotId);
+    if (knownOrders.has(parsedShot.order)) {
+      fail(
+        `shots[${index}].order ${parsedShot.order} conflicts with another shot`,
+      );
+    }
+    knownOrders.add(parsedShot.order);
+    for (const version of parsedShot.contentVersions) {
+      if (knownVersionIds.has(version.versionId)) {
+        fail(
+          `shots[${index}] content version ${version.versionId} is duplicated across shots`,
+        );
+      }
       knownVersionIds.add(version.versionId);
+    }
   }
   if (
     !Array.isArray(parsed.renderRecords) ||
