@@ -1,9 +1,14 @@
 "use client";
 
-import type { VideoProject } from "@acs/video-document";
+import {
+  type QuantizedTimeline,
+  quantizeTimeline,
+  type VideoProject,
+} from "@acs/video-document";
+import type { SceneSpec } from "@acs/video-scene";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { applyPlan } from "./apply-plan";
+import { applyPlan, applyStoryboard } from "./apply-plan";
 import {
   importVideoProject,
   listVideoProjects,
@@ -11,9 +16,20 @@ import {
   saveVideoProject,
   type VideoProjectSummary,
 } from "./local-video-projects";
-import { type PlanResult, planFromSentence, specSummary } from "./planner";
+import {
+  isStoryboardSentence,
+  type PlanResult,
+  planFromSentence,
+  planStoryboard,
+  type StoryboardResult,
+  specSummary,
+} from "./planner";
 import { exportFileName, parseProjectJson } from "./project-io";
-import { ScenePreview } from "./scene-preview";
+import {
+  ScenePreview,
+  TimelinePreview,
+  type TimelinePreviewItem,
+} from "./scene-preview";
 import "./video-studio.css";
 
 // 新项目从空镜头开始（validateVideoProject 允许 shots 为空数组）；
@@ -37,6 +53,7 @@ type EditorState = {
   busy: boolean;
   sentence: string;
   plan: PlanResult | null;
+  storyboard: StoryboardResult | null;
 };
 
 export default function VideoStudioPage() {
@@ -56,7 +73,38 @@ export default function VideoStudioPage() {
   }, [refreshProjects]);
 
   if (editor) {
-    const { document, message, busy, sentence, plan } = editor;
+    const { document, message, busy, sentence, plan, storyboard } = editor;
+    // 镜头时间线（量化帧图 @24fps）：镜头卡 + 时间条 + 整片预览共用
+    // video-document 里 spec 是 unknown（包不依赖 video-scene）；本工作台写入的
+    // spec 都是规划器产出并过 validateSceneSpec 的 SceneSpec——预览渲染前仍会再验。
+    const shotSpecs = document.shots.map((shot) => {
+      const working = shot.contentVersions.find(
+        (version) => version.versionId === shot.workingVersionId,
+      );
+      return working && working.sceneSource.type === "spec"
+        ? (working.sceneSource.spec as SceneSpec | null)
+        : null;
+    });
+    const durations = document.shots.map((shot) => {
+      const working = shot.contentVersions.find(
+        (version) => version.versionId === shot.workingVersionId,
+      );
+      return working ? working.durationMs : 0;
+    });
+    let pieceTimeline: QuantizedTimeline | null = null;
+    let pieceItems: TimelinePreviewItem[] | null = null;
+    if (
+      document.shots.length > 0 &&
+      durations.every((duration) => duration > 0) &&
+      shotSpecs.every((spec) => spec !== null)
+    ) {
+      pieceTimeline = quantizeTimeline(durations, 24);
+      pieceItems = shotSpecs.map((spec, index) => ({
+        spec: spec as SceneSpec,
+        startFrame: pieceTimeline!.shots[index]!.startFrame,
+        frames: pieceTimeline!.shots[index]!.frames,
+      }));
+    }
     return (
       <main className="studio-shell">
         <header className="studio-topbar">
@@ -101,7 +149,7 @@ export default function VideoStudioPage() {
                 id="planner-sentence"
                 className="planner-input"
                 value={sentence}
-                placeholder="做一个12秒的文字动画，标题是云制作，副标题是Video Studio"
+                placeholder="做一个12秒的文字动画，标题是云制作，或：做一个30秒的STEM解说视频，主题是勾股定理，分4个镜头"
                 onChange={(event) =>
                   setEditor({ ...editor, sentence: event.target.value })
                 }
@@ -110,13 +158,25 @@ export default function VideoStudioPage() {
                 type="button"
                 className="planner-run"
                 disabled={busy || sentence.trim().length === 0}
-                onClick={() =>
-                  setEditor({
-                    ...editor,
-                    plan: planFromSentence(sentence.trim()),
-                    message: null,
-                  })
-                }
+                onClick={() => {
+                  const trimmed = sentence.trim();
+                  // 分镜句式 → 多镜头规划器；其余 → P0 单镜头规划器
+                  if (isStoryboardSentence(trimmed)) {
+                    setEditor({
+                      ...editor,
+                      storyboard: planStoryboard(trimmed),
+                      plan: null,
+                      message: null,
+                    });
+                  } else {
+                    setEditor({
+                      ...editor,
+                      plan: planFromSentence(trimmed),
+                      storyboard: null,
+                      message: null,
+                    });
+                  }
+                }}
               >
                 规划
               </button>
@@ -127,6 +187,72 @@ export default function VideoStudioPage() {
             <div className="planner-feedback">
               <p className="planner-reason">{plan.reason}</p>
               <p className="planner-guidance">{plan.guidance}</p>
+            </div>
+          ) : null}
+
+          {storyboard && !storyboard.ok ? (
+            <div className="planner-feedback">
+              <p className="planner-reason">{storyboard.reason}</p>
+              <p className="planner-guidance">{storyboard.guidance}</p>
+            </div>
+          ) : null}
+
+          {storyboard && storyboard.ok ? (
+            <div className="plan-card storyboard-card">
+              <p className="plan-summary">
+                分镜预告：{storyboard.title} · {storyboard.shots.length} 个镜头
+                · {storyboard.totalMs / 1000}s
+              </p>
+              <ol className="plan-shot-list">
+                {storyboard.shots.map((shot, index) => (
+                  <li key={index} className="plan-shot-item">
+                    <span className="plan-shot-label">
+                      {index + 1}. {shot.label} ·{" "}
+                      {shot.plan.spec.durationMs / 1000}s
+                    </span>
+                    <span className="plan-shot-hint">
+                      {shot.plan.renderHint}
+                    </span>
+                  </li>
+                ))}
+              </ol>
+              <div className="plan-actions">
+                <button
+                  type="button"
+                  className="plan-apply"
+                  onClick={() => {
+                    // P1：分镜应用 = 在当前项目上只追加 N 个镜头
+                    const applied = applyStoryboard(
+                      document,
+                      sentence.trim(),
+                      storyboard,
+                      {
+                        shot: () => crypto.randomUUID(),
+                        version: () => crypto.randomUUID(),
+                      },
+                    );
+                    setEditor({
+                      document: applied.document,
+                      message: applied.notice,
+                      busy: false,
+                      sentence,
+                      plan: null,
+                      storyboard: null,
+                    });
+                  }}
+                >
+                  确认应用（追加 {storyboard.shots.length} 个镜头）
+                </button>
+                <button
+                  type="button"
+                  className="plan-discard"
+                  onClick={() =>
+                    setEditor({ ...editor, storyboard: null, message: null })
+                  }
+                >
+                  放弃
+                </button>
+              </div>
             </div>
           ) : null}
 
@@ -152,6 +278,7 @@ export default function VideoStudioPage() {
                       busy: false,
                       sentence: sentence,
                       plan: null,
+                      storyboard: null,
                     });
                   }}
                 >
@@ -171,8 +298,59 @@ export default function VideoStudioPage() {
           ) : null}
 
           <p className="editor-hint">
-            规划器只认固定句式，解析失败会把语法原样告诉你；确认应用后生成首个镜头。
+            规划器只认固定句式（单镜头 / STEM
+            分镜），解析失败会把语法原样告诉你；分镜应用会在当前项目上追加镜头。
           </p>
+
+          {document.shots.length > 0 && pieceTimeline && pieceItems ? (
+            <section className="editor-shots">
+              <h3>
+                镜头时间线（{document.shots.length} 镜头 ·{" "}
+                {pieceTimeline.totalFrames} 帧 @24fps ≈{" "}
+                {(pieceTimeline.totalFrames / 24).toFixed(1)}s）
+              </h3>
+              <div className="timeline-bar">
+                {pieceTimeline.shots.map((span) => (
+                  <span
+                    key={span.shotIndex}
+                    className="timeline-span"
+                    style={{
+                      width: `${(span.frames / pieceTimeline!.totalFrames) * 100}%`,
+                    }}
+                  >
+                    {span.shotIndex + 1}号 {span.frames}帧
+                  </span>
+                ))}
+              </div>
+              <ol className="shot-list">
+                {document.shots.map((shot, index) => {
+                  const working = shot.contentVersions.find(
+                    (version) => version.versionId === shot.workingVersionId,
+                  );
+                  return (
+                    <li key={shot.shotId} className="shot-card">
+                      <span className="shot-order">
+                        {index + 1}（order {shot.order}）
+                        {shot.locked ? " · 锁定" : ""}
+                      </span>
+                      <span className="shot-description">
+                        {working ? working.description : "（无工作版本）"}
+                      </span>
+                      <span className="shot-duration">
+                        {working ? `${working.durationMs / 1000}s` : ""} ·{" "}
+                        {pieceTimeline!.shots[index]!.frames} 帧
+                      </span>
+                    </li>
+                  );
+                })}
+              </ol>
+              <TimelinePreview items={pieceItems} timeline={pieceTimeline} />
+            </section>
+          ) : document.shots.length > 0 ? (
+            <p className="editor-hint">
+              镜头含非 spec 场景源或时长缺失，整片预览不可用。
+            </p>
+          ) : null}
           <button
             type="button"
             className="editor-save"
@@ -187,6 +365,7 @@ export default function VideoStudioPage() {
                   busy: false,
                   sentence,
                   plan,
+                  storyboard,
                 });
               } catch (error) {
                 setEditor({
@@ -266,6 +445,7 @@ export default function VideoStudioPage() {
                 busy: false,
                 sentence: "",
                 plan: null,
+                storyboard: null,
               })
             }
           >
@@ -299,6 +479,7 @@ export default function VideoStudioPage() {
                   busy: false,
                   sentence: imported.brief.sentence,
                   plan: null,
+                  storyboard: null,
                 });
               } catch (error) {
                 setListMessage(
@@ -343,6 +524,7 @@ export default function VideoStudioPage() {
                           busy: false,
                           sentence: document.brief.sentence,
                           plan: null,
+                          storyboard: null,
                         });
                       }}
                     >

@@ -317,3 +317,110 @@
   color: #5d7469;
   white-space: nowrap;
 }
+
+/* —— P1 分镜预告卡与镜头时间线 —— */
+
+.plan-shot-list {
+  list-style: none;
+  margin: 0 0 6px;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.plan-shot-item {
+  display: grid;
+  gap: 2px;
+  padding: 8px 10px;
+  border: 1px solid #e7efe9;
+  border-radius: 8px;
+  background: #fbfdfc;
+}
+
+.plan-shot-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #173f3b;
+}
+
+.plan-shot-hint {
+  font-size: 12px;
+  color: #5d7469;
+}
+
+.editor-shots {
+  margin-bottom: 20px;
+  display: grid;
+  gap: 12px;
+}
+
+.editor-shots h3 {
+  font-size: 15px;
+  margin: 0;
+}
+
+.timeline-bar {
+  display: flex;
+  width: 100%;
+  height: 34px;
+  border: 1px solid #cadbd1;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.timeline-span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: #173f3b;
+  background: #dcebe1;
+  border-right: 1px solid #ffffff;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.timeline-span:last-child {
+  border-right: none;
+}
+
+.timeline-span:nth-child(even) {
+  background: #ecf5ee;
+}
+
+.shot-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.shot-card {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  align-items: baseline;
+  padding: 10px 12px;
+  border: 1px solid #e7efe9;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 13px;
+}
+
+.shot-order {
+  font-weight: 700;
+  color: #173f3b;
+}
+
+.shot-description {
+  color: #1b2c29;
+  flex: 1;
+}
+
+.shot-duration {
+  color: #5d7469;
+  font-size: 12px;
+  white-space: nowrap;
+}
