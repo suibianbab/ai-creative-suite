@@ -1,5 +1,9 @@
 # Current State v2
 
+## 2026-10-17 Video Studio P0 代码评审整改（P1-A~E、P2-A~C、P3）
+
+外部代码评审（`docs/VIDEO_STUDIO_P0_CODE_REVIEW_2026-10-17.md`）指出的问题已逐项整改，一条一提交，全部 TDD（先看失败再实现）。P1-A：工作台原生「导出/导入项目 JSON」，浏览器→CLI→浏览器闭环由 `scripts/video/e2e-closed-loop.mjs` 脚本化走通（同项目 ID 贯穿、v2→v3 快进接受、落后/分叉/篡改拒绝，登记 VID-006）；顺带修掉 SvgTree 把 kebab-case SVG 属性直传 React 的控制台错误。P1-B：IndexedDB 快照库 + 只追加演进校验。P1-C：乐观并发单事务原子化。P1-D：确定性比较改解码像素口径（`frame-compare`）。P1-E：确认卡 `renderHint` 如实预告画面内容。P2-A：组件源码静态门禁（禁墙钟/未播种随机/网络/存储，扫描器自检证明能抓）+ 渲染输出 2000 节点预算（两座渲染桥每帧执行）；逐帧墙钟超时明确延期到渲染 CLI worker 隔离（当前边界：仅内置注册组件，无用户代码执行路径）。P2-B/P2-C：确认应用区分首镜头与另存新项目、跨镜头 shotId/versionId/order 唯一。P3：`reactSvgAttrs` 归一到 `@acs/video-scene`，web 预览与 remotion 合成两桥共用，重构前后 MP4 哈希逐字节一致。审片记录已按四象限（实现/回归/链路/视觉）重标并更正原「闭环」措辞（原始轮次导出/回写系 DevTools 辅助，非用户链路），媒体不入库的视觉结论标注为本机复核；见 `../artifacts/video-p0-sample-2026-10-17/REVIEW.md` §9 与 `../artifacts/video-studio-e2e/E2E_CLOSED_LOOP.md`。
+
 ## 2026-10-17 Video Studio P0 单场景闭环
 
 `docs/superpowers/plans/2026-10-17-video-studio-p0.md` 十个任务全部完成。新增 `@acs/video-scene`（SceneSpec v1 声明式场景 + 文字/线描/基础图形三个纯函数组件、播种随机、本地字体）与 `@acs/remotion-engine` SceneSpec 合成；`apps/web` `/video-studio` 工作台壳支持规则规划器（句式 → 计划确认卡 → 分镜）、IndexedDB 本地项目保存与刷新重开；`scripts/video/render-scene.mjs` 按 aspectTargets 出 1280×720 / 720×1280 双尺寸并回写 RenderRecord。端到端样片（VID-003）两轮真实浏览器闭环 + 双尺寸出片 + 逐字段重开校验通过，审片记录见 `../artifacts/video-p0-sample-2026-10-17/REVIEW.md`；确定性双跑校验登记为 VID-002（72 帧逐帧一致）。审片发现并修复竖版文字标题双侧裁切缺陷（字号现按文本 em 宽钳制到画布 88%，横版像素不变）；竖版行为如实分述：线描/图形为设计空间等比居中缩放，文字为原生竖版排版 + 宽度钳制。注意：qa/registry.json 中 VID-001 已被 FilmCraft 遗留 manual 条目占用，本计划的新用例编号顺延为 VID-002/VID-003。P0 为本地优先；服务端 video_projects 迁移与 LLM 规划属 P1。

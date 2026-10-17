@@ -2,11 +2,11 @@
 // 不可改写、不可删除；标题/brief 等元数据可改。保存前必须通过本校验。
 import assert from "node:assert/strict";
 import test from "node:test";
-import type { VideoProject } from "./types.js";
 import {
   assertAppendOnlyEvolution,
   VideoProjectMutationError,
 } from "./evolve.js";
+import type { VideoProject } from "./types.js";
 
 const ID = "0b0b13a2-6c63-4d3d-9a52-a70f6a3b4001";
 
@@ -16,7 +16,10 @@ function baseProject(): VideoProject {
     id: ID,
     title: "p0",
     savedVersion: 2,
-    brief: { sentence: "做一个8秒的线描动画，标题是山水发布", aspectTargets: ["landscape"] },
+    brief: {
+      sentence: "做一个8秒的线描动画，标题是山水发布",
+      aspectTargets: ["landscape"],
+    },
     shots: [
       {
         shotId: "0b0b13a2-6c63-4d3d-9a52-a70f6a3b4002",
@@ -157,10 +160,7 @@ test("删除旧内容版本 → 拒绝", () => {
 test("丢失旧镜头 → 拒绝", () => {
   const next = appendedProject();
   next.shots = [];
-  assert.throws(
-    () => assertAppendOnlyEvolution(baseProject(), next),
-    /shot/,
-  );
+  assert.throws(() => assertAppendOnlyEvolution(baseProject(), next), /shot/);
 });
 
 test("改写已有渲染记录 → 拒绝；追加渲染记录 → 通过", () => {
@@ -235,9 +235,7 @@ test("删除已有交付记录 → 拒绝；旧 delivery 的来源在追加编�
     versionId: "0b0b13a2-6c63-4d3d-9a52-a70f6a3b4007",
     createdAt: "2026-10-17T03:00:00.000Z",
   });
-  assert.doesNotThrow(() =>
-    assertAppendOnlyEvolution(withDelivery, evolved),
-  );
+  assert.doesNotThrow(() => assertAppendOnlyEvolution(withDelivery, evolved));
   const allVersionIds = new Set(
     evolved.shots.flatMap((shot) =>
       shot.contentVersions.map((version) => version.versionId),

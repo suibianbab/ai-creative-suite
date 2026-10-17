@@ -152,15 +152,13 @@ test("v1 单记录库升级到 v2：既有记录迁移为快照，可继续保�
         const database = request.result;
         const transaction = database.transaction("projects", "readwrite");
         const legacy = makeProject(); // savedVersion 1，v1 时代的存量文档
-        transaction
-          .objectStore("projects")
-          .put({
-            id: legacy.id,
-            title: legacy.title,
-            updatedAt: 1,
-            savedVersion: 1,
-            document: legacy,
-          });
+        transaction.objectStore("projects").put({
+          id: legacy.id,
+          title: legacy.title,
+          updatedAt: 1,
+          savedVersion: 1,
+          document: legacy,
+        });
         transaction.oncomplete = () => {
           database.close();
           resolve();

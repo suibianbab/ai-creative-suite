@@ -11,6 +11,8 @@
 
 两轮均：浏览器新建项目 → 规划器解析 → 确认卡应用 → 保存 v2 → 导出项目 JSON → 渲染双尺寸 → 回写 RenderRecord → 刷新重开逐字段校验通过（标题、一句话需求回填、场景源 JSON、事件 `["submitted"]`）。样片共渲染两遍（文字轮裁切修复后重渲、终审补记浏览器版本后重渲），最终 savedVersion=4、RenderRecord ×4/项目。
 
+**措辞更正（2026-10-17 整改）**：本轮记录时的「导出项目 JSON / 回写 / 重开」系开发辅助手段（DevTools 取存储侧文档、文件系统回写），当时工作台尚无原生导出/导入功能——原表述把它写成了用户可走的闭环，不属实。整改后工作台已有原生「导出项目 JSON / 导入项目 JSON」，浏览器→CLI→浏览器闭环由脚本化 E2E 走通并回归（VID-006、`artifacts/video-studio-e2e/E2E_CLOSED_LOOP.md`）；本文档的存储侧数据与渲染结论不受影响（校验的是同一份文档结构）。
+
 ## 2. SceneSpec（存储侧 sceneSource.type = "spec"）
 
 文字轮（seed=FNV-1a(句子)）：
@@ -56,6 +58,10 @@ ffprobe 校验通过（分辨率/帧数/时长）；RenderRecord ×2 已回写�
 
 ## 5. 确定性校验（`pnpm qa:video-determinism`，exit 0，72/72 帧双渲染逐帧一致）
 
+比较语义（2026-10-17 P1-D 整改后）：逐帧比较的是**解码后的像素**（`frame-compare` 的 `decodeFrameHash`，ffmpeg 解码 RGBA 后哈希），不是 PNG 容器字节——容器元数据不同、像素相同应判一致（ADR 0003 §2.5）。回归用例 `scripts/video/frame-compare.test.mjs`（VID-005）证明同像素不同元数据判等、异像素判异。
+
+覆盖范围如实标注：本校验为单夹具（3 秒文字动画）单画幅 PNG 序列的抽查；双画幅 MP4 的尺寸/帧数/时长由出片管线核对（render-manifest + VID-003 ffprobe 步骤）另行覆盖，不属本校验范围。
+
 manifest 原文（终审修复后含 browser 字段）：
 
 ```json
@@ -90,3 +96,27 @@ manifest 原文（终审修复后含 browser 字段）：
 - `project-text.json` / `project-line.json` — 存储侧项目文档（含 renderRecords、savedVersion=3）
 - `render-text/` / `render-line/` — landscape.mp4、portrait.mp4、render-manifest.json
 - `frames/` — 4 张审片抽帧 PNG（文字 t=1.5s、线描 t=1.0s，横竖各一）
+
+## 9. 代码评审整改记录（2026-10-17，P0 收口后复审）
+
+四象限标注：**[实现]** 代码落地 · **[回归]** 自动化测试 · **[链路]** 真实工作台/渲染管线走通 · **[视觉]** 视觉质量结论。凡媒体未入库的视觉结论一律标注「本机复核，不可在推送分支独立复核」。
+
+| 发现 | 修复（提交） | [实现] | [回归] | [链路] | [视觉] |
+|---|---|---|---|---|---|
+| P1-A 闭环非真实工作台链路（导出/导入缺失） | `e1965c5` + `9460e16` | 工作台原生导出/导入项目 JSON；`importVideoProject` 新项目入库 / CLI 快进接受 / 落后·分叉·篡改拒绝 | store 19 项（导入五分支）；web 套件 23/21 项；`project-io` 4 项 | 脚本化 E2E 浏览器→CLI→浏览器（VID-006）：同项目 ID 贯穿、v2→v3、渲染记录可见、控制台零错误；可复跑 | 不适用（链路验收） |
+| P1-B 不可变文档版本缺失 | `f1b34f4` | IndexedDB 快照库（每版本可读回）+ 只追加演进校验（`evolve.ts`） | `evolve.test` 10 项 + store 快照/篡改/迁移 3 项 | E2E 中快进导入保留本地 v2 快照（VID-006 passCriteria） | 不适用 |
+| P1-C 并发保存可静默覆盖 | `8bf1806` | 单 readwrite 事务内 get→比较→put；冲突抛 `VideoProjectConflictError` | 双标签并发恰一成功；串行+幂等重放 | 由存储契约保证（浏览器两标签页共享同一事务序列化） | 不适用 |
+| P1-D 确定性比较口径错误（容器字节） | `d15c07e` | `frame-compare` 解码像素哈希；verify-determinism 换用并如实声明覆盖范围 | `frame-compare.test` 3 项（VID-005） | 复跑 exit 0，72/72 帧解码像素一致 | 像素级一致≠视觉质量；视觉结论见 §7（本机复核） |
+| P1-E 确认卡未预告画面内容 | `4658c56` | 规划确认卡 `renderHint`：模板抽取结果与「标题不进画面/进画面」分组件说破 | planner 单测断言措辞；E2E 断言点名标题 | E2E 校验 renderHint 含「标题「闭环验收」」 | 预览即渲染组件本身，所见即所出 |
+| P2-A 禁网络/墙钟无门禁、资源上限不全 | `a8fd9cf` | 静态扫描门禁（§2.3 违禁 API）+ 渲染输出节点预算（§2.4 出站上限） | `determinism-gate.test`（含扫描器自检）+ `svg-budget.test`（VID-007，video-scene 33 项） | 两座渲染桥每帧执行预算检查 | 不适用（门禁） |
+| P2-B 确认应用未区分首镜头/另存 | `822c5cb` | `applyPlan` 双模式：空项目落当前文档，已有镜头另存新项目并明示 | `apply-plan.test` 4 项 | E2E 首镜头路径走通 | 不适用 |
+| P2-C 跨镜头 shotId/versionId/order 可重复 | `49227f0` | 项目层校验三重唯一性 | `validate.test` 4 项（跨镜头重复拒） | 经 save/import 入口强制（store 保存前校验） | 不适用 |
+| P3 SvgTree 双份漂移 | `db3aded` | `reactSvgAttrs` 归一 `@acs/video-scene`，两桥共用；remotion 侧同步消除 React 属性警告 | `react-svg-attrs.test` 2 项（video-scene 套件内） | E2E 复跑零控制台错误；重构前后 MP4/截图 SHA-256 逐字节一致；确定性 72/72 复验 | 渲染输出不变（哈希一致） |
+
+**P2-A 逐帧渲染超时延期声明**（按整改要求：明确可信组件边界 + 当前可执行门禁 + 后续补齐点）：
+
+- 边界：渲染只执行内置注册组件（`defaultRegistry` v1，三组件），`scene_spec` 是声明式数据，无用户/LLM 代码执行路径；违禁 API 由静态门禁拦截。
+- 当前门禁：spec 256 KiB 上限 + 组件 params 条目上限（shapes≤24 / paths≤8）+ 渲染输出 ≤2000 节点 + 确定性双渲染回归（VID-002）。
+- 补齐点：逐帧墙钟超时需要在渲染 CLI 中以 worker 线程隔离执行组件渲染（超时杀 worker），列入 Video Studio P1 待办；届时 `SceneResourceError` 体系复用。
+
+**媒体证据可复核性**：`render-text/`、`render-line/`、`frames/` 的 MP4/PNG 按 gitignore 约定仅存本机，未随分支分发——§7 视觉质量结论与 §6 修复效果属**本机复核**，不可在推送分支独立复核；分支内可独立复核的是脚本、JSON 文档与哈希清单（E2E 闭环另见 `artifacts/video-studio-e2e/E2E_CLOSED_LOOP.md` 的 SHA-256 表）。
