@@ -55,6 +55,7 @@ import {
   planPhotoCraftSequence,
   protectPhraseOf,
 } from "./instruction";
+import { extractTargetPhrase } from "./instruction-ir";
 import {
   cachePhotoCraftCloudProject,
   hasUnsyncedPhotoCraftDraft,
@@ -67,6 +68,13 @@ import {
   reviewPhotoCraftProject,
   savePhotoCraftProject,
 } from "./local-projects";
+import {
+  classifyTargetPhrase,
+  normalizePromptBox,
+  parseStatusMessage,
+  shouldOfferSelectionEntry,
+  topCandidatesSpread,
+} from "./target-entry";
 import "./photocraft.css";
 
 const bridge = "http://127.0.0.1:4112";
@@ -383,6 +391,8 @@ export default function PhotoCraftStudio() {
   const [partCandidates, setPartCandidates] = useState<{
     mode: "target" | "protect";
     phrase: string;
+    // D 项入口：本环是否按用户画框限定重圈（归一化框，展示与重置用）。
+    promptBox: [number, number, number, number] | null;
     // C 项：服务返回图尺寸（mask_png_b64 的像素空间，bounds/outline 同空间，
     // 坐标按 sampleSize/服务尺寸换算——与候选坐标同一次换算）。
     serviceWidth: number;
@@ -404,6 +414,12 @@ export default function PhotoCraftStudio() {
   } | null>(null);
   const [candidateBusy, setCandidateBusy] = useState(false);
   const candidateConfirmationPending = useRef(false);
+  // D 项入口：等待用户在图上拖画限定框（方位词/多实例消歧）。非空时画布
+  // pointerUp 把拖画矩形交给 findPartCandidates 的画框限定重圈，而非普通
+  // scope/protect 取样。
+  const [awaitTargetBox, setAwaitTargetBox] = useState<{
+    phrase: string;
+  } | null>(null);
   // C 项：已上传候选蒙版的 id（POST /v1/selection-mask 返回）。仅目标模式确认
   // 候选时置位；蒙版不可用或切换选区来源时清空，executeInstructionStep 只在
   // selectionMethod==="mask" 且 id 在场时带蒙版头（outline 恒为套索兜底数据）。
@@ -551,6 +567,7 @@ export default function PhotoCraftStudio() {
     setProtectRect(null);
     setSelectionMethod("object");
     setCandidateMaskId(null);
+    setAwaitTargetBox(null);
     canvasNeedsSync.current = false;
     setCanvasOutOfSync(false);
   }
@@ -1590,7 +1607,14 @@ export default function PhotoCraftStudio() {
     if (parts && parts.chosen === null) {
       const ordinal = ordinalIndex(instruction);
       if (ordinal !== null && parts.candidates[ordinal]) {
-        choosePartCandidate(ordinal, false, parts);
+        // D-5 整改：蒙版还在准备时「第几个」不再被静默吞掉——明说等一下。
+        if (candidateConfirmationPending.current) {
+          setMessage(
+            "正在准备上一个候选的像素蒙版选区，请稍候几秒再确认编号。",
+          );
+          return;
+        }
+        void choosePartCandidate(ordinal, false, parts);
         return;
       }
     }
@@ -1607,6 +1631,7 @@ export default function PhotoCraftStudio() {
       setTargetGap(null);
       setProtectGap(null);
       setPartCandidates(null);
+      setAwaitTargetBox(null);
       setColorChoice(false);
       const directSequence = planPhotoCraftSequence(text);
       const direct = directSequence?.[0] ?? planPhotoCraftInstruction(text);
@@ -1791,14 +1816,29 @@ export default function PhotoCraftStudio() {
       (nextPlan.operation === "recolor" || nextPlan.operation === "adjust")
     )
       setSelectionMethod("existing");
+    // D 项入口（codex §D 整改）：「左耳」这类固定 selected-area 词不再默默
+    // 切到 provider 主体蒙版——那等于把整只猫当耳朵改。没有原生选区、画框、
+    // 轮廓、点位任何手绘范围时，落 targetGap 入口：智能找目标出候选环，或
+    // 点击/画框限定位置，位置由用户定，不替用户猜。
+    let targetGapPhrase: string | null = null;
     if (
-      nextPlan.operation === "recolor" &&
       nextPlan.target === "selected-area" &&
-      /(?:耳朵|猫耳|左耳|右耳)/.test(sourceText)
+      shouldOfferSelectionEntry(
+        nextPlan,
+        {
+          hasNativeSelection: sourceInfo?.hasSelection === true,
+          outlineLength: outline.length,
+          hasScopeRect: scopeRect !== null,
+          pointsLength: points.length,
+        },
+        extractTargetPhrase(sourceText.replace(/\s+/g, "")),
+      )
     ) {
-      setSelectionMethod("provider");
-      setSelectionMode("outline");
-      setProviderScopeFeather(60);
+      const phrase = extractTargetPhrase(sourceText.replace(/\s+/g, ""));
+      if (phrase) {
+        targetGapPhrase = phrase;
+        setTargetGap({ phrase });
+      }
     }
     if (nextPlan.target === "whole-image") {
       setPoints([]);
@@ -1841,15 +1881,17 @@ export default function PhotoCraftStudio() {
       setProtectRect(null);
     }
     // M3 protect 清单：计划带保护名词时打开同一提议-确认环圈保护框。
+    // 状态栏消息取舍集中在 parseStatusMessage——目标缺口提示不能被兜底
+    // 计划描述覆盖（E-1 c3 实测回归）。
     const protectPhrase = protectPhraseOf(nextPlan);
-    if (protectPhrase) {
-      setProtectGap({ phrase: protectPhrase });
-      setMessage(
-        `${describePhotoCraftPlan(nextPlan)} 保护范围「${protectPhrase}」待圈定：点下方「智能找保护框」，或用蒙版笔刷手画。`,
-      );
-      return;
-    }
-    setMessage(describePhotoCraftPlan(nextPlan));
+    if (protectPhrase) setProtectGap({ phrase: protectPhrase });
+    setMessage(
+      parseStatusMessage({
+        planDescription: describePhotoCraftPlan(nextPlan),
+        targetGapPhrase,
+        protectPhrase: protectPhrase ?? null,
+      }),
+    );
   }
 
   /** §6-2 解释确认：用户点头后才把云端计划落地为待预览计划。 */
@@ -2028,9 +2070,14 @@ export default function PhotoCraftStudio() {
     void interpretInstruction(next);
   }
 
-  async function findPartCandidates(mode: "target" | "protect") {
+  async function findPartCandidates(
+    mode: "target" | "protect",
+    promptBox?: [number, number, number, number] | null,
+  ) {
     const gap = mode === "target" ? targetGap : protectGap;
     if (!gap) return;
+    // 画框限定只对目标环有意义（方位/多实例消歧）；protect 环无视。
+    const box = mode === "target" ? (promptBox ?? null) : null;
     const source = activeSource.current ?? file;
     if (!source) {
       setMessage("请先导入图片或打开项目");
@@ -2039,6 +2086,8 @@ export default function PhotoCraftStudio() {
     const revision = contextRevision.current;
     try {
       setCandidateBusy(true);
+      // 请求已发出（无论是否带画框），画框等待态随之结束。
+      setAwaitTargetBox(null);
       // 原生格式（.pcraft/.psd）先经桥接栅格化为全尺寸 PNG 再送候选服务；
       // 栅格化图与 samplePreview 同尺寸，候选坐标换算仍然一致。
       let upload: Blob = source;
@@ -2057,6 +2106,9 @@ export default function PhotoCraftStudio() {
           "x-acs-phrase-b64": btoa(
             String.fromCharCode(...new TextEncoder().encode(gap.phrase)),
           ),
+          // D 项入口：画框限定走归一化坐标头（EXIF 两侧已归一），桥透传、
+          // 服务切 box 提示模式——同模型同契约，不引入新模型。
+          ...(box ? { "x-acs-prompt-box": JSON.stringify(box) } : {}),
         },
         body: upload,
       });
@@ -2129,7 +2181,9 @@ export default function PhotoCraftStudio() {
       if (!candidates.length) {
         setMessage(
           mode === "target"
-            ? `本机视觉模型没有圈出明显的「${gap.phrase}」区域；请手动画框或套索指定范围。`
+            ? box
+              ? `在所画框内没有圈出明显的「${gap.phrase}」区域；可画一个稍大的框重试，或直接手动画框/套索指定范围。`
+              : `本机视觉模型没有圈出明显的「${gap.phrase}」区域；可点「点击/画框限定」后在目标处画框重圈，或手动画框/套索指定范围。`
             : `本机视觉模型没有圈出明显的「${gap.phrase}」保护区域；请用蒙版笔刷的手画保护框模式圈出。`,
         );
         return;
@@ -2137,6 +2191,7 @@ export default function PhotoCraftStudio() {
       const nextCandidates = {
         mode,
         phrase: gap.phrase,
+        promptBox: box,
         serviceWidth: width,
         serviceHeight: height,
         candidates,
@@ -2159,8 +2214,33 @@ export default function PhotoCraftStudio() {
         // candidateBusy 在蒙版备完后才清，避免按钮提前解禁。
         await choosePartCandidate(0, true, nextCandidates);
       } else {
+        // D 项入口：方位词/多实例词典信号 + 候选分布信号（前两名不重叠=图里
+        // 疑似多处同名目标）都指向同一动作——点编号选目标，或画框限定重圈。
+        const classify =
+          mode === "target" ? classifyTargetPhrase(gap.phrase) : null;
+        const spread =
+          mode === "target" &&
+          !box &&
+          topCandidatesSpread(
+            candidates.map(
+              (item: { bounds: [number, number, number, number] }) => ({
+                bounds: item.bounds,
+              }),
+            ),
+          );
+        let disambiguationHint = "";
+        if (classify?.directional || classify?.multiInstance) {
+          const signal = classify?.multiInstance
+            ? "数量词（图里可能有多处）"
+            : "方位词（可能有多处同名目标）";
+          disambiguationHint = `「${gap.phrase}」带${signal}，请点准目标编号，或点「点击/画框限定」后重圈；`;
+        } else if (spread) {
+          disambiguationHint = `前两个候选位置不同（图里可能有多处「${gap.phrase}」），点准目标编号或画框限定；`;
+        }
         setMessage(
-          `${mode === "target" ? "目标" : "保护范围"}「${gap.phrase}」找到 ${candidates.length} 个候选，已编号叠在图片上（最高匹配分数 ${Math.round(top.score * 100)}%，分数是本批候选的相对排名，非正确率）。点编号框、下方按钮，或直接说「第几个」确认。`,
+          `${box ? "已按你画的框限定范围重新圈选。" : ""}${
+            mode === "target" ? "目标" : "保护范围"
+          }「${gap.phrase}」找到 ${candidates.length} 个候选，已编号叠在图片上（${candidates.length === 1 ? "只有一个候选，分数不能判断选区是否准确" : `最高匹配分数 ${Math.round(top.score * 100)}%，分数只是本批候选的相对排名，非正确率`}）。${disambiguationHint}点编号框、下方按钮，或直接说「第几个」确认。`,
         );
       }
     } catch (error) {
@@ -2325,6 +2405,7 @@ export default function PhotoCraftStudio() {
     const landed = landRewrittenSelectionPlan(parts.phrase, () => {
       setPartCandidates({ ...parts, chosen: ordinal, autoTop: nextAutoTop });
       setTargetGap(null);
+      setAwaitTargetBox(null);
       setOutline(chosen.outline);
       setSelectionMethod("manual");
       setSelectionMode("outline");
@@ -2342,10 +2423,12 @@ export default function PhotoCraftStudio() {
       );
       return;
     }
+    // D-5 整改：蒙版就位前不声称「已选中」——先中性提示圈选完成、蒙版准备中，
+    // prepare 结束后由下方按真实结果（mask/套索）改写。
     setMessage(
       auto
-        ? `「${parts.phrase}」候选①匹配分数 ${Math.round(chosen.score * 100)}% ≥ τ_auto，已自动选中并生成计划；点「预览编辑」查看效果（预览即提议，可撤销/微调）。`
-        : `目标「${parts.phrase}」已按候选 ${ordinal + 1} 的轮廓选中；点「预览编辑」查看效果。`,
+        ? `「${parts.phrase}」候选①匹配分数 ${Math.round(chosen.score * 100)}% ≥ τ_auto，已自动选中并生成计划；正在准备像素蒙版选区…`
+        : `目标「${parts.phrase}」已按候选 ${ordinal + 1} 圈选，正在准备像素蒙版选区…`,
     );
     // C 项：计划已落地（套索兜底就位）后异步备真实像素蒙版；成功切 mask
     // 选区法，失败保持 manual+outline 退回套索。candidateBusy 期间候选按钮
@@ -2375,7 +2458,7 @@ export default function PhotoCraftStudio() {
       maskReady
         ? auto
           ? `「${parts.phrase}」候选①匹配分数 ${Math.round(chosen.score * 100)}% ≥ τ_auto，已自动选中（像素蒙版选区）并生成计划；点「预览编辑」查看效果（预览即提议，可撤销/微调）。`
-          : `目标「${parts.phrase}」已按候选 ${ordinal + 1} 的像素蒙版选中；点「预览编辑」查看效果。`
+          : `目标「${parts.phrase}」已按候选 ${ordinal + 1} 的像素蒙版选中；点「预览编辑」查看效果。候选可能漏选部件或带入邻近区域，请在原尺寸检查，必要时用 PhotoCraft 蒙版笔刷补回或剔除。`
         : `候选像素蒙版不可用，已退回轮廓套索选区；点「预览编辑」查看效果。`,
     );
   }
@@ -3656,6 +3739,22 @@ export default function PhotoCraftStudio() {
               </div>
             </div>
           )}
+          {awaitTargetBox && !candidateBusy && (
+            <div className="pc-target-review">
+              <strong>请在图片上画框限定「{awaitTargetBox.phrase}」</strong>
+              <p>
+                按住鼠标从目标一角拖到对角，画一个覆盖「
+                {awaitTargetBox.phrase}
+                」的框（当前任何选区工具下都能画），松开后只按框内范围重新圈选候选。
+                「左/右」这类方位词或同名多处目标，画框限定最稳。
+              </p>
+              <div className="pc-target-actions">
+                <button type="button" onClick={() => setAwaitTargetBox(null)}>
+                  取消画框限定
+                </button>
+              </div>
+            </div>
+          )}
           {targetGap && !candidateBusy && !partCandidates && (
             <div className="pc-target-review">
               <strong>目标「{targetGap.phrase}」需要指定范围</strong>
@@ -3672,6 +3771,18 @@ export default function PhotoCraftStudio() {
                 >
                   智能找目标：{targetGap.phrase}
                 </button>
+                <button
+                  type="button"
+                  disabled={busy || !(activeSource.current ?? file)}
+                  onClick={() => {
+                    setAwaitTargetBox({ phrase: targetGap.phrase });
+                    setMessage(
+                      `请在图片上按住拖动画一个框住「${targetGap.phrase}」的框，松开后按框内范围智能圈选候选。`,
+                    );
+                  }}
+                >
+                  点击/画框限定后智能找
+                </button>
                 {sourceInfo?.hasSelection && (
                   <button type="button" onClick={useExistingSelectionForGap}>
                     用已保存的原生选区
@@ -3681,6 +3792,7 @@ export default function PhotoCraftStudio() {
                   type="button"
                   onClick={() => {
                     setTargetGap(null);
+                    setAwaitTargetBox(null);
                     setMessage(
                       "请直接在图片上画框或套索，再点「解析编辑要求」。",
                     );
@@ -3744,7 +3856,11 @@ export default function PhotoCraftStudio() {
               <p>
                 本机视觉模型正在圈选「
                 {(targetGap ?? protectGap)?.phrase ?? ""}
-                」候选区域…（SAM 网格分割约需一两分钟）
+                」候选区域…（
+                {partCandidates?.promptBox
+                  ? "按画框提示圈选，通常几十秒内完成"
+                  : "SAM 网格分割约需一两分钟"}
+                ）
               </p>
             </div>
           )}
@@ -3757,6 +3873,7 @@ export default function PhotoCraftStudio() {
                 {partCandidates.phrase}」
                 {partCandidates.chosen !== null &&
                   `（候选 ${partCandidates.chosen + 1}）`}
+                {partCandidates.promptBox && "（已按画框限定重圈）"}
               </strong>
               {partCandidates.chosen === null ? (
                 <>
@@ -3774,14 +3891,33 @@ export default function PhotoCraftStudio() {
                           choosePartCandidate(position, false, partCandidates)
                         }
                       >
-                        候选{position + 1}（{Math.round(item.score * 100)}%）
+                        候选{position + 1}（
+                        {partCandidates.candidates.length === 1
+                          ? "单候选"
+                          : `${Math.round(item.score * 100)}%`}
+                        ）
                       </button>
                     ))}
+                    {partCandidates.mode === "target" && (
+                      <button
+                        type="button"
+                        disabled={candidateBusy}
+                        onClick={() => {
+                          setAwaitTargetBox({ phrase: partCandidates.phrase });
+                          setMessage(
+                            "请在图片上按住拖动画一个框住目标的框，松开后只按框内范围重新圈选候选。",
+                          );
+                        }}
+                      >
+                        点击/画框限定重新圈选
+                      </button>
+                    )}
                     <button
                       type="button"
                       disabled={candidateBusy}
                       onClick={() => {
                         setPartCandidates(null);
+                        setAwaitTargetBox(null);
                         setMessage(
                           partCandidates.mode === "target"
                             ? "请直接在图片上画框或套索指定范围。"
@@ -3794,12 +3930,35 @@ export default function PhotoCraftStudio() {
                   </div>
                 </>
               ) : (
-                <p className="pc-candidate-current">
-                  已选候选 {partCandidates.chosen + 1}，
-                  {partCandidates.mode === "target"
-                    ? "其轮廓已作为套索选区生效；点其它编号可更换，或直接点「预览编辑」。"
-                    : "已设为保护框；点其它编号可更换。"}
-                </p>
+                <>
+                  <p className="pc-candidate-current">
+                    已选候选 {partCandidates.chosen + 1}，
+                    {partCandidates.mode === "target"
+                      ? selectionMethod === "mask"
+                        ? "其像素蒙版已作为精确选区生效（比套索更贴合边缘）；点其它编号可更换，或直接点「预览编辑」。"
+                        : "其轮廓已作为套索选区生效；点其它编号可更换，或直接点「预览编辑」。"
+                      : "已设为保护框；点其它编号可更换。"}
+                  </p>
+                  {partCandidates.mode === "target" && (
+                    <div className="pc-target-actions">
+                      <button
+                        type="button"
+                        disabled={candidateBusy}
+                        onClick={() => {
+                          // 确认后仍可反悔：恢复目标缺口态（选错候选的换圈
+                          // 入口），画框限定后按框重圈。
+                          setTargetGap({ phrase: partCandidates.phrase });
+                          setAwaitTargetBox({ phrase: partCandidates.phrase });
+                          setMessage(
+                            "请在图片上按住拖动画一个框住目标的框，松开后只按框内范围重新圈选候选。",
+                          );
+                        }}
+                      >
+                        点击/画框限定重新圈选
+                      </button>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           )}
@@ -4434,7 +4593,7 @@ export default function PhotoCraftStudio() {
                       }
                       event.preventDefault();
                       pointerStart.current = imagePoint(event);
-                      if (selectionMode === "freehand") {
+                      if (selectionMode === "freehand" && !awaitTargetBox) {
                         freehandPoints.current = [pointerStart.current];
                         setFreehandDraft(freehandPoints.current);
                       }
@@ -4484,7 +4643,8 @@ export default function PhotoCraftStudio() {
                       if (
                         !start ||
                         (selectionMode !== "scope" &&
-                          selectionMode !== "protect")
+                          selectionMode !== "protect" &&
+                          !awaitTargetBox)
                       )
                         return;
                       const end = imagePoint(event);
@@ -4514,6 +4674,36 @@ export default function PhotoCraftStudio() {
                       pointerStart.current = null;
                       setDragRect(null);
                       const end = imagePoint(event);
+                      // D 项入口：等待用户画框限定目标。松手即归一化画框并按
+                      // 框重请求候选（x-acs-prompt-box → SAM 框提示模式）；
+                      // 框太小不猜不缩放，直接提示重画。
+                      if (awaitTargetBox) {
+                        if (!start) return;
+                        const drawn: [number, number, number, number] = [
+                          Math.min(start[0], end[0]),
+                          Math.min(start[1], end[1]),
+                          Math.abs(end[0] - start[0]),
+                          Math.abs(end[1] - start[1]),
+                        ];
+                        if (drawn[2] < 4 || drawn[3] < 4) {
+                          setMessage(
+                            "请在目标处按住拖动画一个覆盖目标的框再松开（正在等待限定「" +
+                              awaitTargetBox.phrase +
+                              "」的位置）。",
+                          );
+                          return;
+                        }
+                        const box = normalizePromptBox(drawn, sampleSize);
+                        if (!box) {
+                          setMessage(
+                            "画框太小（任一边不足画面的 2%）；请重新拖画一个能盖住目标的框。",
+                          );
+                          return;
+                        }
+                        setAwaitTargetBox(null);
+                        void findPartCandidates("target", box);
+                        return;
+                      }
                       if (selectionMode === "freehand") {
                         const traced = [...freehandPoints.current, end];
                         freehandPoints.current = [];
@@ -4759,7 +4949,7 @@ export default function PhotoCraftStudio() {
                     partCandidates.candidates.map((item, position) => (
                       <div
                         key={`part-${item.index}-${partCandidates.mode}`}
-                        className={`pc-sample-box candidate${partCandidates.chosen === position ? " active" : ""}${maskTool === "off" && !candidateBusy ? " interactive" : ""}`}
+                        className={`pc-sample-box candidate${partCandidates.chosen === position ? " active" : ""}${maskTool === "off" && !candidateBusy && !awaitTargetBox ? " interactive" : ""}`}
                         style={{
                           left: `${(item.bounds[0] / sampleSize[0]) * 100}%`,
                           top: `${(item.bounds[1] / sampleSize[1]) * 100}%`,
@@ -4769,8 +4959,18 @@ export default function PhotoCraftStudio() {
                         onClick={(event) => {
                           event.preventDefault();
                           event.stopPropagation();
-                          if (candidateBusy) return;
-                          choosePartCandidate(position, false, partCandidates);
+                          // D-5 整改：蒙版准备中的点击不再静默吞掉。
+                          if (candidateBusy) {
+                            setMessage(
+                              "正在准备候选像素蒙版选区，请稍候几秒再点编号。",
+                            );
+                            return;
+                          }
+                          void choosePartCandidate(
+                            position,
+                            false,
+                            partCandidates,
+                          );
                         }}
                       >
                         <span className="pc-candidate-badge">

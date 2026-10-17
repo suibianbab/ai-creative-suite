@@ -20,6 +20,17 @@ re-validates against the PhotoCraft document before select.loadSelection,
 and the consumer rescales with smoothing + a ≥128 threshold. outline stays
 as the lasso fallback whenever the mask path is unavailable.
 
+Box-constrained mode (D 项入口): optional X-Acs-Prompt-Box header carries
+[ x1, y1, x2, y2 ] as fractions of the response width×height (EXIF is
+already normalized on both sides, browser naturalWidth included). Instead
+of the 8×8 grid the service then decodes box-prompt variants (box / box+
+center / box+center+quad points / center point — same cached embedding,
+same vit_b.quant model). Returned masks are clipped to the user box before
+filtering, ranking, outline and PNG encoding. A box is a hard editing scope:
+pixels outside it must never be changed. Same filters, dedupe, CLIP ranking, contract and
+response shape as grid mode; used by the disambiguation entry
+(方位词/多实例 → 用户点击/画框限定位置 → 重新圈选), never a default switch.
+
 Never persists or modifies uploaded originals. Not a production upload API.
 """
 
@@ -57,6 +68,72 @@ def iou(a: np.ndarray, b: np.ndarray) -> float:
     inter = np.logical_and(a, b).sum()
     union = np.logical_or(a, b).sum()
     return float(inter / union) if union else 0.0
+
+
+def _dedupe(regions: list[dict]) -> list[dict]:
+    """IoU 贪心 NMS：SAM 分高者优先保留，输出 ≤MAX_REGIONS_FOR_CLIP。"""
+    regions.sort(key=lambda item: item["sam_score"], reverse=True)
+    kept: list[dict] = []
+    for region in regions:
+        if any(iou(region["mask"], other["mask"]) > IOU_DEDUPE for other in kept):
+            continue
+        kept.append(region)
+        if len(kept) >= MAX_REGIONS_FOR_CLIP:
+            break
+    return kept
+
+
+def _clip_mask_to_box(mask: np.ndarray, box: list[float]) -> np.ndarray:
+    """Keep only pixels inside the user-drawn normalized box."""
+    height, width = mask.shape
+    x1, y1, x2, y2 = box
+    left = max(0, min(width, round(x1 * width)))
+    right = max(left, min(width, round(x2 * width)))
+    top = max(0, min(height, round(y1 * height)))
+    bottom = max(top, min(height, round(y2 * height)))
+    clipped = np.zeros_like(mask, dtype=bool)
+    clipped[top:bottom, left:right] = mask[top:bottom, left:right]
+    return clipped
+
+
+def _box_spill_ratio(mask: np.ndarray, clipped: np.ndarray) -> float:
+    """Reject a whole-object proposal that a small part box merely chops off."""
+    total = int(mask.sum())
+    return (total - int(clipped.sum())) / total if total else 1.0
+
+
+def _decode_prompt(session, embeddings, transform, original_size, prompts):
+    """单次 decoder 提示解码（网格点与 box 提示共用；draft-grounding-masks.py
+    同机制）：返回 (bool 蒙版[原图分辨率], SAM 分数)。decoder 输出 logits，
+    >0 才是选中。"""
+    from rembg.sessions.sam import apply_coords, get_input_points, transform_masks
+
+    input_size = (684, 1024)
+    target_size = 1024
+    input_points, input_labels = get_input_points(prompts)
+    coords = np.concatenate([input_points, np.array([[0.0, 0.0]])], axis=0)[None, :, :]
+    labels = np.concatenate([input_labels, np.array([-1])], axis=0)[None, :].astype(np.float32)
+    coords = apply_coords(coords, input_size, target_size).astype(np.float32)
+    coords = np.concatenate([coords, np.ones((1, coords.shape[1], 1), dtype=np.float32)], axis=2)
+    coords = (coords @ transform.T)[:, :, :2].astype(np.float32)
+    outputs = session.decoder.run(
+        None,
+        {
+            "image_embeddings": embeddings,
+            "point_coords": coords,
+            "point_labels": labels,
+            "mask_input": np.zeros((1, 1, 256, 256), dtype=np.float32),
+            "has_mask_input": np.zeros(1, dtype=np.float32),
+            "orig_im_size": np.array(input_size, dtype=np.float32),
+        },
+    )
+    masks = transform_masks(outputs[0], original_size, np.linalg.inv(transform))
+    best = int(np.argmax(outputs[1][0]))
+    score = float(outputs[1][0][best])
+    # transform_masks 返回 (1, N, H, W)：批 0 的第 best 张蒙版。
+    batch = masks[0]
+    raw = batch[best] if best < len(batch) else batch[0]
+    return raw > 0, score
 
 
 def comb_outline(mask: np.ndarray, budget: int = OUTLINE_BUDGET) -> list[list[int]]:
@@ -144,7 +221,10 @@ class CandidateHandler(BaseHTTPRequestHandler):
         if origin:
             self.send_header("Access-Control-Allow-Origin", origin)
             self.send_header("Access-Control-Allow-Methods", "POST, OPTIONS")
-            self.send_header("Access-Control-Allow-Headers", "Content-Type, X-Acs-Phrase-B64")
+            self.send_header(
+                "Access-Control-Allow-Headers",
+                "Content-Type, X-Acs-Phrase-B64, X-Acs-Prompt-Box",
+            )
             self.send_header("Vary", "Origin")
         self.end_headers()
 
@@ -159,12 +239,12 @@ class CandidateHandler(BaseHTTPRequestHandler):
         self._headers(200, "text/plain; charset=utf-8", len(body), origin)
         self.wfile.write(body)
 
-    def _sam_regions(self, image: Image.Image) -> list[dict]:
-        from rembg.sessions.sam import apply_coords, get_input_points, transform_masks, warp_affine
+    def _embed(self, image: Image.Image):
+        """encoder 一次（网格 64 点与 box 变体共用同一 embedding）。"""
+        from rembg.sessions.sam import warp_affine
 
         session = self.sam_session
         input_size = (684, 1024)
-        target_size = 1024
         rgb = np.asarray(image.convert("RGB"))
         original_size = rgb.shape[:2]
         scale = min(input_size[1] / original_size[1], input_size[0] / original_size[0])
@@ -173,7 +253,10 @@ class CandidateHandler(BaseHTTPRequestHandler):
         embeddings = session.encoder.run(
             None, {session.encoder.get_inputs()[0].name: model_image}
         )[0]
+        return session, embeddings, transform, original_size
 
+    def _sam_regions(self, image: Image.Image) -> list[dict]:
+        session, embeddings, transform, original_size = self._embed(image)
         height, width = image.height, image.width
         regions: list[dict] = []
         for gy in range(1, GRID + 1):
@@ -181,44 +264,57 @@ class CandidateHandler(BaseHTTPRequestHandler):
                 x = int(width * gx / (GRID + 1))
                 y = int(height * gy / (GRID + 1))
                 prompts = [{"type": "point", "label": 1, "data": [x, y]}]
-                input_points, input_labels = get_input_points(prompts)
-                coords = np.concatenate([input_points, np.array([[0.0, 0.0]])], axis=0)[None, :, :]
-                labels = np.concatenate([input_labels, np.array([-1])], axis=0)[None, :].astype(np.float32)
-                coords = apply_coords(coords, input_size, target_size).astype(np.float32)
-                coords = np.concatenate([coords, np.ones((1, coords.shape[1], 1), dtype=np.float32)], axis=2)
-                coords = (coords @ transform.T)[:, :, :2].astype(np.float32)
-                outputs = session.decoder.run(
-                    None,
-                    {
-                        "image_embeddings": embeddings,
-                        "point_coords": coords,
-                        "point_labels": labels,
-                        "mask_input": np.zeros((1, 1, 256, 256), dtype=np.float32),
-                        "has_mask_input": np.zeros(1, dtype=np.float32),
-                        "orig_im_size": np.array(input_size, dtype=np.float32),
-                    },
+                mask, score = _decode_prompt(
+                    session, embeddings, transform, original_size, prompts
                 )
-                masks = transform_masks(outputs[0], original_size, np.linalg.inv(transform))
-                best = int(np.argmax(outputs[1][0]))
-                score = float(outputs[1][0][best])
-                # transform_masks 返回 (1, N, H, W)：批 0 的第 best 张蒙版。
-                batch = masks[0]
-                raw = batch[best] if best < len(batch) else batch[0]
-                mask = raw > 0
                 area_ratio = float(mask.sum()) / (width * height)
                 if score < 0.6 or not (MIN_AREA_RATIO <= area_ratio <= MAX_AREA_RATIO):
                     continue
                 regions.append({"mask": mask, "sam_score": score, "area_ratio": area_ratio})
-        # Dedupe by IoU, keep the higher-SAM-score survivor (greedy NMS).
-        regions.sort(key=lambda item: item["sam_score"], reverse=True)
-        kept: list[dict] = []
-        for region in regions:
-            if any(iou(region["mask"], other["mask"]) > IOU_DEDUPE for other in kept):
+        return _dedupe(regions)
+
+    def _box_regions(self, image: Image.Image, box: list[float]) -> list[dict]:
+        """D 项入口：用户点击/画框限定后的 box 提示候选（同模型同契约）。
+
+        变体来自 GT 起草（draft-grounding-masks.py）的两条实测结论：纯点提示
+        在蓬毛/复杂纹理上退化成大团块，纯框提示只抓框内最显著核——框+中心、
+        框+多点组合能把 SAM 拉满目标整体。四种变体先裁到用户画框内，再送
+        CLIP 排序，环上由用户确认，不在此默默选边。画框是编辑范围硬边界。
+        """
+        session, embeddings, transform, original_size = self._embed(image)
+        height, width = image.height, image.width
+        x1, y1, x2, y2 = box
+        px1, py1 = round(x1 * width), round(y1 * height)
+        px2, py2 = round(x2 * width), round(y2 * height)
+        rect = {"type": "rectangle", "data": [px1, py1, px2, py2]}
+        cx, cy = round((px1 + px2) / 2), round((py1 + py2) / 2)
+        center = {"type": "point", "label": 1, "data": [cx, cy]}
+        qx1 = round(px1 + (px2 - px1) * 0.25)
+        qx2 = round(px1 + (px2 - px1) * 0.75)
+        qy1 = round(py1 + (py2 - py1) * 0.25)
+        qy2 = round(py1 + (py2 - py1) * 0.75)
+        quad = [
+            {"type": "point", "label": 1, "data": [qx, qy]}
+            for qx, qy in ((qx1, qy1), (qx2, qy1), (qx1, qy2), (qx2, qy2))
+        ]
+        variants = [[rect], [rect, center], [rect, center, *quad], [center]]
+        regions: list[dict] = []
+        for prompts in variants:
+            mask, score = _decode_prompt(
+                session, embeddings, transform, original_size, prompts
+            )
+            clipped = _clip_mask_to_box(mask, box)
+            # A clipped cat head still looks like a rectangular ear selection.
+            # Do not offer it as a candidate for direct confirmation; the user
+            # should use PhotoCraft's manual outline/mask refinement instead.
+            if _box_spill_ratio(mask, clipped) > 0.25:
                 continue
-            kept.append(region)
-            if len(kept) >= MAX_REGIONS_FOR_CLIP:
-                break
-        return kept
+            mask = clipped
+            area_ratio = float(mask.sum()) / (width * height)
+            if score < 0.6 or not (MIN_AREA_RATIO <= area_ratio <= MAX_AREA_RATIO):
+                continue
+            regions.append({"mask": mask, "sam_score": score, "area_ratio": area_ratio})
+        return _dedupe(regions)
 
     def _clip_rank(
         self, image: Image.Image, regions: list[dict], phrase: str
@@ -288,6 +384,37 @@ class CandidateHandler(BaseHTTPRequestHandler):
         if not phrase or len(phrase) > 40:
             self._error(422, "X-Acs-Phrase-B64 must decode to a 1-40 char phrase", origin)
             return
+        # D 项入口：可选画框限定（归一化 [x1,y1,x2,y2]，响应 width/height 空间；
+        # EXIF 两侧已归一，浏览器 naturalWidth 同口径）。格式可疑一律 422，
+        # 不静默退回网格模式——入口限定与无限定是不同的候选语义。
+        box: list[float] | None = None
+        box_header = self.headers.get("X-Acs-Prompt-Box", "")
+        if box_header:
+            try:
+                raw_box = json.loads(box_header)
+            except ValueError:
+                raw_box = None
+            if (
+                not isinstance(raw_box, list)
+                or len(raw_box) != 4
+                or not all(isinstance(v, (int, float)) for v in raw_box)
+            ):
+                self._error(
+                    422,
+                    "X-Acs-Prompt-Box must be JSON [x1, y1, x2, y2] in [0, 1]",
+                    origin,
+                )
+                return
+            x1, y1, x2, y2 = (float(v) for v in raw_box)
+            if not (
+                0.0 <= x1 < x2 <= 1.0
+                and 0.0 <= y1 < y2 <= 1.0
+                and x2 - x1 >= 0.02
+                and y2 - y1 >= 0.02
+            ):
+                self._error(422, "X-Acs-Prompt-Box too small or out of range", origin)
+                return
+            box = [x1, y1, x2, y2]
         try:
             length = int(self.headers.get("Content-Length", ""))
         except ValueError:
@@ -319,7 +446,9 @@ class CandidateHandler(BaseHTTPRequestHandler):
                     (round(image.width * scale), round(image.height * scale)),
                     Image.Resampling.LANCZOS,
                 )
-            regions = self._sam_regions(image)
+            regions = (
+                self._box_regions(image, box) if box else self._sam_regions(image)
+            )
             if not regions:
                 # 契约：正常与 no-regions 响应都带有限正数的 width/height
                 # （grounding-eval 严格校验按同一契约执行；浏览器端

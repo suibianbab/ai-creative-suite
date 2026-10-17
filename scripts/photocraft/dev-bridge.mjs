@@ -179,7 +179,7 @@ async function handleRequest(request, response) {
   response.setHeader("access-control-allow-methods", "GET, POST, OPTIONS");
   response.setHeader(
     "access-control-allow-headers",
-    "content-type, x-acs-hue, x-acs-plan, x-acs-plan-b64, x-acs-points, x-acs-rect, x-acs-outline, x-acs-patches, x-acs-edge-shift, x-acs-edge-feather, x-acs-protect-rect, x-acs-selection-method, x-acs-selection-mask-id, x-acs-heal-size, x-acs-provider-scope-feather, x-acs-source-job, x-acs-generation-rect, x-acs-generation-selection, x-acs-generation-outline, x-acs-foreground-selection, x-acs-foreground-outline, x-acs-foreground-patches, x-acs-foreground-rect, x-acs-background-shadow",
+    "content-type, x-acs-hue, x-acs-plan, x-acs-plan-b64, x-acs-points, x-acs-rect, x-acs-outline, x-acs-patches, x-acs-edge-shift, x-acs-edge-feather, x-acs-protect-rect, x-acs-selection-method, x-acs-selection-mask-id, x-acs-heal-size, x-acs-provider-scope-feather, x-acs-source-job, x-acs-generation-rect, x-acs-generation-selection, x-acs-generation-outline, x-acs-foreground-selection, x-acs-foreground-outline, x-acs-foreground-patches, x-acs-foreground-rect, x-acs-background-shadow, x-acs-phrase-b64, x-acs-prompt-box",
   );
   response.setHeader("cache-control", "no-store");
   if (request.method === "OPTIONS") {
@@ -1440,6 +1440,40 @@ async function handleRequest(request, response) {
       const phraseB64 = String(request.headers["x-acs-phrase-b64"] ?? "");
       if (!/^[A-Za-z0-9+/=]{4,340}$/.test(phraseB64))
         throw new Error("缺少目标名词（x-acs-phrase-b64 头无效）");
+      // D 项入口：可选画框限定透传（归一化 [x1,y1,x2,y2]）。桥侧只做形状
+      // 校验（与服务端同一口径），语义校验在候选服务——格式坏即 400，
+      // 不静默按无框模式发（限定与无限定是不同候选语义）。
+      let promptBox = null;
+      const promptBoxHeader = String(request.headers["x-acs-prompt-box"] ?? "");
+      if (promptBoxHeader) {
+        try {
+          promptBox = JSON.parse(promptBoxHeader);
+        } catch {
+          promptBox = null;
+        }
+        if (
+          !Array.isArray(promptBox) ||
+          promptBox.length !== 4 ||
+          !promptBox.every(
+            (v) => typeof v === "number" && Number.isFinite(v),
+          ) ||
+          !(
+            promptBox[0] >= 0 &&
+            promptBox[0] < promptBox[2] &&
+            promptBox[2] <= 1
+          ) ||
+          !(
+            promptBox[1] >= 0 &&
+            promptBox[1] < promptBox[3] &&
+            promptBox[3] <= 1
+          ) ||
+          promptBox[2] - promptBox[0] < 0.02 ||
+          promptBox[3] - promptBox[1] < 0.02
+        )
+          throw new Error(
+            "画框限定无效（x-acs-prompt-box 须为 [x1,y1,x2,y2] 归一化坐标）",
+          );
+      }
       const contentType = String(
         request.headers["content-type"] ?? "image/png",
       ).split(";")[0];
@@ -1451,6 +1485,9 @@ async function handleRequest(request, response) {
           headers: {
             "content-type": contentType,
             "x-acs-phrase-b64": phraseB64,
+            ...(promptBox
+              ? { "x-acs-prompt-box": JSON.stringify(promptBox) }
+              : {}),
           },
           body: image,
           signal: AbortSignal.timeout(120_000),

@@ -1,5 +1,9 @@
 # Current State v2
 
+## 2026-10-17 PhotoCraft D/E 复审修复
+
+画框候选现为服务端硬限域，并过滤明显由整物体被小框截断形成的候选；网格默认与自动选中关闭状态不变。IMG-055 新契约下 12/12 执行成功，box top-1 mask IoU mean 0.6916（模拟标注框）。浏览器验收脚本已入仓，IMG-057 四条真实页面链路执行成功；花瓣误染花蕊经 PhotoCraft 现有蒙版笔刷接力后，花蕊平均 RGB 变化由 94.87 降至 0.261/255；左耳框外隔离 0.021/255，但耳根仍有硬边，UI-038 全尺寸视觉验收未通过，不能宣称自动部件精修达标。IMG-056 生成 A/B 改为四个计划臂全部成功才算完整比较，未重新付费运行。见 `../docs/PHOTOCRAFT_E1_REVIEW_FIXES_2026-10-17.md` 与 `../qa/UI-038-2026-10-17.md`。
+
 ## 2026-10-10 target update
 
 用户已确认 `../docs/PRODUCT_ARCHITECTURE_ALIGNMENT.md` 的多题材 Video/Motion 与专业编辑器复用方向；ADR-0012 已取代旧的 PhotoCraft 可选和完整原生编辑器目标。以下实现清单仍描述当前开发原型；PhotoCraft 已完成开发级闭环，VectorCraft、EffectCraft、FilmCraft 尚未集成。近期技术验证优先级：巩固 PhotoCraft 质量与生产桥接；再验证 VectorCraft 素材流、EffectCraft 非商品题材动效与 FilmCraft 多轨剪辑。旧 ImageDocument 项目不要求先批量迁移，原图与可导出结果须可继续访问。

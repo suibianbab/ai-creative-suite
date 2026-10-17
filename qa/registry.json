@@ -69,12 +69,14 @@
         "../web/src/app/image-studio/photocraft/instruction-ir.test.ts",
         "../web/src/app/image-studio/photocraft/instruction-eval.test.ts",
         "../web/src/app/image-studio/photocraft/batch-recipe.test.ts",
-        "../web/src/app/image-studio/photocraft/candidate-mask.test.ts"
+        "../web/src/app/image-studio/photocraft/candidate-mask.test.ts",
+        "../web/src/app/image-studio/photocraft/target-entry.test.ts"
       ],
       "checks": [
         "Direct phrase plans retain object and protection constraints",
         "Model plans reject unsupported commands, unsafe amounts and partial requests",
-        "Candidate mask PNG decode validates strict base64, PNG magic and IHDR dims before any selection upload"
+        "Candidate mask PNG decode validates strict base64, PNG magic and IHDR dims before any selection upload",
+        "Target entry gates offer box-limited search only for selected-area plans with a concrete noun and no drawn scope"
       ]
     },
     {
@@ -218,6 +220,7 @@
       "cwd": "apps/api",
       "argv": [
         "node",
+        "--env-file=../../.env",
         "--import",
         "tsx",
         "--test",
@@ -998,6 +1001,93 @@
       ]
     },
     {
+      "id": "IMG-055",
+      "tier": "live-grounding",
+      "title": "Box-constrained candidate mode vs grid mode on the same GT targets",
+      "cwd": ".",
+      "argv": ["node", "scripts/photocraft/box-constrained-eval.mjs"],
+      "requiresFiles": [
+        "qa/fixtures/photocraft-grounding/annotations.json",
+        "qa/fixtures/photocraft-grounding/masks/manifest.json",
+        "scripts/photocraft/box-constrained-eval.mjs",
+        "scripts/photocraft/grounding-contract.mjs"
+      ],
+      "requiresPorts": [4104],
+      "checks": [
+        "GT fixture integrity is validated before any service call with the same gate as IMG-054 (manifest targets must be single-instance annotation phrases, mask PNG size must equal the annotation size, masks strictly binary); any violation exits non-zero",
+        "Each GT target is evaluated twice against the same :4104 model: once in grid mode (no prompt header) and once in box mode with x-acs-prompt-box set to the annotation box converted to normalized [x1,y1,x2,y2] as a simulated user box; both runs go through the shared fetchCandidates contract so mask_png_b64 is validated per candidate",
+        "Per-mode metrics are computed identically (top-3 masks resized to GT resolution bilinearly, binarized >=128, scored for mask IoU, miss rate and spill rate) and summarized as top-1/best mask IoU means, >=0.5 counts, no-candidate counts and mean latency, plus per-target top-1 delta classified as improved/unchanged/regressed at the 0.05 threshold",
+        "The report honestly declares the simulated-box caveat (annotation boxes carry ~+/-5% labeling error and are not real user trajectories) and stays report-only: no default-service switch, no auto-select enablement, TAU_AUTO_ENABLED untouched; service or fixture errors exit non-zero while quality deltas (including regressions) are findings; the report lands in .tools/photocraft-serve-qa/box-constrained-report.json with --case subsets in box-constrained-report.subset.json"
+      ]
+    },
+    {
+      "id": "IMG-056",
+      "tier": "live-model",
+      "title": "Same-image generation A/B: qwen-image-2.0-pro baseline vs qwen-image-3.0-pro",
+      "cwd": "apps/api",
+      "argv": [
+        "node",
+        "--env-file=../../.env",
+        "--import",
+        "tsx",
+        "../../scripts/photocraft/generation-ab.ts"
+      ],
+      "requiresFiles": [
+        ".env",
+        "scripts/photocraft/generation-ab.ts",
+        "scripts/photocraft/generation-ab-status.mjs",
+        "qa/fixtures/photocraft-hat-teal.png"
+      ],
+      "checks": [
+        "Only genuinely generative operations run the paid models (label removal with fabric reconstruction, whole background replacement) on the same source image, prompt and rect through the production QwenLocalImageEditProvider; native-layer recolor/brightness ops stay native per IMG-030/IMG-033 and are asserted by those cases, not re-billed here",
+        "Each model arm retries transient connection failures up to 3 times with backoff and records metrics or a redacted error; any missing or failed planned model/case arm exits non-zero, so a partial run cannot claim an A/B comparison",
+        "The mask-interface model arm is probed and honestly recorded as unavailable when the account returns Model-not-exist instead of being fabricated as comparison data",
+        "The report stays report-only in artifacts/photocraft-e2-2026-10-17/generation-ab-report.json with per-arm PNGs for human visual review: no IMAGE_LOCAL_EDIT_MODEL default switch, and visual quality conclusions require human review of the artifacts rather than being inferred from composite metrics alone"
+      ]
+    },
+    {
+      "id": "IMG-057",
+      "tier": "browser-image",
+      "title": "PhotoCraft browser path and requested-region quality",
+      "cwd": ".",
+      "argv": ["node", "scripts/photocraft/acceptance-e1.mjs"],
+      "requiresFiles": [
+        "scripts/photocraft/acceptance-e1.mjs",
+        "scripts/photocraft/proxy3100.mjs",
+        "scripts/photocraft/origin-shim.mjs",
+        "qa/fixtures/photocraft-fluffy-cat-cc0.jpg",
+        "qa/fixtures/photocraft-grounding/masks/hibiscus-brilliant.jpg/花蕊.png"
+      ],
+      "requiresPorts": [3100, 4112, 4104],
+      "checks": [
+        "The tracked Playwright rig opens four real browser edit flows and records interaction failures separately from visual-quality failures",
+        "For the petal instruction, the pistil GT region must stay nearly unchanged after an explicit PhotoCraft mask-brush retouch; the unretouched defect is recorded separately",
+        "For the left-ear instruction, the user box is a hard boundary and pixels outside it must stay nearly unchanged; whole-ear semantic coverage remains a separate manual acceptance item",
+        "A preview that renders but fails an automated scope or target-region gate exits non-zero, so browser-path success cannot hide a measurable wrong-region edit",
+        "The fallback case removes only its temporary candidate-mask file and verifies the PhotoCraft lasso fallback message"
+      ]
+    },
+    {
+      "id": "IMG-058",
+      "tier": "browser-image",
+      "title": "Region-difference report for the browser PhotoCraft previews",
+      "cwd": ".",
+      "argv": ["node", "scripts/photocraft/e1-region-diff.mjs"],
+      "requiresFiles": [
+        "scripts/photocraft/e1-region-diff.mjs",
+        "qa/fixtures/photocraft-grounding/masks/hibiscus-brilliant.jpg/花蕊.png",
+        "artifacts/photocraft-e1-2026-10-17/c1-roof-preview-render.png",
+        "artifacts/photocraft-e1-2026-10-17/c2-petal-after-retouch-render.png",
+        "artifacts/photocraft-e1-2026-10-17/c3-left-ear-after-retouch-render.png",
+        "artifacts/photocraft-e1-2026-10-17/c4-lasso-fallback-preview-render.png"
+      ],
+      "checks": [
+        "Runs after IMG-057 using its four full-resolution browser preview renders, including PhotoCraft mask-brush retouches for flower and ear",
+        "Reports target and nontarget pixel differences against unchanged source dimensions; a missing or mismatched preview exits non-zero",
+        "The report is a quantitative supplement only: the left-ear root transition still needs UI-038 full-size human review"
+      ]
+    },
+    {
       "id": "IMG-050",
       "tier": "image-qa",
       "title": "Preview vs save-reopen vs export pixel consistency",
@@ -1651,6 +1741,21 @@
         "A successful task writes an editable new version and settles one credit",
         "Failed tasks refund their reservation without changing the project version",
         "Visible defects are not marked as finished commercial quality"
+      ]
+    },
+    {
+      "id": "UI-038",
+      "title": "Part-target semantic coverage after box-constrained selection",
+      "fixture": "qa/fixtures/photocraft-fluffy-cat-cc0.jpg and the left-ear flow in IMG-057",
+      "steps": [
+        "Draw a tight box around the viewer-left ear and inspect all candidate overlays at full image size",
+        "Preview candidate 1, then use PhotoCraft mask brush to add missing ear pixels or erase any forehead and blanket spill",
+        "Compare the full-resolution preview with the source and record whether both ears, forehead, eyes and blanket remain untouched outside the requested left ear"
+      ],
+      "passCriteria": [
+        "The entire requested left ear visibly changes color without a rectangular cutoff or large unedited patch",
+        "The other ear, forehead, eyes and blanket retain their original appearance",
+        "If those conditions cannot be met, save as needs-manual-retouch rather than ready; IMG-057 scope-isolation PASS alone must not be called full semantic quality PASS"
       ]
     },
     {

@@ -151,6 +151,32 @@ function extractTargetPhrase(clean: string): string | undefined {
 }
 
 /**
+ * 指代「选区本身/整图/主体类」而非可圈选具体物体的名词（D 项入口）：
+ * 这些词落到 selected-area 计划时不开智能找目标环——环圈不出「选区」，
+ * 主体/背景另有 provider 通路。
+ */
+export const GENERIC_SELECTION_PHRASES = new Set([
+  "选区",
+  "区域",
+  "画框",
+  "轮廓",
+  "目标",
+  "整张图",
+  "画面",
+  "图片",
+  "照片",
+  "图像",
+  "主体",
+  "背景",
+  "前景",
+  "商品",
+  "产品",
+  "标签",
+]);
+
+export { extractTargetPhrase };
+
+/**
  * L2 gap analysis: when the express lane produced no plan, classify why.
  * Target gaps go to grounding, param gaps to defaults/handover, ambiguity to
  * one follow-up question, capability gaps to an honest rejection.

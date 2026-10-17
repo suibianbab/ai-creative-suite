@@ -1,0 +1,78 @@
+{
+  "executedAt": "2026-10-17T02:29:10.968Z",
+  "source": "qa/fixtures/photocraft-hat-teal.png",
+  "arms": [
+    {
+      "key": "qwen-image-2.0-pro",
+      "label": "baseline-2.0-pro"
+    },
+    {
+      "key": "qwen-image-3.0-pro",
+      "label": "challenger-3.0-pro"
+    }
+  ],
+  "maskInterfaceProbe": "qwen-image-edit",
+  "rows": [
+    {
+      "model": "qwen-image-2.0-pro",
+      "case": "remove",
+      "ok": true,
+      "tookMs": 68493,
+      "bytes": 1429159,
+      "dims": {
+        "width": 1024,
+        "height": 1024
+      },
+      "output": "remove-qwen-image-2.0-pro.png",
+      "dimsMatch": false
+    },
+    {
+      "model": "qwen-image-2.0-pro",
+      "case": "background",
+      "ok": true,
+      "tookMs": 28041,
+      "bytes": 1490931,
+      "dims": {
+        "width": 1024,
+        "height": 1024
+      },
+      "output": "background-qwen-image-2.0-pro.png",
+      "dimsMatch": false
+    },
+    {
+      "model": "qwen-image-3.0-pro",
+      "case": "remove",
+      "ok": true,
+      "tookMs": 203872,
+      "bytes": 5120947,
+      "dims": {
+        "width": 2048,
+        "height": 2048
+      },
+      "output": "remove-qwen-image-3.0-pro.png",
+      "dimsMatch": false
+    },
+    {
+      "model": "qwen-image-3.0-pro",
+      "case": "background",
+      "ok": true,
+      "tookMs": 125977,
+      "bytes": 4986871,
+      "dims": {
+        "width": 2048,
+        "height": 2048
+      },
+      "output": "background-qwen-image-3.0-pro.png",
+      "dimsMatch": false
+    },
+    {
+      "model": "qwen-image-edit",
+      "case": "remove",
+      "ok": false,
+      "tookMs": 40088,
+      "error": "Error: 千问图片 Provider 返回 HTTP 404 (InvalidParameter)。 Model not exist."
+    }
+  ],
+  "boundary": "整图/局部调色、换色等 PhotoCraft 原生调整层能做的操作不交给生成模型（能力表与路由由 IMG-030/IMG-033 钉死）；本 A/B 仅覆盖确需生成的移除补画与整幅背景替换。",
+  "note": "报告 only：不据此切换 IMAGE_LOCAL_EDIT_MODEL 默认值；视觉质量结论以 artifacts/photocraft-e2-2026-10-17/ 人工复核为准。"
+}

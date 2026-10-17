@@ -1,0 +1,134 @@
+{
+  "executedAt": "2026-10-17T03:34:21.288Z",
+  "method": "编辑预览与源图同尺寸（原生调整层渲染，无重采样）；区域平均带符号亮度差（Rec.601，提亮为正）与平均绝对差（0-255）",
+  "caveat": "花瓣为 PhotoCraft 蒙版笔刷精修后的预览；左耳为两笔耳根擦除后的预览。耳区用头部蒙版上半左右粗分（无单耳 GT）；帽徽沿用 E-2 标签框。语义与边缘质量仍须人工复核，本表仅是定量补充",
+  "gtMasks": "qa/fixtures/photocraft-grounding/masks/（IMG-054 GT，非独立标注）",
+  "rows": [
+    {
+      "case": "c1-roof",
+      "dims": "1280x960",
+      "insideTarget": {
+        "meanSignedLumDiff": 1.8,
+        "meanAbsLumDiff": 1.85,
+        "meanAbsDiffRGB": [
+          2.14,
+          1.81,
+          2.05
+        ],
+        "pixels": 103380
+      },
+      "outsideTarget": {
+        "meanSignedLumDiff": 0.03,
+        "meanAbsLumDiff": 0.1,
+        "meanAbsDiffRGB": [
+          0.27,
+          0.16,
+          0.31
+        ],
+        "pixels": 1125420
+      }
+    },
+    {
+      "case": "c2-petal",
+      "dims": "1280x937",
+      "insideTarget": {
+        "meanSignedLumDiff": -1.68,
+        "meanAbsLumDiff": 2.8,
+        "meanAbsDiffRGB": [
+          157.67,
+          49.08,
+          150.42
+        ],
+        "pixels": 338943
+      },
+      "outsideTarget": {
+        "meanSignedLumDiff": -0.14,
+        "meanAbsLumDiff": 0.21,
+        "meanAbsDiffRGB": [
+          0.82,
+          0.33,
+          0.92
+        ],
+        "pixels": 860417
+      },
+      "pistilOnly": {
+        "meanSignedLumDiff": 0.02,
+        "meanAbsLumDiff": 0.12,
+        "meanAbsDiffRGB": [
+          0.32,
+          0.19,
+          0.28
+        ],
+        "pixels": 3942
+      }
+    },
+    {
+      "case": "c3-left-ear",
+      "dims": "1920x2560",
+      "headUpperLeft": {
+        "meanSignedLumDiff": -11.4,
+        "meanAbsLumDiff": 11.42,
+        "meanAbsDiffRGB": [
+          26.6,
+          11.1,
+          26.69
+        ],
+        "pixels": 90255
+      },
+      "headUpperRight": {
+        "meanSignedLumDiff": 0,
+        "meanAbsLumDiff": 0.02,
+        "meanAbsDiffRGB": [
+          0.03,
+          0.03,
+          0.06
+        ],
+        "pixels": 100817
+      },
+      "outsideHead": {
+        "meanSignedLumDiff": 0,
+        "meanAbsLumDiff": 0.01,
+        "meanAbsDiffRGB": [
+          0.01,
+          0.01,
+          0.03
+        ],
+        "pixels": 4559115
+      }
+    },
+    {
+      "case": "c4-lasso-fallback",
+      "dims": "1254x1254",
+      "insideTarget": {
+        "meanSignedLumDiff": 2.52,
+        "meanAbsLumDiff": 2.52,
+        "meanAbsDiffRGB": [
+          2.1,
+          2.62,
+          3.11
+        ],
+        "pixels": 57000
+      },
+      "outsideHat": {
+        "meanSignedLumDiff": 0,
+        "meanAbsLumDiff": 0,
+        "meanAbsDiffRGB": [
+          0,
+          0,
+          0
+        ],
+        "pixels": 1034863
+      },
+      "hatExceptEmblem": {
+        "meanSignedLumDiff": 0,
+        "meanAbsLumDiff": 0,
+        "meanAbsDiffRGB": [
+          0,
+          0,
+          0
+        ],
+        "pixels": 480653
+      }
+    }
+  ]
+}

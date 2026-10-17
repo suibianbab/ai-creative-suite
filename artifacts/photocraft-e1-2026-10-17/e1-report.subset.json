@@ -1,0 +1,207 @@
+{
+  "executedAt": "2026-10-17T03:27:41.892Z",
+  "web": "http://127.0.0.1:3100",
+  "subset": true,
+  "failures": 0,
+  "quality": [
+    {
+      "case": "c3-left-ear",
+      "gate": "scope-isolation",
+      "metric": {
+        "insideMeanAbsDiff": 34.463,
+        "outsideMeanAbsDiff": 0.021
+      },
+      "pass": true,
+      "explanation": "左耳框外平均 RGB 变化须 ≤0.5/255，框内须有实际编辑"
+    },
+    {
+      "case": "c3-left-ear",
+      "gate": "semantic-coverage",
+      "status": "manual-review-required",
+      "explanation": "框内隔离不证明整只耳朵换色；必须在原尺寸检查漏选及框边裁切，必要时用 PhotoCraft 蒙版笔刷补回。"
+    }
+  ],
+  "steps": [
+    {
+      "t": "2026-10-17T03:27:25.638Z",
+      "case": "c3-left-ear",
+      "name": "image-open",
+      "detail": "photocraft-fluffy-cat-cc0.jpg 1920×2560"
+    },
+    {
+      "t": "2026-10-17T03:27:25.741Z",
+      "case": "shot",
+      "name": "c3-01-open",
+      "detail": ""
+    },
+    {
+      "t": "2026-10-17T03:27:27.363Z",
+      "case": "c3-left-ear",
+      "name": "parse",
+      "detail": "\"把左耳涂成蓝色\" → 「左耳」的目标位置不替你猜：点「智能找目标：左耳」看本机视觉候选，或点「点击/画框限定」后在目标处画框圈选；也可以直接手动画框/套索。"
+    },
+    {
+      "t": "2026-10-17T03:27:27.369Z",
+      "case": "c3-left-ear",
+      "name": "target-gap-panel",
+      "detail": "目标「左耳」需要指定范围"
+    },
+    {
+      "t": "2026-10-17T03:27:27.371Z",
+      "case": "c3-left-ear",
+      "name": "no-silent-provider",
+      "detail": "#pc-selection-method=object"
+    },
+    {
+      "t": "2026-10-17T03:27:27.372Z",
+      "case": "c3-left-ear",
+      "name": "no-guess-message",
+      "detail": "「左耳」的目标位置不替你猜：点「智能找目标：左耳」看本机视觉候选，或点「点击/画框限定」后在目标处画框圈选；也可以直接手动画框/套索。"
+    },
+    {
+      "t": "2026-10-17T03:27:27.409Z",
+      "case": "shot",
+      "name": "c3-02-entry",
+      "detail": ""
+    },
+    {
+      "t": "2026-10-17T03:27:28.100Z",
+      "case": "c3-left-ear",
+      "name": "await-box-entry",
+      "detail": "请在图片上按住拖动画一个框住「左耳」的框，松开后按框内范围智能圈选候选。"
+    },
+    {
+      "t": "2026-10-17T03:27:29.776Z",
+      "case": "c3-left-ear",
+      "name": "draw-box",
+      "detail": "box=[0.51,0.11,0.12,0.095] → 请在图片上按住拖动画一个框住「左耳」的框，松开后按框内范围智能圈选候选。"
+    },
+    {
+      "t": "2026-10-17T03:27:33.612Z",
+      "case": "c3-left-ear",
+      "name": "box-ring-open",
+      "detail": "已按你画的框限定范围重新圈选。目标「左耳」找到 1 个候选，已编号叠在图片上（只有一个候选，分数不能判断选区是否准确）。「左耳」带方位词（可能有多处同名目标），请点准目标编号，或点「点击/画框限定」后重圈；点编号框、下方按钮，或直接说「第几个」确认。"
+    },
+    {
+      "t": "2026-10-17T03:27:33.668Z",
+      "case": "shot",
+      "name": "c3-03-box-ring",
+      "detail": ""
+    },
+    {
+      "t": "2026-10-17T03:27:34.552Z",
+      "case": "c3-left-ear",
+      "name": "confirm-candidate-1",
+      "detail": "目标「左耳」已按候选 1 的像素蒙版选中；点「预览编辑」查看效果。候选可能漏选部件或带入邻近区域，请在原尺寸检查，必要时用 PhotoCraft 蒙版笔刷补回或剔除。"
+    },
+    {
+      "t": "2026-10-17T03:27:34.554Z",
+      "case": "c3-left-ear",
+      "name": "mask-status",
+      "detail": "目标「左耳」已按候选 1 的像素蒙版选中；点「预览编辑」查看效果。候选可能漏选部件或带入邻近区域，请在原尺寸检查，必要时用 PhotoCraft 蒙版笔刷补回或剔除。"
+    },
+    {
+      "t": "2026-10-17T03:27:34.586Z",
+      "case": "shot",
+      "name": "c3-04-confirmed",
+      "detail": ""
+    },
+    {
+      "t": "2026-10-17T03:27:34.646Z",
+      "case": "c3-left-ear",
+      "name": "plan-confirmed",
+      "detail": "勾选计划确认框 ×1"
+    },
+    {
+      "t": "2026-10-17T03:27:38.043Z",
+      "case": "c3-left-ear",
+      "name": "preview-ok",
+      "detail": "编辑预览已生成。请检查目标、边缘、标签和背景，确认后应用。"
+    },
+    {
+      "t": "2026-10-17T03:27:38.102Z",
+      "case": "shot",
+      "name": "c3-05-preview",
+      "detail": ""
+    },
+    {
+      "t": "2026-10-17T03:27:38.144Z",
+      "case": "c3-left-ear",
+      "name": "full-preview-saved",
+      "detail": "c3-left-ear-before-retouch-render.png"
+    },
+    {
+      "t": "2026-10-17T03:27:39.848Z",
+      "case": "c3-left-ear",
+      "name": "photocraft-mask-erase",
+      "detail": "brush=32, points=[[1091,518]]"
+    },
+    {
+      "t": "2026-10-17T03:27:41.557Z",
+      "case": "c3-left-ear",
+      "name": "photocraft-mask-erase",
+      "detail": "brush=32, points=[[1145,497]]"
+    },
+    {
+      "t": "2026-10-17T03:27:41.662Z",
+      "case": "shot",
+      "name": "c3-06-after-mask-retouch",
+      "detail": ""
+    },
+    {
+      "t": "2026-10-17T03:27:41.688Z",
+      "case": "c3-left-ear",
+      "name": "full-preview-saved",
+      "detail": "c3-left-ear-after-retouch-render.png"
+    },
+    {
+      "t": "2026-10-17T03:27:41.892Z",
+      "case": "c3-left-ear",
+      "name": "scope-isolation-pass",
+      "detail": "{\"insideMeanAbsDiff\":34.463,\"outsideMeanAbsDiff\":0.021}"
+    },
+    {
+      "t": "2026-10-17T03:27:41.892Z",
+      "case": "c3-left-ear",
+      "name": "semantic-coverage-needs-manual-review",
+      "detail": "框内隔离通过，耳朵覆盖仍须人工验收"
+    }
+  ],
+  "statusLog": [
+    {
+      "t": "2026-10-17T03:27:27.363Z",
+      "tag": "c3-left-ear/parse",
+      "text": "「左耳」的目标位置不替你猜：点「智能找目标：左耳」看本机视觉候选，或点「点击/画框限定」后在目标处画框圈选；也可以直接手动画框/套索。"
+    },
+    {
+      "t": "2026-10-17T03:27:28.100Z",
+      "tag": "c3-left-ear/await-box",
+      "text": "请在图片上按住拖动画一个框住「左耳」的框，松开后按框内范围智能圈选候选。"
+    },
+    {
+      "t": "2026-10-17T03:27:29.776Z",
+      "tag": "c3-left-ear/draw-box",
+      "text": "请在图片上按住拖动画一个框住「左耳」的框，松开后按框内范围智能圈选候选。"
+    },
+    {
+      "t": "2026-10-17T03:27:33.612Z",
+      "tag": "c3-left-ear/box-ring-open",
+      "text": "已按你画的框限定范围重新圈选。目标「左耳」找到 1 个候选，已编号叠在图片上（只有一个候选，分数不能判断选区是否准确）。「左耳」带方位词（可能有多处同名目标），请点准目标编号，或点「点击/画框限定」后重圈；点编号框、下方按钮，或直接说「第几个」确认。"
+    },
+    {
+      "t": "2026-10-17T03:27:34.552Z",
+      "tag": "c3-left-ear/confirm-1",
+      "text": "目标「左耳」已按候选 1 的像素蒙版选中；点「预览编辑」查看效果。候选可能漏选部件或带入邻近区域，请在原尺寸检查，必要时用 PhotoCraft 蒙版笔刷补回或剔除。"
+    },
+    {
+      "t": "2026-10-17T03:27:38.043Z",
+      "tag": "c3-left-ear/preview",
+      "text": "编辑预览已生成。请检查目标、边缘、标签和背景，确认后应用。"
+    }
+  ],
+  "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "pageErrors": [],
+  "note": "仓库脚本分别记录交互步骤与局部视觉门槛；候选通过但目标区域错误时仍返回失败。花瓣花蕊 GT 属同家族非独立标注，需结合人工复核。"
+}

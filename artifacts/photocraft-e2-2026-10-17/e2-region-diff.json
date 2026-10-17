@@ -1,0 +1,42 @@
+{
+  "executedAt": "2026-10-17T02:39:05.044Z",
+  "method": "输出 Lanczos3 重采样回 1254² 后与源图逐通道绝对差，按区域聚合均值（0-255）",
+  "caveat": "重采样抹平高频细节，数值仅量级参考；质量主判 = 人工/VLM 视觉复核（docs 第七轮 E-2）",
+  "hatMask": "qa/fixtures/photocraft-grounding/masks/photocraft-hat-teal.png 帽顶∪帽沿",
+  "labelRect": {
+    "left": 600,
+    "top": 470,
+    "width": 300,
+    "height": 190
+  },
+  "rows": [
+    {
+      "file": "remove-qwen-image-2.0-pro.png",
+      "meanAbsDiffInsideLabel": 78.36,
+      "meanAbsDiffOutsideLabel": 5.56,
+      "meanAbsDiffInsideHat": 19.7,
+      "meanAbsDiffOutsideHat": 2.23
+    },
+    {
+      "file": "remove-qwen-image-3.0-pro.png",
+      "meanAbsDiffInsideLabel": 80.23,
+      "meanAbsDiffOutsideLabel": 11.13,
+      "meanAbsDiffInsideHat": 26.1,
+      "meanAbsDiffOutsideHat": 7.16
+    },
+    {
+      "file": "background-qwen-image-2.0-pro.png",
+      "meanAbsDiffInsideLabel": 16.01,
+      "meanAbsDiffOutsideLabel": 20.62,
+      "meanAbsDiffInsideHat": 13.82,
+      "meanAbsDiffOutsideHat": 23.89
+    },
+    {
+      "file": "background-qwen-image-3.0-pro.png",
+      "meanAbsDiffInsideLabel": 19.97,
+      "meanAbsDiffOutsideLabel": 21.34,
+      "meanAbsDiffInsideHat": 18.01,
+      "meanAbsDiffOutsideHat": 23
+    }
+  ]
+}

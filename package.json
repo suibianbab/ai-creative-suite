@@ -16,10 +16,12 @@
     "qa:image": "node scripts/qa/run-regression.mjs image-qa",
     "qa:live-model": "node scripts/qa/run-regression.mjs live-model",
     "qa:grounding": "node scripts/qa/run-regression.mjs live-grounding",
+    "qa:browser-image": "node scripts/qa/run-regression.mjs browser-image",
     "dev:photocraft-bridge": "node scripts/photocraft/dev-bridge.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.2.0",
+    "playwright-core": "1.64.1",
     "typescript": "^5.9.3"
   }
 }

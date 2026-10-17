@@ -1,0 +1,618 @@
+{
+  "executedAt": "2026-10-17T03:34:20.485Z",
+  "web": "http://127.0.0.1:3100",
+  "subset": false,
+  "failures": 0,
+  "quality": [
+    {
+      "case": "c2-petal",
+      "gate": "visual-quality",
+      "metric": {
+        "insideMeanAbsDiff": 0.261,
+        "outsideMeanAbsDiff": 34.254
+      },
+      "pass": true,
+      "explanation": "花瓣指令应保留花蕊，花蕊平均 RGB 变化须 ≤8/255"
+    },
+    {
+      "case": "c3-left-ear",
+      "gate": "scope-isolation",
+      "metric": {
+        "insideMeanAbsDiff": 34.463,
+        "outsideMeanAbsDiff": 0.021
+      },
+      "pass": true,
+      "explanation": "左耳框外平均 RGB 变化须 ≤0.5/255，框内须有实际编辑"
+    },
+    {
+      "case": "c3-left-ear",
+      "gate": "semantic-coverage",
+      "status": "manual-review-required",
+      "explanation": "框内隔离不证明整只耳朵换色；必须在原尺寸检查漏选及框边裁切，必要时用 PhotoCraft 蒙版笔刷补回。"
+    }
+  ],
+  "steps": [
+    {
+      "t": "2026-10-17T03:32:50.650Z",
+      "case": "c1-roof",
+      "name": "image-open",
+      "detail": "meigs-house-front-street-marietta-oh.jpg 1280×960"
+    },
+    {
+      "t": "2026-10-17T03:32:50.747Z",
+      "case": "shot",
+      "name": "c1-01-open",
+      "detail": ""
+    },
+    {
+      "t": "2026-10-17T03:32:52.380Z",
+      "case": "c1-roof",
+      "name": "parse",
+      "detail": "\"把屋顶提亮一点\" → 「target」调整对象不在当前可自动识别的名词内；可说「主体/背景」，或用画框/轮廓指定范围。可点「智能找目标」让本机视觉模型圈出「屋顶」候选，或继续手动画框/套索。"
+    },
+    {
+      "t": "2026-10-17T03:32:52.386Z",
+      "case": "c1-roof",
+      "name": "target-gap-panel",
+      "detail": "目标「屋顶」需要指定范围"
+    },
+    {
+      "t": "2026-10-17T03:32:52.427Z",
+      "case": "shot",
+      "name": "c1-02-gap",
+      "detail": ""
+    },
+    {
+      "t": "2026-10-17T03:33:06.431Z",
+      "case": "c1-roof",
+      "name": "grid-ring-open",
+      "detail": "目标「屋顶」找到 3 个候选，已编号叠在图片上（最高匹配分数 35%，分数只是本批候选的相对排名，非正确率）。前两个候选位置不同（图里可能有多处「屋顶」），点准目标编号或画框限定；点编号框、下方按钮，或直接说「第几个」确认。"
+    },
+    {
+      "t": "2026-10-17T03:33:06.476Z",
+      "case": "shot",
+      "name": "c1-03-grid-ring",
+      "detail": ""
+    },
+    {
+      "t": "2026-10-17T03:33:07.179Z",
+      "case": "c1-roof",
+      "name": "await-box-entry",
+      "detail": "请在图片上按住拖动画一个框住目标的框，松开后只按框内范围重新圈选候选。"
+    },
+    {
+      "t": "2026-10-17T03:33:08.882Z",
+      "case": "c1-roof",
+      "name": "draw-box",
+      "detail": "box=[0.15,0.26,0.68,0.22] → 请在图片上按住拖动画一个框住目标的框，松开后只按框内范围重新圈选候选。"
+    },
+    {
+      "t": "2026-10-17T03:33:12.730Z",
+      "case": "c1-roof",
+      "name": "box-ring-open",
+      "detail": "已按你画的框限定范围重新圈选。目标「屋顶」找到 2 个候选，已编号叠在图片上（最高匹配分数 63%，分数只是本批候选的相对排名，非正确率）。点编号框、下方按钮，或直接说「第几个」确认。"
+    },
+    {
+      "t": "2026-10-17T03:33:12.783Z",
+      "case": "shot",
+      "name": "c1-04-box-ring",
+      "detail": ""
+    },
+    {
+      "t": "2026-10-17T03:33:13.675Z",
+      "case": "c1-roof",
+      "name": "confirm-candidate-1",
+      "detail": "目标「屋顶」已按候选 1 的像素蒙版选中；点「预览编辑」查看效果。候选可能漏选部件或带入邻近区域，请在原尺寸检查，必要时用 PhotoCraft 蒙版笔刷补回或剔除。"
+    },
+    {
+      "t": "2026-10-17T03:33:13.676Z",
+      "case": "c1-roof",
+      "name": "mask-status",
+      "detail": "目标「屋顶」已按候选 1 的像素蒙版选中；点「预览编辑」查看效果。候选可能漏选部件或带入邻近区域，请在原尺寸检查，必要时用 PhotoCraft 蒙版笔刷补回或剔除。"
+    },
+    {
+      "t": "2026-10-17T03:33:13.721Z",
+      "case": "shot",
+      "name": "c1-05-confirmed",
+      "detail": ""
+    },
+    {
+      "t": "2026-10-17T03:33:13.766Z",
+      "case": "c1-roof",
+      "name": "plan-confirmed",
+      "detail": "勾选计划确认框 ×1"
+    },
+    {
+      "t": "2026-10-17T03:33:15.636Z",
+      "case": "c1-roof",
+      "name": "preview-ok",
+      "detail": "编辑预览已生成。请检查目标、边缘、标签和背景，确认后应用。"
+    },
+    {
+      "t": "2026-10-17T03:33:15.690Z",
+      "case": "shot",
+      "name": "c1-06-preview",
+      "detail": ""
+    },
+    {
+      "t": "2026-10-17T03:33:15.721Z",
+      "case": "c1-roof",
+      "name": "full-preview-saved",
+      "detail": "c1-roof-preview-render.png"
+    },
+    {
+      "t": "2026-10-17T03:33:19.071Z",
+      "case": "c2-petal",
+      "name": "image-open",
+      "detail": "hibiscus-brilliant.jpg 1280×937"
+    },
+    {
+      "t": "2026-10-17T03:33:19.165Z",
+      "case": "shot",
+      "name": "c2-01-open",
+      "detail": ""
+    },
+    {
+      "t": "2026-10-17T03:33:20.771Z",
+      "case": "c2-petal",
+      "name": "parse",
+      "detail": "\"把花瓣换成蓝色\" → 「target」目标不在当前可自动识别的名词内；可说「主体/背景」，或用画框/轮廓指定范围。可点「智能找目标」让本机视觉模型圈出「花瓣」候选，或继续手动画框/套索。"
+    },
+    {
+      "t": "2026-10-17T03:33:20.784Z",
+      "case": "c2-petal",
+      "name": "target-gap-panel",
+      "detail": "目标「花瓣」需要指定范围"
+    },
+    {
+      "t": "2026-10-17T03:33:20.784Z",
+      "case": "c2-petal",
+      "name": "gap-phrase-resolved",
+      "detail": "花瓣"
+    },
+    {
+      "t": "2026-10-17T03:33:20.825Z",
+      "case": "shot",
+      "name": "c2-02-gap",
+      "detail": ""
+    },
+    {
+      "t": "2026-10-17T03:33:34.818Z",
+      "case": "c2-petal",
+      "name": "grid-ring-open",
+      "detail": "目标「花瓣」找到 3 个候选，已编号叠在图片上（最高匹配分数 36%，分数只是本批候选的相对排名，非正确率）。点编号框、下方按钮，或直接说「第几个」确认。"
+    },
+    {
+      "t": "2026-10-17T03:33:34.862Z",
+      "case": "shot",
+      "name": "c2-03-grid-ring",
+      "detail": ""
+    },
+    {
+      "t": "2026-10-17T03:33:35.758Z",
+      "case": "c2-petal",
+      "name": "confirm-candidate-1",
+      "detail": "目标「花瓣」已按候选 1 的像素蒙版选中；点「预览编辑」查看效果。候选可能漏选部件或带入邻近区域，请在原尺寸检查，必要时用 PhotoCraft 蒙版笔刷补回或剔除。"
+    },
+    {
+      "t": "2026-10-17T03:33:35.759Z",
+      "case": "c2-petal",
+      "name": "mask-status",
+      "detail": "目标「花瓣」已按候选 1 的像素蒙版选中；点「预览编辑」查看效果。候选可能漏选部件或带入邻近区域，请在原尺寸检查，必要时用 PhotoCraft 蒙版笔刷补回或剔除。"
+    },
+    {
+      "t": "2026-10-17T03:33:35.808Z",
+      "case": "shot",
+      "name": "c2-04-confirmed",
+      "detail": ""
+    },
+    {
+      "t": "2026-10-17T03:33:35.864Z",
+      "case": "c2-petal",
+      "name": "plan-confirmed",
+      "detail": "勾选计划确认框 ×1"
+    },
+    {
+      "t": "2026-10-17T03:33:37.741Z",
+      "case": "c2-petal",
+      "name": "preview-ok",
+      "detail": "编辑预览已生成。请检查目标、边缘、标签和背景，确认后应用。"
+    },
+    {
+      "t": "2026-10-17T03:33:37.781Z",
+      "case": "shot",
+      "name": "c2-05-preview",
+      "detail": ""
+    },
+    {
+      "t": "2026-10-17T03:33:37.791Z",
+      "case": "c2-petal",
+      "name": "full-preview-saved",
+      "detail": "c2-petal-before-retouch-render.png"
+    },
+    {
+      "t": "2026-10-17T03:33:37.873Z",
+      "case": "c2-petal",
+      "name": "visual-defect-before-retouch",
+      "detail": "{\"insideMeanAbsDiff\":94.87,\"outsideMeanAbsDiff\":34.469}"
+    },
+    {
+      "t": "2026-10-17T03:33:39.305Z",
+      "case": "c2-petal",
+      "name": "photocraft-mask-erase",
+      "detail": "brush=32, points=[[269,442],[435,442]]"
+    },
+    {
+      "t": "2026-10-17T03:33:40.755Z",
+      "case": "c2-petal",
+      "name": "photocraft-mask-erase",
+      "detail": "brush=32, points=[[269,458],[435,458]]"
+    },
+    {
+      "t": "2026-10-17T03:33:40.829Z",
+      "case": "shot",
+      "name": "c2-06-after-mask-retouch",
+      "detail": ""
+    },
+    {
+      "t": "2026-10-17T03:33:40.838Z",
+      "case": "c2-petal",
+      "name": "full-preview-saved",
+      "detail": "c2-petal-after-retouch-render.png"
+    },
+    {
+      "t": "2026-10-17T03:33:40.914Z",
+      "case": "c2-petal",
+      "name": "visual-quality-pass",
+      "detail": "{\"insideMeanAbsDiff\":0.261,\"outsideMeanAbsDiff\":34.254}"
+    },
+    {
+      "t": "2026-10-17T03:33:44.847Z",
+      "case": "c3-left-ear",
+      "name": "image-open",
+      "detail": "photocraft-fluffy-cat-cc0.jpg 1920×2560"
+    },
+    {
+      "t": "2026-10-17T03:33:44.945Z",
+      "case": "shot",
+      "name": "c3-01-open",
+      "detail": ""
+    },
+    {
+      "t": "2026-10-17T03:33:46.553Z",
+      "case": "c3-left-ear",
+      "name": "parse",
+      "detail": "\"把左耳涂成蓝色\" → 「左耳」的目标位置不替你猜：点「智能找目标：左耳」看本机视觉候选，或点「点击/画框限定」后在目标处画框圈选；也可以直接手动画框/套索。"
+    },
+    {
+      "t": "2026-10-17T03:33:46.558Z",
+      "case": "c3-left-ear",
+      "name": "target-gap-panel",
+      "detail": "目标「左耳」需要指定范围"
+    },
+    {
+      "t": "2026-10-17T03:33:46.560Z",
+      "case": "c3-left-ear",
+      "name": "no-silent-provider",
+      "detail": "#pc-selection-method=object"
+    },
+    {
+      "t": "2026-10-17T03:33:46.561Z",
+      "case": "c3-left-ear",
+      "name": "no-guess-message",
+      "detail": "「左耳」的目标位置不替你猜：点「智能找目标：左耳」看本机视觉候选，或点「点击/画框限定」后在目标处画框圈选；也可以直接手动画框/套索。"
+    },
+    {
+      "t": "2026-10-17T03:33:46.611Z",
+      "case": "shot",
+      "name": "c3-02-entry",
+      "detail": ""
+    },
+    {
+      "t": "2026-10-17T03:33:47.298Z",
+      "case": "c3-left-ear",
+      "name": "await-box-entry",
+      "detail": "请在图片上按住拖动画一个框住「左耳」的框，松开后按框内范围智能圈选候选。"
+    },
+    {
+      "t": "2026-10-17T03:33:48.978Z",
+      "case": "c3-left-ear",
+      "name": "draw-box",
+      "detail": "box=[0.51,0.11,0.12,0.095] → 请在图片上按住拖动画一个框住「左耳」的框，松开后按框内范围智能圈选候选。"
+    },
+    {
+      "t": "2026-10-17T03:33:52.817Z",
+      "case": "c3-left-ear",
+      "name": "box-ring-open",
+      "detail": "已按你画的框限定范围重新圈选。目标「左耳」找到 1 个候选，已编号叠在图片上（只有一个候选，分数不能判断选区是否准确）。「左耳」带方位词（可能有多处同名目标），请点准目标编号，或点「点击/画框限定」后重圈；点编号框、下方按钮，或直接说「第几个」确认。"
+    },
+    {
+      "t": "2026-10-17T03:33:52.868Z",
+      "case": "shot",
+      "name": "c3-03-box-ring",
+      "detail": ""
+    },
+    {
+      "t": "2026-10-17T03:33:53.755Z",
+      "case": "c3-left-ear",
+      "name": "confirm-candidate-1",
+      "detail": "目标「左耳」已按候选 1 的像素蒙版选中；点「预览编辑」查看效果。候选可能漏选部件或带入邻近区域，请在原尺寸检查，必要时用 PhotoCraft 蒙版笔刷补回或剔除。"
+    },
+    {
+      "t": "2026-10-17T03:33:53.757Z",
+      "case": "c3-left-ear",
+      "name": "mask-status",
+      "detail": "目标「左耳」已按候选 1 的像素蒙版选中；点「预览编辑」查看效果。候选可能漏选部件或带入邻近区域，请在原尺寸检查，必要时用 PhotoCraft 蒙版笔刷补回或剔除。"
+    },
+    {
+      "t": "2026-10-17T03:33:53.805Z",
+      "case": "shot",
+      "name": "c3-04-confirmed",
+      "detail": ""
+    },
+    {
+      "t": "2026-10-17T03:33:53.863Z",
+      "case": "c3-left-ear",
+      "name": "plan-confirmed",
+      "detail": "勾选计划确认框 ×1"
+    },
+    {
+      "t": "2026-10-17T03:33:57.256Z",
+      "case": "c3-left-ear",
+      "name": "preview-ok",
+      "detail": "编辑预览已生成。请检查目标、边缘、标签和背景，确认后应用。"
+    },
+    {
+      "t": "2026-10-17T03:33:57.302Z",
+      "case": "shot",
+      "name": "c3-05-preview",
+      "detail": ""
+    },
+    {
+      "t": "2026-10-17T03:33:57.324Z",
+      "case": "c3-left-ear",
+      "name": "full-preview-saved",
+      "detail": "c3-left-ear-before-retouch-render.png"
+    },
+    {
+      "t": "2026-10-17T03:33:59.016Z",
+      "case": "c3-left-ear",
+      "name": "photocraft-mask-erase",
+      "detail": "brush=32, points=[[1091,518]]"
+    },
+    {
+      "t": "2026-10-17T03:34:00.734Z",
+      "case": "c3-left-ear",
+      "name": "photocraft-mask-erase",
+      "detail": "brush=32, points=[[1145,497]]"
+    },
+    {
+      "t": "2026-10-17T03:34:00.785Z",
+      "case": "shot",
+      "name": "c3-06-after-mask-retouch",
+      "detail": ""
+    },
+    {
+      "t": "2026-10-17T03:34:00.807Z",
+      "case": "c3-left-ear",
+      "name": "full-preview-saved",
+      "detail": "c3-left-ear-after-retouch-render.png"
+    },
+    {
+      "t": "2026-10-17T03:34:01.011Z",
+      "case": "c3-left-ear",
+      "name": "scope-isolation-pass",
+      "detail": "{\"insideMeanAbsDiff\":34.463,\"outsideMeanAbsDiff\":0.021}"
+    },
+    {
+      "t": "2026-10-17T03:34:01.011Z",
+      "case": "c3-left-ear",
+      "name": "semantic-coverage-needs-manual-review",
+      "detail": "框内隔离通过，耳朵覆盖仍须人工验收"
+    },
+    {
+      "t": "2026-10-17T03:34:04.214Z",
+      "case": "c4-lasso-fallback",
+      "name": "image-open",
+      "detail": "photocraft-hat-teal.png 1254×1254"
+    },
+    {
+      "t": "2026-10-17T03:34:04.328Z",
+      "case": "shot",
+      "name": "c4-01-open",
+      "detail": ""
+    },
+    {
+      "t": "2026-10-17T03:34:05.941Z",
+      "case": "c4-lasso-fallback",
+      "name": "parse",
+      "detail": "\"把帽徽提亮一点\" → 「target」调整对象不在当前可自动识别的名词内；可说「主体/背景」，或用画框/轮廓指定范围。可点「智能找目标」让本机视觉模型圈出「帽徽」候选，或继续手动画框/套索。"
+    },
+    {
+      "t": "2026-10-17T03:34:05.949Z",
+      "case": "c4-lasso-fallback",
+      "name": "target-gap-panel",
+      "detail": "目标「帽徽」需要指定范围"
+    },
+    {
+      "t": "2026-10-17T03:34:18.404Z",
+      "case": "c4-lasso-fallback",
+      "name": "grid-ring-open",
+      "detail": "目标「帽徽」找到 3 个候选，已编号叠在图片上（最高匹配分数 35%，分数只是本批候选的相对排名，非正确率）。前两个候选位置不同（图里可能有多处「帽徽」），点准目标编号或画框限定；点编号框、下方按钮，或直接说「第几个」确认。"
+    },
+    {
+      "t": "2026-10-17T03:34:18.455Z",
+      "case": "shot",
+      "name": "c4-02-ring",
+      "detail": ""
+    },
+    {
+      "t": "2026-10-17T03:34:19.360Z",
+      "case": "c4-lasso-fallback",
+      "name": "confirm-candidate-1",
+      "detail": "目标「帽徽」已按候选 1 的像素蒙版选中；点「预览编辑」查看效果。候选可能漏选部件或带入邻近区域，请在原尺寸检查，必要时用 PhotoCraft 蒙版笔刷补回或剔除。"
+    },
+    {
+      "t": "2026-10-17T03:34:19.362Z",
+      "case": "c4-lasso-fallback",
+      "name": "mask-status",
+      "detail": "目标「帽徽」已按候选 1 的像素蒙版选中；点「预览编辑」查看效果。候选可能漏选部件或带入邻近区域，请在原尺寸检查，必要时用 PhotoCraft 蒙版笔刷补回或剔除。"
+    },
+    {
+      "t": "2026-10-17T03:34:19.414Z",
+      "case": "shot",
+      "name": "c4-03-confirmed",
+      "detail": ""
+    },
+    {
+      "t": "2026-10-17T03:34:19.482Z",
+      "case": "c4-lasso-fallback",
+      "name": "mask-dir-deleted",
+      "detail": "删除 d32a2b80-499e-4f25-a809-1737a5d69fad/candidate-mask.png"
+    },
+    {
+      "t": "2026-10-17T03:34:19.529Z",
+      "case": "c4-lasso-fallback",
+      "name": "plan-confirmed",
+      "detail": "勾选计划确认框 ×1"
+    },
+    {
+      "t": "2026-10-17T03:34:20.404Z",
+      "case": "c4-lasso-fallback",
+      "name": "preview-ok",
+      "detail": "候选像素蒙版不可用，已用轮廓套索重新生成预览；编辑预览已生成。请检查目标、边缘、标签和背景，确认后应用。"
+    },
+    {
+      "t": "2026-10-17T03:34:20.404Z",
+      "case": "c4-lasso-fallback",
+      "name": "fallback-message-seen",
+      "detail": "候选像素蒙版不可用，已用轮廓套索重新生成预览；编辑预览已生成。请检查目标、边缘、标签和背景，确认后应用。"
+    },
+    {
+      "t": "2026-10-17T03:34:20.469Z",
+      "case": "shot",
+      "name": "c4-04-preview-after-fallback",
+      "detail": ""
+    },
+    {
+      "t": "2026-10-17T03:34:20.485Z",
+      "case": "c4-lasso-fallback",
+      "name": "full-preview-saved",
+      "detail": "c4-lasso-fallback-preview-render.png"
+    }
+  ],
+  "statusLog": [
+    {
+      "t": "2026-10-17T03:32:52.380Z",
+      "tag": "c1-roof/parse",
+      "text": "「target」调整对象不在当前可自动识别的名词内；可说「主体/背景」，或用画框/轮廓指定范围。可点「智能找目标」让本机视觉模型圈出「屋顶」候选，或继续手动画框/套索。"
+    },
+    {
+      "t": "2026-10-17T03:33:06.431Z",
+      "tag": "c1-roof/ring-open",
+      "text": "目标「屋顶」找到 3 个候选，已编号叠在图片上（最高匹配分数 35%，分数只是本批候选的相对排名，非正确率）。前两个候选位置不同（图里可能有多处「屋顶」），点准目标编号或画框限定；点编号框、下方按钮，或直接说「第几个」确认。"
+    },
+    {
+      "t": "2026-10-17T03:33:07.179Z",
+      "tag": "c1-roof/await-box",
+      "text": "请在图片上按住拖动画一个框住目标的框，松开后只按框内范围重新圈选候选。"
+    },
+    {
+      "t": "2026-10-17T03:33:08.882Z",
+      "tag": "c1-roof/draw-box",
+      "text": "请在图片上按住拖动画一个框住目标的框，松开后只按框内范围重新圈选候选。"
+    },
+    {
+      "t": "2026-10-17T03:33:12.730Z",
+      "tag": "c1-roof/box-ring-open",
+      "text": "已按你画的框限定范围重新圈选。目标「屋顶」找到 2 个候选，已编号叠在图片上（最高匹配分数 63%，分数只是本批候选的相对排名，非正确率）。点编号框、下方按钮，或直接说「第几个」确认。"
+    },
+    {
+      "t": "2026-10-17T03:33:13.675Z",
+      "tag": "c1-roof/confirm-1",
+      "text": "目标「屋顶」已按候选 1 的像素蒙版选中；点「预览编辑」查看效果。候选可能漏选部件或带入邻近区域，请在原尺寸检查，必要时用 PhotoCraft 蒙版笔刷补回或剔除。"
+    },
+    {
+      "t": "2026-10-17T03:33:15.636Z",
+      "tag": "c1-roof/preview",
+      "text": "编辑预览已生成。请检查目标、边缘、标签和背景，确认后应用。"
+    },
+    {
+      "t": "2026-10-17T03:33:20.771Z",
+      "tag": "c2-petal/parse",
+      "text": "「target」目标不在当前可自动识别的名词内；可说「主体/背景」，或用画框/轮廓指定范围。可点「智能找目标」让本机视觉模型圈出「花瓣」候选，或继续手动画框/套索。"
+    },
+    {
+      "t": "2026-10-17T03:33:34.818Z",
+      "tag": "c2-petal/ring-open",
+      "text": "目标「花瓣」找到 3 个候选，已编号叠在图片上（最高匹配分数 36%，分数只是本批候选的相对排名，非正确率）。点编号框、下方按钮，或直接说「第几个」确认。"
+    },
+    {
+      "t": "2026-10-17T03:33:35.757Z",
+      "tag": "c2-petal/confirm-1",
+      "text": "目标「花瓣」已按候选 1 的像素蒙版选中；点「预览编辑」查看效果。候选可能漏选部件或带入邻近区域，请在原尺寸检查，必要时用 PhotoCraft 蒙版笔刷补回或剔除。"
+    },
+    {
+      "t": "2026-10-17T03:33:37.741Z",
+      "tag": "c2-petal/preview",
+      "text": "编辑预览已生成。请检查目标、边缘、标签和背景，确认后应用。"
+    },
+    {
+      "t": "2026-10-17T03:33:46.553Z",
+      "tag": "c3-left-ear/parse",
+      "text": "「左耳」的目标位置不替你猜：点「智能找目标：左耳」看本机视觉候选，或点「点击/画框限定」后在目标处画框圈选；也可以直接手动画框/套索。"
+    },
+    {
+      "t": "2026-10-17T03:33:47.298Z",
+      "tag": "c3-left-ear/await-box",
+      "text": "请在图片上按住拖动画一个框住「左耳」的框，松开后按框内范围智能圈选候选。"
+    },
+    {
+      "t": "2026-10-17T03:33:48.978Z",
+      "tag": "c3-left-ear/draw-box",
+      "text": "请在图片上按住拖动画一个框住「左耳」的框，松开后按框内范围智能圈选候选。"
+    },
+    {
+      "t": "2026-10-17T03:33:52.817Z",
+      "tag": "c3-left-ear/box-ring-open",
+      "text": "已按你画的框限定范围重新圈选。目标「左耳」找到 1 个候选，已编号叠在图片上（只有一个候选，分数不能判断选区是否准确）。「左耳」带方位词（可能有多处同名目标），请点准目标编号，或点「点击/画框限定」后重圈；点编号框、下方按钮，或直接说「第几个」确认。"
+    },
+    {
+      "t": "2026-10-17T03:33:53.755Z",
+      "tag": "c3-left-ear/confirm-1",
+      "text": "目标「左耳」已按候选 1 的像素蒙版选中；点「预览编辑」查看效果。候选可能漏选部件或带入邻近区域，请在原尺寸检查，必要时用 PhotoCraft 蒙版笔刷补回或剔除。"
+    },
+    {
+      "t": "2026-10-17T03:33:57.256Z",
+      "tag": "c3-left-ear/preview",
+      "text": "编辑预览已生成。请检查目标、边缘、标签和背景，确认后应用。"
+    },
+    {
+      "t": "2026-10-17T03:34:05.941Z",
+      "tag": "c4-lasso-fallback/parse",
+      "text": "「target」调整对象不在当前可自动识别的名词内；可说「主体/背景」，或用画框/轮廓指定范围。可点「智能找目标」让本机视觉模型圈出「帽徽」候选，或继续手动画框/套索。"
+    },
+    {
+      "t": "2026-10-17T03:34:18.404Z",
+      "tag": "c4-lasso-fallback/ring-open",
+      "text": "目标「帽徽」找到 3 个候选，已编号叠在图片上（最高匹配分数 35%，分数只是本批候选的相对排名，非正确率）。前两个候选位置不同（图里可能有多处「帽徽」），点准目标编号或画框限定；点编号框、下方按钮，或直接说「第几个」确认。"
+    },
+    {
+      "t": "2026-10-17T03:34:19.360Z",
+      "tag": "c4-lasso-fallback/confirm-1",
+      "text": "目标「帽徽」已按候选 1 的像素蒙版选中；点「预览编辑」查看效果。候选可能漏选部件或带入邻近区域，请在原尺寸检查，必要时用 PhotoCraft 蒙版笔刷补回或剔除。"
+    },
+    {
+      "t": "2026-10-17T03:34:20.404Z",
+      "tag": "c4-lasso-fallback/preview",
+      "text": "候选像素蒙版不可用，已用轮廓套索重新生成预览；编辑预览已生成。请检查目标、边缘、标签和背景，确认后应用。"
+    }
+  ],
+  "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 422 (Unprocessable Entity)",
+    "Failed to load resource: the server responded with a status of 400 (Bad Request)"
+  ],
+  "pageErrors": [],
+  "note": "仓库脚本分别记录交互步骤与局部视觉门槛；候选通过但目标区域错误时仍返回失败。花瓣花蕊 GT 属同家族非独立标注，需结合人工复核。"
+}

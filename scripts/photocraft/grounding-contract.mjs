@@ -286,12 +286,14 @@ export async function fetchCandidates({
   imageBytes,
   contentType,
   phrase,
+  promptBox = null, // D 项：可选 [x1,y1,x2,y2] 归一化画框（box 提示模式）
   fetchImpl = fetch,
 }) {
   const headers = {
     "Content-Type": contentType,
     "X-Acs-Phrase-B64": Buffer.from(phrase, "utf8").toString("base64"),
   };
+  if (promptBox) headers["X-Acs-Prompt-Box"] = JSON.stringify(promptBox);
   for (let attempt = 0; attempt < 6; attempt += 1) {
     let response;
     try {
