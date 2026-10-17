@@ -40,3 +40,25 @@ export function quantizeTimeline(
   });
   return { shots, totalFrames: boundary[boundary.length - 1]! };
 }
+
+export type GlobalFrameMapping = { shotIndex: number; localFrame: number };
+
+// 全局帧 → (镜头, 镜头内本地帧)。startFrame ≤ frame < startFrame+frames 归该镜头，
+// 边界帧归后一镜头的起点；frame 超出 [0, totalFrames) 钳到首/末帧，播放循环回绕不越界。
+export function mapGlobalFrame(
+  timeline: QuantizedTimeline,
+  frame: number,
+): GlobalFrameMapping {
+  if (timeline.shots.length === 0) throw new Error("timeline 不能为空");
+  if (!Number.isInteger(frame)) throw new Error("frame 必须为整数");
+  const clamped = Math.min(Math.max(frame, 0), timeline.totalFrames - 1);
+  for (const shot of timeline.shots) {
+    if (clamped < shot.startFrame + shot.frames)
+      return {
+        shotIndex: shot.shotIndex,
+        localFrame: clamped - shot.startFrame,
+      };
+  }
+  const last = timeline.shots[timeline.shots.length - 1]!;
+  return { shotIndex: last.shotIndex, localFrame: last.frames - 1 };
+}

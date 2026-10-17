@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { quantizeTimeline, ZeroFrameShotError } from "./quantize.js";
+import {
+  mapGlobalFrame,
+  quantizeTimeline,
+  ZeroFrameShotError,
+} from "./quantize.js";
 
 test("30×1100ms 在 24fps 总长恰为 792 帧（33.0s），30fps 恰为 990 帧", () => {
   const durations = Array.from({ length: 30 }, () => 1100);
@@ -32,4 +36,29 @@ test("1100ms×30 在 24fps 下任意镜头不为 0 帧", () => {
     24,
   );
   assert.ok(q.shots.every((s) => s.frames >= 1));
+});
+
+test("mapGlobalFrame：边界帧归后一镜头起点，超尾帧钳到最后镜头末帧", () => {
+  // [1600,1600,1600]ms@24 → 边界 [0,38,77,115]，spans [38,39,38]
+  const t = quantizeTimeline([1600, 1600, 1600], 24);
+  assert.deepEqual(
+    t.shots.map((s) => s.frames),
+    [38, 39, 38],
+  );
+  assert.deepEqual(mapGlobalFrame(t, 0), { shotIndex: 0, localFrame: 0 });
+  // 38 是镜头 1 的 startFrame：归镜头 1 的第 0 帧，不属镜头 0
+  assert.deepEqual(mapGlobalFrame(t, 38), { shotIndex: 1, localFrame: 0 });
+  assert.deepEqual(mapGlobalFrame(t, 76), { shotIndex: 1, localFrame: 38 });
+  assert.deepEqual(mapGlobalFrame(t, 77), { shotIndex: 2, localFrame: 0 });
+  // 超尾帧钳到 totalFrames-1=114 → 镜头 2 的第 37 帧
+  assert.deepEqual(mapGlobalFrame(t, 200), { shotIndex: 2, localFrame: 37 });
+  assert.deepEqual(mapGlobalFrame(t, -5), { shotIndex: 0, localFrame: 0 });
+});
+
+test("mapGlobalFrame：空 timeline 或非法帧抛错", () => {
+  assert.throws(() => mapGlobalFrame({ shots: [], totalFrames: 0 }, 0), /空/);
+  assert.throws(
+    () => mapGlobalFrame(quantizeTimeline([1000], 24), Number.NaN),
+    /整数/,
+  );
 });
