@@ -1,5 +1,9 @@
 # Current State v2
 
+## 2026-10-18 Video Studio P1 多镜头编排第一刀
+
+`docs/superpowers/plans/2026-10-18-video-studio-p1-multishot.md` 七个任务全部完成（分支 `worktree-video-studio-p1`，自 P0 分支叠起）。多镜头链路：STEM 一句话分镜规划器（`做一个N秒…分M个镜头` 句式 → 3..8 镜头分镜确认卡，开场/要点/模板示意/结语如实预告）→ `applyStoryboard` 只追加演进（追加镜头与内容版本，不动既有 shots）→ 累计边界量化帧图（`@acs/video-document` `quantizeTimeline` + `mapGlobalFrame`，24fps 半进位）→ `@acs/remotion-engine` `TimelineScene` 合成（spans 连续无缝校验，帧归属查找）→ 工作台镜头时间线（时间条 + 镜头卡）与整片预览（`TimelinePreview` 共用 `renderSpecLayer`/`SpecCanvas`）→ CLI 整片单文件双画幅出片（单镜头为 N=1 特例，帧图 frameMap 与逐镜头 RenderRecord 回写）。渲染前逐帧干跑门禁补齐 P2-A 运行时侧：worker 隔离干跑全部 (镜头, 帧)（`frame-dryrun`，单帧预算默认 500ms，同步死循环可击杀，超时/抛错逐帧点名，`--skip-dryrun` 可跳），登记 VID-008。端到端验收 `scripts/video/e2e-multishot.mjs`（VID-009）：水循环 4 镜头 8s 一句话 → 浏览器确认卡 → 追加应用 → 保存 v2 → 导出 → CLI 干跑 192 帧全过 + 横竖整片出片（48×4 帧/画幅，ffprobe 核对）→ RenderRecord ×8 回写 v3 → 浏览器导入同 ID 贯穿，一次通过、控制台零错误；见 `../artifacts/video-studio-multishot/E2E_MULTISHOT.md`。单镜头输出不变性：P0 冒烟项目 N=1 经 Timeline 合成重渲染，抽样帧解码像素 PIXEL-IDENTICAL。媒体仍不入库，视觉结论为本机复核（SHA-256 见证据 md）。
+
 ## 2026-10-17 Video Studio P0 代码评审整改（P1-A~E、P2-A~C、P3）
 
 外部代码评审（`docs/VIDEO_STUDIO_P0_CODE_REVIEW_2026-10-17.md`）指出的问题已逐项整改，一条一提交，全部 TDD（先看失败再实现）。P1-A：工作台原生「导出/导入项目 JSON」，浏览器→CLI→浏览器闭环由 `scripts/video/e2e-closed-loop.mjs` 脚本化走通（同项目 ID 贯穿、v2→v3 快进接受、落后/分叉/篡改拒绝，登记 VID-006）；顺带修掉 SvgTree 把 kebab-case SVG 属性直传 React 的控制台错误。P1-B：IndexedDB 快照库 + 只追加演进校验。P1-C：乐观并发单事务原子化。P1-D：确定性比较改解码像素口径（`frame-compare`）。P1-E：确认卡 `renderHint` 如实预告画面内容。P2-A：组件源码静态门禁（禁墙钟/未播种随机/网络/存储，扫描器自检证明能抓）+ 渲染输出 2000 节点预算（两座渲染桥每帧执行）；逐帧墙钟超时明确延期到渲染 CLI worker 隔离（当前边界：仅内置注册组件，无用户代码执行路径）。P2-B/P2-C：确认应用区分首镜头与另存新项目、跨镜头 shotId/versionId/order 唯一。P3：`reactSvgAttrs` 归一到 `@acs/video-scene`，web 预览与 remotion 合成两桥共用，重构前后 MP4 哈希逐字节一致。审片记录已按四象限（实现/回归/链路/视觉）重标并更正原「闭环」措辞（原始轮次导出/回写系 DevTools 辅助，非用户链路），媒体不入库的视觉结论标注为本机复核；见 `../artifacts/video-p0-sample-2026-10-17/REVIEW.md` §9 与 `../artifacts/video-studio-e2e/E2E_CLOSED_LOOP.md`。

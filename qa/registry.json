@@ -1209,6 +1209,19 @@
         "Render output budget: assertNodeBudget rejects SvgNode trees beyond MAX_RENDER_NODES (2000) with SceneResourceError naming counts, enforced per frame by both render bridges (remotion composition and workbench preview) per ADR 0003 §2.4",
         "React SVG attribute adaptation (reactSvgAttrs) is shared by both bridges from one package so kebab-case SvgNode attrs cannot drift between preview and render"
       ]
+    },
+    {
+      "id": "VID-008",
+      "tier": "smoke",
+      "title": "Per-frame dry-run gate with worker isolation and frame budget",
+      "cwd": ".",
+      "argv": ["node", "--test", "scripts/video/frame-dryrun.test.mjs"],
+      "checks": [
+        "dryRunJobs runs every (shot, frame) render inside a worker thread so a synchronous infinite loop cannot wedge the CLI; the hanging fixture is terminated within the per-frame budget (default 500ms, the runtime side of ADR 0003 §2.4 resource limits)",
+        "Timeout and thrown-render failures name the shot label and frame index, and the batch continues past per-frame errors instead of aborting silently",
+        "The dry-run adapter (spec-frame-renderer) reuses the same registry validation, seeded random and node-budget assertion as the real render path",
+        "render-scene.mjs runs the dry-run gate over every frame before any Remotion invocation unless --skip-dryrun is passed"
+      ]
     }
   ],
   "manual": [
@@ -1928,6 +1941,23 @@
         "Import lands on v3 with two render records visible (1280x720 and 720x1280) while the local v2 snapshot is kept",
         "Stale, diverged and fast-forward-tampered imports are rejected with a conflict or mutation error",
         "Browser console stays free of errors during the whole loop"
+      ]
+    },
+    {
+      "id": "VID-009",
+      "title": "Video Studio multi-shot storyboard closed loop",
+      "fixture": "Dev server on :3210 plus Playwright Chromium; scripted run documented in artifacts/video-studio-multishot/E2E_MULTISHOT.md (rerun: PORT=3210 pnpm --filter @acs/web dev, then node scripts/video/e2e-multishot.mjs)",
+      "steps": [
+        "Create a project in the browser and plan the storyboard sentence 做一个8秒的STEM解说视频，主题是水循环，分4个镜头",
+        "Check the storyboard confirmation card previews all four shots honestly (opening names the title, placeholder point shots, template shape shots, closing)",
+        "Apply the storyboard as appended shots, check the quantized timeline bar (4 spans at 24fps) and the whole-piece preview, then save",
+        "Export the project JSON, render the single-file piece in both aspects via scripts/video/render-scene.mjs (dry-run gate included)",
+        "Back in the browser list view, import the CLI-returned JSON and reopen the editor"
+      ],
+      "passCriteria": [
+        "The same project id and all four content version ids survive browser to CLI to browser without rewrite",
+        "CLI lands on v3 with 8 render records (4 shots x 2 aspects) whose per-record frames match the quantized spans (48+48+48+48 at 8s/24fps)",
+        "Import shows the shot timeline (4 shot cards), both aspect records and the whole-piece preview; browser console stays free of errors"
       ]
     },
     {
