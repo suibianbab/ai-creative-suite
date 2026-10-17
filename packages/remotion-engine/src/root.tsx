@@ -1,7 +1,12 @@
 import { quantizeTimeline } from "@acs/video-document";
 import { Composition } from "remotion";
 import { Form01 } from "./form01";
-import { type SceneSpecProps, SceneSpecScene } from "./scene-spec-composition";
+import {
+  type SceneSpecProps,
+  SceneSpecScene,
+  type TimelineProps,
+  TimelineScene,
+} from "./scene-spec-composition";
 
 export const SCENE_FPS = 24;
 
@@ -10,6 +15,18 @@ const sceneCalculateMetadata = ({ props }: { props: SceneSpecProps }) => ({
   durationInFrames: props.spec
     ? quantizeTimeline([props.spec.durationMs], SCENE_FPS).totalFrames
     : 144,
+});
+
+// 整片时长 = 末镜头 startFrame+frames（CLI 用 quantizeTimeline 产物注入，
+// spans 连续无缝）；Studio 无 props 时给 6s 占位。
+const timelineCalculateMetadata = ({ props }: { props: TimelineProps }) => ({
+  durationInFrames:
+    props.shots && props.shots.length > 0
+      ? (() => {
+          const last = props.shots[props.shots.length - 1]!;
+          return last.startFrame + last.frames;
+        })()
+      : 144,
 });
 
 export const Root = () => (
@@ -49,6 +66,24 @@ export const Root = () => (
       width={720}
       height={1280}
       defaultProps={{ spec: undefined }}
+    />
+    <Composition
+      id="Timeline-Landscape"
+      component={TimelineScene}
+      calculateMetadata={timelineCalculateMetadata}
+      fps={SCENE_FPS}
+      width={1280}
+      height={720}
+      defaultProps={{ shots: undefined }}
+    />
+    <Composition
+      id="Timeline-Portrait"
+      component={TimelineScene}
+      calculateMetadata={timelineCalculateMetadata}
+      fps={SCENE_FPS}
+      width={720}
+      height={1280}
+      defaultProps={{ shots: undefined }}
     />
   </>
 );
