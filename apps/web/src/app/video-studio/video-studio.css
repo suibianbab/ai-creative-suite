@@ -152,3 +152,162 @@
   font-size: 13px;
   color: #497a61;
 }
+
+.planner-field {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.planner-label {
+  font-size: 13px;
+  color: #5d7469;
+}
+
+.planner-row {
+  display: flex;
+  gap: 8px;
+}
+
+.planner-input {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #cadbd1;
+  border-radius: 8px;
+  background: #fff;
+  color: #1b2c29;
+  font-size: 14px;
+}
+
+.planner-run {
+  border: 1px solid #cadbd1;
+  border-radius: 8px;
+  background: #fff;
+  color: #1b2c29;
+  padding: 8px 14px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.planner-run:hover:not(:disabled),
+.planner-run:disabled {
+  opacity: 0.6;
+}
+
+.planner-run:disabled {
+  cursor: not-allowed;
+}
+
+.planner-feedback {
+  border: 1px solid #e4cfc7;
+  border-radius: 10px;
+  background: #faf3ef;
+  padding: 12px 14px;
+  margin-bottom: 20px;
+}
+
+.planner-reason {
+  color: #9c4a2f;
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.planner-guidance {
+  color: #7a5d4f;
+  font-size: 13px;
+}
+
+.plan-card {
+  border: 1px solid #cadbd1;
+  border-radius: 10px;
+  background: #fff;
+  padding: 14px;
+  margin-bottom: 20px;
+}
+
+.plan-summary {
+  font-size: 13px;
+  color: #173f3b;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.plan-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.plan-apply {
+  border: 1px solid #173f3b;
+  border-radius: 8px;
+  background: #173f3b;
+  color: #fff;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.plan-apply:hover {
+  opacity: 0.9;
+}
+
+.plan-discard {
+  border: 1px solid #cadbd1;
+  border-radius: 8px;
+  background: #fff;
+  color: #1b2c29;
+  padding: 8px 16px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.plan-discard:hover {
+  background: #ecf5ee;
+}
+
+.preview-box {
+  display: grid;
+  gap: 10px;
+}
+
+.preview-canvas {
+  width: 100%;
+  height: auto;
+  border: 1px solid #e7efe9;
+  border-radius: 8px;
+  background: #fff;
+  display: block;
+}
+
+.preview-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.preview-toggle {
+  border: 1px solid #cadbd1;
+  border-radius: 8px;
+  background: #fff;
+  color: #1b2c29;
+  padding: 6px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.preview-toggle:hover {
+  background: #ecf5ee;
+}
+
+.preview-slider {
+  flex: 1;
+}
+
+.preview-frame {
+  font-size: 12px;
+  color: #5d7469;
+  white-space: nowrap;
+}

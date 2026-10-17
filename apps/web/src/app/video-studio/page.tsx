@@ -9,10 +9,12 @@ import {
   saveVideoProject,
   type VideoProjectSummary,
 } from "./local-video-projects";
+import { type PlanResult, planFromSentence, specSummary } from "./planner";
+import { ScenePreview } from "./scene-preview";
 import "./video-studio.css";
 
 // 新项目从空镜头开始（validateVideoProject 允许 shots 为空数组）；
-// 第一个镜头由 Task 9 的规划器写入，这里不造占位 spec。
+// 第一个镜头只能由规划器的确认环写入，这里不造占位 spec。
 function createEmptyVideoProject(): VideoProject {
   return {
     schemaVersion: 1,
@@ -26,10 +28,59 @@ function createEmptyVideoProject(): VideoProject {
   };
 }
 
+const COMPONENT_LABEL: Record<string, string> = {
+  "text-animation": "文字",
+  "line-drawing": "线描",
+  "basic-shapes": "图形",
+};
+
+// 确认环落地：按 operations.test.ts 的 baseProject 结构直接构造初始文档
+// （首镜头 = 初始内容版本 + submitted(human) 事件，workingVersionId 指向它；
+// 不用 addCandidateVersion——它作用于已存在的镜头）。
+function projectFromPlan(
+  sentence: string,
+  plan: Extract<PlanResult, { ok: true }>,
+): VideoProject {
+  const now = new Date().toISOString();
+  const versionId = crypto.randomUUID();
+  const label = COMPONENT_LABEL[plan.spec.componentId] ?? plan.spec.componentId;
+  return {
+    schemaVersion: 1,
+    id: crypto.randomUUID(),
+    title: plan.title,
+    brief: { sentence, aspectTargets: ["landscape", "portrait"] },
+    shots: [
+      {
+        shotId: crypto.randomUUID(),
+        order: 0,
+        locked: false,
+        workingVersionId: versionId,
+        contentVersions: [
+          {
+            versionId,
+            createdAt: now,
+            durationMs: plan.spec.durationMs,
+            description: `${label}动画：${plan.title}`,
+            narrationText: "",
+            sceneSource: { type: "spec", spec: plan.spec },
+            provenance: { engineId: "planner-rules", engineVersion: "1" },
+          },
+        ],
+        events: [{ kind: "submitted", versionId, at: now, actor: "human" }],
+      },
+    ],
+    renderRecords: [],
+    deliveries: [],
+    savedVersion: 1,
+  };
+}
+
 type EditorState = {
   document: VideoProject;
   message: string | null;
   busy: boolean;
+  sentence: string;
+  plan: PlanResult | null;
 };
 
 export default function VideoStudioPage() {
@@ -47,7 +98,7 @@ export default function VideoStudioPage() {
   }, [refreshProjects]);
 
   if (editor) {
-    const { document, message, busy } = editor;
+    const { document, message, busy, sentence, plan } = editor;
     return (
       <main className="studio-shell">
         <header className="studio-topbar">
@@ -82,8 +133,78 @@ export default function VideoStudioPage() {
               }
             />
           </label>
+
+          <div className="planner-field">
+            <label className="planner-label" htmlFor="planner-sentence">
+              一句话需求
+            </label>
+            <div className="planner-row">
+              <input
+                id="planner-sentence"
+                className="planner-input"
+                value={sentence}
+                placeholder="做一个12秒的文字动画，标题是云制作，副标题是Video Studio"
+                onChange={(event) =>
+                  setEditor({ ...editor, sentence: event.target.value })
+                }
+              />
+              <button
+                type="button"
+                className="planner-run"
+                disabled={busy || sentence.trim().length === 0}
+                onClick={() =>
+                  setEditor({
+                    ...editor,
+                    plan: planFromSentence(sentence.trim()),
+                    message: null,
+                  })
+                }
+              >
+                规划
+              </button>
+            </div>
+          </div>
+
+          {plan && !plan.ok ? (
+            <div className="planner-feedback">
+              <p className="planner-reason">{plan.reason}</p>
+              <p className="planner-guidance">{plan.guidance}</p>
+            </div>
+          ) : null}
+
+          {plan && plan.ok ? (
+            <div className="plan-card">
+              <p className="plan-summary">{specSummary(plan.spec)}</p>
+              <ScenePreview spec={plan.spec} />
+              <div className="plan-actions">
+                <button
+                  type="button"
+                  className="plan-apply"
+                  onClick={() =>
+                    setEditor({
+                      document: projectFromPlan(sentence.trim(), plan),
+                      message: "已应用规划，确认无误后点「保存」",
+                      busy: false,
+                      sentence: sentence,
+                      plan: null,
+                    })
+                  }
+                >
+                  确认应用
+                </button>
+                <button
+                  type="button"
+                  className="plan-discard"
+                  onClick={() => setEditor({ ...editor, plan: null })}
+                >
+                  放弃
+                </button>
+              </div>
+            </div>
+          ) : null}
+
           <p className="editor-hint">
-            规划器与预览在下一步接入；当前可改标题并保存到本地。
+            规划器只认固定句式，解析失败会把语法原样告诉你；确认应用后生成首个镜头。
           </p>
           <button
             type="button"
@@ -97,6 +218,8 @@ export default function VideoStudioPage() {
                   document: saved,
                   message: `已保存（v${saved.savedVersion}）`,
                   busy: false,
+                  sentence,
+                  plan,
                 });
               } catch (error) {
                 setEditor({
@@ -136,6 +259,8 @@ export default function VideoStudioPage() {
                 document: createEmptyVideoProject(),
                 message: null,
                 busy: false,
+                sentence: "",
+                plan: null,
               })
             }
           >
@@ -170,7 +295,13 @@ export default function VideoStudioPage() {
                           await refreshProjects();
                           return;
                         }
-                        setEditor({ document, message: null, busy: false });
+                        setEditor({
+                          document,
+                          message: null,
+                          busy: false,
+                          sentence: document.brief.sentence,
+                          plan: null,
+                        });
                       }}
                     >
                       打开
