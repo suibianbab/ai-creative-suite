@@ -8,14 +8,15 @@ import {
   validateSceneSpec,
 } from "@acs/video-scene";
 import { createElement, useEffect, useMemo, useRef, useState } from "react";
+import { reactSvgAttrs } from "./react-svg-attrs";
 
 // SvgNode 数据树 → React 元素（自 remotion-engine 同名渲染器复制，web 不依赖
-// remotion-engine；属性原样透传，text 与 children 二选一）。
+// remotion-engine；属性名经 reactSvgAttrs 转 React 驼峰，text 与 children 二选一）。
 export function SvgTree({ node }: { node: SvgNode }) {
   const children =
     node.text ??
     node.children?.map((child, index) => <SvgTree key={index} node={child} />);
-  return createElement(node.tag, node.attrs, children);
+  return createElement(node.tag, reactSvgAttrs(node.attrs), children);
 }
 
 const FPS = 30;
