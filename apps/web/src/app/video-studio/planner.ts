@@ -243,6 +243,9 @@ export function splitShotDurations(totalMs: number, shots: number): number[] {
 
 export type StoryboardShot = {
   label: string;
+  // D2：该镜头的旁白朗读文本——只读画面实际展示/表达的事实（标题/要点序号/
+  // 谢谢观看），不虚构讲解词；合成走 scripts/video/tts-narration.mjs。
+  narrationText: string;
   plan: PlanResult & { ok: true };
 };
 
@@ -294,6 +297,7 @@ export function planStoryboard(sentence: string): StoryboardResult {
     let label: string;
     let params: unknown;
     let renderHint: string;
+    let narrationText: string;
     if (index === 0) {
       label = "开场";
       params = {
@@ -304,6 +308,7 @@ export function planStoryboard(sentence: string): StoryboardResult {
         enterMs: DEFAULT_ENTER_MS,
       };
       renderHint = `开场镜头：标题「${title}」进入画面`;
+      narrationText = `${title}。`;
     } else if (!isMiddle) {
       label = "结语";
       params = {
@@ -315,11 +320,14 @@ export function planStoryboard(sentence: string): StoryboardResult {
         enterMs: DEFAULT_ENTER_MS,
       };
       renderHint = `结语镜头：标题「${title}」与副标题「谢谢观看」进入画面`;
+      narrationText = "谢谢观看。";
     } else if (useShapes) {
       shapeIndex += 1;
       label = `示意 ${shapeIndex}`;
       params = basicShapesParams(seed);
       renderHint = `示意镜头：从固定模板库按镜头 seed 抽取模板「${SHAPE_TEMPLATE_LABELS[seed % SHAPE_TEMPLATE_LABELS.length]}」依次入场，不含讲解文字`;
+      // 画面无文字：旁白只读主题这个不争事实
+      narrationText = `${title}。`;
     } else {
       pointIndex += 1;
       label = `要点 ${pointIndex}`;
@@ -332,6 +340,7 @@ export function planStoryboard(sentence: string): StoryboardResult {
         enterMs: DEFAULT_ENTER_MS,
       };
       renderHint = `要点镜头：标题「${title}」与占位副标题「要点 ${pointIndex}」进入画面`;
+      narrationText = `${title}，要点 ${pointIndex}。`;
     }
     const spec: SceneSpec = {
       specVersion: 1,
@@ -343,7 +352,11 @@ export function planStoryboard(sentence: string): StoryboardResult {
       params,
     };
     validateSceneSpec(spec, defaultRegistry); // 兜底：构造结果必须过注册表校验
-    return { label, plan: { ok: true, spec, title, renderHint } };
+    return {
+      label,
+      narrationText,
+      plan: { ok: true, spec, title, renderHint },
+    };
   });
 
   return { ok: true, title, totalMs, shots };

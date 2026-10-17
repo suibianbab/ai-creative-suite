@@ -128,6 +128,31 @@ test("空项目应用分镜：追加 4 镜头、order 0..3、事件 submitted、
   assert.match(result.notice, /追加 4 个镜头/);
 });
 
+// D2 Task1：分镜旁白文本落入 ContentVersion.narrationText（TTS 合成输入）
+test("应用分镜：narrationText 逐镜头落入内容版本，与分镜结果一致", () => {
+  const result = applyStoryboard(
+    emptyProject(),
+    STORYBOARD_SENTENCE,
+    storyboard,
+    {
+      shot: uuidFactory("cccccccc", 100),
+      version: uuidFactory("dddddddd", 100),
+    },
+  );
+  assert.ok(storyboard.ok);
+  result.document.shots.forEach((shot, index) => {
+    assert.equal(
+      shot.contentVersions[0]!.narrationText,
+      storyboard.shots[index]!.narrationText,
+      `镜头 ${index + 1} 旁白未落档`,
+    );
+  });
+  assert.equal(
+    result.document.shots[0]!.contentVersions[0]!.narrationText,
+    "勾股定理。",
+  );
+});
+
 test("已有镜头项目应用分镜：旧镜头逐字段不变，只追加演进通过", () => {
   const withShot = applyPlan(
     emptyProject(),

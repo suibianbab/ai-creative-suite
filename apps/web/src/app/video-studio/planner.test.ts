@@ -140,6 +140,24 @@ test("分镜：内容预告如实——开场点名标题、要点点名占位�
   assert.match(sb.shots[3]!.plan.renderHint, /谢谢观看/);
 });
 
+// D2 Task1：旁白文本 = 该镜头画面实际展示/表达的事实，不虚构讲解词。
+test("分镜：narrationText 如实——开场读标题、要点读标题+要点、示意读主题、结语读谢谢观看", () => {
+  const sb = planStoryboard("做一个30秒的STEM解说视频，主题是水循环");
+  assert.ok(sb.ok);
+  assert.equal(sb.shots[0]!.narrationText, "水循环。");
+  assert.equal(sb.shots[1]!.narrationText, "水循环，要点 1。");
+  // 示意镜头画面无文字：旁白只读主题这个不争事实
+  assert.equal(sb.shots[2]!.narrationText, "水循环。");
+  assert.equal(sb.shots[3]!.narrationText, "谢谢观看。");
+  for (const shot of sb.shots) {
+    assert.ok(shot.narrationText.length > 0, "每镜头旁白非空");
+    assert.ok(
+      shot.narrationText.length <= 2000,
+      "旁白不超 ContentVersion 上限",
+    );
+  }
+});
+
 test("分镜：默认 4 镜头；「分3/8个镜头」生效且交替构成正确", () => {
   const d = planStoryboard("做一个12秒的STEM解说视频，主题是光的折射");
   assert.ok(d.ok);

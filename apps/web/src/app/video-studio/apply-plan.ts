@@ -144,7 +144,7 @@ export function applyStoryboard(
           createdAt: now,
           durationMs: shot.plan.spec.durationMs,
           description: `${shot.label}（${label}动画）：${shot.plan.title}`,
-          narrationText: "",
+          narrationText: shot.narrationText,
           sceneSource: { type: "spec" as const, spec: shot.plan.spec },
           provenance: { engineId: "planner-rules", engineVersion: "1" },
         },
