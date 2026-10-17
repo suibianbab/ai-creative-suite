@@ -18,6 +18,7 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
 import { browserLabel } from "./env-info.mjs";
+import { decodeFrameHash } from "./frame-compare.mjs";
 
 const ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -134,7 +135,7 @@ console.log(
 renderOnce(path.join(OUT_BASE, "run-a"), path.join(OUT_BASE, "run-a.log"));
 renderOnce(path.join(OUT_BASE, "run-b"), path.join(OUT_BASE, "run-b.log"));
 
-// 3. 逐帧对比（帧数 + sha256）
+// 3. 逐帧对比（帧数 + 解码像素哈希，ADR §2.5：不比容器字节）
 const framesA = frameFiles(path.join(OUT_BASE, "run-a"));
 const framesB = frameFiles(path.join(OUT_BASE, "run-b"));
 if (framesA.length !== totalFrames || framesB.length !== totalFrames)
@@ -145,8 +146,8 @@ if (framesA.length !== framesB.length)
   fail(`两次渲染帧数不同: ${framesA.length} vs ${framesB.length}`);
 
 for (const [index, name] of framesA.entries()) {
-  const hashA = sha256(readFileSync(path.join(OUT_BASE, "run-a", name)));
-  const hashB = sha256(readFileSync(path.join(OUT_BASE, "run-b", name)));
+  const hashA = decodeFrameHash(path.join(OUT_BASE, "run-a", name));
+  const hashB = decodeFrameHash(path.join(OUT_BASE, "run-b", name));
   if (hashA !== hashB)
     fail(`帧 ${index}(${name}) 不一致: ${hashA} vs ${hashB}`);
 }
@@ -167,7 +168,11 @@ const manifest = {
   frames: totalFrames,
 };
 console.log(
-  `[verify-determinism] OK: ${framesA.length}/${framesA.length} 帧逐帧一致`,
+  `[verify-determinism] OK: ${framesA.length}/${framesA.length} 帧解码像素逐帧一致`,
+);
+console.log(
+  `[verify-determinism] 覆盖范围说明: 本抽查仅 ${ASPECT} 夹具（${totalFrames} 帧）；` +
+    `横竖双画幅 MP4 的尺寸/帧数由 render-scene 出片核对另行覆盖`,
 );
 console.log(
   `[verify-determinism] 输入集 manifest: ${JSON.stringify(manifest, null, 2)}`,

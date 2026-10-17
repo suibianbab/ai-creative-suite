@@ -1184,6 +1184,18 @@
         "Missing paths and empty paths (Remotion bundled headless shell) return explicit unavailable markers",
         "On Windows the version comes from the executable file version resource without launching the browser process"
       ]
+    },
+    {
+      "id": "VID-005",
+      "tier": "smoke",
+      "title": "Determinism check compares decoded pixels, not PNG container bytes",
+      "cwd": ".",
+      "argv": ["node", "--test", "scripts/video/frame-compare.test.mjs"],
+      "checks": [
+        "Same pixels with different PNG metadata (inserted tEXt chunk) hash equal under decodeFrameHash while container-byte hashes differ",
+        "Different pixels at the same dimensions hash different",
+        "Decode failures surface a readable error naming the frame path"
+      ]
     }
   ],
   "manual": [
