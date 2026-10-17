@@ -36,6 +36,11 @@ export type SceneRegistry = {
   version: number;
 };
 
+// 组件定义助手：标注类型 + 预留后续（如冻结、字段检查）的钩子位置。
+export function defineComponent(component: SceneComponent): SceneComponent {
+  return component;
+}
+
 // 版本化注册表（ADR 0003 §2.1–2.2）：新视觉能力 = 新组件 + 版本号，规划器只能对着它出 spec。
 export function createRegistry(
   components: SceneComponent[],
