@@ -111,6 +111,25 @@ export function buildNarrationJobs(project) {
   return jobs;
 }
 
+// 计费台账解析（终评 Important#3）：jsonl 文本 → 逐行对象数组。
+// 坏行（崩溃残留的半行）必须 throw 点名行号——静默吞掉会让预算闸读到偏小的
+// 累计值，放行已超 ¥50 上限的调用。文件不存在 ≠ 坏行：不存在由调用方按
+// 「首次调用从 0 起」处理。
+export function parseUsageLedger(text) {
+  const entries = [];
+  for (const [index, line] of text.split("\n").entries()) {
+    if (!line.trim()) continue;
+    try {
+      entries.push(JSON.parse(line));
+    } catch {
+      throw new Error(
+        `计费台账第 ${index + 1} 行损坏（疑似崩溃残留半行）: ${line.slice(0, 60)}`,
+      );
+    }
+  }
+  return entries;
+}
+
 // 旁白装配（Task4，render-scene 消费）：项目 + 资产目录 + 量化帧图 → 逐镜头
 // 音轨 entries。纪律：
 //  - 镜头 narrationText 为空 → 不装配（旁白以落档文本为准，目录里有没有 wav 不看）；

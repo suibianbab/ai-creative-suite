@@ -19,6 +19,7 @@ import {
   buildNarrationJobs,
   estimateTtsCostCny,
   parseTtsSse,
+  parseUsageLedger,
 } from "./tts-sse.mjs";
 
 const ROOT = path.resolve(
@@ -36,16 +37,17 @@ function fail(message) {
 }
 
 function ledgerTotalCny() {
-  let total = 0;
+  let text;
   try {
-    for (const line of readFileSync(USAGE_LEDGER, "utf8").split("\n")) {
-      if (!line.trim()) continue;
-      total += JSON.parse(line).costCny ?? 0;
-    }
+    text = readFileSync(USAGE_LEDGER, "utf8");
   } catch {
-    /* 台账不存在 = 首次调用，从 0 起 */
+    return 0; /* 台账不存在 = 首次调用，从 0 起 */
   }
-  return total;
+  // 坏行（崩溃残留半行）会 throw 点名行号——预算闸宁可停也不读偏小值放行超支
+  return parseUsageLedger(text).reduce(
+    (total, entry) => total + (entry.costCny ?? 0),
+    0,
+  );
 }
 
 function appendUsage(entry) {

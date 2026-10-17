@@ -12,6 +12,7 @@ import {
   buildNarrationJobs,
   estimateTtsCostCny,
   parseTtsSse,
+  parseUsageLedger,
 } from "./tts-sse.mjs";
 
 // 两个合成 chunk + 一句 begin/end：镜像真实流的字段结构（字节量缩小）。
@@ -181,4 +182,27 @@ test("buildNarrationJobs：无镜头项目 throw；>2000 字符 throw 点名镜�
   // 2000 恰好合法（ContentVersion 上限）
   const ok = buildNarrationJobs(project([shot("s8", "v8", "水".repeat(2000))]));
   assert.equal(ok.length, 1);
+});
+
+// 终评 Important#3：台账半行（崩溃残留）不能被静默吞掉——那会让 ¥50 预算闸
+// 读到偏小的累计值而放行超支。坏行必须点名报错，由 CLI fail-fast。
+test("parseUsageLedger：合法逐行求和；坏行 throw 点名行号，不静默截断", () => {
+  const good = [
+    '{"at":"t1","costCny":0.0034}',
+    "",
+    '{"at":"t2","costCny":0.0009}',
+  ].join("\n");
+  const entries = parseUsageLedger(good);
+  assert.equal(entries.length, 2, "空行跳过");
+  assert.ok(Math.abs(entries[1].costCny - 0.0009) < 1e-12);
+  const corrupt = [
+    '{"at":"t1","costCny":0.0034}',
+    '{"at":"t2","costCny":0.00', // 崩溃残留半行
+    '{"at":"t3","costCny":0.0009}',
+  ].join("\n");
+  assert.throws(
+    () => parseUsageLedger(corrupt),
+    /第 2 行/,
+    "坏行必须点名行号（其后条目不得被静默丢弃）",
+  );
 });

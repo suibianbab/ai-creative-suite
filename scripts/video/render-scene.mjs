@@ -170,6 +170,8 @@ if (values.narration) {
       `[render-scene] 旁白音轨 ${narrationEntries.length}/${timeline.shots.length} 镜头`,
     );
   }
+  // 终评 Important#1：0 条旁白（目录空/资产全缺/narrationText 全空）不 spawn
+  // 服务——空 --files 会让子进程用法错误退出，把「缺资产=提示不阻断」变成渲染中止。
   // 探针裁决（Task4 Step3）：Remotion CLI 渲染的 <Audio src> 只认 http(s)——
   //   绝对路径（file:///）→「Can only download URLs starting with http://」；
   //   data URI → 静默无声（资产未进下载队列，最危险的失败模式）；
@@ -177,42 +179,56 @@ if (values.narration) {
   // 解法：独立进程 narration-server.mjs 托管旁白 wav（白名单 + CORS，127.0.0.1
   // 随机端口）。不能同进程起服务——渲染 spawnSync 会冻住事件循环（探针实测：
   // TCP 建连但请求永不响应）。props 注入 http URL，失败会响（下载报错）。
-  const names = narrationEntries.map((entry) =>
-    encodeURIComponent(path.basename(entry.audioSrc)),
-  );
-  narrationServer = spawn(
-    process.execPath,
-    [
-      path.join(ROOT, "scripts/video/narration-server.mjs"),
-      "--dir",
-      path.resolve(values.narration),
-      "--files",
-      names.map(decodeURIComponent).join(","),
-    ],
-    { stdio: ["ignore", "pipe", "pipe"] },
-  );
-  let serverOutput = "";
-  narrationServer.stdout.on("data", (chunk) => {
-    serverOutput += chunk;
-  });
-  const serverDead = new Promise((_, reject) => {
-    narrationServer.on("exit", () =>
-      reject(new Error(`narration-server 提前退出: ${serverOutput}`)),
+  if (narrationEntries.length > 0) {
+    const names = narrationEntries.map((entry) =>
+      encodeURIComponent(path.basename(entry.audioSrc)),
     );
-  });
-  const portLine = new Promise((resolve, reject) => {
-    narrationServer.stdout.on("data", function onChunk(chunk) {
-      const match = /"port":(\d+)/.exec(`${chunk}`);
-      if (match) {
-        narrationServer.stdout.off("data", onChunk);
-        resolve(Number(match[1]));
-      }
+    narrationServer = spawn(
+      process.execPath,
+      [
+        path.join(ROOT, "scripts/video/narration-server.mjs"),
+        "--dir",
+        path.resolve(values.narration),
+        "--files",
+        names.map(decodeURIComponent).join(","),
+      ],
+      { stdio: ["ignore", "pipe", "pipe"] },
+    );
+    // 终评 Important#2：fail() 走 process.exit(1)，若不在退出钩子里收尾，
+    // 服务进程会带着 ACAO:* 的监听孤儿化（重复失败渲染会累积）。exit 钩子
+    // 覆盖所有退出路径（fail/正常/未捕获异常），kill 幂等。
+    process.on("exit", () => narrationServer?.kill());
+    let serverOutput = "";
+    narrationServer.stdout.on("data", (chunk) => {
+      serverOutput += chunk;
     });
-    setTimeout(() => reject(new Error("narration-server 端口上报超时")), 10000);
-  });
-  const port = await Promise.race([portLine, serverDead]);
-  for (const [index, entry] of narrationEntries.entries()) {
-    entry.propsSrc = `http://127.0.0.1:${port}/${names[index]}`;
+    const serverDead = new Promise((_, reject) => {
+      narrationServer.on("exit", () =>
+        reject(new Error(`narration-server 提前退出: ${serverOutput}`)),
+      );
+    });
+    let portTimer;
+    const portLine = new Promise((resolve, reject) => {
+      narrationServer.stdout.on("data", function onChunk(chunk) {
+        const match = /"port":(\d+)/.exec(`${chunk}`);
+        if (match) {
+          narrationServer.stdout.off("data", onChunk);
+          resolve(Number(match[1]));
+        }
+      });
+      portTimer = setTimeout(
+        () => reject(new Error("narration-server 端口上报超时")),
+        10000,
+      );
+    });
+    // 端口已定（或已败）就清掉 10s 定时器——否则它是进程退出前最后一只
+    // 持有事件循环的句柄，快跑完的运行也会多挂最多 10 秒
+    const port = await Promise.race([portLine, serverDead]).finally(() =>
+      clearTimeout(portTimer),
+    );
+    for (const [index, entry] of narrationEntries.entries()) {
+      entry.propsSrc = `http://127.0.0.1:${port}/${names[index]}`;
+    }
   }
 }
 const fontDigests = {
@@ -255,7 +271,7 @@ const manifest = {
   aspects: {},
 };
 // Timeline props：量化帧图 + 逐镜头 spec（TimelineScene 要求 spans 连续无缝）。
-// 旁白（若有）：audioSrc 用 data URI（探针实测绝对路径被 Remotion 拒收，见装配块注释）。
+// 旁白（若有）：audioSrc 用装配块注入的 http://127.0.0.1:<port>/ URL（见上方探针裁决）。
 const narrationByShot = new Map(
   narrationEntries.map((entry) => [entry.shotIndex, entry]),
 );
