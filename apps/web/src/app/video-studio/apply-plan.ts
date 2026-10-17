@@ -1,5 +1,6 @@
 import type { VideoProject } from "@acs/video-document";
 import type { SceneSpec } from "@acs/video-scene";
+import type { StoryboardResult } from "./planner.js";
 
 // P2-B：确认应用不得静默更换项目身份。两种模式：
 //  - first-shot：编辑中的项目还没有镜头 → 在当前文档上落首个镜头（id 不变）；
@@ -105,5 +106,67 @@ export function applyPlan(
       plan,
       ids,
     ),
+  };
+}
+
+// —— P1 applyStoryboard：分镜应用 = 在当前项目上「只追加」N 个镜头 ——
+//
+// 与 P2-B 单镜头的 save-as-new 不同：分镜是对整片的编排，语义就是往当前
+// 项目追加镜头（evolve.ts 允许 shots 增长）。已有镜头逐字段不动，
+// order 接续现有最大 +1；每镜头落初始内容版本 + submitted(human) 事件。
+export type StoryboardApplyResult = {
+  mode: "storyboard-append";
+  notice: string;
+  document: VideoProject;
+};
+
+export function applyStoryboard(
+  document: VideoProject,
+  sentence: string,
+  storyboard: StoryboardResult & { ok: true },
+  ids: { shot: () => string; version: () => string },
+): StoryboardApplyResult {
+  const now = new Date().toISOString();
+  const nextOrder =
+    document.shots.reduce((max, shot) => Math.max(max, shot.order), -1) + 1;
+  const newShots = storyboard.shots.map((shot, index) => {
+    const versionId = ids.version();
+    const label =
+      COMPONENT_LABEL[shot.plan.spec.componentId] ?? shot.plan.spec.componentId;
+    return {
+      shotId: ids.shot(),
+      order: nextOrder + index,
+      locked: false,
+      workingVersionId: versionId,
+      contentVersions: [
+        {
+          versionId,
+          createdAt: now,
+          durationMs: shot.plan.spec.durationMs,
+          description: `${shot.label}（${label}动画）：${shot.plan.title}`,
+          narrationText: "",
+          sceneSource: { type: "spec" as const, spec: shot.plan.spec },
+          provenance: { engineId: "planner-rules", engineVersion: "1" },
+        },
+      ],
+      events: [
+        {
+          kind: "submitted" as const,
+          versionId,
+          at: now,
+          actor: "human" as const,
+        },
+      ],
+    };
+  });
+  return {
+    mode: "storyboard-append",
+    notice: `已应用分镜（追加 ${newShots.length} 个镜头）到当前项目，确认无误后点「保存」`,
+    document: {
+      ...document,
+      title: document.shots.length === 0 ? storyboard.title : document.title,
+      brief: { ...document.brief, sentence },
+      shots: [...document.shots, ...newShots],
+    },
   };
 }
