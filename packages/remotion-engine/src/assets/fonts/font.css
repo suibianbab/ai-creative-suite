@@ -1,0 +1,10 @@
+/* 自托管 Noto Sans SC Regular（OFL，见同目录 OFL.txt）。
+   Google Fonts 静态 CDN 的单文件全量字体只有 woff 容器（woff2 仅按 unicode-range 切 102 片），
+   取 woff 单文件：指纹入 render-manifest，渲染确定性由字节级 digest 保障。 */
+@font-face {
+  font-family: "NotoSansSC";
+  src: url("./NotoSansSC-Regular.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}

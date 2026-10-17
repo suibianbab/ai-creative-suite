@@ -112,6 +112,12 @@ importers:
 
   packages/remotion-engine:
     dependencies:
+      '@acs/video-document':
+        specifier: workspace:*
+        version: link:../video-document
+      '@acs/video-scene':
+        specifier: workspace:*
+        version: link:../video-scene
       '@remotion/media':
         specifier: 4.0.534
         version: 4.0.534(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
