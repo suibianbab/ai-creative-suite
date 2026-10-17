@@ -340,7 +340,7 @@ const report = {
       "运行时云解析 + judge round-trip：不在本脚本范围，由 scripts/photocraft/cloud-roundtrip.mjs 单独接真实模型覆盖（model 通道在本脚本仍以评测集预置计划直送引擎，不重复计费）",
       "跨题材（房子/花/家具等非商品域）真图 grounding：不在本脚本范围，引擎矩阵固定使用帽子图与文字样式样张；qa/fixtures/photocraft-grounding/ 标注集由 IMG-053 grounding-eval.mjs（live-grounding tier）专项评测",
       "滑杆预览 vs 保存重开 vs 导出文件的逐像素一致性（补充C）：不在本脚本范围，由 IMG-050 preview-consistency.mjs 专项覆盖（亮度矩阵内已实测逐字节一致）",
-      "方案 §7 指标（主体级自动率 / 一次确认率 / 越界拦截率）：未测量",
+      "方案 §7 指标（主体级自动率 / 一次确认率 / 越界拦截率）：由 IMG-061 section7-metrics.mjs 从各专项报告装配（含本脚本 212 条），此处不重复测量",
     ],
   },
   failures,

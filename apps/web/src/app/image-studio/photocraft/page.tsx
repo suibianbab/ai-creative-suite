@@ -69,7 +69,10 @@ import {
   savePhotoCraftProject,
 } from "./local-projects";
 import {
+  canOfferExcludeRefine,
   classifyTargetPhrase,
+  EXCLUDE_POINT_LIMIT,
+  normalizeExcludePoint,
   normalizePromptBox,
   parseStatusMessage,
   shouldOfferSelectionEntry,
@@ -393,6 +396,9 @@ export default function PhotoCraftStudio() {
     phrase: string;
     // D 项入口：本环是否按用户画框限定重圈（归一化框，展示与重置用）。
     promptBox: [number, number, number, number] | null;
+    // 剔除点（蒙版代数交互）：本次圈选附带的归一化负点（候选 − 误选区域，
+    // 服务端转 SAM label 0 背景点）。仅与 promptBox 同现；环关闭时清空。
+    excludePoints: Array<[number, number]>;
     // C 项：服务返回图尺寸（mask_png_b64 的像素空间，bounds/outline 同空间，
     // 坐标按 sampleSize/服务尺寸换算——与候选坐标同一次换算）。
     serviceWidth: number;
@@ -420,6 +426,13 @@ export default function PhotoCraftStudio() {
   const [awaitTargetBox, setAwaitTargetBox] = useState<{
     phrase: string;
   } | null>(null);
+  // 剔除点采集态（蒙版代数交互）：非空（true）时图片点击 = 添加归一化剔除点
+  // （≤EXCLUDE_POINT_LIMIT 个），配合「按剔除点重圈」重新请求候选。仅画框
+  // 限定后的目标环提供；PhotoCraft 蒙版笔刷仍是逐像素剔除的精细工具。
+  const [awaitExcludeClick, setAwaitExcludeClick] = useState(false);
+  const [excludePoints, setExcludePoints] = useState<Array<[number, number]>>(
+    [],
+  );
   // C 项：已上传候选蒙版的 id（POST /v1/selection-mask 返回）。仅目标模式确认
   // 候选时置位；蒙版不可用或切换选区来源时清空，executeInstructionStep 只在
   // selectionMethod==="mask" 且 id 在场时带蒙版头（outline 恒为套索兜底数据）。
@@ -1633,6 +1646,8 @@ export default function PhotoCraftStudio() {
       setPartCandidates(null);
       setAwaitTargetBox(null);
       setColorChoice(false);
+      setAwaitExcludeClick(false);
+      setExcludePoints([]);
       const directSequence = planPhotoCraftSequence(text);
       const direct = directSequence?.[0] ?? planPhotoCraftInstruction(text);
       let nextSteps = directSequence ?? (direct ? [direct] : []);
@@ -2073,11 +2088,17 @@ export default function PhotoCraftStudio() {
   async function findPartCandidates(
     mode: "target" | "protect",
     promptBox?: [number, number, number, number] | null,
+    refineExcludePoints?: Array<[number, number]> | null,
   ) {
     const gap = mode === "target" ? targetGap : protectGap;
     if (!gap) return;
     // 画框限定只对目标环有意义（方位/多实例消歧）；protect 环无视。
     const box = mode === "target" ? (promptBox ?? null) : null;
+    // 剔除点仅与画框同现（服务 422 约束在前，客户端同样不构造矛盾请求）。
+    const exclude =
+      mode === "target" && box && refineExcludePoints?.length
+        ? refineExcludePoints.slice(0, EXCLUDE_POINT_LIMIT)
+        : null;
     const source = activeSource.current ?? file;
     if (!source) {
       setMessage("请先导入图片或打开项目");
@@ -2109,6 +2130,11 @@ export default function PhotoCraftStudio() {
           // D 项入口：画框限定走归一化坐标头（EXIF 两侧已归一），桥透传、
           // 服务切 box 提示模式——同模型同契约，不引入新模型。
           ...(box ? { "x-acs-prompt-box": JSON.stringify(box) } : {}),
+          // 剔除点：框内候选误选的区域（花蕊/猫脸…）→ SAM 负点重圈，
+          // 蒙版代数「候选 − 误选」的服务端形态。
+          ...(exclude
+            ? { "x-acs-exclude-points": JSON.stringify(exclude) }
+            : {}),
         },
         body: upload,
       });
@@ -2192,6 +2218,7 @@ export default function PhotoCraftStudio() {
         mode,
         phrase: gap.phrase,
         promptBox: box,
+        excludePoints: exclude ?? [],
         serviceWidth: width,
         serviceHeight: height,
         candidates,
@@ -2239,6 +2266,10 @@ export default function PhotoCraftStudio() {
         }
         setMessage(
           `${box ? "已按你画的框限定范围重新圈选。" : ""}${
+            exclude
+              ? `已避开你点选的 ${exclude.length} 处剔除区域重新圈选（候选不再覆盖这些位置；框仍是硬边界）。`
+              : ""
+          }${
             mode === "target" ? "目标" : "保护范围"
           }「${gap.phrase}」找到 ${candidates.length} 个候选，已编号叠在图片上（${candidates.length === 1 ? "只有一个候选，分数不能判断选区是否准确" : `最高匹配分数 ${Math.round(top.score * 100)}%，分数只是本批候选的相对排名，非正确率`}）。${disambiguationHint}点编号框、下方按钮，或直接说「第几个」确认。`,
         );
@@ -2282,6 +2313,8 @@ export default function PhotoCraftStudio() {
     const landed = landRewrittenSelectionPlan(gap.phrase, () => {
       setTargetGap(null);
       setPartCandidates(null);
+      setAwaitExcludeClick(false);
+      setExcludePoints([]);
       setSelectionMethod("existing");
       setSelectionMode("scope");
       setPoints([]);
@@ -3681,6 +3714,8 @@ export default function PhotoCraftStudio() {
                 setTargetGap(null);
                 setProtectGap(null);
                 setPartCandidates(null);
+                setAwaitExcludeClick(false);
+                setExcludePoints([]);
               }
               void closeLiveTuning(true);
               setMessage("");
@@ -3904,6 +3939,7 @@ export default function PhotoCraftStudio() {
                         disabled={candidateBusy}
                         onClick={() => {
                           setAwaitTargetBox({ phrase: partCandidates.phrase });
+                          setAwaitExcludeClick(false);
                           setMessage(
                             "请在图片上按住拖动画一个框住目标的框，松开后只按框内范围重新圈选候选。",
                           );
@@ -3912,12 +3948,75 @@ export default function PhotoCraftStudio() {
                         点击/画框限定重新圈选
                       </button>
                     )}
+                    {canOfferExcludeRefine({
+                      mode: partCandidates.mode,
+                      hasPromptBox: Boolean(partCandidates.promptBox),
+                      chosen: partCandidates.chosen !== null,
+                      candidateCount: partCandidates.candidates.length,
+                    }) && (
+                      <>
+                        {!awaitExcludeClick && excludePoints.length === 0 && (
+                          <button
+                            type="button"
+                            disabled={candidateBusy}
+                            onClick={() => {
+                              setAwaitExcludeClick(true);
+                              setMessage(
+                                "候选带进了不该选的区域（如花瓣环带进花蕊）？直接在图上点击误选位置（最多 4 处），点完用「按剔除点重圈」重新圈选；PhotoCraft 蒙版笔刷仍可逐像素精修。",
+                              );
+                            }}
+                          >
+                            点选剔除误选区域
+                          </button>
+                        )}
+                        {excludePoints.length > 0 && (
+                          <>
+                            {!awaitExcludeClick && (
+                              <button
+                                type="button"
+                                disabled={candidateBusy}
+                                onClick={() => setAwaitExcludeClick(true)}
+                              >
+                                继续点选剔除
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              disabled={candidateBusy || awaitExcludeClick}
+                              onClick={() => {
+                                setAwaitExcludeClick(false);
+                                void findPartCandidates(
+                                  "target",
+                                  partCandidates.promptBox,
+                                  excludePoints,
+                                );
+                              }}
+                            >
+                              按剔除点重圈（{excludePoints.length} 点）
+                            </button>
+                            <button
+                              type="button"
+                              disabled={candidateBusy}
+                              onClick={() => {
+                                setExcludePoints([]);
+                                setAwaitExcludeClick(false);
+                                setMessage("已清除剔除点。");
+                              }}
+                            >
+                              清除剔除点
+                            </button>
+                          </>
+                        )}
+                      </>
+                    )}
                     <button
                       type="button"
                       disabled={candidateBusy}
                       onClick={() => {
                         setPartCandidates(null);
                         setAwaitTargetBox(null);
+                        setAwaitExcludeClick(false);
+                        setExcludePoints([]);
                         setMessage(
                           partCandidates.mode === "target"
                             ? "请直接在图片上画框或套索指定范围。"
@@ -4701,7 +4800,36 @@ export default function PhotoCraftStudio() {
                           return;
                         }
                         setAwaitTargetBox(null);
+                        // 画新框意味着上一轮剔除点失效（点位语义随旧框作废）。
+                        setExcludePoints([]);
                         void findPartCandidates("target", box);
+                        return;
+                      }
+                      // 剔除点采集（蒙版代数交互）：等待态下点击 = 记一个
+                      // 归一化负点（不拖画），满 4 个自动停止采集。
+                      if (awaitExcludeClick) {
+                        const normalized = normalizeExcludePoint(
+                          end,
+                          sampleSize,
+                        );
+                        if (!normalized) return;
+                        if (
+                          excludePoints.some(
+                            (point) =>
+                              Math.abs(point[0] - normalized[0]) < 0.005 &&
+                              Math.abs(point[1] - normalized[1]) < 0.005,
+                          )
+                        ) {
+                          setMessage("这个位置已点过剔除；请点其它误选区域。");
+                          return;
+                        }
+                        const nextPoints = [...excludePoints, normalized];
+                        setExcludePoints(nextPoints);
+                        if (nextPoints.length >= EXCLUDE_POINT_LIMIT)
+                          setAwaitExcludeClick(false);
+                        setMessage(
+                          `已记 ${nextPoints.length}/${EXCLUDE_POINT_LIMIT} 个剔除点（候选误选的区域）。继续点击可加点；点下方「按剔除点重圈」生效，或「清除剔除点」重来。`,
+                        );
                         return;
                       }
                       if (selectionMode === "freehand") {
@@ -4949,12 +5077,17 @@ export default function PhotoCraftStudio() {
                     partCandidates.candidates.map((item, position) => (
                       <div
                         key={`part-${item.index}-${partCandidates.mode}`}
-                        className={`pc-sample-box candidate${partCandidates.chosen === position ? " active" : ""}${maskTool === "off" && !candidateBusy && !awaitTargetBox ? " interactive" : ""}`}
+                        className={`pc-sample-box candidate${partCandidates.chosen === position ? " active" : ""}${maskTool === "off" && !candidateBusy && !awaitTargetBox && !awaitExcludeClick ? " interactive" : ""}`}
                         style={{
                           left: `${(item.bounds[0] / sampleSize[0]) * 100}%`,
                           top: `${(item.bounds[1] / sampleSize[1]) * 100}%`,
                           width: `${(item.bounds[2] / sampleSize[0]) * 100}%`,
                           height: `${(item.bounds[3] / sampleSize[1]) * 100}%`,
+                          // 剔除点采集态：编号框不抢点击——误选区域往往就在
+                          // 候选框正中间，点击必须穿透到图片层记为剔除点。
+                          ...(awaitExcludeClick
+                            ? { pointerEvents: "none" as const }
+                            : {}),
                         }}
                         onClick={(event) => {
                           event.preventDefault();
@@ -4966,6 +5099,7 @@ export default function PhotoCraftStudio() {
                             );
                             return;
                           }
+                          if (awaitExcludeClick) return;
                           void choosePartCandidate(
                             position,
                             false,
@@ -4979,6 +5113,20 @@ export default function PhotoCraftStudio() {
                           {partCandidates.phrase} {Math.round(item.score * 100)}
                           %
                         </span>
+                      </div>
+                    ))}
+                  {partCandidates?.promptBox &&
+                    excludePoints.map((point, position) => (
+                      <div
+                        key={`exclude-${point[0]}-${point[1]}`}
+                        className="pc-exclude-mark"
+                        style={{
+                          left: `${point[0] * 100}%`,
+                          top: `${point[1] * 100}%`,
+                        }}
+                        title={`剔除点 ${position + 1}（候选误选区域）`}
+                      >
+                        ×
                       </div>
                     ))}
                 </div>

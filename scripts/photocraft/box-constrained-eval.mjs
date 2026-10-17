@@ -1,11 +1,12 @@
 // D 项（第七轮整改）画框限定评测：同一批 GT 目标上，SAM 8×8 网格模式 vs
-// x-acs-prompt-box 框提示模式的像素蒙版质量对比。
+// x-acs-prompt-box 框提示模式的像素蒙版质量对比；第八轮加重排序 A/B 臂
+// （box+X-Acs-Rank:ensemble，CLIP-only 序 vs 0.7·z(clip)+0.3·z(sam) 集成序）。
 //
 // 动机（codex §D + GT drafting 证据）：同模型换提示方式（框+点组合替代网格）
 // 可把「框好≠mask 好」的低分目标拉起来（草稿工作流实测猫头 0.143 → GT 可用
-// 草稿）。本脚本把该证据钉进可复算的对比报告：12 个 IMG-054 GT 目标 × 两种
-// 模式，标注框当作「用户画框」的模拟（框误差 ±5%，非真实用户轨迹，报告
-// 如此声明）。
+// 草稿）。本脚本把该证据钉进可复算的对比报告：12 个 IMG-054 GT 目标 × 三
+// 种臂（grid / box+clip / box+ensemble），标注框当作「用户画框」的模拟
+// （框误差 ±5%，非真实用户轨迹，报告如此声明）。
 //
 // 口径：GT fixture 完整性先于服务调用（同 mask-quality-eval）；指标 =
 // best/top1 mask IoU、漏选、越界（GT 分辨率，linear 缩放 + ≥128 二值）；
@@ -191,8 +192,9 @@ async function loadFixtureImage(image) {
   return loaded;
 }
 
-async function evalMode(gt, promptBox, gtBinary) {
-  // grid 模式 promptBox=null；box 模式传归一化 [x1,y1,x2,y2]。
+async function evalMode(gt, promptBox, gtBinary, rank = null) {
+  // grid 模式 promptBox=null；box 模式传归一化 [x1,y1,x2,y2]；
+  // rank="ensemble" 时服务端按 0.7·z(clip)+0.3·z(sam) 重排序（重排序 A/B 臂）。
   const { bytes, contentType } = await loadFixtureImage(gt.image);
   const result = await fetchCandidates({
     base: CANDIDATES_BASE,
@@ -200,6 +202,7 @@ async function evalMode(gt, promptBox, gtBinary) {
     contentType,
     phrase: gt.phrase,
     promptBox,
+    rank,
   });
   if (result.error) return { error: result.error };
   const response = result.response;
@@ -259,6 +262,24 @@ for (const gt of gtTargets) {
     );
     continue;
   }
+  // 重排序 A/B：同框同模型，仅 X-Acs-Rank=ensemble（0.7·z(clip)+0.3·z(sam)）。
+  // clip 臂即上面 box 的默认序；两臂候选池相同，只有顺序（与 top-k 截断）不同。
+  const boxEnsemble = await evalMode(gt, promptBox, gtBinary, "ensemble");
+  // grid+ensemble：网格模式 24 候选池上的重排序——z 分数在 2-4 个 box 变体上
+  // 退化（实测 12/12 与 clip 同序），集成序的真正战场是整池排序。
+  const gridEnsemble = await evalMode(gt, null, gtBinary, "ensemble");
+  if (boxEnsemble.error) {
+    errors.push(
+      `${gt.image} | ${gt.phrase} | box+ensemble：${boxEnsemble.error}`,
+    );
+    continue;
+  }
+  if (gridEnsemble.error) {
+    errors.push(
+      `${gt.image} | ${gt.phrase} | grid+ensemble：${gridEnsemble.error}`,
+    );
+    continue;
+  }
   const top1 = (mode) =>
     mode.candidates.length ? mode.candidates[0].maskIou : null;
   records.push({
@@ -267,6 +288,8 @@ for (const gt of gtTargets) {
     promptBox,
     grid,
     box,
+    boxEnsemble,
+    gridEnsemble,
     top1Delta:
       top1(grid) !== null && top1(box) !== null
         ? Number((top1(box) - top1(grid)).toFixed(4))
@@ -276,6 +299,7 @@ for (const gt of gtTargets) {
     console.log(
       `${gt.phrase.padEnd(6)} grid top1=${top1(grid)?.toFixed(3) ?? "—"} best=${grid.best?.maskIou.toFixed(3) ?? "—"}（${grid.candidates.length} 个）  ` +
         `box top1=${top1(box)?.toFixed(3) ?? "—"} best=${box.best?.maskIou.toFixed(3) ?? "—"}（${box.candidates.length} 个）  ` +
+        `boxEns top1=${top1(boxEnsemble)?.toFixed(3) ?? "—"}  gridEns top1=${top1(gridEnsemble)?.toFixed(3) ?? "—"}  ` +
         `Δtop1=${top1(grid) !== null && top1(box) !== null ? (top1(box) - top1(grid)).toFixed(3) : "—"}`,
     );
 }
@@ -315,18 +339,50 @@ function modeSummary(mode) {
 }
 
 const deltas = records.map((r) => r.top1Delta).filter((v) => v !== null);
+const gridEnsembleDeltas = records
+  .map((r) => {
+    const clip = r.grid.candidates[0]?.maskIou ?? null;
+    const ens = r.gridEnsemble.candidates[0]?.maskIou ?? null;
+    return clip !== null && ens !== null
+      ? Number((ens - clip).toFixed(4))
+      : null;
+  })
+  .filter((v) => v !== null);
+const ensembleDeltas = records
+  .map((r) => {
+    const clip = r.box.candidates[0]?.maskIou ?? null;
+    const ens = r.boxEnsemble.candidates[0]?.maskIou ?? null;
+    return clip !== null && ens !== null
+      ? Number((ens - clip).toFixed(4))
+      : null;
+  })
+  .filter((v) => v !== null);
 const summary = {
   gtTargetsTotal: caseFilter ? records.length : gtTargets.length,
   evaluated: records.length,
   grid: modeSummary("grid"),
   box: modeSummary("box"),
+  boxEnsemble: modeSummary("boxEnsemble"),
+  gridEnsemble: modeSummary("gridEnsemble"),
   top1Delta: {
     improved: deltas.filter((v) => v > 0.05).length,
     unchanged: deltas.filter((v) => Math.abs(v) <= 0.05).length,
     regressed: deltas.filter((v) => v < -0.05).length,
     mean: mean(deltas),
   },
-  note: "模拟用户画框 = 人工标注框（±5% 标注误差，非真实用户轨迹）；box 模式 = 服务端 x-acs-prompt-box 框+点组合提示，同一 SAM vit_b.quant 模型。报告 only：不据此切换默认服务或开启自动选中。",
+  gridEnsembleTop1Delta: {
+    improved: gridEnsembleDeltas.filter((v) => v > 0.05).length,
+    unchanged: gridEnsembleDeltas.filter((v) => Math.abs(v) <= 0.05).length,
+    regressed: gridEnsembleDeltas.filter((v) => v < -0.05).length,
+    mean: mean(gridEnsembleDeltas),
+  },
+  ensembleTop1Delta: {
+    improved: ensembleDeltas.filter((v) => v > 0.05).length,
+    unchanged: ensembleDeltas.filter((v) => Math.abs(v) <= 0.05).length,
+    regressed: ensembleDeltas.filter((v) => v < -0.05).length,
+    mean: mean(ensembleDeltas),
+  },
+  note: "模拟用户画框 = 人工标注框（±5% 标注误差，非真实用户轨迹）；box 模式 = 服务端 x-acs-prompt-box 框+点组合提示，boxEnsemble = 同框同模型仅 X-Acs-Rank=ensemble（0.7·z(clip)+0.3·z(sam)），同一 SAM vit_b.quant 模型。报告 only：不据此切换默认服务或开启自动选中。",
 };
 
 const report = {
@@ -352,6 +408,18 @@ else {
   );
   console.log(
     `box ：top1 mean=${summary.box.top1MaskIouMean}（≥0.5 ${summary.box.top1GeHalf}/${summary.evaluated}），best mean=${summary.box.bestMaskIouMean}，无候选 ${summary.box.noCandidates}，平均 ${summary.box.tookMsMean}ms`,
+  );
+  console.log(
+    `boxEns：top1 mean=${summary.boxEnsemble.top1MaskIouMean}（≥0.5 ${summary.boxEnsemble.top1GeHalf}/${summary.evaluated}），best mean=${summary.boxEnsemble.bestMaskIouMean}，无候选 ${summary.boxEnsemble.noCandidates}`,
+  );
+  console.log(
+    `Δtop1(box ens-clip)：改善 ${summary.ensembleTop1Delta.improved}、持平 ${summary.ensembleTop1Delta.unchanged}、回退 ${summary.ensembleTop1Delta.regressed}，mean ${summary.ensembleTop1Delta.mean}`,
+  );
+  console.log(
+    `gridEns：top1 mean=${summary.gridEnsemble.top1MaskIouMean}（≥0.5 ${summary.gridEnsemble.top1GeHalf}/${summary.evaluated}），best mean=${summary.gridEnsemble.bestMaskIouMean}`,
+  );
+  console.log(
+    `Δtop1(grid ens-clip)：改善 ${summary.gridEnsembleTop1Delta.improved}、持平 ${summary.gridEnsembleTop1Delta.unchanged}、回退 ${summary.gridEnsembleTop1Delta.regressed}，mean ${summary.gridEnsembleTop1Delta.mean}`,
   );
   console.log(
     `Δtop1：改善(>+0.05) ${summary.top1Delta.improved}、持平 ${summary.top1Delta.unchanged}、回退(<-0.05) ${summary.top1Delta.regressed}，mean ${summary.top1Delta.mean}`,

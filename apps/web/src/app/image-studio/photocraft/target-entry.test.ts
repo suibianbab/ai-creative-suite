@@ -5,7 +5,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  canOfferExcludeRefine,
   classifyTargetPhrase,
+  EXCLUDE_POINT_LIMIT,
+  normalizeExcludePoint,
   normalizePromptBox,
   parseStatusMessage,
   shouldOfferSelectionEntry,
@@ -242,4 +245,43 @@ test("parseStatusMessage: 目标缺口 + 保护缺口 → 两条引导都在", (
   });
   assert.ok(message.includes("目标「左耳」的位置不替你猜"));
   assert.ok(message.includes("保护范围「标签」待圈定"));
+});
+
+test("normalizeExcludePoint: 像素点 → 归一化 [x,y]，越界钳到边界而非拒绝", () => {
+  assert.deepEqual(normalizeExcludePoint([512, 256], [1024, 512]), [0.5, 0.5]);
+  // 点在候选边缘附近是常态：钳制优于让用户重试。
+  assert.deepEqual(normalizeExcludePoint([-30, 9999], [1000, 1000]), [0, 1]);
+  // 尺寸非法 / 坐标非有限数 → null（不产生误导性剔除点）。
+  assert.equal(normalizeExcludePoint([10, 10], [0, 100]), null);
+  assert.equal(normalizeExcludePoint([Number.NaN, 10], [100, 100]), null);
+});
+
+test("normalizeExcludePoint: 与服务端口径一致（4 位小数、clamp01）", () => {
+  const point = normalizeExcludePoint([333, 77], [1000, 500]);
+  assert.ok(point);
+  assert.equal(point[0], 0.333);
+  assert.equal(point[1], 0.154);
+});
+
+test("canOfferExcludeRefine: 仅画框限定后的目标环且未确认时提供", () => {
+  const base = {
+    mode: "target" as const,
+    hasPromptBox: true,
+    chosen: false,
+    candidateCount: 2,
+  };
+  assert.equal(canOfferExcludeRefine(base), true);
+  // 网格模式（无框）不提供：剔除点对未限定候选语义不成立。
+  assert.equal(canOfferExcludeRefine({ ...base, hasPromptBox: false }), false);
+  // protect 环 / 已确认 / 空候选不提供。
+  assert.equal(
+    canOfferExcludeRefine({ ...base, mode: "protect" as const }),
+    false,
+  );
+  assert.equal(canOfferExcludeRefine({ ...base, chosen: true }), false);
+  assert.equal(canOfferExcludeRefine({ ...base, candidateCount: 0 }), false);
+});
+
+test("EXCLUDE_POINT_LIMIT: 与服务端 parse_exclude_points 上限一致（4）", () => {
+  assert.equal(EXCLUDE_POINT_LIMIT, 4);
 });

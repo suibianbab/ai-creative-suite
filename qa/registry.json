@@ -1015,8 +1015,8 @@
       "requiresPorts": [4104],
       "checks": [
         "GT fixture integrity is validated before any service call with the same gate as IMG-054 (manifest targets must be single-instance annotation phrases, mask PNG size must equal the annotation size, masks strictly binary); any violation exits non-zero",
-        "Each GT target is evaluated twice against the same :4104 model: once in grid mode (no prompt header) and once in box mode with x-acs-prompt-box set to the annotation box converted to normalized [x1,y1,x2,y2] as a simulated user box; both runs go through the shared fetchCandidates contract so mask_png_b64 is validated per candidate",
-        "Per-mode metrics are computed identically (top-3 masks resized to GT resolution bilinearly, binarized >=128, scored for mask IoU, miss rate and spill rate) and summarized as top-1/best mask IoU means, >=0.5 counts, no-candidate counts and mean latency, plus per-target top-1 delta classified as improved/unchanged/regressed at the 0.05 threshold",
+        "Each GT target is evaluated in four arms against the same :4104 model: grid mode (no prompt header), box mode with x-acs-prompt-box set to the annotation box converted to normalized [x1,y1,x2,y2] as a simulated user box, and the same two pools re-requested with X-Acs-Rank: ensemble (0.7*z(clip)+0.3*z(sam) re-ranking); all arms go through the shared fetchCandidates contract so mask_png_b64 and sam_score are validated per candidate",
+        "Per-mode metrics are computed identically (top-3 masks resized to GT resolution bilinearly, binarized >=128, scored for mask IoU, miss rate and spill rate) and summarized as top-1/best mask IoU means, >=0.5 counts, no-candidate counts and mean latency, plus per-target top-1 deltas classified as improved/unchanged/regressed at the 0.05 threshold (box vs grid, and each ensemble arm vs its clip-ordered pool)",
         "The report honestly declares the simulated-box caveat (annotation boxes carry ~+/-5% labeling error and are not real user trajectories) and stays report-only: no default-service switch, no auto-select enablement, TAU_AUTO_ENABLED untouched; service or fixture errors exit non-zero while quality deltas (including regressions) are findings; the report lands in .tools/photocraft-serve-qa/box-constrained-report.json with --case subsets in box-constrained-report.subset.json"
       ]
     },
@@ -1100,6 +1100,66 @@
         "Reopened documents expose the slider value on the editable adjustment layer, and masked layers keep their mask after save and reopen",
         "Pixels farther than 6px outside the provider mask stay byte-identical to the original; boundary spill is bounded to 2/255",
         "An sRGB ICC-embedded input covers the profile path; any tolerance violation fails the run with a JSON report"
+      ]
+    },
+    {
+      "id": "IMG-059",
+      "tier": "image-qa",
+      "title": "Subject-level automation rate probe against the plan's 100% promise",
+      "cwd": ".",
+      "argv": ["node", "scripts/photocraft/subject-auto-probe.mjs"],
+      "requiresFiles": [
+        "qa/fixtures/photocraft-grounding/annotations.json",
+        "scripts/photocraft/subject-auto-probe.mjs"
+      ],
+      "requiresPorts": [4112],
+      "checks": [
+        "Operationalizes the plan §0 subject-level 100% promise: for each of the 11 annotation images the bridge /v1/instruction must return 200 with a provider-mask selection, selectionBounds non-null, a pixel-visible preview (brightness +30 plan; change threshold 48 separates engine re-encode noise from real edits), and the changed-pixel bbox inside selectionBounds within 8px",
+        "Provider mask foreground coverage is measured directly on :4101 per image so empty or whole-image masks surface as probe failures instead of hiding behind HTTP 200",
+        "The measured rate is reported honestly (10/11 = 90.91%): the no-salient-subject interior failure is a finding, not a test failure; fixture or bridge errors exit non-zero; the report lands in .tools/photocraft-serve-qa/subject-auto-report.json"
+      ]
+    },
+    {
+      "id": "IMG-060",
+      "tier": "live-grounding",
+      "title": "Exclude-point mask algebra eval (part = whole minus mis-selected region)",
+      "cwd": ".",
+      "argv": ["node", "scripts/photocraft/exclude-point-eval.mjs"],
+      "requiresFiles": [
+        "qa/fixtures/photocraft-grounding/annotations.json",
+        "qa/fixtures/photocraft-grounding/masks/manifest.json",
+        "scripts/photocraft/exclude-point-eval.mjs",
+        "scripts/photocraft/grounding-contract.mjs"
+      ],
+      "requiresPorts": [4104],
+      "checks": [
+        "Derives part-level GT via boolean mask algebra from reviewed whole and sub-region GT masks (petals = flower minus stamen, ears = cat head minus face) with zero new annotations; derived components must all be in the IMG-054 manifest and non-empty, else exit non-zero before any service call",
+        "Simulates the interaction from GT alone: the prompt box is the whole-target annotation box and exclude points are sub-region GT centroids, sent through the shared fetchCandidates contract with X-Acs-Exclude-Points (and an ensemble-rank third arm)",
+        "Three arms are compared per case (box only, box+exclude, box+exclude+ensemble) with the same mask IoU/miss/spill metrics as IMG-054/055; the mixed ranking result (exclude can demote top-1 while the correct mask stays in the ring) is reported as a finding, not a failure; the report lands in .tools/photocraft-serve-qa/exclude-point-report.json"
+      ]
+    },
+    {
+      "id": "IMG-061",
+      "tier": "image-qa",
+      "title": "Plan §7 promise-versus-measured assembly across the PhotoCraft eval reports",
+      "cwd": ".",
+      "argv": ["node", "scripts/photocraft/section7-metrics.mjs"],
+      "requiresFiles": [
+        "scripts/photocraft/section7-metrics.mjs",
+        "scripts/photocraft/section7-rates.mjs",
+        ".tools/photocraft-serve-qa/live-eval-report.json",
+        ".tools/photocraft-serve-qa/cloud-roundtrip-report.json",
+        ".tools/photocraft-serve-qa/subject-auto-report.json",
+        ".tools/photocraft-serve-qa/box-constrained-report.json",
+        ".tools/photocraft-serve-qa/mask-quality-report.json",
+        ".tools/photocraft-serve-qa/grounding-report.json",
+        ".tools/photocraft-serve-qa/exclude-point-report.json",
+        ".tools/photocraft-serve-qa/preview-consistency-report.json"
+      ],
+      "checks": [
+        "Assembles every plan §0/§6/§7 promise against the measured numbers with explicit numerators and denominators (parse accuracy, subject-level automation, one-confirm part editing grid vs box, out-of-scope rejection parse-layer plus cloud runtime, grounding IoU distributions, mask-algebra evidence); a missing upstream report is an infrastructure error that exits non-zero rather than silently degrading to unmeasured",
+        "Promises that need real-user telemetry (confirm-UI 95% interception, average confirmations, abandon rate, online loop) are declared unmeasured with the telemetry-infrastructure caveat instead of being claimed",
+        "Rate math and null-safe promise verdicts live in section7-rates.mjs with unit tests (section7-rates.test.mjs); the assembled table lands in .tools/photocraft-serve-qa/section7-report.json and the case is skipped until its upstream report files exist"
       ]
     }
   ],

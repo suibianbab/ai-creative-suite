@@ -508,3 +508,79 @@ test("parseImageSize: PNG IHDR / JPEG SOFn 宽高", () => {
   assert.deepEqual(parseImageSize(jpeg), { width: 1280, height: 960 });
   assert.equal(parseImageSize(Buffer.from([0x00, 0x01])), null);
 });
+
+test("validateCandidatesResponse: sam_score 合法通过 / 越界或非数值 → 坏响应", () => {
+  const withSam = {
+    ...GOOD_RESPONSE,
+    candidates: [{ ...GOOD_CANDIDATE, sam_score: 0.8731 }],
+  };
+  assert.equal(validateCandidatesResponse(withSam).ok, true);
+  for (const bad of [1.5, -0.1, "0.8", null]) {
+    const verdict = validateCandidatesResponse({
+      ...GOOD_RESPONSE,
+      candidates: [{ ...GOOD_CANDIDATE, sam_score: bad }],
+    });
+    assert.equal(verdict.ok, false, `sam_score=${JSON.stringify(bad)}`);
+    assert.match(verdict.error, /sam_score/);
+  }
+});
+
+test("validateCandidatesResponse: rank 声明 clip/ensemble 通过 / 其它值 → 坏响应", () => {
+  assert.equal(
+    validateCandidatesResponse({ ...GOOD_RESPONSE, rank: "ensemble" }).ok,
+    true,
+  );
+  assert.equal(
+    validateCandidatesResponse({ ...GOOD_RESPONSE, rank: "clip" }).ok,
+    true,
+  );
+  const verdict = validateCandidatesResponse({
+    ...GOOD_RESPONSE,
+    rank: "weighted",
+  });
+  assert.equal(verdict.ok, false);
+  assert.match(verdict.error, /rank/);
+});
+
+test("fetchCandidates: 剔除点与重排序头按参数携带，缺省不携带", async () => {
+  await withMock(
+    (req, res) => {
+      const captured = {
+        exclude: req.headers["x-acs-exclude-points"],
+        rank: req.headers["x-acs-rank"],
+        box: req.headers["x-acs-prompt-box"],
+      };
+      json(res, 200, { ...GOOD_RESPONSE, rank: "ensemble", captured });
+    },
+    async (base) => {
+      const withArgs = await fetchCandidates({
+        base,
+        ...POST_ARGS,
+        promptBox: [0.1, 0.1, 0.6, 0.6],
+        excludePoints: [
+          [0.3, 0.4],
+          [0.35, 0.42],
+        ],
+        rank: "ensemble",
+      });
+      assert.equal(withArgs.error, undefined);
+      const sent = withArgs.response.captured;
+      assert.equal(sent.rank, "ensemble");
+      assert.equal(sent.box, JSON.stringify([0.1, 0.1, 0.6, 0.6]));
+      assert.equal(
+        sent.exclude,
+        JSON.stringify([
+          [0.3, 0.4],
+          [0.35, 0.42],
+        ]),
+      );
+
+      const without = await fetchCandidates({ base, ...POST_ARGS });
+      assert.equal(without.error, undefined);
+      const omitted = without.response.captured;
+      assert.equal(omitted.exclude, undefined);
+      assert.equal(omitted.rank, undefined);
+      assert.equal(omitted.box, undefined);
+    },
+  );
+});

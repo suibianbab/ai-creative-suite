@@ -520,3 +520,41 @@ IMG-055 在修改后全量重跑（12/12 exit 0）：grid top-1 mask IoU mean 0.
 浏览器 rig、代理、shim 已移入仓库并登记 **IMG-057**（`pnpm qa:browser-image`），IMG-058 复算四张全分辨率预览的区域差分。最终全量复跑 `failures=0`：花瓣首次预览的花蕊平均 RGB 变化 **94.87/255**，脚本用 PhotoCraft 原有蒙版笔刷模拟两笔人工擦除后降到 **0.261/255**；左耳框外平均变化 **0.021/255**。左耳主要耳面已换色，但耳根仍有硬边；**UI-038 原尺寸视觉验收未通过**，该图应继续精修，不能标为商业成片。关键截图存 `qa/evidence/photocraft-e1-2026-10-17/`，全量交互日志与区域差分分别存 `artifacts/photocraft-e1-2026-10-17/e1-report.json`、`e1-region-diff.json`。
 
 IMG-056 仍是付费生成模型 A/B；现在四个预定模型×操作臂有任一个缺失或失败均非零退出，mask 接口探针单独记录。未重复调用付费模型，也未改生成默认、候选网格默认或 `TAU_AUTO_ENABLED=false`。本轮验证：Python 画框单测 3/3、A/B 门槛单测 3/3、入口单测 11/11、`qa:validate` **67 automated / 42 manual**、Biome 与 TypeScript typecheck 通过。
+
+
+## 整改回应（第八轮，2026-10-17）：方案 §7 承诺量化（项 2）+ 部件级候选粒度三件套（项 3）
+
+用户指令：「你把 2 和 3 都做了吧」。两项全部交付，全部改动未提交，待复审后统一提交。
+
+### 项 2：§7 量化指标测量（把承诺改成有证据的承诺）
+
+新装配脚本 `section7-metrics.mjs`（登记 **IMG-061**）从 8 份既有评测报告把方案 §0/§6/§7 每条承诺对到实测数字，分子/分母显式写死在各项 `operational` 字段；比率算术与 null 安全判定抽到 `section7-rates.mjs`（8 条单测钉住「未测量 rate=null 不冒充 0/不判达标」）。报告落 `.tools/photocraft-serve-qa/section7-report.json`。实测结果（11 条承诺：达标 2、未达标 2、实测分布 3、未测量 4）：
+
+| 承诺 | 实测 | 结论 |
+|---|---|---|
+| 解析准确率（金标准集 ≥200 条） | 212/212（解析断言 67 + 引擎执行 145；云 round-trip 23 例 17 真调用，acceptance 双过） | **达标** |
+| 主体级 100% 自动 | **10/11 = 90.9%**（IMG-059） | **未达标**：living-room 无显著主体全景，provider 蒙版前景 0.01%（hibiscus 对照 28.92%）——主体级编辑对无主体图本身是目标缺口 |
+| 部件级 ≥90% 经一次确认 | 默认网格环 **5/12 = 41.7%**；画框限定环 11/12 = 91.7% | **未达标**：承诺判默认入口（§0 部件级路径是「候选提议 + 一次点击确认」，不含画框）；画框入口即使过线也多一次画框交互，不冒充达标 |
+| 越界指令体面拒绝、绝不半吊子执行 | 解析层 17/17 + 云道 4/4（modelRejectNeverEntailed） | **达标** |
+| 解释确认 UI 拦截剩余 95% 误解析 | 需真实用户「纠正」分流 | **未测量**：结构性保障已实现（部件级必经确认环），但 95% 是设计预估，无用户数据前不改口 |
+| 平均确认次数 / 编辑放弃率 / 线上回流 | 需线上会话遥测 | **未测量**：遥测管道未建设，建管道前 §7 三项用户指标无法闭环 |
+
+主体级探针 `subject-auto-probe.mjs`（登记 **IMG-059**）操作定义：①桥 `/v1/instruction` 200 ②selectionBounds 非空 ③预览与源图有像素变化 ④变化像素 bbox ⊆ selectionBounds（±8px）。测量方法三个坑（脚本注释已记）：sourceUrl 返回 `.pcraft` 原生文档（ZIP 魔数）不是栅格，比对用上传字节 vs 预览 PNG；hue 旋转式换色在白/低饱和主体上不可见，改用 brightness+30；JPEG→引擎重编码有全局色管噪声（95% 像素差 0-7、尾巴到 ~23，真编辑 ≥120），变化阈值取 48。
+
+### 项 3：部件级候选粒度（架构内、不引入新模型）
+
+三件套全部落地，默认行为零回归（IMG-055 grid/box 臂与已提交基线逐位一致）：
+
+**(a) 蒙版代数（负点重圈）**：`X-Acs-Exclude-Points`（1-4 个 [x,y] 归一化点，仅与画框同现）→ rembg `get_input_points` 的 label 0（SAM 背景点）追加到全部 box 提示变体 = 不做第二次分割的布尔减法。服务端 `parse_exclude_points`/`box_prompt_variants`，桥同口径形状校验（无框带点 400 不透传，已实测）。
+**(b) 确认环负点精修交互**（page.tsx）：「点选剔除误选区域」进入待点击态（候选框 pointer-events:none 让点击落到图上）→ 图上红圈 × 标记（≤4 个，0.005 去重）→「按剔除点重圈」带点重请求 /「清除剔除点」；`canOfferExcludeRefine` 门控（仅画框模式且有已选候选）；4 处环关闭点全部重置。纯函数 `normalizeExcludePoint`/`EXCLUDE_POINT_LIMIT=4` 进 target-entry.ts（4 条新单测）。
+**(c) ensemble 重排序**：`X-Acs-Rank: clip|ensemble`（默认 clip 不变），ensemble = 0.7·z(clip)+0.3·z(sam)，z 按整池归一后先排序再切 top-k；响应逐候选加 `sam_score`、响应级加 `rank`（契约层 grounding-contract 逐项校验 + 3 条新注入测试）。
+
+**实测证据（如实，两项都不过线但机制可用）**：
+- 剔除点评测 `exclude-point-eval.mjs`（登记 **IMG-060**）：GT 用布尔代数从已复核蒙版派生（花瓣=花朵∧¬花蕊、耳朵=猫头∧¬猫脸），模拟交互全部从 GT 推导（画框=整体标注框、剔除点=子区域质心），零新标注。花瓣：box-only top1 已 0.974，加负点反把 top1 打到 0.394（best 0.970 仍在环内）；耳朵：0.529→0.627 改善。结论：负点减法有效，但重圈后 CLIP 会惩罚「扣掉一块」的候选——这正是确认环人工兜底与 ensemble 的动机。
+- ensemble 在本 GT 集上完全不改变 top-1：box 池（2-4 候选）z 退化 12/12 与 clip 同序；24 候选网格池上 12/12 top-1 不变，且 grid 环 best mean 0.471→0.4459（l-beck 窗户的环内最佳 0.296 被 SAM 大蒙版偏好挤出 top-3）；动机案例「花朵」（clip 序正确候选在第 2 位 0.986，差 0.04 分）没被 0.3 的 SAM 权重救回。**默认 rank 维持 clip，ensemble 仅作可选头交付**；要让「环内第 2 位反超」需要更大的排序重设计，不是 0.3 的微调。
+
+**顺带修了一个真 bug**：SAM decoder 的 iou 预测头量化后可轻微越界（帽顶网格点实测 sam_score=1.0055）——clip 序下它从不进 top-3 所以从未暴露，ensemble 序把它带进 top-3 才被共享契约层拦下（IMG-055 第四臂 11/12 退出）。修复 `clamp01`（NaN→0 让 score<0.6 门拦下而非放行）钉在 `_decode_prompt` 唯一出口 + Clamp01Test 4 条回归；修后 IMG-055 四臂全量重跑 12/12 exit 0，grid/box 与基线逐位一致。
+
+### 四态交付口径
+
+代码实现 ✓（服务/桥/契约/Web 全链）；自动回归 ✓（Python 22 = 画框 3 + 精修/夹紧 19；契约 25；入口 15；rates 8；`qa:validate` **70 automated / 42 manual**；Biome + typecheck 过）；真实浏览器 ✗（剔除点点击链未跑浏览器 rig——服务端效果经 IMG-060 真服务三臂实测 + 桥 400 校验/透传实测（box 0.2451→exclude 0.2429、rank 回显 ensemble），UI 接线仅 typecheck/lint）；视觉质量 ✗（剔除点红圈标记无视觉验收）。`TAU_AUTO_ENABLED=false`、候选网格默认、`IMAGE_LOCAL_EDIT_MODEL`、候选 rank 默认全部未动。

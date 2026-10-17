@@ -179,7 +179,7 @@ async function handleRequest(request, response) {
   response.setHeader("access-control-allow-methods", "GET, POST, OPTIONS");
   response.setHeader(
     "access-control-allow-headers",
-    "content-type, x-acs-hue, x-acs-plan, x-acs-plan-b64, x-acs-points, x-acs-rect, x-acs-outline, x-acs-patches, x-acs-edge-shift, x-acs-edge-feather, x-acs-protect-rect, x-acs-selection-method, x-acs-selection-mask-id, x-acs-heal-size, x-acs-provider-scope-feather, x-acs-source-job, x-acs-generation-rect, x-acs-generation-selection, x-acs-generation-outline, x-acs-foreground-selection, x-acs-foreground-outline, x-acs-foreground-patches, x-acs-foreground-rect, x-acs-background-shadow, x-acs-phrase-b64, x-acs-prompt-box",
+    "content-type, x-acs-hue, x-acs-plan, x-acs-plan-b64, x-acs-points, x-acs-rect, x-acs-outline, x-acs-patches, x-acs-edge-shift, x-acs-edge-feather, x-acs-protect-rect, x-acs-selection-method, x-acs-selection-mask-id, x-acs-heal-size, x-acs-provider-scope-feather, x-acs-source-job, x-acs-generation-rect, x-acs-generation-selection, x-acs-generation-outline, x-acs-foreground-selection, x-acs-foreground-outline, x-acs-foreground-patches, x-acs-foreground-rect, x-acs-background-shadow, x-acs-phrase-b64, x-acs-prompt-box, x-acs-exclude-points, x-acs-rank",
   );
   response.setHeader("cache-control", "no-store");
   if (request.method === "OPTIONS") {
@@ -1477,6 +1477,47 @@ async function handleRequest(request, response) {
       const contentType = String(
         request.headers["content-type"] ?? "image/png",
       ).split(";")[0];
+      // 剔除点（蒙版代数交互）：1-4 个 [x,y] 归一化点，仅与画框同现——
+      // 桥侧与服务同口径做形状校验（无框带点 = 语义矛盾，400 不透传）。
+      let excludePoints = null;
+      const excludeHeader = String(
+        request.headers["x-acs-exclude-points"] ?? "",
+      );
+      if (excludeHeader) {
+        try {
+          excludePoints = JSON.parse(excludeHeader);
+        } catch {
+          excludePoints = null;
+        }
+        const validExclude =
+          Array.isArray(excludePoints) &&
+          excludePoints.length >= 1 &&
+          excludePoints.length <= 4 &&
+          excludePoints.every(
+            (point) =>
+              Array.isArray(point) &&
+              point.length === 2 &&
+              point.every(
+                (v) =>
+                  typeof v === "number" &&
+                  Number.isFinite(v) &&
+                  v >= 0 &&
+                  v <= 1,
+              ),
+          );
+        if (!validExclude)
+          throw new Error(
+            "剔除点无效（x-acs-exclude-points 须为 1-4 个 [x,y] 归一化坐标）",
+          );
+        if (!promptBox)
+          throw new Error(
+            "剔除点仅在画框限定模式下可用（缺少 x-acs-prompt-box）",
+          );
+      }
+      // 重排序声明：clip（默认，现行为）| ensemble（0.7·CLIP + 0.3·SAM）。
+      const rankHeader = String(request.headers["x-acs-rank"] ?? "");
+      if (rankHeader && rankHeader !== "clip" && rankHeader !== "ensemble")
+        throw new Error("x-acs-rank 只接受 clip 或 ensemble");
       const image = await body(request);
       let upstream;
       try {
@@ -1488,6 +1529,10 @@ async function handleRequest(request, response) {
             ...(promptBox
               ? { "x-acs-prompt-box": JSON.stringify(promptBox) }
               : {}),
+            ...(excludePoints
+              ? { "x-acs-exclude-points": JSON.stringify(excludePoints) }
+              : {}),
+            ...(rankHeader ? { "x-acs-rank": rankHeader } : {}),
           },
           body: image,
           signal: AbortSignal.timeout(120_000),

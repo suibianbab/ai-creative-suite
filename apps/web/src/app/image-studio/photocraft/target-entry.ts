@@ -27,6 +27,47 @@ export function classifyTargetPhrase(phrase: string): PhraseClassification {
   };
 }
 
+/** 剔除点上限（与服务端 parse_exclude_points 同口径）。 */
+export const EXCLUDE_POINT_LIMIT = 4;
+
+/**
+ * 剔除点（蒙版代数的交互形态）归一化：sampleSize 像素点 → [x,y] ∈ [0,1]²
+ * （响应空间同比例）。越界点钳到边界而非拒绝——用户点在候选边缘附近是
+ * 常态，钳制比「重试一次」体验好；服务端只要求值域合法。
+ */
+export function normalizeExcludePoint(
+  point: readonly [number, number],
+  size: readonly [number, number],
+): [number, number] | null {
+  if (size[0] <= 0 || size[1] <= 0) return null;
+  if (!Number.isFinite(point[0]) || !Number.isFinite(point[1])) return null;
+  const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
+  return [
+    Number(clamp01(point[0] / size[0]).toFixed(4)),
+    Number(clamp01(point[1] / size[1]).toFixed(4)),
+  ];
+}
+
+/**
+ * 「点选剔除」入口条件：目标候选环在画框限定模式下且尚未确认——剔除点
+ * 只对「框内候选还带进了误选区域」有意义（花瓣含花蕊、猫头含猫脸），
+ * 网格模式与已确认候选不提供，避免与 PhotoCraft 蒙版笔刷（更精细的
+ * 剔除工具）抢职责。
+ */
+export function canOfferExcludeRefine(ctx: {
+  mode: "target" | "protect";
+  hasPromptBox: boolean;
+  chosen: boolean;
+  candidateCount: number;
+}): boolean {
+  return (
+    ctx.mode === "target" &&
+    ctx.hasPromptBox &&
+    !ctx.chosen &&
+    ctx.candidateCount > 0
+  );
+}
+
 /**
  * 像素画框（sampleSize 空间）→ 归一化 [x1,y1,x2,y2]（响应/原图同比例空间，
  * EXIF 两侧已归一）。太小的框返回 null——服务端也会拒（≥2% 边长），提前

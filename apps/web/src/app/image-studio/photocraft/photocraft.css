@@ -266,6 +266,24 @@
   left: auto;
   right: -8px;
 }
+/* 剔除点标记（蒙版代数交互）：画框限定环上的用户负点，× 居中于点击处 */
+.pc-exclude-mark {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #f87171;
+  border-radius: 999px;
+  background: rgba(248, 113, 113, 0.18);
+  color: #fca5a5;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  pointer-events: none;
+}
 .pc-target-review {
   display: flex;
   flex-direction: column;

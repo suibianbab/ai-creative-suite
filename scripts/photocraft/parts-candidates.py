@@ -31,6 +31,24 @@ pixels outside it must never be changed. Same filters, dedupe, CLIP ranking, con
 response shape as grid mode; used by the disambiguation entry
 (方位词/多实例 → 用户点击/画框限定位置 → 重新圈选), never a default switch.
 
+Exclude points (蒙版代数的交互形态, box mode only): optional
+X-Acs-Exclude-Points header carries 1-4 [x,y] fraction pairs marking
+regions the candidate wrongly includes (花蕊 inside 花瓣, 猫脸 inside 猫头).
+Each becomes a SAM background-labeled point (label 0) appended to every
+box-prompt variant, so the decoder pulls the mask away from the clicked
+spot — boolean mask subtraction without a second segmentation pass. Only
+valid together with a prompt box (422 otherwise); the box stays the hard
+scope, exclusion is a soft signal the decoder weighs.
+
+Ranking (重排序): X-Acs-Rank selects the candidate order — "clip" (default,
+current behavior: Chinese-CLIP cosine only) or "ensemble" (z-scored
+clip_score + sam_score, 0.7/0.3). CLIP alone ranks a correct mask low when
+the crop is visually ambiguous (花朵 case: top-1 0.000 / best 0.986 box
+IoU); SAM's own IoU score is an independent signal from the same decode.
+Report-only experiments decide whether callers adopt ensemble; the default
+order never changes silently. Each candidate now also exposes its
+sam_score so evaluations can re-rank offline.
+
 Never persists or modifies uploaded originals. Not a production upload API.
 """
 
@@ -102,6 +120,113 @@ def _box_spill_ratio(mask: np.ndarray, clipped: np.ndarray) -> float:
     return (total - int(clipped.sum())) / total if total else 1.0
 
 
+MAX_EXCLUDE_POINTS = 4
+RANK_MODES = ("clip", "ensemble")
+ENSEMBLE_CLIP_WEIGHT = 0.7
+
+
+def parse_exclude_points(raw_header: str) -> tuple[list[list[float]] | None, str]:
+    """X-Acs-Exclude-Points 头解析（box 模式专用）。
+
+    返回 (points, None) 或 (None, 错误消息)：1-4 个 [x,y]（0..1 归一化，
+    响应 width/height 空间）。格式可疑一律报错，不静默忽略——用户点了
+    「剔除这块」却照旧返回含它的候选，比报错更糟。
+    """
+    if not raw_header:
+        return [], ""
+    try:
+        raw = json.loads(raw_header)
+    except ValueError:
+        return None, "X-Acs-Exclude-Points must be JSON [[x,y], …]"
+    if not isinstance(raw, list) or not (1 <= len(raw) <= MAX_EXCLUDE_POINTS):
+        return (
+            None,
+            f"X-Acs-Exclude-Points must be 1-{MAX_EXCLUDE_POINTS} [x,y] pairs",
+        )
+    for item in raw:
+        if (
+            not isinstance(item, list)
+            or len(item) != 2
+            or not all(isinstance(v, (int, float)) for v in item)
+            or not (0.0 <= float(item[0]) <= 1.0 and 0.0 <= float(item[1]) <= 1.0)
+        ):
+            return None, "X-Acs-Exclude-Points entries must be [x, y] in [0, 1]"
+    return [[float(x), float(y)] for x, y in raw], ""
+
+
+def box_prompt_variants(
+    box_px: tuple[int, int, int, int],
+    exclude_points_px: list[tuple[float, float]],
+) -> list[list[dict]]:
+    """box 提示变体（D 项 + 剔除点）：框 / 框+中心 / 框+中心+四分点 / 中心，
+    每个变体再附加全部负点（SAM label 0 = 背景，见 get_input_points 直通）。
+    纯函数供单测钉住提示结构——这是蒙版代数「候选 − 误选区域」的服务端形态。"""
+    px1, py1, px2, py2 = box_px
+    rect = {"type": "rectangle", "data": [px1, py1, px2, py2]}
+    cx, cy = round((px1 + px2) / 2), round((py1 + py2) / 2)
+    center = {"type": "point", "label": 1, "data": [cx, cy]}
+    qx1 = round(px1 + (px2 - px1) * 0.25)
+    qx2 = round(px1 + (px2 - px1) * 0.75)
+    qy1 = round(py1 + (py2 - py1) * 0.25)
+    qy2 = round(py1 + (py2 - py1) * 0.75)
+    quad = [
+        {"type": "point", "label": 1, "data": [qx, qy]}
+        for qx, qy in ((qx1, qy1), (qx2, qy1), (qx1, qy2), (qx2, qy2))
+    ]
+    variants = [[rect], [rect, center], [rect, center, *quad], [center]]
+    negatives = [
+        {"type": "point", "label": 0, "data": [round(x), round(y)]}
+        for x, y in exclude_points_px
+    ]
+    if negatives:
+        variants = [variant + negatives for variant in variants]
+    return variants
+
+
+def clamp01(value: float) -> float:
+    """SAM decoder 的 iou 预测头输出名义上在 [0,1]，但量化后实测会轻微越界
+    （帽顶网格点候选 1.0055）；NaN 时比较门（score < 0.6）恒 False 会放行。
+    契约把 sam_score 钉死在 [0,1] 内有限数——在唯一出口 _decode_prompt 夹紧。"""
+    if math.isnan(value):
+        return 0.0
+    return min(max(value, 0.0), 1.0)
+
+
+def ensemble_order_key(clip_z: float, sam_z: float) -> float:
+    """ensemble 排序键 = 0.7·z(clip) + 0.3·z(sam)（z 分数按本批候选算，
+    纯函数独立可测；单候选批次 z=0，退化为 clip 顺序）。"""
+    return ENSEMBLE_CLIP_WEIGHT * clip_z + (1.0 - ENSEMBLE_CLIP_WEIGHT) * sam_z
+
+
+def _z_scores(values: list[float]) -> list[float]:
+    if not values:
+        return []
+    mean = sum(values) / len(values)
+    variance = sum((v - mean) ** 2 for v in values) / len(values)
+    std = variance**0.5
+    if std < 1e-9:
+        return [0.0 for _ in values]
+    return [(v - mean) / std for v in values]
+
+
+def rank_regions(regions: list[dict], rank_mode: str) -> list[dict]:
+    """候选排序：clip = 现行为（CLIP 余弦降序，原位排序）；ensemble = z 归一
+    后 0.7·clip + 0.3·sam（显式配对列表，不给排序键塞 index 反模式）。排序
+    不改变区域内容，只决定环上顺序与 top-k 截断。"""
+    if rank_mode not in RANK_MODES:
+        raise ValueError(f"unknown rank mode: {rank_mode}")
+    if rank_mode == "clip":
+        regions.sort(key=lambda item: item["clip_score"], reverse=True)
+        return regions
+    clip_z = _z_scores([item["clip_score"] for item in regions])
+    sam_z = _z_scores([item["sam_score"] for item in regions])
+    pairs = sorted(
+        zip(clip_z, sam_z, regions),
+        key=lambda pair: -ensemble_order_key(pair[0], pair[1]),
+    )
+    return [region for _, _, region in pairs]
+
+
 def _decode_prompt(session, embeddings, transform, original_size, prompts):
     """单次 decoder 提示解码（网格点与 box 提示共用；draft-grounding-masks.py
     同机制）：返回 (bool 蒙版[原图分辨率], SAM 分数)。decoder 输出 logits，
@@ -133,7 +258,7 @@ def _decode_prompt(session, embeddings, transform, original_size, prompts):
     # transform_masks 返回 (1, N, H, W)：批 0 的第 best 张蒙版。
     batch = masks[0]
     raw = batch[best] if best < len(batch) else batch[0]
-    return raw > 0, score
+    return raw > 0, clamp01(score)
 
 
 def comb_outline(mask: np.ndarray, budget: int = OUTLINE_BUDGET) -> list[list[int]]:
@@ -223,7 +348,8 @@ class CandidateHandler(BaseHTTPRequestHandler):
             self.send_header("Access-Control-Allow-Methods", "POST, OPTIONS")
             self.send_header(
                 "Access-Control-Allow-Headers",
-                "Content-Type, X-Acs-Phrase-B64, X-Acs-Prompt-Box",
+                "Content-Type, X-Acs-Phrase-B64, X-Acs-Prompt-Box, "
+                "X-Acs-Exclude-Points, X-Acs-Rank",
             )
             self.send_header("Vary", "Origin")
         self.end_headers()
@@ -273,31 +399,30 @@ class CandidateHandler(BaseHTTPRequestHandler):
                 regions.append({"mask": mask, "sam_score": score, "area_ratio": area_ratio})
         return _dedupe(regions)
 
-    def _box_regions(self, image: Image.Image, box: list[float]) -> list[dict]:
+    def _box_regions(
+        self,
+        image: Image.Image,
+        box: list[float],
+        exclude_points: list[list[float]] | None = None,
+    ) -> list[dict]:
         """D 项入口：用户点击/画框限定后的 box 提示候选（同模型同契约）。
 
         变体来自 GT 起草（draft-grounding-masks.py）的两条实测结论：纯点提示
         在蓬毛/复杂纹理上退化成大团块，纯框提示只抓框内最显著核——框+中心、
-        框+多点组合能把 SAM 拉满目标整体。四种变体先裁到用户画框内，再送
-        CLIP 排序，环上由用户确认，不在此默默选边。画框是编辑范围硬边界。
+        框+多点组合能把 SAM 拉满目标整体。剔除点（蒙版代数：候选 − 误选区域）
+        以 SAM 负点（label 0）附加到每个变体，decoder 直接把蒙版从误选处拉开。
+        所有变体先裁到用户画框内，再送 CLIP 排序，环上由用户确认，不在此默默
+        选边。画框是编辑范围硬边界。
         """
         session, embeddings, transform, original_size = self._embed(image)
         height, width = image.height, image.width
         x1, y1, x2, y2 = box
         px1, py1 = round(x1 * width), round(y1 * height)
         px2, py2 = round(x2 * width), round(y2 * height)
-        rect = {"type": "rectangle", "data": [px1, py1, px2, py2]}
-        cx, cy = round((px1 + px2) / 2), round((py1 + py2) / 2)
-        center = {"type": "point", "label": 1, "data": [cx, cy]}
-        qx1 = round(px1 + (px2 - px1) * 0.25)
-        qx2 = round(px1 + (px2 - px1) * 0.75)
-        qy1 = round(py1 + (py2 - py1) * 0.25)
-        qy2 = round(py1 + (py2 - py1) * 0.75)
-        quad = [
-            {"type": "point", "label": 1, "data": [qx, qy]}
-            for qx, qy in ((qx1, qy1), (qx2, qy1), (qx1, qy2), (qx2, qy2))
+        exclude_px = [
+            (x * width, y * height) for x, y in (exclude_points or [])
         ]
-        variants = [[rect], [rect, center], [rect, center, *quad], [center]]
+        variants = box_prompt_variants((px1, py1, px2, py2), exclude_px)
         regions: list[dict] = []
         for prompts in variants:
             mask, score = _decode_prompt(
@@ -362,8 +487,7 @@ class CandidateHandler(BaseHTTPRequestHandler):
             sims = (image_feats @ text_feats.T)[:, 0].tolist()
         for region, score in zip(regions, sims):
             region["clip_score"] = float(score)
-        regions.sort(key=lambda item: item["clip_score"], reverse=True)
-        return regions[: self.top_k]
+        return regions
 
     def do_POST(self) -> None:
         origin = self._origin()
@@ -415,6 +539,26 @@ class CandidateHandler(BaseHTTPRequestHandler):
                 self._error(422, "X-Acs-Prompt-Box too small or out of range", origin)
                 return
             box = [x1, y1, x2, y2]
+        # 剔除点（蒙版代数交互）：仅在画框限定模式下有意义——无框网格候选
+        # 本来就未承诺避开任何区域，带点请求是无意义的组合，422 而非忽略。
+        exclude_header = self.headers.get("X-Acs-Exclude-Points", "")
+        if exclude_header and not box:
+            self._error(
+                422,
+                "X-Acs-Exclude-Points requires X-Acs-Prompt-Box (box mode only)",
+                origin,
+            )
+            return
+        exclude_points, exclude_error = parse_exclude_points(exclude_header)
+        if exclude_points is None:
+            self._error(422, exclude_error, origin)
+            return
+        # 重排序：clip = 现行为默认；ensemble = 0.7·z(clip)+0.3·z(sam)。
+        # 未知值 422，不静默退回 clip——评测与生产都要知道自己用的哪种序。
+        rank_mode = self.headers.get("X-Acs-Rank", "") or "clip"
+        if rank_mode not in RANK_MODES:
+            self._error(422, f"X-Acs-Rank must be one of {RANK_MODES}", origin)
+            return
         try:
             length = int(self.headers.get("Content-Length", ""))
         except ValueError:
@@ -447,7 +591,9 @@ class CandidateHandler(BaseHTTPRequestHandler):
                     Image.Resampling.LANCZOS,
                 )
             regions = (
-                self._box_regions(image, box) if box else self._sam_regions(image)
+                self._box_regions(image, box, exclude_points)
+                if box
+                else self._sam_regions(image)
             )
             if not regions:
                 # 契约：正常与 no-regions 响应都带有限正数的 width/height
@@ -465,7 +611,9 @@ class CandidateHandler(BaseHTTPRequestHandler):
                 self._headers(200, "application/json", len(body), origin)
                 self.wfile.write(body)
                 return
-            ranked = self._clip_rank(image, regions, phrase)
+            ranked = rank_regions(
+                self._clip_rank(image, regions, phrase), rank_mode
+            )[: self.top_k]
             scores = [region["clip_score"] for region in ranked]
             peak = max(abs(s) for s in scores) or 1.0
             exps = [math.exp(s / peak * 8) for s in scores]
@@ -485,6 +633,9 @@ class CandidateHandler(BaseHTTPRequestHandler):
                         "index": index + 1,
                         "score": round(exps[index] / total, 4),
                         "clip_score": round(region["clip_score"], 4),
+                        # 重排序证据链：SAM 自身 IoU 分随候选透出，评测端可离线
+                        # 复算 clip/ensemble 两种序（X-Acs-Rank 只改服务端排序）。
+                        "sam_score": round(region["sam_score"], 4),
                         "bounds": [x0, y0, x1 - x0, y1 - y0],
                         "outline": outline,
                         "mask_png_b64": mask_png_b64(mask),
@@ -497,6 +648,7 @@ class CandidateHandler(BaseHTTPRequestHandler):
                     "width": image.width,
                     "height": image.height,
                     "candidates": candidates,
+                    "rank": rank_mode,
                     "took_ms": round((time.time() - started) * 1000),
                 }
             ).encode("utf-8")

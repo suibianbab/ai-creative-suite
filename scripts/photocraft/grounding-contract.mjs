@@ -11,6 +11,9 @@
 //     no-regions 才是「合法无候选」，缺字段/非法值一律算坏响应。
 //   score 是同批候选上的 softmax 置信度，值域 [0,1]；bounds/outline 是
 //   「返回图（最长边 ≤1024）」像素坐标，必须落在返回图尺寸内。
+//   sam_score（重排序证据链，可选有限数 ∈[0,1]）：SAM 自身 IoU 分，评测端
+//   可离线复算 clip/ensemble 两种序；rank 字段（可选 "clip"|"ensemble"）
+//   声明本响应实际使用的排序。
 //   mask_png_b64（C 项，正常候选必填）：base64 的 8bit 灰度 PNG（255=选中），
 //   IHDR 宽高必须等于响应 width/height（与 bounds/outline 同坐标系）；
 //   非空性由桥端 select.loadSelection 探针保证（与 provider 蒙版同分工），
@@ -57,6 +60,13 @@ function candidateError(candidate, width, height, position) {
     !isFiniteNumber(candidate.clip_score)
   )
     return `${at} clip_score 非法`;
+  if (
+    candidate.sam_score !== undefined &&
+    (!isFiniteNumber(candidate.sam_score) ||
+      candidate.sam_score < 0 ||
+      candidate.sam_score > 1)
+  )
+    return `${at} sam_score 非法（须为 [0,1] 内有限数）`;
   if (candidate.area_ratio !== undefined) {
     if (
       !isFiniteNumber(candidate.area_ratio) ||
@@ -98,6 +108,13 @@ export function validateCandidatesResponse(payload) {
     (!isFiniteNumber(payload.took_ms) || payload.took_ms < 0)
   )
     return { ok: false, error: "took_ms 非法" };
+  // rank（重排序声明，可选）：clip | ensemble。缺失视为 clip（历史响应）。
+  if (
+    payload.rank !== undefined &&
+    payload.rank !== "clip" &&
+    payload.rank !== "ensemble"
+  )
+    return { ok: false, error: `rank 非法（clip|ensemble）：${payload.rank}` };
   if (reason !== undefined && reason !== null) {
     if (reason !== "no-regions")
       return { ok: false, error: `未知 reason：${reason}` };
@@ -287,6 +304,8 @@ export async function fetchCandidates({
   contentType,
   phrase,
   promptBox = null, // D 项：可选 [x1,y1,x2,y2] 归一化画框（box 提示模式）
+  excludePoints = null, // 剔除点：可选 1-4 个 [x,y] 归一化点（仅 box 模式）
+  rank = null, // 重排序：可选 "clip"|"ensemble"（缺省 = 服务默认 clip）
   fetchImpl = fetch,
 }) {
   const headers = {
@@ -294,6 +313,9 @@ export async function fetchCandidates({
     "X-Acs-Phrase-B64": Buffer.from(phrase, "utf8").toString("base64"),
   };
   if (promptBox) headers["X-Acs-Prompt-Box"] = JSON.stringify(promptBox);
+  if (excludePoints && excludePoints.length)
+    headers["X-Acs-Exclude-Points"] = JSON.stringify(excludePoints);
+  if (rank) headers["X-Acs-Rank"] = rank;
   for (let attempt = 0; attempt < 6; attempt += 1) {
     let response;
     try {
