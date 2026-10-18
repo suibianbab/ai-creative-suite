@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   addCandidateVersion,
+  reviseWorkingVersion,
   rollbackWorkingVersion,
   ShotLockedError,
   setLocked,
@@ -97,4 +98,119 @@ test("回滚 working 版本保留历史且旧 delivery 不变", () => {
   );
   assert.equal(rolled.deliveries.length, 1);
   assert.equal(rolled.shots[0]!.contentVersions.length, 2); // 历史不丢
+});
+
+// —— 分镜编辑器：人工修订路径（ADR 0003 §1.3）——
+
+const T0 = "2026-10-18T00:00:00.000Z";
+const T = "2026-10-18T01:00:00.000Z";
+
+// baseProject 的版本 narrationText 为空串；这里给一个非空初值便于断言继承/覆盖。
+function editableProject(): VideoProject {
+  const p = baseProject();
+  const shot = p.shots[0]!;
+  return {
+    ...p,
+    shots: [
+      {
+        ...shot,
+        contentVersions: [
+          { ...shot.contentVersions[0]!, narrationText: "旧旁白。" },
+        ],
+      },
+    ],
+  };
+}
+
+test("reviseWorkingVersion 追加 human 版本并前移指针", () => {
+  const p = editableProject();
+  const next = reviseWorkingVersion(
+    p,
+    p.shots[0]!.shotId,
+    { narrationText: "新旁白。" },
+    UUID2,
+    T,
+  );
+  const shot = next.shots[0]!;
+  assert.equal(shot.contentVersions.length, 2);
+  assert.equal(shot.workingVersionId, UUID2);
+  const v2 = shot.contentVersions[1]!;
+  assert.equal(v2.narrationText, "新旁白。");
+  assert.equal(v2.durationMs, shot.contentVersions[0]!.durationMs); // 未 patch spec → 继承
+  assert.equal(v2.provenance.engineId, "human-edit");
+  assert.equal(v2.provenance.parentVersionId, UUID);
+  assert.deepEqual(shot.events.at(-1), {
+    kind: "submitted",
+    versionId: UUID2,
+    at: T,
+    actor: "human",
+  });
+  assert.ok(v2.description.includes("人工修订"));
+  assert.ok(v2.description.length <= 200);
+  // 入参不动
+  assert.equal(p.shots[0]!.contentVersions.length, 1);
+});
+
+test("reviseWorkingVersion 锁定镜头允许且追加 audit 事件", () => {
+  const p = setLocked(editableProject(), editableProject().shots[0]!.shotId, true, T0);
+  const next = reviseWorkingVersion(
+    p,
+    p.shots[0]!.shotId,
+    { narrationText: "锁定下改。" },
+    UUID2,
+    T,
+  );
+  const events = next.shots[0]!.events;
+  assert.deepEqual(events.at(-2), {
+    kind: "submitted",
+    versionId: UUID2,
+    at: T,
+    actor: "human",
+  });
+  assert.deepEqual(events.at(-1), {
+    kind: "audit",
+    note: "人工修订（锁定镜头）",
+    at: T,
+    actor: "human",
+  });
+});
+
+test("reviseWorkingVersion spec patch 同步 durationMs 与 sceneSource", () => {
+  const p = editableProject();
+  const spec = {
+    specVersion: 1,
+    componentId: "text-animation",
+    componentVersion: "1",
+    durationMs: 3000,
+    seed: 1,
+    background: "#ffffff",
+    params: {},
+  };
+  const next = reviseWorkingVersion(p, p.shots[0]!.shotId, { spec }, UUID2, T);
+  const v2 = next.shots[0]!.contentVersions[1]!;
+  assert.equal(v2.durationMs, 3000);
+  assert.deepEqual(v2.sceneSource, { type: "spec", spec });
+  // 未给 narrationText → 继承 working 版本
+  assert.equal(v2.narrationText, "旧旁白。");
+});
+
+test("reviseWorkingVersion 未知镜头抛错且入参不变", () => {
+  const p = editableProject();
+  assert.throws(
+    () => reviseWorkingVersion(p, "no-such-shot", { narrationText: "x" }, UUID2, T),
+    /不存在/,
+  );
+  assert.equal(p.shots[0]!.contentVersions.length, 1);
+});
+
+test("reviseWorkingVersion 空旁白合法", () => {
+  const p = editableProject();
+  const next = reviseWorkingVersion(
+    p,
+    p.shots[0]!.shotId,
+    { narrationText: "" },
+    UUID2,
+    T,
+  );
+  assert.equal(next.shots[0]!.contentVersions[1]!.narrationText, "");
 });

@@ -89,3 +89,64 @@ export function rollbackWorkingVersion(
     ],
   }));
 }
+
+// 人工修订（分镜编辑器）：以当前 working 版本为 base 追加新 ContentVersion +
+// submitted(human)。锁定镜头允许（ADR 0003 §1.3 人工路径），并追加 audit 事件
+// 留痕。patch.spec 由调用方先用 video-scene 的 validateSceneSpec + 组件注册表
+// 校验过（本包不依赖 video-scene，spec 在文档内是 unknown）。
+export function reviseWorkingVersion(
+  p: VideoProject,
+  shotId: string,
+  patch: { narrationText?: string; spec?: unknown },
+  newVersionId: string,
+  at = new Date().toISOString(),
+): VideoProject {
+  const shot = p.shots.find((s) => s.shotId === shotId);
+  if (!shot) throw new Error(`shotId ${shotId} 不存在`);
+  const base = shot.contentVersions.find(
+    (v) => v.versionId === shot.workingVersionId,
+  );
+  if (!base) {
+    throw new Error(`镜头 ${shotId} 的工作版本 ${shot.workingVersionId} 不存在`);
+  }
+  const version: ContentVersion = {
+    ...base,
+    versionId: newVersionId,
+    createdAt: at,
+    durationMs:
+      patch.spec === undefined
+        ? base.durationMs
+        : (patch.spec as { durationMs: number }).durationMs,
+    description: `${base.description.slice(0, 160)}（人工修订）`,
+    narrationText: patch.narrationText ?? base.narrationText,
+    sceneSource:
+      patch.spec === undefined
+        ? base.sceneSource
+        : { type: "spec", spec: patch.spec },
+    provenance: {
+      ...base.provenance,
+      engineId: "human-edit",
+      engineVersion: "1",
+      parentVersionId: base.versionId,
+    },
+  };
+  return updateShot(p, shotId, (s) => ({
+    ...s,
+    contentVersions: [...s.contentVersions, version],
+    events: [
+      ...s.events,
+      { kind: "submitted", versionId: newVersionId, at, actor: "human" as const },
+      ...(s.locked
+        ? [
+            {
+              kind: "audit" as const,
+              note: "人工修订（锁定镜头）",
+              at,
+              actor: "human" as const,
+            },
+          ]
+        : []),
+    ],
+    workingVersionId: newVersionId,
+  }));
+}
