@@ -3,8 +3,11 @@ import test from "node:test";
 import { defaultRegistry, validateSceneSpec } from "@acs/video-scene";
 import {
   isStoryboardSentence,
+  LINE_TEMPLATE_LABELS,
   planFromSentence,
   planStoryboard,
+  reseedSpecParams,
+  SHAPE_TEMPLATE_LABELS,
   speechAwareDurationMs,
   splitShotDurations,
 } from "./planner.js";
@@ -250,4 +253,58 @@ test("分镜：3s/4 镜头水循环 → 语音需求撑大镜头，totalMs=Σ实
   );
   assert.deepEqual(durations, [1600, 3100, 1600, 1900]);
   assert.ok(result.totalMs > 3000);
+});
+
+// —— 分镜编辑器：模板换枚（reseedSpecParams）——
+
+test("reseedSpecParams 线描：同 seed 不动点、+1 换枚、表长回绕", () => {
+  const plan = planFromSentence("做一个10秒的线描动画，标题是水循环");
+  assert.ok(plan.ok);
+  // 不动点：同 seed 重抽还原原 params（模板表单一事实源）
+  assert.deepEqual(
+    reseedSpecParams(plan.spec, plan.spec.seed).params,
+    plan.spec.params,
+  );
+  // +1 换枚：params 变化且 seed 记录前移
+  const next = reseedSpecParams(plan.spec, plan.spec.seed + 1);
+  assert.equal(next.seed, plan.spec.seed + 1);
+  assert.notDeepEqual(next.params, plan.spec.params);
+  // 保留时长/背景
+  assert.equal(next.durationMs, plan.spec.durationMs);
+  assert.equal(next.background, plan.spec.background);
+  // 表长回绕：seed 与 seed+len 同模板
+  const len = LINE_TEMPLATE_LABELS.length;
+  assert.deepEqual(
+    reseedSpecParams(plan.spec, plan.spec.seed + len).params,
+    reseedSpecParams(plan.spec, plan.spec.seed).params,
+  );
+  // 换枚结果仍过注册表校验
+  validateSceneSpec(next, defaultRegistry);
+});
+
+test("reseedSpecParams 图形：同 seed 不动点、+1 换枚、表长回绕", () => {
+  const plan = planFromSentence("做一个10秒的图形动画，标题是水循环");
+  assert.ok(plan.ok);
+  assert.deepEqual(
+    reseedSpecParams(plan.spec, plan.spec.seed).params,
+    plan.spec.params,
+  );
+  const next = reseedSpecParams(plan.spec, plan.spec.seed + 1);
+  assert.notDeepEqual(next.params, plan.spec.params);
+  const len = SHAPE_TEMPLATE_LABELS.length;
+  assert.deepEqual(
+    reseedSpecParams(plan.spec, plan.spec.seed + len).params,
+    reseedSpecParams(plan.spec, plan.spec.seed).params,
+  );
+  validateSceneSpec(next, defaultRegistry);
+});
+
+test("reseedSpecParams 文字动画：仅 seed 记录变，params 不动", () => {
+  const plan = planFromSentence("做一个10秒的文字动画，标题是水循环");
+  assert.ok(plan.ok);
+  const before = structuredClone(plan.spec);
+  const reseeded = reseedSpecParams(plan.spec, 999);
+  assert.deepEqual(reseeded, { ...plan.spec, seed: 999 });
+  // 入参不被改
+  assert.deepEqual(plan.spec, before);
 });

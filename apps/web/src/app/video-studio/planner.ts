@@ -64,7 +64,8 @@ function hashSentence(sentence: string): number {
 // —— 线描模板（1000×1000 设计空间，组件契约见 line-drawing.ts）——
 // 下标与 LINE_TEMPLATE_LABELS 一一对应：确认卡如实预告「会画什么」，
 // 不让必填的「标题」暗示画面按题材生成（P1-E）。
-const LINE_TEMPLATE_LABELS = [
+// 导出标签数组：分镜编辑器显示模板序号、测试断言表长回绕。
+export const LINE_TEMPLATE_LABELS = [
   "单条弧线",
   "H 形线条",
   "三角形轮廓",
@@ -82,8 +83,8 @@ const LINE_TEMPLATES: string[][] = [
 ];
 
 // —— 图形模板：归一化包围盒（basic-shapes 组件契约）——
-// 下标与 SHAPE_TEMPLATE_LABELS 一一对应，用途同线描。
-const SHAPE_TEMPLATE_LABELS = [
+// 下标与 SHAPE_TEMPLATE_LABELS 一一对应，用途同线描（导出理由同线描）。
+export const SHAPE_TEMPLATE_LABELS = [
   "单个方块",
   "圆与横条",
   "三角形、小方块与小圆",
@@ -204,6 +205,19 @@ export function specSummary(spec: SceneSpec): string {
   const label =
     TYPE_LABEL[spec.componentId as keyof typeof TYPE_LABEL] ?? spec.componentId;
   return `${label}动画 ${spec.durationMs / 1000}s · seed ${spec.seed} · 背景 ${spec.background}`;
+}
+
+// 换模板（分镜编辑器）：对 line-drawing / basic-shapes 用新 seed 从模板表
+// 重生成 params（模板表单一事实源）；text-animation 的 params 是标题/副标题，
+// 不经此路（走标题输入框）。返回新 spec，不改入参；其余字段原样保留。
+export function reseedSpecParams(spec: SceneSpec, seed: number): SceneSpec {
+  if (spec.componentId === "line-drawing") {
+    return { ...spec, seed, params: lineDrawingParams(seed) };
+  }
+  if (spec.componentId === "basic-shapes") {
+    return { ...spec, seed, params: basicShapesParams(seed) };
+  }
+  return { ...spec, seed };
 }
 
 // —— P1 分镜规划器：一句话 STEM 解说视频 → N 个镜头的 spec 序列 ——
