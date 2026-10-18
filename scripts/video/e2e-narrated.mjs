@@ -429,6 +429,21 @@ if (!/谢谢观看/.test(echoNarrations.at(-1) ?? ""))
   fail("导入回显", `末镜头旁白未回显: ${echoNarrations.at(-1)}`);
 const recordRows = await page.locator(".render-records li").count();
 if (recordRows !== 8) fail("导入后渲染记录", `记录条数 ${recordRows} ≠ 8`);
+// 预览近似标注（spec R3 近似路径的诚实性）：预览字幕是均匀分布，必须告诉
+// 用户出片才按字级时间戳——不标等于让用户拿预览对出片节奏。
+const previewNote = await page
+  .locator(".piece-preview .preview-subtitle-note")
+  .textContent()
+  .catch(() => null);
+if (
+  !previewNote ||
+  !/预览近似/.test(previewNote) ||
+  !/字级时间戳/.test(previewNote)
+)
+  fail(
+    "预览近似标注",
+    `整片预览缺「预览近似，出片按字级时间戳」: ${previewNote}`,
+  );
 await page.screenshot({
   path: path.join(OUT_DIR, "narrated-editor.png"),
   fullPage: true,

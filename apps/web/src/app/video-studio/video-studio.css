@@ -330,6 +330,15 @@
   gap: 10px;
 }
 
+/* 预览字幕是均匀近似（无字级时间戳），出片才按字级——必须标注，不能
+ * 让用户拿预览对出片节奏（spec R3 近似路径的诚实性） */
+.preview-subtitle-note {
+  margin-left: auto;
+  color: #64748b;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
 .preview-toggle {
   border: 1px solid #cadbd1;
   border-radius: 8px;

@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-10-18T04:41:16.779Z",
-  "projectId": "892c02a8-86f0-4326-b7fd-483423a853d8",
+  "generatedAt": "2026-10-18T05:17:30.482Z",
+  "projectId": "ae7f22fd-9797-415b-86b3-aa61d573b4c3",
   "remotion": "4.0.534",
   "browser": "Google Chrome 155.0.8059.41",
   "fontDigests": {
@@ -17,69 +17,69 @@
       "frameMap": [
         {
           "shotIndex": 0,
-          "shotId": "b6759cde-c8d9-4a97-8866-c3d67f803f2a",
-          "versionId": "1e700835-a40f-48a0-8d98-146df0252681",
+          "shotId": "350b2edb-9432-4a0b-bb34-b58f319d8009",
+          "versionId": "50f92e3b-0a1f-4aaa-ad8c-33abb76e41fc",
           "componentId": "text-animation",
           "startFrame": 0,
           "frames": 48,
-          "contentDigest": "65928c2dbae9bd6c1de5c24a12c3ba2f22c786fd26c95e2d2f23ad5e05d20698"
+          "contentDigest": "8dbbc16956520e728d373cb9546a551e011416438ecb61f2991c78f267ad485b"
         },
         {
           "shotIndex": 1,
-          "shotId": "d9c113a4-5000-42ca-8f48-bff29d263d39",
-          "versionId": "6c93461d-073f-4360-99d5-155ffc3ccb46",
+          "shotId": "cb2eff7b-6bde-4516-b1c4-1e3d5902a66e",
+          "versionId": "3c67c892-ddd5-4fdd-a4da-27fc856201f9",
           "componentId": "text-animation",
           "startFrame": 48,
           "frames": 74,
-          "contentDigest": "aa4e1d74960830e76687ea5e19568e2fd5ece561ccb41f90bfc40f221d71f775"
+          "contentDigest": "44d9fe4c52f5053630e01a8c4d8d1cd9b57c145b900a2cd2ca656df510ed0e8e"
         },
         {
           "shotIndex": 2,
-          "shotId": "194c3f73-803d-4370-a59d-fbe51c2df5bd",
-          "versionId": "e808f97f-dcbb-459b-b93d-f624bfe9cded",
+          "shotId": "0809e9c2-51c0-468c-a3be-7fd629019d6a",
+          "versionId": "580e3ea4-3b99-49ec-a5bb-abc4f5d24025",
           "componentId": "basic-shapes",
           "startFrame": 122,
           "frames": 48,
-          "contentDigest": "b719b8a039b0c4c4687f405dcfcace5ed8a3d19f277940ae660be196dbdf2fda"
+          "contentDigest": "ab8ef8078051cc66663c93e03af5cb089ffd7217fc55ecb63777fe1ce67e04cf"
         },
         {
           "shotIndex": 3,
-          "shotId": "62bfbdec-79a5-40b6-9b46-fc1682e306b5",
-          "versionId": "8f8dddac-caf9-4cb2-bd39-51875e7fadde",
+          "shotId": "5ef52b92-b702-4ad8-9e58-40650e689409",
+          "versionId": "ee35cfd0-0640-40a9-a8e1-49702c10b380",
           "componentId": "text-animation",
           "startFrame": 170,
           "frames": 48,
-          "contentDigest": "947ecbfbf31b91a7cec4f7a689fade349d239a10a54d03461acc5b259ebcfa38"
+          "contentDigest": "90113d85c891a8c429d4ed3bd4b3a53f1c44e0c37fc7562aa55a9f36d121c8a7"
         }
       ],
       "narration": [
         {
           "shotIndex": 0,
-          "versionId": "1e700835-a40f-48a0-8d98-146df0252681",
+          "versionId": "50f92e3b-0a1f-4aaa-ad8c-33abb76e41fc",
           "audioBytes": 76844,
           "durationMs": 1600,
-          "wordsFile": "b6759cde-c8d9-4a97-8866-c3d67f803f2a-1e700835-a40f-48a0-8d98-146df0252681.words.json"
+          "wordsFile": "350b2edb-9432-4a0b-bb34-b58f319d8009-50f92e3b-0a1f-4aaa-ad8c-33abb76e41fc.words.json"
         },
         {
           "shotIndex": 1,
-          "versionId": "6c93461d-073f-4360-99d5-155ffc3ccb46",
+          "versionId": "3c67c892-ddd5-4fdd-a4da-27fc856201f9",
           "audioBytes": 126764,
           "durationMs": 2640,
-          "wordsFile": "d9c113a4-5000-42ca-8f48-bff29d263d39-6c93461d-073f-4360-99d5-155ffc3ccb46.words.json"
+          "wordsFile": "cb2eff7b-6bde-4516-b1c4-1e3d5902a66e-3c67c892-ddd5-4fdd-a4da-27fc856201f9.words.json"
         },
         {
           "shotIndex": 2,
-          "versionId": "e808f97f-dcbb-459b-b93d-f624bfe9cded",
+          "versionId": "580e3ea4-3b99-49ec-a5bb-abc4f5d24025",
           "audioBytes": 76844,
           "durationMs": 1600,
-          "wordsFile": "194c3f73-803d-4370-a59d-fbe51c2df5bd-e808f97f-dcbb-459b-b93d-f624bfe9cded.words.json"
+          "wordsFile": "0809e9c2-51c0-468c-a3be-7fd629019d6a-580e3ea4-3b99-49ec-a5bb-abc4f5d24025.words.json"
         },
         {
           "shotIndex": 3,
-          "versionId": "8f8dddac-caf9-4cb2-bd39-51875e7fadde",
+          "versionId": "ee35cfd0-0640-40a9-a8e1-49702c10b380",
           "audioBytes": 63404,
           "durationMs": 1320,
-          "wordsFile": "62bfbdec-79a5-40b6-9b46-fc1682e306b5-8f8dddac-caf9-4cb2-bd39-51875e7fadde.words.json"
+          "wordsFile": "5ef52b92-b702-4ad8-9e58-40650e689409-ee35cfd0-0640-40a9-a8e1-49702c10b380.words.json"
         }
       ],
       "subtitleCues": [
@@ -90,8 +90,8 @@
         },
         {
           "shotIndex": 1,
-          "cues": 3,
-          "textSha256": "4636b41214d72a004f85e9de8d08403f8722873015d982fd4e7b384a01bb44a9"
+          "cues": 2,
+          "textSha256": "425c6c7ef375c7c92ef86db710d703aef7ef2c289cb8860aa8aba58606cb8585"
         },
         {
           "shotIndex": 2,
@@ -115,69 +115,69 @@
       "frameMap": [
         {
           "shotIndex": 0,
-          "shotId": "b6759cde-c8d9-4a97-8866-c3d67f803f2a",
-          "versionId": "1e700835-a40f-48a0-8d98-146df0252681",
+          "shotId": "350b2edb-9432-4a0b-bb34-b58f319d8009",
+          "versionId": "50f92e3b-0a1f-4aaa-ad8c-33abb76e41fc",
           "componentId": "text-animation",
           "startFrame": 0,
           "frames": 48,
-          "contentDigest": "65928c2dbae9bd6c1de5c24a12c3ba2f22c786fd26c95e2d2f23ad5e05d20698"
+          "contentDigest": "8dbbc16956520e728d373cb9546a551e011416438ecb61f2991c78f267ad485b"
         },
         {
           "shotIndex": 1,
-          "shotId": "d9c113a4-5000-42ca-8f48-bff29d263d39",
-          "versionId": "6c93461d-073f-4360-99d5-155ffc3ccb46",
+          "shotId": "cb2eff7b-6bde-4516-b1c4-1e3d5902a66e",
+          "versionId": "3c67c892-ddd5-4fdd-a4da-27fc856201f9",
           "componentId": "text-animation",
           "startFrame": 48,
           "frames": 74,
-          "contentDigest": "aa4e1d74960830e76687ea5e19568e2fd5ece561ccb41f90bfc40f221d71f775"
+          "contentDigest": "44d9fe4c52f5053630e01a8c4d8d1cd9b57c145b900a2cd2ca656df510ed0e8e"
         },
         {
           "shotIndex": 2,
-          "shotId": "194c3f73-803d-4370-a59d-fbe51c2df5bd",
-          "versionId": "e808f97f-dcbb-459b-b93d-f624bfe9cded",
+          "shotId": "0809e9c2-51c0-468c-a3be-7fd629019d6a",
+          "versionId": "580e3ea4-3b99-49ec-a5bb-abc4f5d24025",
           "componentId": "basic-shapes",
           "startFrame": 122,
           "frames": 48,
-          "contentDigest": "b719b8a039b0c4c4687f405dcfcace5ed8a3d19f277940ae660be196dbdf2fda"
+          "contentDigest": "ab8ef8078051cc66663c93e03af5cb089ffd7217fc55ecb63777fe1ce67e04cf"
         },
         {
           "shotIndex": 3,
-          "shotId": "62bfbdec-79a5-40b6-9b46-fc1682e306b5",
-          "versionId": "8f8dddac-caf9-4cb2-bd39-51875e7fadde",
+          "shotId": "5ef52b92-b702-4ad8-9e58-40650e689409",
+          "versionId": "ee35cfd0-0640-40a9-a8e1-49702c10b380",
           "componentId": "text-animation",
           "startFrame": 170,
           "frames": 48,
-          "contentDigest": "947ecbfbf31b91a7cec4f7a689fade349d239a10a54d03461acc5b259ebcfa38"
+          "contentDigest": "90113d85c891a8c429d4ed3bd4b3a53f1c44e0c37fc7562aa55a9f36d121c8a7"
         }
       ],
       "narration": [
         {
           "shotIndex": 0,
-          "versionId": "1e700835-a40f-48a0-8d98-146df0252681",
+          "versionId": "50f92e3b-0a1f-4aaa-ad8c-33abb76e41fc",
           "audioBytes": 76844,
           "durationMs": 1600,
-          "wordsFile": "b6759cde-c8d9-4a97-8866-c3d67f803f2a-1e700835-a40f-48a0-8d98-146df0252681.words.json"
+          "wordsFile": "350b2edb-9432-4a0b-bb34-b58f319d8009-50f92e3b-0a1f-4aaa-ad8c-33abb76e41fc.words.json"
         },
         {
           "shotIndex": 1,
-          "versionId": "6c93461d-073f-4360-99d5-155ffc3ccb46",
+          "versionId": "3c67c892-ddd5-4fdd-a4da-27fc856201f9",
           "audioBytes": 126764,
           "durationMs": 2640,
-          "wordsFile": "d9c113a4-5000-42ca-8f48-bff29d263d39-6c93461d-073f-4360-99d5-155ffc3ccb46.words.json"
+          "wordsFile": "cb2eff7b-6bde-4516-b1c4-1e3d5902a66e-3c67c892-ddd5-4fdd-a4da-27fc856201f9.words.json"
         },
         {
           "shotIndex": 2,
-          "versionId": "e808f97f-dcbb-459b-b93d-f624bfe9cded",
+          "versionId": "580e3ea4-3b99-49ec-a5bb-abc4f5d24025",
           "audioBytes": 76844,
           "durationMs": 1600,
-          "wordsFile": "194c3f73-803d-4370-a59d-fbe51c2df5bd-e808f97f-dcbb-459b-b93d-f624bfe9cded.words.json"
+          "wordsFile": "0809e9c2-51c0-468c-a3be-7fd629019d6a-580e3ea4-3b99-49ec-a5bb-abc4f5d24025.words.json"
         },
         {
           "shotIndex": 3,
-          "versionId": "8f8dddac-caf9-4cb2-bd39-51875e7fadde",
+          "versionId": "ee35cfd0-0640-40a9-a8e1-49702c10b380",
           "audioBytes": 63404,
           "durationMs": 1320,
-          "wordsFile": "62bfbdec-79a5-40b6-9b46-fc1682e306b5-8f8dddac-caf9-4cb2-bd39-51875e7fadde.words.json"
+          "wordsFile": "5ef52b92-b702-4ad8-9e58-40650e689409-ee35cfd0-0640-40a9-a8e1-49702c10b380.words.json"
         }
       ],
       "subtitleCues": [
@@ -188,8 +188,8 @@
         },
         {
           "shotIndex": 1,
-          "cues": 3,
-          "textSha256": "4636b41214d72a004f85e9de8d08403f8722873015d982fd4e7b384a01bb44a9"
+          "cues": 2,
+          "textSha256": "425c6c7ef375c7c92ef86db710d703aef7ef2c289cb8860aa8aba58606cb8585"
         },
         {
           "shotIndex": 2,

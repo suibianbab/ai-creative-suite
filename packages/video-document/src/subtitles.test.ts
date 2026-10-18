@@ -86,6 +86,51 @@ test("非法时间戳字（begin≥end）被剔除后全废则回退均匀", () 
   assert.equal(cues[0]!.endMs, 1200);
 });
 
+// 终评 Important#4（spec R2：cue 文本取原始字符）：TTS 会规范化文本——
+// 实测「水循环，要点 1。」的字级 token 是 「水/循/环/，/要/点/、/一/。」
+// （数字变汉字、顿号凭空多出）。字幕必须仍显用户原文，时间戳才取 token。
+test("文本取原始字符：TTS 规范化（1→、一）时 cue 文本仍是 narrationText 原文", () => {
+  const normalized = "水循环，要点、一。".split("").map((text, i) => ({
+    text,
+    beginMs: 360 + i * 260,
+    endMs: 360 + i * 260 + 200,
+  }));
+  const cues = buildSubtitleCues({
+    narrationText: "水循环，要点 1。",
+    words: normalized,
+  });
+  assert.deepEqual(
+    cues.map((c) => c.text),
+    ["水循环，", "要点 1。"],
+    "字幕显原文（含阿拉伯数字与空格），不显 TTS 规范化文本",
+  );
+  // 时间戳仍取 token：首 cue 覆盖到「，」token 的 endMs
+  assert.equal(cues[0]!.startMs, normalized[0]!.beginMs);
+  assert.equal(cues[0]!.endMs, normalized[3]!.endMs);
+  assert.equal(cues[1]!.endMs, normalized[8]!.endMs, "末 cue 到「。」token 末");
+});
+
+// 锚点全失（重度规范化，原文与 token 无任何相等字符）：退化为按 token
+// 时间包络均匀分布原文——文本仍是原文，时间近似但落在真实语音窗内。
+test("原文与 token 完全无锚点：按 token 时间包络均匀分布原文", () => {
+  const cues = buildSubtitleCues({
+    narrationText: "甲乙丙。",
+    words: [
+      { text: "x", beginMs: 100, endMs: 200 },
+      { text: "y", beginMs: 200, endMs: 300 },
+      { text: "z", beginMs: 300, endMs: 400 },
+      { text: "w", beginMs: 400, endMs: 500 },
+    ],
+  });
+  assert.deepEqual(
+    cues.map((c) => c.text),
+    ["甲乙丙。"],
+    "cue 文本必须是原文，不得拼 token",
+  );
+  assert.equal(cues[0]!.startMs, 100, "包络起点 = 首token begin");
+  assert.equal(cues[0]!.endMs, 500, "包络终点 = 末token end");
+});
+
 test("activeSubtitleCue：半开区间，t=endMs 时下一条/无", () => {
   const cues = [
     { text: "甲", startMs: 0, endMs: 500 },

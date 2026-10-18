@@ -37,18 +37,20 @@
 
 以下产物因 gitignore 约定（媒体不入库）仅存本地，**不构成可独立复核的视觉证据**；其 SHA-256 供本机比对：
 
-| 文件 | SHA-256（2026-10-18 字幕轨收口复跑，speech-aware 后终值） |
+| 文件 | SHA-256（2026-10-18 终评整改后复跑终值） |
 | --- | --- |
-| e2e.video-project.json | `e1a34b8af84e1f462c8d979cba465ffec94b1e751b39b5fd9ea7f41735ebb3ab` |
+| e2e.video-project.json | `87d85b26f2f57f3bfec395a8357426067b0a75745aed2a1a3c2784df2c6ba661` |
 | e2e-render/landscape.mp4 | `bbda0997f8038e6b9b751e0528e9839ede2bb63612b1dc81636502db156e9f0f` |
 | e2e-render/portrait.mp4 | `b1849dd5ab1d0391dbc574a23bdbf3bdba8e7327679810f90ae949d48bb5127a` |
-| multishot-editor.png | `a15f424a765c0241315ad5907f14dd2ed26feb149fd5f5cc28f537477ba313ee` |
+| multishot-editor.png | `f99dc2e7c786be5b18e2c0c8379b6b664f3b3b189ef7530a8c4071c0bd3f81d7` |
 
 **2026-10-18 复跑备注（复核整改后的回归运行）**：locked 末条裁定 + 分镜追加语义（brief.applications 快照）落地后全链路一次通过；两片 MP4 与彼时表值 `e4df78e9…`/`85bac1b8…` **逐字节一致**（第 4 次跨运行实证——复核修复不进渲染路径）；项目 JSON 因 brief 新增 applications 快照与新 UUID 刷新、截图因预览相位刷新（均属预期，已取新值入表）。
 
 **2026-10-18 第三轮复跑备注（brief.applications 数据契约，commit `1bfe025`）**：validate 导入格式校验 + evolve 只追加校验落地后同日再跑两次（项目 ID `7bdb4bd0-…`、`35f59255-…`），全链路一次通过——分镜应用（写 applications）→ 浏览器保存 v2 → CLI 再保存 v3（过新只追加检查）→ 导入（过新格式校验）全程无阻；产物 json 中 `brief.applications` 条目完整落档（appended*/film*After/appliedAt 齐全）。两片 MP4 仍逐字节一致（跨运行一致实证累计至第 6 次——校验代码不进渲染路径）；JSON/截图哈希随新 UUID/预览相位刷新，表中取最后一次运行值。
 
 **2026-10-18 第四轮复跑备注（字幕轨收口，speech-aware 规划落地）**：分镜规划器改为语速感知时长（等分 vs 400+300×字数 取大者）后同句复跑，项目时长 8000→9100ms（要点镜头 2000→3100ms）——两片 MP4 哈希**合法变化**（`e4df78e9…`/`85bac1b8…` → 上表新值），变的是时长数据（帧数 192→218）而非引擎行为；引擎不变性由字幕轨 T2 的第 7 次复跑独立证明（无字幕 props 时 MP4 与旧值逐字节不变，见下段）。脚本硬断言随规划语义更新为 Σ9100ms；项目 JSON/截图因新 UUID 与预览相位刷新（属预期，已取新值入表）。
+
+**2026-10-18 第五轮复跑备注（字幕轨终评整改）**：字幕 cue 原文映射（`mapNarrationTextToWords`）与预览近似标注落地后同句复跑，全链路一次通过——两片 MP4 与第四轮**逐字节一致**（`bbda0997`/`b1849dd`，第 9 次跨运行实证）：本链路无旁白资产/无字幕 props，cue 构建纯函数的改动不进渲染路径，哈希不变即为佐证。项目 JSON 因新 UUID 刷新；截图与同日 e2e-narrated 的 `narrated-editor.png` 逐字节相同（同句确定性 + 均为导入后初始帧截图，彼文档有注）。
 
 **跨运行确定性（本机复核）**：speech-aware 落地前，七次完整独立运行（项目 ID 各不相同）的 landscape/portrait MP4 SHA-256 **逐字节一致**（`e4df78e9…`/`85bac1b8…`，七次相同，其中第 7 次为字幕轨 T2 无字幕 props 的回归复跑）——同一句话→同一种子→同一 spec→同一像素，UUID 不进入渲染路径；预览侧修复（fps 对齐、spec 安全解析）与字幕轨的 cues 构建纯函数均不触碰无字幕渲染路径，哈希不变即为佐证。speech-aware 之后（第 8 次）哈希随时长数据变化，属上述合法演进。项目 JSON 与截图因内嵌新 UUID/预览相位而不同，属预期，表中取收口运行值（复跑会更新盘上文件）。
 

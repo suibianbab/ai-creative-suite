@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "id": "892c02a8-86f0-4326-b7fd-483423a853d8",
+  "id": "ae7f22fd-9797-415b-86b3-aa61d573b4c3",
   "title": "水循环",
   "brief": {
     "sentence": "做一个8秒的STEM解说视频，主题是水循环，分4个镜头",
@@ -15,20 +15,20 @@
         "appendedDurationMs": 9100,
         "filmShotCountAfter": 4,
         "filmTotalMsAfter": 9100,
-        "appliedAt": "2026-10-18T04:41:11.581Z"
+        "appliedAt": "2026-10-18T05:17:25.778Z"
       }
     ]
   },
   "shots": [
     {
-      "shotId": "b6759cde-c8d9-4a97-8866-c3d67f803f2a",
+      "shotId": "350b2edb-9432-4a0b-bb34-b58f319d8009",
       "order": 0,
       "locked": false,
-      "workingVersionId": "1e700835-a40f-48a0-8d98-146df0252681",
+      "workingVersionId": "50f92e3b-0a1f-4aaa-ad8c-33abb76e41fc",
       "contentVersions": [
         {
-          "versionId": "1e700835-a40f-48a0-8d98-146df0252681",
-          "createdAt": "2026-10-18T04:41:11.581Z",
+          "versionId": "50f92e3b-0a1f-4aaa-ad8c-33abb76e41fc",
+          "createdAt": "2026-10-18T05:17:25.778Z",
           "durationMs": 2000,
           "description": "开场（文字动画）：水循环",
           "narrationText": "水循环。",
@@ -59,21 +59,21 @@
       "events": [
         {
           "kind": "submitted",
-          "versionId": "1e700835-a40f-48a0-8d98-146df0252681",
-          "at": "2026-10-18T04:41:11.581Z",
+          "versionId": "50f92e3b-0a1f-4aaa-ad8c-33abb76e41fc",
+          "at": "2026-10-18T05:17:25.778Z",
           "actor": "human"
         }
       ]
     },
     {
-      "shotId": "d9c113a4-5000-42ca-8f48-bff29d263d39",
+      "shotId": "cb2eff7b-6bde-4516-b1c4-1e3d5902a66e",
       "order": 1,
       "locked": false,
-      "workingVersionId": "6c93461d-073f-4360-99d5-155ffc3ccb46",
+      "workingVersionId": "3c67c892-ddd5-4fdd-a4da-27fc856201f9",
       "contentVersions": [
         {
-          "versionId": "6c93461d-073f-4360-99d5-155ffc3ccb46",
-          "createdAt": "2026-10-18T04:41:11.581Z",
+          "versionId": "3c67c892-ddd5-4fdd-a4da-27fc856201f9",
+          "createdAt": "2026-10-18T05:17:25.778Z",
           "durationMs": 3100,
           "description": "要点 1（文字动画）：水循环",
           "narrationText": "水循环，要点 1。",
@@ -105,21 +105,21 @@
       "events": [
         {
           "kind": "submitted",
-          "versionId": "6c93461d-073f-4360-99d5-155ffc3ccb46",
-          "at": "2026-10-18T04:41:11.581Z",
+          "versionId": "3c67c892-ddd5-4fdd-a4da-27fc856201f9",
+          "at": "2026-10-18T05:17:25.778Z",
           "actor": "human"
         }
       ]
     },
     {
-      "shotId": "194c3f73-803d-4370-a59d-fbe51c2df5bd",
+      "shotId": "0809e9c2-51c0-468c-a3be-7fd629019d6a",
       "order": 2,
       "locked": false,
-      "workingVersionId": "e808f97f-dcbb-459b-b93d-f624bfe9cded",
+      "workingVersionId": "580e3ea4-3b99-49ec-a5bb-abc4f5d24025",
       "contentVersions": [
         {
-          "versionId": "e808f97f-dcbb-459b-b93d-f624bfe9cded",
-          "createdAt": "2026-10-18T04:41:11.581Z",
+          "versionId": "580e3ea4-3b99-49ec-a5bb-abc4f5d24025",
+          "createdAt": "2026-10-18T05:17:25.778Z",
           "durationMs": 2000,
           "description": "示意 1（图形动画）：水循环",
           "narrationText": "水循环。",
@@ -167,21 +167,21 @@
       "events": [
         {
           "kind": "submitted",
-          "versionId": "e808f97f-dcbb-459b-b93d-f624bfe9cded",
-          "at": "2026-10-18T04:41:11.581Z",
+          "versionId": "580e3ea4-3b99-49ec-a5bb-abc4f5d24025",
+          "at": "2026-10-18T05:17:25.778Z",
           "actor": "human"
         }
       ]
     },
     {
-      "shotId": "62bfbdec-79a5-40b6-9b46-fc1682e306b5",
+      "shotId": "5ef52b92-b702-4ad8-9e58-40650e689409",
       "order": 3,
       "locked": false,
-      "workingVersionId": "8f8dddac-caf9-4cb2-bd39-51875e7fadde",
+      "workingVersionId": "ee35cfd0-0640-40a9-a8e1-49702c10b380",
       "contentVersions": [
         {
-          "versionId": "8f8dddac-caf9-4cb2-bd39-51875e7fadde",
-          "createdAt": "2026-10-18T04:41:11.581Z",
+          "versionId": "ee35cfd0-0640-40a9-a8e1-49702c10b380",
+          "createdAt": "2026-10-18T05:17:25.778Z",
           "durationMs": 2000,
           "description": "结语（文字动画）：水循环",
           "narrationText": "谢谢观看。",
@@ -213,8 +213,8 @@
       "events": [
         {
           "kind": "submitted",
-          "versionId": "8f8dddac-caf9-4cb2-bd39-51875e7fadde",
-          "at": "2026-10-18T04:41:11.581Z",
+          "versionId": "ee35cfd0-0640-40a9-a8e1-49702c10b380",
+          "at": "2026-10-18T05:17:25.778Z",
           "actor": "human"
         }
       ]
@@ -222,9 +222,9 @@
   ],
   "renderRecords": [
     {
-      "renderId": "46dcd60b-a0ff-4748-8805-a8b66c03b7d6",
-      "versionId": "1e700835-a40f-48a0-8d98-146df0252681",
-      "contentDigest": "65928c2dbae9bd6c1de5c24a12c3ba2f22c786fd26c95e2d2f23ad5e05d20698",
+      "renderId": "32d0c660-4119-4daa-9971-098176a7437c",
+      "versionId": "50f92e3b-0a1f-4aaa-ad8c-33abb76e41fc",
+      "contentDigest": "8dbbc16956520e728d373cb9546a551e011416438ecb61f2991c78f267ad485b",
       "engineId": "remotion",
       "engineVersion": "1",
       "rendererVersion": "4.0.534",
@@ -240,9 +240,9 @@
       "outputAssetRef": "e2e-render/landscape.mp4"
     },
     {
-      "renderId": "af5b8a26-144b-475f-ac69-44ece823e4ff",
-      "versionId": "6c93461d-073f-4360-99d5-155ffc3ccb46",
-      "contentDigest": "aa4e1d74960830e76687ea5e19568e2fd5ece561ccb41f90bfc40f221d71f775",
+      "renderId": "1ac117d5-e8f9-41ab-91dd-94f8cf65b650",
+      "versionId": "3c67c892-ddd5-4fdd-a4da-27fc856201f9",
+      "contentDigest": "44d9fe4c52f5053630e01a8c4d8d1cd9b57c145b900a2cd2ca656df510ed0e8e",
       "engineId": "remotion",
       "engineVersion": "1",
       "rendererVersion": "4.0.534",
@@ -258,9 +258,9 @@
       "outputAssetRef": "e2e-render/landscape.mp4"
     },
     {
-      "renderId": "4bddfd5c-b302-40d6-8f50-3b14ec327388",
-      "versionId": "e808f97f-dcbb-459b-b93d-f624bfe9cded",
-      "contentDigest": "b719b8a039b0c4c4687f405dcfcace5ed8a3d19f277940ae660be196dbdf2fda",
+      "renderId": "8609828d-6fd5-4c37-99f7-112d293e09b1",
+      "versionId": "580e3ea4-3b99-49ec-a5bb-abc4f5d24025",
+      "contentDigest": "ab8ef8078051cc66663c93e03af5cb089ffd7217fc55ecb63777fe1ce67e04cf",
       "engineId": "remotion",
       "engineVersion": "1",
       "rendererVersion": "4.0.534",
@@ -276,9 +276,9 @@
       "outputAssetRef": "e2e-render/landscape.mp4"
     },
     {
-      "renderId": "9a79eda4-62b7-4bf8-ba6f-914e47ddad74",
-      "versionId": "8f8dddac-caf9-4cb2-bd39-51875e7fadde",
-      "contentDigest": "947ecbfbf31b91a7cec4f7a689fade349d239a10a54d03461acc5b259ebcfa38",
+      "renderId": "381bf04f-ec7c-44a3-ab1e-69b23a6b82fa",
+      "versionId": "ee35cfd0-0640-40a9-a8e1-49702c10b380",
+      "contentDigest": "90113d85c891a8c429d4ed3bd4b3a53f1c44e0c37fc7562aa55a9f36d121c8a7",
       "engineId": "remotion",
       "engineVersion": "1",
       "rendererVersion": "4.0.534",
@@ -294,9 +294,9 @@
       "outputAssetRef": "e2e-render/landscape.mp4"
     },
     {
-      "renderId": "37a56fc3-406c-4c9a-8b2b-2f47799de7bc",
-      "versionId": "1e700835-a40f-48a0-8d98-146df0252681",
-      "contentDigest": "65928c2dbae9bd6c1de5c24a12c3ba2f22c786fd26c95e2d2f23ad5e05d20698",
+      "renderId": "1c2faf34-ecc8-4fa5-9e97-84536c70bf91",
+      "versionId": "50f92e3b-0a1f-4aaa-ad8c-33abb76e41fc",
+      "contentDigest": "8dbbc16956520e728d373cb9546a551e011416438ecb61f2991c78f267ad485b",
       "engineId": "remotion",
       "engineVersion": "1",
       "rendererVersion": "4.0.534",
@@ -312,9 +312,9 @@
       "outputAssetRef": "e2e-render/portrait.mp4"
     },
     {
-      "renderId": "5e39436f-f5ee-4df8-8457-53b9ce03b890",
-      "versionId": "6c93461d-073f-4360-99d5-155ffc3ccb46",
-      "contentDigest": "aa4e1d74960830e76687ea5e19568e2fd5ece561ccb41f90bfc40f221d71f775",
+      "renderId": "561ded2f-102f-48e7-9de2-a3eda22a2e89",
+      "versionId": "3c67c892-ddd5-4fdd-a4da-27fc856201f9",
+      "contentDigest": "44d9fe4c52f5053630e01a8c4d8d1cd9b57c145b900a2cd2ca656df510ed0e8e",
       "engineId": "remotion",
       "engineVersion": "1",
       "rendererVersion": "4.0.534",
@@ -330,9 +330,9 @@
       "outputAssetRef": "e2e-render/portrait.mp4"
     },
     {
-      "renderId": "bc86c53e-4cdf-46fc-a9a8-ac0f73f1c6f5",
-      "versionId": "e808f97f-dcbb-459b-b93d-f624bfe9cded",
-      "contentDigest": "b719b8a039b0c4c4687f405dcfcace5ed8a3d19f277940ae660be196dbdf2fda",
+      "renderId": "5a1649d6-d635-4e7a-9346-820f299cd8a4",
+      "versionId": "580e3ea4-3b99-49ec-a5bb-abc4f5d24025",
+      "contentDigest": "ab8ef8078051cc66663c93e03af5cb089ffd7217fc55ecb63777fe1ce67e04cf",
       "engineId": "remotion",
       "engineVersion": "1",
       "rendererVersion": "4.0.534",
@@ -348,9 +348,9 @@
       "outputAssetRef": "e2e-render/portrait.mp4"
     },
     {
-      "renderId": "dc83e85b-d6c7-465c-bd87-f4ecfc971f06",
-      "versionId": "8f8dddac-caf9-4cb2-bd39-51875e7fadde",
-      "contentDigest": "947ecbfbf31b91a7cec4f7a689fade349d239a10a54d03461acc5b259ebcfa38",
+      "renderId": "84dc3655-a094-490d-8f3e-ff7dab4f3ad0",
+      "versionId": "ee35cfd0-0640-40a9-a8e1-49702c10b380",
+      "contentDigest": "90113d85c891a8c429d4ed3bd4b3a53f1c44e0c37fc7562aa55a9f36d121c8a7",
       "engineId": "remotion",
       "engineVersion": "1",
       "rendererVersion": "4.0.534",

@@ -44,6 +44,8 @@
 
 2026-10-18 二次复跑备注（locked 末条裁定 + 分镜追加语义整改后的回归运行）：全链路一次通过；两片 MP4、`imported-editor.png` 与上表 SHA **全部逐字节一致**（本机复算）；`exported.video-project.json` / `render-manifest.json` 随新运行刷新（新项目 UUID，属预期）。本次运行同时证明 evolve 校验收紧（末条裁定）未破坏单镜头保存路径。
 
+2026-10-18 三次复跑备注（字幕轨终评整改后回归）：全链路一次通过；两片 MP4 与上表 SHA 仍逐字节一致（无旁白/无字幕路径不受 cue 构建改动影响）；exported.video-project.json / render-manifest.json 随新 UUID 刷新（属预期）。
+
 复跑方式（需本地起 dev server 与 Playwright Chromium）：
 
 ```

@@ -243,6 +243,11 @@ export function TimelinePreview({
           第 {Math.min(Math.floor(frame), totalFrames - 1) + 1} / {totalFrames}{" "}
           帧 · 镜头 {mapping.shotIndex + 1}
         </span>
+        {items.some((item) => item.narrationText) ? (
+          <span className="preview-subtitle-note">
+            预览近似，出片按字级时间戳
+          </span>
+        ) : null}
       </div>
     </div>
   );

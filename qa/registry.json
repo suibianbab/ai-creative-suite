@@ -2018,7 +2018,7 @@
     {
       "id": "VID-013",
       "title": "Video Studio narration overflow closure (speech-aware plan, duration align, explicit truncate)",
-      "fixture": "Unit tests in packages/video-document (planner speech-aware durations) and scripts/video/*.test.mjs (wavDurationMs sentinel clamp, planDurationAlignments, readSubtitleCues clamping); live behavior exercised by the VID-011/VID-012 loop with the water-cycle sentence",
+      "fixture": "Unit tests in packages/video-document (planner speech-aware durations, original-char subtitle mapping) and scripts/video/*.test.mjs (wavDurationMs sentinel clamp, planDurationAlignments, applyDurationAlignments validate-before-write, readSubtitleCues fallback/clamping, tts-narration --allow-truncate parse smoke); live behavior exercised by the VID-011/VID-012 loop with the water-cycle sentence",
       "steps": [
         "Plan the 8s/4-shot water-cycle sentence and inspect shot durations: each span is max(equal-split, 400 + 300 x narration chars) ms",
         "Run tts-narration and check the duration-align pass: a wav longer than its version duration (50ms tail guard) appends a tts-duration-align ContentVersion with re-keyed <shotId>-<newVersionId>.wav assets, validated as append-only evolution",
@@ -2027,7 +2027,7 @@
       ],
       "passCriteria": [
         "The e2e sentence plans to [2000,3100,2000,2000] = 9100ms and the scripted run asserts the span sum; the four real wavs all fit their spans (0 alignments, 0 overflow warnings on the calibration run)",
-        "Duration alignment only appends: original versions and their assets stay untouched, the aligned version carries provenance engineId tts-duration-align, and wav duration is computed from actual data bytes (streaming sentinel size in the data header is clamped)",
+        "Duration alignment only appends: original version records stay untouched while the wav/words assets are re-keyed onto the new versionId (the old keys no longer exist on disk), the aligned version carries provenance engineId tts-duration-align with parentVersionId, validation runs in-memory before the project write and asset renames, and wav duration is computed from actual data bytes (streaming sentinel size in the data header is clamped)",
         "Without --allow-truncate the render fails loudly on any narration-overflow warning; with the flag it renders with the audio cut at the span end and says so in the log",
         "Billing stays within the 50 CNY cap with every call logged"
       ]

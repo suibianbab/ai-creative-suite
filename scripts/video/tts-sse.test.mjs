@@ -7,7 +7,13 @@
 //  - 行前缀 id:/event:/:HTTP_STATUS/data:，finish_reason 中间事件是字符串 "null"。
 
 import assert from "node:assert/strict";
-import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import {
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -20,6 +26,7 @@ import {
   parseTtsSse,
   parseUsageLedger,
   planDurationAlignments,
+  readSubtitleCues,
   ttsFetchInit,
   wavDurationMs,
 } from "./tts-sse.mjs";
@@ -360,4 +367,166 @@ test("planDurationAlignments：只报超出的镜头，newDurationMs=wav+50 尾�
   assert.equal(planDurationAlignments(project, edge).length, 0);
   // 无对应 wav 记录的镜头不报（未合成）
   assert.equal(planDurationAlignments(project, new Map()).length, 0);
+});
+
+// ── 终评 fix pass（Important#2/#5）────────────────────────────────────
+
+// 终评 Important#5：words.json 存在但时间戳全非法（Number("x")=NaN、倒挂）
+// 时，旧判据 words.length === 0 漏判 → fallback 不置位，上层无法告警
+// 「字幕走了均匀近似」。合法性必须与 buildSubtitleCues 同一谓词。
+const WORDS_DIR = mkdtempSync(path.join(tmpdir(), "acs-words-"));
+test.after(() => rmSync(WORDS_DIR, { recursive: true, force: true }));
+
+test("readSubtitleCues：时间戳全非法（NaN/倒挂）→ fallback=true 走均匀近似", () => {
+  writeFileSync(
+    path.join(WORDS_DIR, "s1-v1.words.json"),
+    JSON.stringify({
+      sentences: [
+        {
+          words: [
+            { text: "水", begin_time: "x", end_time: "y" }, // Number → NaN
+            { text: "循", begin_time: 800, end_time: 600 }, // 倒挂 end<begin
+          ],
+        },
+      ],
+    }),
+  );
+  const bad = readSubtitleCues(WORDS_DIR, "s1-v1", "水循环。", 1200);
+  assert.equal(bad.fallback, true, "全非法时间戳必须置 fallback 供上层告警");
+  assert.equal(bad.cues.length, 1, "回退均匀：整句一条");
+  assert.equal(bad.cues[0].text, "水循环。");
+  assert.equal(bad.cues[0].endMs, 1200);
+
+  // 合法时间戳 → fallback=false（判据收紧不能误伤正常路径）
+  writeFileSync(
+    path.join(WORDS_DIR, "s2-v1.words.json"),
+    JSON.stringify({
+      sentences: [
+        {
+          words: [{ text: "水", begin_time: 0, end_time: 400 }],
+        },
+      ],
+    }),
+  );
+  const ok = readSubtitleCues(WORDS_DIR, "s2-v1", "水。", 1200);
+  assert.equal(ok.fallback, false, "合法字级时间戳不是近似");
+  assert.equal(ok.cues[0].text, "水。");
+});
+
+// 终评 Important#2：对齐版本的构造/校验必须先于落盘与资产 rename——
+// 旧序在循环里先 rename，validate 抛出时 4 对 wav/words 已离键成孤儿
+//（e2e 里靠 rmSync 自愈，真实使用会「旁白资产缺失」）。纯函数层先证
+// 明「构造+校验」可独立通过，CLI 再按 写档→rename 的次序消费。
+// validateVideoProject 可过的最小项目（UUID/description 齐全）——
+// applyDurationAlignments 的校验在函数内完成，fixture 必须本身合法。
+const SHOT_ID = "11111111-1111-4111-8111-111111111111";
+const VER_ID = "22222222-2222-4222-8222-222222222222";
+
+function alignableProject(durationMs = 2000) {
+  return {
+    schemaVersion: 1,
+    id: "33333333-3333-4333-8333-333333333333",
+    title: "水循环",
+    brief: { sentence: "做一个水循环短片", aspectTargets: ["landscape"] },
+    shots: [
+      {
+        shotId: SHOT_ID,
+        order: 0,
+        locked: false,
+        workingVersionId: VER_ID,
+        contentVersions: [
+          {
+            versionId: VER_ID,
+            createdAt: "2026-10-18T00:00:00.000Z",
+            durationMs,
+            description: "开场：点名主题",
+            narrationText: "水循环。",
+            sceneSource: { type: "spec", spec: { durationMs } },
+            provenance: { engineId: "planner-rules", engineVersion: "1" },
+          },
+        ],
+        events: [],
+      },
+    ],
+    renderRecords: [],
+    deliveries: [],
+    savedVersion: 1,
+  };
+}
+
+test("applyDurationAlignments：纯函数追加新版本+前移 working+返回重键清单，不 mutate 入参", async () => {
+  const { applyDurationAlignments } = await import("./tts-sse.mjs");
+  const src = alignableProject();
+  const plan = [
+    {
+      shotIndex: 0,
+      shotId: SHOT_ID,
+      versionId: VER_ID,
+      oldDurationMs: 2000,
+      wavMs: 2640,
+      newDurationMs: 2690,
+    },
+  ];
+  const NEW_ID = "44444444-4444-4444-8444-444444444444";
+  const { project: out, renames } = applyDurationAlignments(
+    src,
+    plan,
+    () => NEW_ID,
+  );
+  assert.equal(renames.length, 1, "rename 清单与计划一一对应");
+  assert.equal(renames[0].shotId, SHOT_ID);
+  assert.equal(renames[0].fromVersionId, VER_ID);
+  assert.equal(renames[0].toVersionId, NEW_ID);
+
+  const aligned = out.shots[0].contentVersions.find(
+    (v) => v.versionId === NEW_ID,
+  );
+  assert.equal(aligned.durationMs, 2690, "wav+50 尾样保护");
+  assert.equal(aligned.narrationText, "水循环。", "同文案只调时长");
+  assert.equal(
+    aligned.provenance.engineId,
+    "tts-duration-align",
+    "演进来源留痕",
+  );
+  assert.equal(
+    aligned.provenance.parentVersionId,
+    VER_ID,
+    "父版本指向旧版本（只追加演进的链）",
+  );
+  assert.equal(out.shots[0].workingVersionId, NEW_ID, "working 前移");
+  assert.equal(out.shots[0].contentVersions.length, 2, "只追加不改写旧版本");
+  assert.equal(out.savedVersion, src.savedVersion + 1, "回写档位 +1");
+
+  assert.equal(
+    src.shots[0].workingVersionId,
+    VER_ID,
+    "入参未被 mutate（CLI 依此做写前校验）",
+  );
+  assert.equal(src.shots[0].contentVersions.length, 1);
+});
+
+test("applyDurationAlignments：荒谬时长过不了 validateVideoProject → throw（磁盘 untouched 由调用方次序保证）", async () => {
+  const { applyDurationAlignments } = await import("./tts-sse.mjs");
+  const src = alignableProject();
+  const plan = [
+    {
+      shotIndex: 0,
+      shotId: SHOT_ID,
+      versionId: VER_ID,
+      oldDurationMs: 2000,
+      wavMs: 44739241 - 50,
+      newDurationMs: 44739241, // e2e 实录的流式哨兵时长（~44.7 天）
+    },
+  ];
+  assert.throws(
+    () =>
+      applyDurationAlignments(
+        src,
+        plan,
+        () => "55555555-5555-4555-8555-555555555555",
+      ),
+    /durationMs must be an integer between 1 and 600000/,
+    "schema 上限必须在校验层拦住，而不是等落盘后渲染失败",
+  );
+  assert.equal(src.shots[0].contentVersions.length, 1, "throw 后入参原样");
 });

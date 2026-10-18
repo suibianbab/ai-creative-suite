@@ -5,13 +5,19 @@
 //         "usage":{"characters":34},"request_id":"…"}
 // 纪律：音频必须逐 chunk 解码（output.audio.data）后 Buffer.concat——
 // 把整条流的 base64 先拼再解会得到损坏字节（spike 实测 8KB ≠ 223KB）。
+import { randomUUID } from "node:crypto";
 import { existsSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 // scripts/ 不进 workspace 包图，按预检裁决用相对路径引 dist（与 render-scene
 // 同款）。字幕 cue 构建必须与 web 预览同一实现源（spec R1 派生投影单一事实）。
-const { buildSubtitleCues } = await import(
+const {
+  assertAppendOnlyEvolution,
+  buildSubtitleCues,
+  isValidWordTiming,
+  validateVideoProject,
+} = await import(
   pathToFileURL(
     path.join(
       path.dirname(fileURLToPath(import.meta.url)),
@@ -312,7 +318,10 @@ export function readSubtitleCues(dir, base, narrationText, spanMs) {
     words = []; // 文件缺失/坏 JSON → 均匀回退
   }
   const built = buildSubtitleCues({ narrationText, words, spanMs });
-  const fallback = words.length === 0 && narrationText.trim().length > 0;
+  // 与 buildSubtitleCues 同一合法性谓词：words 存在但时间戳全非法同样走
+  // 均匀近似——fallback 必须置位，上层才能告警「字幕是近似而非字级」。
+  const fallback =
+    narrationText.trim().length > 0 && !words.some(isValidWordTiming);
   const cues = built
     .map((cue) => ({
       ...cue,
@@ -321,4 +330,54 @@ export function readSubtitleCues(dir, base, narrationText, spanMs) {
     }))
     .filter((cue) => cue.endMs > cue.startMs);
   return { cues, fallback };
+}
+
+// 对齐落地（终评 Important#2 拆出的纯函数层）：在内存里完成「构造新版本
+// + 前移 working + schema 校验 + 只追加校验」，全部通过才返回——调用方
+// （CLI）先 atomicWriteFile 再按 renames 逐项 rename 资产。校验抛出时
+// 磁盘 untouched（旧序先 rename 后校验，抛出时资产已离键成孤儿）。
+export function applyDurationAlignments(
+  project,
+  alignments,
+  newVersionIdFactory = () => randomUUID(),
+) {
+  const next = structuredClone(project);
+  const renames = [];
+  for (const item of alignments) {
+    const shot = next.shots[item.shotIndex];
+    const old = shot.contentVersions.find(
+      (version) => version.versionId === item.versionId,
+    );
+    const newVersionId = newVersionIdFactory();
+    const aligned = structuredClone(old);
+    aligned.versionId = newVersionId;
+    aligned.createdAt = new Date().toISOString();
+    aligned.durationMs = item.newDurationMs;
+    aligned.description = `${old.description.slice(0, 160)}（时长对齐 ${item.newDurationMs}ms）`;
+    if (aligned.sceneSource.type === "spec")
+      aligned.sceneSource.spec.durationMs = item.newDurationMs;
+    aligned.provenance = {
+      engineId: "tts-duration-align",
+      engineVersion: "1",
+      parentVersionId: item.versionId,
+    };
+    shot.contentVersions.push(aligned);
+    shot.events.push({
+      kind: "submitted",
+      versionId: newVersionId,
+      at: aligned.createdAt,
+      actor: "ai",
+    });
+    shot.workingVersionId = newVersionId;
+    renames.push({
+      shotId: item.shotId,
+      fromVersionId: item.versionId,
+      toVersionId: newVersionId,
+    });
+  }
+  next.savedVersion += 1;
+  // 校验在内存态完成：schema（时长上限等）+ 只追加演进（旧版本原样）
+  const validated = validateVideoProject(next);
+  assertAppendOnlyEvolution(project, validated);
+  return { project: validated, renames };
 }
