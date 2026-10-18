@@ -1,3 +1,4 @@
+export * from "./components/bar-chart.js";
 export * from "./components/basic-shapes.js";
 export * from "./components/line-drawing.js";
 export * from "./components/text-animation.js";
