@@ -301,6 +301,15 @@
   container-type: inline-size;
 }
 
+/* P1 转场叠层：全幅黑幕，opacity 由共享帧数学逐帧给定（镜头层之上、字幕层
+ * 之下——字幕浮于暗场之上，与 TimelineScene 叠层级序一致） */
+.transition-overlay {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  pointer-events: none;
+}
+
 /* 字幕近似层：与出片同构（半透明深色药丸衬白字，比例取 engine 换算：
  * 画布高 = 56.25cqw → 字号 5%高=2.8cqw、底距 8%高=4.5cqw） */
 .preview-subtitle {
@@ -440,6 +449,53 @@
   padding: 0;
   display: grid;
   gap: 8px;
+}
+
+/* P1 转场编辑区：逐边界一行（镜头 i → i+1：无/淡入淡出 + 时长 ms） */
+.transitions-editor {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border: 1px solid #e7efe9;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 13px;
+  display: grid;
+  gap: 6px;
+}
+
+.transitions-editor h4 {
+  margin: 0;
+  font-size: 13px;
+  color: #173f3b;
+}
+
+.transition-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.transition-boundary {
+  min-width: 96px;
+  color: #334155;
+}
+
+.transition-duration-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #475569;
+}
+
+.transition-duration {
+  width: 76px;
+}
+
+.transition-error {
+  margin: 0;
+  color: #b3261e;
+  font-size: 12px;
 }
 
 .shot-card {

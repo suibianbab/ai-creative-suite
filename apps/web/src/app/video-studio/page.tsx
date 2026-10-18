@@ -41,6 +41,11 @@ import {
 } from "./scene-preview";
 import { ShotEditorCard } from "./shot-editor-card";
 import { shotWorkingSpec } from "./shot-specs";
+import {
+  buildTransitionsPatch,
+  type TransitionDraftRow,
+  transitionsDraftFromProject,
+} from "./transitions-draft";
 import "./video-studio.css";
 
 // 新项目从空镜头开始（validateVideoProject 允许 shots 为空数组）；
@@ -76,6 +81,23 @@ export default function VideoStudioPage() {
   const [redoErrors, setRedoErrors] = useState<Record<string, string | null>>(
     {},
   );
+  // P1 转场（Feature ④ spec R4）：草稿行 = 逐边界 无/淡入淡出 + 时长。变更即时
+  // 经 buildTransitionsPatch 校验，合法才落 editor.document（transitions 是可变
+  // 编排元数据，保存即持久化；全无 → 删键，A1 字节不变口径）。镜头数或
+  // transitions 引用变化（应用分镜/导入/保存回包）时重建草稿（越界项丢弃）。
+  const [transitionRows, setTransitionRows] = useState<TransitionDraftRow[]>(
+    [],
+  );
+  const [transitionError, setTransitionError] = useState<string | null>(null);
+  useEffect(() => {
+    setTransitionRows(
+      transitionsDraftFromProject(
+        editor?.document.shots.length ?? 0,
+        editor?.document.transitions,
+      ),
+    );
+    setTransitionError(null);
+  }, [editor?.document.shots.length, editor?.document.transitions]);
   const importInputRef = useRef<HTMLInputElement>(null);
 
   const refreshProjects = useCallback(async () => {
@@ -131,6 +153,17 @@ export default function VideoStudioPage() {
         narrationText: workingMeta[index]!.narrationText,
       }));
     }
+    // 转场草稿落文档：合法 patch 才写（非法仅行内提示，文档保持上一合法态）；
+    // 全无 → 删 transitions 键（老项目字节不变口径）。
+    const applyTransitionRows = (rows: TransitionDraftRow[]) => {
+      setTransitionRows(rows);
+      const { patch, error } = buildTransitionsPatch(rows);
+      setTransitionError(error);
+      const next = { ...document };
+      if (patch) next.transitions = patch;
+      else delete next.transitions;
+      setEditor({ ...editor, document: next });
+    };
     return (
       <main className="studio-shell">
         <header className="studio-topbar">
@@ -480,7 +513,76 @@ export default function VideoStudioPage() {
                   />
                 ))}
               </ol>
-              <TimelinePreview items={pieceItems} timeline={pieceTimeline} />
+              {document.shots.length > 1 ? (
+                <div className="transitions-editor">
+                  <h4>转场</h4>
+                  {transitionRows.map((row) => (
+                    <div
+                      key={row.boundary}
+                      className="transition-row"
+                      data-boundary={row.boundary}
+                    >
+                      <span className="transition-boundary">
+                        镜头 {row.boundary + 1} → {row.boundary + 2}
+                      </span>
+                      <select
+                        className="transition-kind"
+                        value={row.kind}
+                        onChange={(event) => {
+                          const kind =
+                            event.target.value === "fade" ? "fade" : "none";
+                          applyTransitionRows(
+                            transitionRows.map((candidate) =>
+                              candidate.boundary === row.boundary
+                                ? { ...candidate, kind }
+                                : candidate,
+                            ),
+                          );
+                        }}
+                      >
+                        <option value="none">无</option>
+                        <option value="fade">淡入淡出</option>
+                      </select>
+                      <label className="transition-duration-label">
+                        时长
+                        <input
+                          className="transition-duration"
+                          type="number"
+                          min={100}
+                          max={2000}
+                          step={100}
+                          value={row.durationMs}
+                          onChange={(event) => {
+                            applyTransitionRows(
+                              transitionRows.map((candidate) =>
+                                candidate.boundary === row.boundary
+                                  ? {
+                                      ...candidate,
+                                      durationMs: Number(event.target.value),
+                                    }
+                                  : candidate,
+                              ),
+                            );
+                          }}
+                        />
+                        ms
+                      </label>
+                    </div>
+                  ))}
+                  {transitionError ? (
+                    <p className="transition-error">{transitionError}</p>
+                  ) : null}
+                  <p className="editor-hint">
+                    转场为镜头间黑色淡入淡出（dip-to-black）：向相邻镜头借帧叠
+                    黑幕，镜头时长不变；预览与出片同一帧数学。
+                  </p>
+                </div>
+              ) : null}
+              <TimelinePreview
+                items={pieceItems}
+                timeline={pieceTimeline}
+                transitions={document.transitions}
+              />
             </section>
           ) : document.shots.length > 0 ? (
             <p className="editor-hint">

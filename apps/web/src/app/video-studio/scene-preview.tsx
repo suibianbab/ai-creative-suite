@@ -5,6 +5,9 @@ import {
   buildSubtitleCues,
   mapGlobalFrame,
   type QuantizedTimeline,
+  resolveTransitionWindows,
+  type ShotTransition,
+  transitionOverlayAt,
 } from "@acs/video-document";
 import {
   assertNodeBudget,
@@ -157,9 +160,12 @@ export type TimelinePreviewItem = {
 export function TimelinePreview({
   items,
   timeline,
+  transitions,
 }: {
   items: TimelinePreviewItem[];
   timeline: QuantizedTimeline;
+  // P1 转场（Feature ④ spec R4）：与出片同一 resolve/overlay helper（A3 双端一致）。
+  transitions?: ShotTransition[];
 }) {
   const [frame, setFrame] = useState(0);
   const [playing, setPlaying] = useState(true);
@@ -201,6 +207,17 @@ export function TimelinePreview({
     return activeSubtitleCue(cues, (mapping.localFrame / PIECE_FPS) * 1000);
   }, [active, mapping.localFrame]);
 
+  // P1 转场：与出片同斜率同 split（共享 helper）；无转场恒 0 不渲染。
+  // span 不足在此抛错 → React 渲染错误边界/控制台呈现（错误消息已指路缩短）。
+  const transitionWindows =
+    transitions && transitions.length > 0 && timeline.shots.length > 1
+      ? resolveTransitionWindows(transitions, timeline.shots, PIECE_FPS)
+      : [];
+  const overlayOpacity = transitionOverlayAt(
+    transitionWindows,
+    Math.floor(frame),
+  );
+
   return (
     <div className="preview-box piece-preview">
       <div className="piece-stage">
@@ -211,6 +228,13 @@ export function TimelinePreview({
             frame={mapping.localFrame}
             fps={activeContext.fps}
             durationFrames={activeContext.durationFrames}
+          />
+        ) : null}
+        {overlayOpacity > 0 ? (
+          <div
+            className="transition-overlay"
+            aria-hidden="true"
+            style={{ opacity: overlayOpacity }}
           />
         ) : null}
         {activeCue ? (
