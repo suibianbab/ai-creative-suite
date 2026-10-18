@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import type { SceneSpec } from "@acs/video-scene";
+import { type SceneSpec, stickFigure } from "@acs/video-scene";
 import {
   applyStickTemplate,
   buildStickRevisePatch,
@@ -28,7 +28,7 @@ const STICK_PARAMS = {
   textColor: "#1b2c29",
   enterMs: 400,
   cycleMs: 800,
-  travelMs: 2400,
+  travelMs: 1200,
 };
 
 const STICK_SPEC = {
@@ -147,4 +147,74 @@ test("buildStickRevisePatch：行级错误（行号定位、动作/坐标/数量
 test("isStickComponentId", () => {
   assert.equal(isStickComponentId("stick-figure"), true);
   assert.equal(isStickComponentId("flow-diagram"), false);
+});
+
+// —— 终评 I-1（Codex 复核）：模板时序必须收进规划器默认 2000ms 镜头 ——
+// 组件公式（stick-figure.ts）：行走完成时刻 = i×200（梯次）+ enterMs +
+// travelMs；默认镜头末帧 tMs = 47/24×1000 ≈ 1958.33ms。
+type FigureDecl = { action: string; fromX: number; toX: number };
+
+function figureTransform(root: unknown, i: number): string {
+  const groups: Array<Record<string, unknown>> = [];
+  const walk = (node: unknown): void => {
+    if (!node || typeof node !== "object") return;
+    const n = node as {
+      tag?: string;
+      attrs?: Record<string, unknown>;
+      children?: unknown[];
+    };
+    if (n.tag === "g" && n.attrs && "transform" in n.attrs)
+      groups.push(n.attrs);
+    for (const child of n.children ?? []) walk(child);
+  };
+  walk(root);
+  return groups[i]!.transform as string;
+}
+
+test("五枚模板时序预算：行走人物 ≤1800ms 落定（默认 2000ms 镜头留 ≥200ms 停留）", () => {
+  // 上限 1800（非 1958.33）：落定后至少 ~5 帧可见停留，标题承诺的动作在
+  // 默认镜头内成立。跳（x 固定）与 fromX=toX 的人物无行程，只查淡入完成。
+  for (const template of STICK_TEMPLATES) {
+    const params = template.params as {
+      figures: FigureDecl[];
+      enterMs: number;
+      travelMs: number;
+    };
+    params.figures.forEach((figure, i) => {
+      const travels = figure.action !== "跳" && figure.toX !== figure.fromX;
+      const done = i * 200 + params.enterMs + (travels ? params.travelMs : 0);
+      assert.ok(
+        done <= 1800,
+        `${template.templateId} 人物${i} 完成于 ${done}ms > 1800ms（默认 2000ms 镜头内动作被截断）`,
+      );
+    });
+  }
+});
+
+test("默认 2 秒镜头末帧（帧 47 @24fps）：横穿/相遇人物已抵达 toX", () => {
+  const renderAtLastFrame = (templateId: string) =>
+    stickFigure.render(applyStickTemplate(SPEC, templateId).spec!, {
+      frame: 47,
+      fps: 24,
+      width: 1920,
+      height: 1080,
+    } as Parameters<typeof stickFigure.render>[1]);
+  const across = renderAtLastFrame("stick-walk-across");
+  assert.ok(
+    figureTransform(across, 0).startsWith("translate(920.00 "),
+    `横穿未抵达: ${figureTransform(across, 0)}`,
+  );
+  const meet = renderAtLastFrame("stick-meet");
+  assert.ok(
+    figureTransform(meet, 0).startsWith("translate(420.00 "),
+    `相遇人物0未抵达: ${figureTransform(meet, 0)}`,
+  );
+  assert.ok(
+    figureTransform(meet, 1).startsWith("translate(580.00 "),
+    `相遇人物1未抵达: ${figureTransform(meet, 1)}`,
+  );
+  assert.ok(
+    figureTransform(meet, 2).startsWith("translate(500.00 "),
+    `相遇人物2位置异常: ${figureTransform(meet, 2)}`,
+  );
 });

@@ -1296,10 +1296,10 @@
       "argv": ["node", "scripts/video/e2e-stick.mjs"],
       "requiresPorts": [3211],
       "checks": [
-        "Template dropdown fourth group applies stick-figure: shot 2 swaps to stick-walk-across and shot 3 to stick-meet through the real editor card with data textarea prefilled from template defaults",
+        "Template dropdown fourth group applies stick-figure: shot 2 swaps to stick-walk-across and shot 3 to stick-meet through the real editor card with data textarea prefilled from template defaults; shot 4 swaps to stick-walk-across keeping template-default figures at the planner default 2000ms (terminal-review I-1 regression witness: the walk completes inside a default shot)",
         "Data edit round-trips figures with action words: per-line action,fromX[,toX] parses into figure objects including a toX-omitted line defaulting to fromX, groundY kept",
         "Narration edit merges in single apply: working-version narration equals the concurrently edited text and durationMs 3100 survives the swap",
-        "Renders both aspects deterministic: double run byte-identical via SHA-256, stickman frames non-empty (signalstats YAVG >= 100 at frames 80 and 140), flow baseline unchanged (VID-019 rerun inside reproduces archived hashes, registry v5 append harmless)",
+        "Renders both aspects deterministic: double run byte-identical via SHA-256, stickman frames non-empty (signalstats YAVG >= 100 at frames 80, 140 and 200), flow baseline unchanged (VID-019 rerun inside reproduces archived hashes, registry v5 append harmless)",
         "No TTS billing: ledger line count unchanged and browser console logs zero errors"
       ]
     },

@@ -3,9 +3,11 @@
 //   浏览器新建→STEM 分镜（4 镜头 218 帧，水循环）→保存
 //   →镜头 2 换 stick-walk-across（旁白并发编辑单次应用一并落库）→改人物数据→应用→保存
 //   →镜头 3 换 stick-meet→改人物数据（动作词 + toX 缺省行）→应用→保存
+//   →镜头 4 换 stick-walk-across 保持模板默认数据（默认 2000ms 镜头内整动作
+//     收口回归——终评 I-1：travelMs 修复后 1600ms 落定，末帧前留 ~358ms 停留）
 //   →导出 JSON（结构断言：figures/动作词/坐标/旁白合并/时长保留）
 //   →CLI render-scene 双画幅出片→双跑逐字节 SHA-256 一致
-//   →火柴人帧 YAVG ≥100（帧 80 行进中 / 帧 140 三人梯次，双画幅）
+//   →火柴人帧 YAVG ≥100（帧 80 行进中 / 帧 140 三人梯次 / 帧 200 默认时长镜头，双画幅）
 //   →A1 金标准：flow e2e（VID-019）子进程复跑 = P2-③ 已档哈希（v5 追加无害）
 //   →计费台账行数不变 + 浏览器控制台零 error。
 // 前置: @acs/web dev server 已在 BASE_URL（:3210，建议经 scripts/dev/proxy-3211.mjs）；
@@ -198,6 +200,14 @@ await card3.locator(".shot-apply").click();
 await page.click(".editor-save");
 await waitForMessage(page, "已保存", "保存相遇镜头");
 
+// —— 2.5 镜头 4 换 stick-walk-across 不改数据：默认 2000ms 镜头整动作收口（I-1 回归）——
+const card4 = page.locator(".shot-list > li").nth(3);
+await card4.locator(".shot-edit-toggle").click();
+await card4.locator(".chart-template-select").selectOption("stick-walk-across");
+await card4.locator(".shot-apply").click();
+await page.click(".editor-save");
+await waitForMessage(page, "已保存", "保存默认时长火柴人镜头");
+
 // —— 3. 导出 + 结构断言 ——
 const [download] = await Promise.all([
   page.waitForEvent("download", { timeout: 15_000 }),
@@ -234,19 +244,32 @@ if (JSON.stringify(figures3[2]) !== '{"action":"指","fromX":500,"toX":500}')
   fail("镜头 3 toX 缺省", JSON.stringify(figures3[2]));
 if (s3.params.groundY !== 800)
   fail("镜头 3 groundY 保留", String(s3.params.groundY));
+// 镜头 4 = I-1 回归见证：模板默认数据 + 默认 2000ms 时长（budget 断言之外
+// 的端到端实例——travelMs 1200 → 400+1200=1600ms 落定）
+const s4 = specOf(exported.shots[3]);
+if (s4.componentId !== "stick-figure") fail("镜头 4 组件", s4.componentId);
+if (
+  JSON.stringify(s4.params.figures) !== '[{"action":"走","fromX":80,"toX":920}]'
+)
+  fail("镜头 4 默认人物", JSON.stringify(s4.params.figures));
+if (s4.durationMs !== 2000)
+  fail("镜头 4 默认时长", `durationMs=${s4.durationMs}`);
 await page.screenshot({
   path: path.join(OUT_DIR, "stick-editor.png"),
   fullPage: true,
 });
 console.log(
-  `[e2e-stick] 编辑落库: 项目 ${exported.id} v${exported.savedVersion}，镜头2=${s2.componentId}(走,120,880)，镜头3=${s3.componentId}(走/走/指 三人)，旁白合并=${working2?.narrationText}`,
+  `[e2e-stick] 编辑落库: 项目 ${exported.id} v${exported.savedVersion}，镜头2=${s2.componentId}(走,120,880)，镜头3=${s3.componentId}(走/走/指 三人)，镜头4=${s4.componentId}(默认数据@2000ms)，旁白合并=${working2?.narrationText}`,
 );
 
 // —— 4. CLI 双画幅出片 + 双跑一致 + 火柴人帧 YAVG ——
 // spans [2000,3100,2000,2000]ms @24fps → 总 218 帧：镜头 2 帧域 48..121，
-// 镜头 3 帧域 122..169。帧 80（镜头 2 内 1333ms）：走 120→880 travelMs 2400
-// → progress≈0.39 x≈416，行进中段；帧 140（镜头 3 内 733ms）：三人 delay
-// 0/200/400 全过淡入窗（enterMs 400），fig0 x≈137 行进中。两帧均 YAVG ≥100。
+// 镜头 3 帧域 122..169，镜头 4 帧域 170..217。帧 80（镜头 2 内 1333ms）：
+// 走 120→880 travelMs 1200 → tRel 933ms progress≈0.78 x≈711 行进后段；
+// 帧 140（镜头 3 内 733ms）：三人 delay 0/200/400 全过淡入窗（enterMs 400），
+// fig0 tRel 333ms progress≈0.33 x≈193 行进前段；帧 200（镜头 4 内 1233ms，
+// I-1 回归帧）：模板默认 走,80,920 → progress≈0.69 x≈663 行进中，1600ms
+// 落定后末帧 1958.33ms 前留 ~358ms 停留。三帧均 YAVG ≥100。
 const RENDER_DIR = path.join(OUT_DIR, "render");
 renderProject(EXPORTED, RENDER_DIR, "CLI 出片");
 const RERUN_DIR = path.join(OUT_DIR, "rerun");
@@ -258,7 +281,7 @@ for (const aspect of ["landscape", "portrait"]) {
   const b = sha256(path.join(RERUN_DIR, `${aspect}.mp4`));
   if (a !== b) fail("双跑一致", `${aspect}: ${a} ≠ ${b}`);
   console.log(`[e2e-stick] 双跑一致: ${aspect} ${a}`);
-  for (const frame of [80, 140]) {
+  for (const frame of [80, 140, 200]) {
     const yavg = frameYavg(path.join(RENDER_DIR, `${aspect}.mp4`), frame);
     if (yavg < 100)
       fail("火柴人帧亮度", `${aspect} 帧 ${frame} YAVG=${yavg} < 100`);

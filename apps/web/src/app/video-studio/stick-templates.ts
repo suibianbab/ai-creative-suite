@@ -32,7 +32,9 @@ export const STICK_TEMPLATES: StickTemplate[] = [
       ...STICK_COLORS,
       enterMs: 400,
       cycleMs: 800,
-      travelMs: 2400,
+      // 终评 I-1：400+travelMs ≤1800（默认 2000ms 镜头末帧前落定并留 ≥200ms
+      // 停留）——stick-templates.test.ts 预算断言逐模板钉死
+      travelMs: 1200,
     },
   },
   {
@@ -92,7 +94,8 @@ export const STICK_TEMPLATES: StickTemplate[] = [
       ...STICK_COLORS,
       enterMs: 400,
       cycleMs: 1000,
-      travelMs: 2000,
+      // 终评 I-1：最迟人物（i=1，梯次 200）200+400+1000=1600 ≤1800
+      travelMs: 1000,
     },
   },
 ];

@@ -282,8 +282,10 @@ if (usageAfter !== usageBefore)
 
 // —— 6. A1 金标准：stick e2e（VID-020）子进程复跑 = P2-④ 已档哈希（v6 追加无害）——
 const STICK_HASHES = {
-  landscape: "1b12050d84f70dd01736a2d0e2bfcead2013efb69bb3db31719c9e55d9d62e24",
-  portrait: "6e59b16919d4b3616b9310cdd2d5c71c631ab55c705175d5d0eecd392e80be71",
+  // 终评 I-1 修复后重档（travelMs 收进默认镜头 + 镜头 4 默认时长实例）：
+  // 旧值 1b12050d…/6e59b169… 作废
+  landscape: "cd45c73d88c96a357be43aa843e4c02a6c4be17e360ae1af62bab75ef374a77e",
+  portrait: "35ac522bcf5195297647d0d736a240c49574b0396040d0296ff8176952eb4ae7",
 };
 const stickRun = spawnSync(
   process.execPath,
