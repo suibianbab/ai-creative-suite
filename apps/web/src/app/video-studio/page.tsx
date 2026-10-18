@@ -532,7 +532,7 @@ export default function VideoStudioPage() {
               URL.revokeObjectURL(url);
               setEditor({
                 ...editor,
-                message: `已导出 ${anchor.download}。CLI 出片：node scripts/video/render-scene.mjs --project <导出件> --out <目录>，完成后回列表页「导入项目 JSON」`,
+                message: `已导出 ${anchor.download}。CLI 出片：node scripts/video/render-scene.mjs --project <导出件> --out <目录>；整片 GIF：node scripts/video/export-gif.mjs --project <导出件> --aspect landscape；单镜头 SVG：node scripts/video/export-shot-svg.mjs --project <导出件> --shot 1，完成后回列表页「导入项目 JSON」`,
               });
             }}
           >
