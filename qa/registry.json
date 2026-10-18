@@ -2051,6 +2051,24 @@
       ]
     },
     {
+      "id": "VID-015",
+      "title": "Video Studio export expansion (whole-piece GIF via ffmpeg palette, single-shot SVG flipbook/static, DeliveryRecord persistence)",
+      "fixture": "Unit tests in scripts/video/{export-gif,svg-serialize,export-shot-svg}.test.mjs (render-block assembly, exact-integer frameMap, XML escaping, keyframe slicing, node budget, 1-based shot resolution, spec-only scene source); live loop scripted in scripts/video/e2e-export.mjs and documented in artifacts/video-studio-export/E2E_EXPORT.md (rerun: node scripts/video/e2e-export.mjs, pure CLI, zero TTS billing)",
+      "steps": [
+        "Copy the committed 4-shot baseline project and run render-scene with the full dry-run gate (no --narration) to produce both-aspect MP4s and RenderRecord +8",
+        "Run export-gif --aspect landscape and independently re-probe the GIF with ffprobe (codec=gif, width=480)",
+        "Re-run export-gif on a copy of the project and compare both GIFs byte-for-byte via SHA-256",
+        "Run export-shot-svg --shot 2 --fps 12 (text-animation 3100ms) and count @keyframes segments, then --shot 3 --frame 24 (basic-shapes) and check for animation styles; re-run the animated export for a byte-for-byte comparison",
+        "Run one more static export to confirm appendDelivery keeps the document valid after every delivery append, and diff the billing ledger line count"
+      ],
+      "passCriteria": [
+        "e2e exits 0: GIF ffprobe metadata matches (gif codec, requested width, duration within 0.2s) and DeliveryRecord lands with 4 real renderIds and exact-integer frameMap [24,37,24,24]",
+        "SVG animated export yields exactly 37 keyframe segments for the 74-frame shot at 12fps; static export contains no @keyframes; SVG deliveries carry empty renderIds (direct scene-tree output) with frameMap [37]/[1]",
+        "GIF and SVG double runs are byte-identical (same MP4 source, same ffmpeg, seeded scene render)",
+        "Billing ledger line count is unchanged (zero TTS synthesis in this cut) and every delivery append passes validateVideoProject on the mutated document"
+      ]
+    },
+    {
       "id": "3D-001",
       "title": "Exact product model advertisement",
       "fixture": "Rights-cleared customer-approved accurate 3D model and product reference photos",
