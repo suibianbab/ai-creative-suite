@@ -403,21 +403,20 @@ export function ShotEditorCard({
               type="button"
               className="shot-apply"
               onClick={() => {
-                // 换模板优先：纯 spec 修订（旁白/时长保持文档现值，二次应用可再改）
+                // 换模板 = 以模板 spec 为基底；与同草稿的并发编辑（旁白/背景/
+                // 时长 + 图表数据——选中模板时已预填该模板默认值）一次应用
+                // 一并落库，不静默丢弃（终评 I1 合并语义）。
+                let baseSpec = spec;
                 if (pendingTemplateId) {
                   const applied = applyChartTemplate(spec, pendingTemplateId);
                   if (applied.error || !applied.spec) {
                     setEditError(applied.error ?? "模板无效");
                     return;
                   }
-                  setEditError(null);
-                  setChartError(null);
-                  onRevise({ spec: applied.spec });
-                  return;
+                  baseSpec = applied.spec;
                 }
-                // 图表数据编辑先合入 spec，再走既有 narration/背景/时长门
-                const chartResult = isChartComponentId(spec.componentId)
-                  ? buildChartRevisePatch(spec, chartDraft)
+                const chartResult = isChartComponentId(baseSpec.componentId)
+                  ? buildChartRevisePatch(baseSpec, chartDraft)
                   : null;
                 if (chartResult && (chartResult.error || !chartResult.spec)) {
                   setChartError(chartResult.error ?? "图表数据无效");
@@ -425,13 +424,14 @@ export function ShotEditorCard({
                 }
                 const { patch, error } = buildRevisePatch(
                   draft,
-                  chartResult?.spec ?? spec,
+                  chartResult?.spec ?? baseSpec,
                 );
                 if (error || !patch) {
                   setEditError(error ?? "草稿无效");
                   return;
                 }
                 setEditError(null);
+                setChartError(null);
                 onRevise(patch);
               }}
             >

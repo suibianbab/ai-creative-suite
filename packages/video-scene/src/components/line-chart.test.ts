@@ -99,7 +99,7 @@ test("x 轴标签：有标签点渲染、无标签点跳过、超 6 字符截断
     lineChart.render(spec, makeCtx({ frame: 0 })),
     "text",
   ).map((t) => t.text);
-  assert.ok(!texts.includes("第2年") || texts.includes("第2年")); // 标签在 t=0 即渲染（随描画淡入由 marker 承担）
+  assert.ok(texts.includes("第2年"), "有标签点应在 t=0 渲染 x 标签");
   assert.ok(texts.includes("一二三四五六…"), "超长标签应截断");
   assert.ok(!texts.includes("一二三四五六七八"));
   // 无标签点：不产生空文本节点
