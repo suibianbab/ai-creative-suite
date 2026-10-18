@@ -1317,6 +1317,21 @@
         "Renders both aspects deterministic: double run byte-identical via SHA-256, sketch frames non-empty (signalstats YAVG >= 100 at frames 80 and 140), stick baseline unchanged (VID-020 rerun inside reproduces archived hashes, registry v6 append harmless)",
         "No TTS billing: ledger line count unchanged and browser console logs zero errors"
       ]
+    },
+    {
+      "id": "VID-022",
+      "tier": "integration",
+      "title": "Video Studio loading templates and edit loop (phase bounce dots + ring progress)",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/e2e-loading.mjs"],
+      "requiresPorts": [3211],
+      "checks": [
+        "Template dropdown sixth group applies loading components: shot 2 swaps to loading-dots-3 and shot 3 to loading-ring-72 through the real editor card with label/count/target inputs prefilled from template defaults",
+        "Scalar data edit round-trips: dots count and status label survive on loading-dots, targetPercent and label on loading-progress, colors and cycle/progress timing params preserved through merge",
+        "Narration edit merges in single apply: working-version narration equals the concurrently edited text, durationMs 3100 survives the swap",
+        "Renders both aspects deterministic: double run byte-identical via SHA-256, loading frames non-empty (signalstats YAVG >= 100 at frames 80 and 140), sketch baseline unchanged (VID-021 rerun inside reproduces archived hashes, registry v7 append harmless)",
+        "No TTS billing: ledger line count unchanged and browser console logs zero errors"
+      ]
     }
   ],
   "manual": [
