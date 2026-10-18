@@ -1257,6 +1257,21 @@
         "Double run of the exported project is byte-identical on both aspects via SHA-256 and the whole e2e re-run reproduces the same MP4 hashes (cross-process frame determinism)",
         "Billing ledger line count is unchanged and the browser console logs zero errors (zero TTS synthesis in this cut)"
       ]
+    },
+    {
+      "id": "VID-018",
+      "tier": "integration",
+      "title": "Video Studio map templates and edit loop (grid/journey)",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/e2e-map.mjs"],
+      "requiresPorts": [3211],
+      "checks": [
+        "Workbench map template selector (optgroup) swaps shot 2 to map-grid and shot 3 to map-journey through the real editor card, edited region/waypoint data lands in the saved and exported project JSON while narration text and duration survive the swap",
+        "Exported working specs assert componentId plus params shape: regions join to the edited label,row,col[,value] list and the journey keeps origin/waypoint/destination with one bare-coordinate waypoint",
+        "CLI render-scene outputs both aspects and map frames stay non-empty: ffmpeg signalstats YAVG >= 100 at frame 80 (grid blocks settled) and frame 140 (journey draw late stage) on landscape and portrait",
+        "Double run of the exported project is byte-identical on both aspects via SHA-256 and the whole e2e re-run reproduces the same MP4 hashes (cross-process frame determinism)",
+        "Billing ledger line count is unchanged and the browser console logs zero errors (zero TTS synthesis in this cut)"
+      ]
     }
   ],
   "manual": [
