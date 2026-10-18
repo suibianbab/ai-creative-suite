@@ -1,5 +1,6 @@
 import { barChart } from "./components/bar-chart.js";
 import { basicShapes } from "./components/basic-shapes.js";
+import { flowDiagram } from "./components/flow-diagram.js";
 import { flowSteps } from "./components/flow-steps.js";
 import { lineChart } from "./components/line-chart.js";
 import { lineDrawing } from "./components/line-drawing.js";
@@ -26,6 +27,7 @@ export const defaultRegistry: SceneRegistry = createRegistry(
     mapGrid,
     mapJourney,
     flowSteps,
+    flowDiagram,
   ],
   4,
 );
