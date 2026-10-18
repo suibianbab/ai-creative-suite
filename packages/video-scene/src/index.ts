@@ -1,5 +1,6 @@
 export * from "./components/bar-chart.js";
 export * from "./components/basic-shapes.js";
+export { flowSteps } from "./components/flow-steps.js";
 export * from "./components/line-chart.js";
 export * from "./components/line-drawing.js";
 // 命名再导出（非 export *）：hexLerp 留在组件模块内私有（spec YAGNI 裁定）

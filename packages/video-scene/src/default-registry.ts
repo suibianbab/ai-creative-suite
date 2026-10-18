@@ -1,5 +1,6 @@
 import { barChart } from "./components/bar-chart.js";
 import { basicShapes } from "./components/basic-shapes.js";
+import { flowSteps } from "./components/flow-steps.js";
 import { lineChart } from "./components/line-chart.js";
 import { lineDrawing } from "./components/line-drawing.js";
 import { mapGrid } from "./components/map-grid.js";
@@ -13,6 +14,7 @@ import { createRegistry, type SceneRegistry } from "./registry.js";
 // v2（P2-① 数据可视化）：追加 bar-chart / line-chart / number-counter，
 // 同一分支内原子落地，版本维持 2。
 // v3（P2-② 地图动画）：追加 map-grid / map-journey，同一分支内原子落地。
+// v4（P2-③ 流程图/示意图）：追加流程组件，同一分支内原子落地。
 export const defaultRegistry: SceneRegistry = createRegistry(
   [
     textAnimation,
@@ -23,6 +25,7 @@ export const defaultRegistry: SceneRegistry = createRegistry(
     numberCounter,
     mapGrid,
     mapJourney,
+    flowSteps,
   ],
-  3,
+  4,
 );
