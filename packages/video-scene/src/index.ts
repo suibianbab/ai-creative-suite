@@ -10,3 +10,4 @@ export * from "./registry.js";
 export * from "./spec.js";
 export * from "./svg.js";
 export * from "./svg-budget.js";
+export * from "./text-width.js";
