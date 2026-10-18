@@ -1242,6 +1242,21 @@
         "decodePathName returns null for malformed percent-encoding so narration-server answers 400 instead of crashing; describeHttpFailure names request_id from JSON error bodies; ttsFetchInit attaches an AbortSignal timeout; atomicWriteFile lands content via tmp+rename with no .tmp left behind",
         "Unit tests make zero network calls; billing is exercised only by the opted-in e2e run"
       ]
+    },
+    {
+      "id": "VID-017",
+      "tier": "integration",
+      "title": "Video Studio dataviz chart templates and edit loop (bar/line/counter)",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/e2e-dataviz.mjs"],
+      "requiresPorts": [3211],
+      "checks": [
+        "Workbench chart template selector swaps shot 2 to bar-chart and shot 3 to number-counter through the real editor card, then the revised data (spring/summer/autumn/winter rainfall) lands in the saved and exported project JSON while narration text and duration survive the swap",
+        "Exported working specs assert componentId plus params shape: bars join to the edited label,value list and the counter keeps value 250000 from the template",
+        "CLI render-scene outputs both aspects and chart frames stay non-empty: ffmpeg signalstats YAVG >= 100 at frame 80 (bar shot grown) and frame 140 (counter mid count-up) on landscape and portrait",
+        "Double run of the exported project is byte-identical on both aspects via SHA-256 and the whole e2e re-run reproduces the same MP4 hashes (cross-process frame determinism)",
+        "Billing ledger line count is unchanged and the browser console logs zero errors (zero TTS synthesis in this cut)"
+      ]
     }
   ],
   "manual": [
