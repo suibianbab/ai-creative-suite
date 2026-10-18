@@ -4,6 +4,8 @@ export { flowDiagram } from "./components/flow-diagram.js";
 export { flowSteps } from "./components/flow-steps.js";
 export * from "./components/line-chart.js";
 export * from "./components/line-drawing.js";
+export { loadingDots } from "./components/loading-dots.js";
+export { loadingProgress } from "./components/loading-progress.js";
 // 命名再导出（非 export *）：hexLerp 留在组件模块内私有（spec YAGNI 裁定）
 export { mapGrid } from "./components/map-grid.js";
 export { mapJourney } from "./components/map-journey.js";

@@ -4,6 +4,8 @@ import { flowDiagram } from "./components/flow-diagram.js";
 import { flowSteps } from "./components/flow-steps.js";
 import { lineChart } from "./components/line-chart.js";
 import { lineDrawing } from "./components/line-drawing.js";
+import { loadingDots } from "./components/loading-dots.js";
+import { loadingProgress } from "./components/loading-progress.js";
 import { mapGrid } from "./components/map-grid.js";
 import { mapJourney } from "./components/map-journey.js";
 import { numberCounter } from "./components/number-counter.js";
@@ -20,6 +22,7 @@ import { createRegistry, type SceneRegistry } from "./registry.js";
 // v4（P2-③ 流程图/示意图）：追加流程组件，同一分支内原子落地。
 // v5（P2-④ 火柴人）：追加 stick-figure，同一分支内原子落地。
 // v6（P2-⑤ 手绘）：追加 sketch-note，同一分支内原子落地。
+// v7（P2-⑥ 加载）：追加 loading-dots / loading-progress，同一分支内原子落地。
 export const defaultRegistry: SceneRegistry = createRegistry(
   [
     textAnimation,
@@ -34,6 +37,8 @@ export const defaultRegistry: SceneRegistry = createRegistry(
     flowDiagram,
     stickFigure,
     sketchNote,
+    loadingDots,
+    loadingProgress,
   ],
-  6,
+  7,
 );
