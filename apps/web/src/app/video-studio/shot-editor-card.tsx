@@ -20,6 +20,14 @@ import {
   isFlowComponentId,
 } from "./flow-templates";
 import {
+  applyLoadingTemplate,
+  buildLoadingRevisePatch,
+  draftLoadingFromSpec,
+  isLoadingComponentId,
+  LOADING_TEMPLATES,
+  type LoadingEditDraft,
+} from "./loading-templates";
+import {
   applyMapTemplate,
   buildMapRevisePatch,
   draftMapFromSpec,
@@ -55,8 +63,8 @@ import {
 // 分镜编辑器镜头卡：只读信息 + 展开式编辑（旁白/画面修订、单镜头重做、
 // 版本回滚、锁定）。草稿是本地状态，点「应用修订」才经回调落文档；
 // 校验全走 shot-edit.ts / chart-templates.ts / map-templates.ts /
-// flow-templates.ts / stick-templates.ts / sketch-templates.ts 纯逻辑，
-// 非法草稿不回调。
+// flow-templates.ts / stick-templates.ts / sketch-templates.ts /
+// loading-templates.ts 纯逻辑，非法草稿不回调。
 
 const EMPTY_CHART_DRAFT: ChartEditDraft = {
   title: "",
@@ -74,8 +82,15 @@ const EMPTY_STICK_DRAFT: StickEditDraft = { title: "", data: "" };
 
 const EMPTY_SKETCH_DRAFT: SketchEditDraft = { title: "", data: "" };
 
-// 模板下拉跨图表/地图/流程/火柴人/手绘五族解析：先按图表找，找不到再按
-// 流程、地图、火柴人、手绘找。
+const EMPTY_LOADING_DRAFT: LoadingEditDraft = {
+  title: "",
+  label: "",
+  count: "",
+  target: "",
+};
+
+// 模板下拉跨图表/地图/流程/火柴人/手绘/加载六族解析：先按图表找，找不到
+// 再按流程、地图、火柴人、手绘、加载找。
 function resolveAnyTemplate(
   spec: SceneSpec,
   templateId: string,
@@ -90,6 +105,8 @@ function resolveAnyTemplate(
   if (stick.spec) return { spec: stick.spec, error: null };
   const sketch = applySketchTemplate(spec, templateId);
   if (sketch.spec) return { spec: sketch.spec, error: null };
+  const loading = applyLoadingTemplate(spec, templateId);
+  if (loading.spec) return { spec: loading.spec, error: null };
   return { spec: null, error: flow.error ?? map.error ?? chart.error };
 }
 
@@ -176,6 +193,12 @@ export function ShotEditorCard({
       : EMPTY_SKETCH_DRAFT,
   );
   const [sketchError, setSketchError] = useState<string | null>(null);
+  const [loadingDraft, setLoadingDraft] = useState<LoadingEditDraft>(() =>
+    spec && isLoadingComponentId(spec.componentId)
+      ? draftLoadingFromSpec(spec)
+      : EMPTY_LOADING_DRAFT,
+  );
+  const [loadingError, setLoadingError] = useState<string | null>(null);
 
   // working 版本变了（应用修订/重做/回滚后）→ 草稿重置到新工作版本。
   // 只盯 workingVersionId（终评整改）：锁定切换会换 shot 对象身份但不动
@@ -228,6 +251,12 @@ export function ShotEditorCard({
       nextSpec && isSketchComponentId(nextSpec.componentId)
         ? draftSketchFromSpec(nextSpec)
         : EMPTY_SKETCH_DRAFT,
+    );
+    setLoadingError(null);
+    setLoadingDraft(
+      nextSpec && isLoadingComponentId(nextSpec.componentId)
+        ? draftLoadingFromSpec(nextSpec)
+        : EMPTY_LOADING_DRAFT,
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps -- 依赖收紧是有意的（见上注）
   }, [shot.workingVersionId]);
@@ -380,7 +409,7 @@ export function ShotEditorCard({
             </span>
           ) : null}
           <label className="shot-edit-field">
-            组件模板（图表 / 地图 / 流程 / 火柴人 / 手绘）
+            组件模板（图表 / 地图 / 流程 / 火柴人 / 手绘 / 加载）
             <select
               className="chart-template-select"
               value={pendingTemplateId}
@@ -392,6 +421,7 @@ export function ShotEditorCard({
                 setFlowError(null);
                 setStickError(null);
                 setSketchError(null);
+                setLoadingError(null);
                 if (!templateId) return;
                 const applied = resolveAnyTemplate(spec, templateId);
                 if (applied.error || !applied.spec) {
@@ -409,6 +439,8 @@ export function ShotEditorCard({
                   setStickDraft(draftStickFromSpec(applied.spec));
                 } else if (isSketchComponentId(applied.spec.componentId)) {
                   setSketchDraft(draftSketchFromSpec(applied.spec));
+                } else if (isLoadingComponentId(applied.spec.componentId)) {
+                  setLoadingDraft(draftLoadingFromSpec(applied.spec));
                 }
               }}
             >
@@ -443,6 +475,13 @@ export function ShotEditorCard({
               </optgroup>
               <optgroup label="手绘">
                 {SKETCH_TEMPLATES.map((template) => (
+                  <option key={template.templateId} value={template.templateId}>
+                    {template.label}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="加载">
+                {LOADING_TEMPLATES.map((template) => (
                   <option key={template.templateId} value={template.templateId}>
                     {template.label}
                   </option>
@@ -653,6 +692,76 @@ export function ShotEditorCard({
               ) : null}
             </>
           ) : null}
+          {isLoadingComponentId(spec.componentId) ? (
+            <>
+              <label className="shot-edit-field">
+                加载标题
+                <input
+                  className="loading-title-input"
+                  maxLength={40}
+                  value={loadingDraft.title}
+                  onChange={(event) =>
+                    setLoadingDraft({
+                      ...loadingDraft,
+                      title: event.target.value,
+                    })
+                  }
+                />
+              </label>
+              <label className="shot-edit-field">
+                状态文案（1..12 字）
+                <input
+                  className="loading-label-input"
+                  maxLength={12}
+                  value={loadingDraft.label}
+                  onChange={(event) =>
+                    setLoadingDraft({
+                      ...loadingDraft,
+                      label: event.target.value,
+                    })
+                  }
+                />
+              </label>
+              {spec.componentId === "loading-dots" ? (
+                <label className="shot-edit-field">
+                  点数（3..6）
+                  <input
+                    className="loading-count-input"
+                    type="number"
+                    min={3}
+                    max={6}
+                    value={loadingDraft.count}
+                    onChange={(event) =>
+                      setLoadingDraft({
+                        ...loadingDraft,
+                        count: event.target.value,
+                      })
+                    }
+                  />
+                </label>
+              ) : (
+                <label className="shot-edit-field">
+                  目标百分比（1..100）
+                  <input
+                    className="loading-target-input"
+                    type="number"
+                    min={1}
+                    max={100}
+                    value={loadingDraft.target}
+                    onChange={(event) =>
+                      setLoadingDraft({
+                        ...loadingDraft,
+                        target: event.target.value,
+                      })
+                    }
+                  />
+                </label>
+              )}
+              {loadingError ? (
+                <p className="loading-edit-error">{loadingError}</p>
+              ) : null}
+            </>
+          ) : null}
           {overflowMs > 0 ? (
             <span className="shot-overflow-note">
               旁白按语速需{" "}
@@ -684,9 +793,9 @@ export function ShotEditorCard({
               className="shot-apply"
               onClick={() => {
                 // 换模板 = 以模板 spec 为基底；与同草稿的并发编辑（旁白/背景/
-                // 时长 + 图表/地图/流程/火柴人/手绘数据——选中模板时已预填
-                // 该模板默认值）一次应用一并落库，不静默丢弃（终评 I1 合并
-                // 语义）。
+                // 时长 + 图表/地图/流程/火柴人/手绘/加载数据——选中模板时已
+                // 预填该模板默认值）一次应用一并落库，不静默丢弃（终评 I1
+                // 合并语义）。
                 let baseSpec = spec;
                 if (pendingTemplateId) {
                   const applied = resolveAnyTemplate(spec, pendingTemplateId);
@@ -770,9 +879,37 @@ export function ShotEditorCard({
                   setSketchError(sketchResult.error ?? "手绘数据无效");
                   return;
                 }
+                const loadingResult = isLoadingComponentId(
+                  (
+                    sketchResult?.spec ??
+                    stickResult?.spec ??
+                    flowResult?.spec ??
+                    mapResult?.spec ??
+                    chartResult?.spec ??
+                    baseSpec
+                  ).componentId,
+                )
+                  ? buildLoadingRevisePatch(
+                      sketchResult?.spec ??
+                        stickResult?.spec ??
+                        flowResult?.spec ??
+                        mapResult?.spec ??
+                        chartResult?.spec ??
+                        baseSpec,
+                      loadingDraft,
+                    )
+                  : null;
+                if (
+                  loadingResult &&
+                  (loadingResult.error || !loadingResult.spec)
+                ) {
+                  setLoadingError(loadingResult.error ?? "加载数据无效");
+                  return;
+                }
                 const { patch, error } = buildRevisePatch(
                   draft,
-                  sketchResult?.spec ??
+                  loadingResult?.spec ??
+                    sketchResult?.spec ??
                     stickResult?.spec ??
                     flowResult?.spec ??
                     mapResult?.spec ??
@@ -789,6 +926,7 @@ export function ShotEditorCard({
                 setFlowError(null);
                 setStickError(null);
                 setSketchError(null);
+                setLoadingError(null);
                 onRevise(patch);
               }}
             >

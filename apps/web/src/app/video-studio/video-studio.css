@@ -791,6 +791,13 @@
   color: #a3230f;
 }
 
+/* P2-⑥ 加载编辑字段（沿手绘控件同款外观；数字输入沿 shot-duration-input） */
+.loading-edit-error {
+  margin: 0;
+  font-size: 12px;
+  color: #a3230f;
+}
+
 .shot-edit-actions,
 .shot-redo-row {
   display: flex;
