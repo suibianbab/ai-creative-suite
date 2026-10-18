@@ -8,6 +8,7 @@ export * from "./components/line-drawing.js";
 export { mapGrid } from "./components/map-grid.js";
 export { mapJourney } from "./components/map-journey.js";
 export * from "./components/number-counter.js";
+export { sketchNote } from "./components/sketch-note.js";
 export { stickFigure } from "./components/stick-figure.js";
 export * from "./components/text-animation.js";
 export * from "./default-registry.js";
