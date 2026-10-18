@@ -334,3 +334,67 @@ test("locked 未变时追加 lock-changed 事件 → 不禁止（无害的冗余
   });
   assert.doesNotThrow(() => assertAppendOnlyEvolution(baseProject(), next));
 });
+
+// 末条裁定（2026-10-18 Codex 复核反馈）：背书不是「追加段里出现过匹配值」，
+// 而是「追加段最后一条 lock-changed 所说的值 = 最终 locked」。构造
+// [锁定 true，解锁 false] 而终态 true 曾被接受——事件链末条与终态矛盾。
+test("追加段先锁后解、终态却为锁 → 拒绝（末条事件与终态矛盾）", () => {
+  const next = appendedProject();
+  const shot = next.shots[0]!;
+  shot.locked = true;
+  shot.events.push(
+    {
+      kind: "lock-changed",
+      locked: true,
+      at: "2026-10-17T04:00:00.000Z",
+      actor: "human",
+    },
+    {
+      kind: "lock-changed",
+      locked: false,
+      at: "2026-10-17T05:00:00.000Z",
+      actor: "human",
+    },
+  );
+  assert.throws(
+    () => assertAppendOnlyEvolution(baseProject(), next),
+    /lock-changed|locked/,
+    "末条 lock-changed 裁定最终状态，不能翻回去",
+  );
+});
+
+test("追加段先锁后解、终态为解 → 通过（同帧两次 setLocked 的合法轨迹）", () => {
+  const next = appendedProject();
+  const shot = next.shots[0]!;
+  shot.locked = false;
+  shot.events.push(
+    {
+      kind: "lock-changed",
+      locked: true,
+      at: "2026-10-17T04:00:00.000Z",
+      actor: "human",
+    },
+    {
+      kind: "lock-changed",
+      locked: false,
+      at: "2026-10-17T05:00:00.000Z",
+      actor: "human",
+    },
+  );
+  assert.doesNotThrow(() => assertAppendOnlyEvolution(baseProject(), next));
+});
+
+test("locked 未变但追加段末条 lock-changed 与终态矛盾 → 拒绝", () => {
+  const next = appendedProject();
+  next.shots[0]!.events.push({
+    kind: "lock-changed",
+    locked: true, // 事件说锁了，终态却仍是 false
+    at: "2026-10-17T04:00:00.000Z",
+    actor: "human",
+  });
+  assert.throws(
+    () => assertAppendOnlyEvolution(baseProject(), next),
+    /lock-changed|locked/,
+    "审计链末条必须与终态一致，无论状态是否翻转",
+  );
+});

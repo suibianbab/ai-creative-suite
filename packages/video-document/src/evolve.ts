@@ -1,8 +1,8 @@
 // 文档演进只允许追加（ADR 0003 §3.1「不可变文档版本」）。保存新版本前，
 // 调用方必须证明：旧镜头的内容版本与事件、渲染记录、交付记录在新文档中
 // 原样保留（旧序列是新序列的前缀），旧内容版本逐字段未改。标题、brief、
-// workingVersionId 等当前态/元数据可变；locked 可变但每次变化必须在本帧
-// 追加段留下值匹配的 lock-changed 事件（setLocked 的审计契约）。savedVersion
+// workingVersionId 等当前态/元数据可变；locked 可变但最终状态由本次追加段
+// 最后一条 lock-changed 事件裁定（setLocked 的审计契约，见下方不变量）。savedVersion
 // 不参与判定。
 import { canonicalJson } from "./canonical-json.js";
 import type { VideoProject } from "./types.js";
@@ -63,20 +63,34 @@ export function assertAppendOnlyEvolution(
       nextShot.events,
       (slot) => `shots[${index}].events[${slot}]`,
     );
-    // 锁定审计不变量（Codex 复核反馈）：locked 每次变化必须走 setLocked 留
-    // lock-changed(human) 事件。背书只认本次追加段——旧前缀里同值的历史
-    // 事件不能为本次翻转背书（否则锁→解锁→直改回旧值可绕过审计）。
-    if (previousShot.locked !== nextShot.locked) {
-      const appendedEvents = nextShot.events.slice(previousShot.events.length);
-      const justified = appendedEvents.some(
-        (event) =>
-          event.kind === "lock-changed" && event.locked === nextShot.locked,
-      );
-      if (!justified) {
-        throw new VideoProjectMutationError(
-          `shots[${index}]（${previousShot.shotId}）locked ${previousShot.locked} → ${nextShot.locked} 未追加值匹配的 lock-changed 事件（锁定变化必须走 setLocked 留审计事件）`,
-        );
+    // 锁定审计不变量（Codex 复核反馈 ×2）：locked 的最终状态由本次追加段
+    // 最后一条 lock-changed 事件裁定。两条规则：
+    //   1) locked 变化 → 追加段必须有 lock-changed 事件（直改拒绝）；
+    //   2) 追加段存在 lock-changed → 末条事件值必须等于最终 locked。
+    // 旧实现用 some() 找「任意位置的同值事件」背书——构造 [锁 true，解 false]
+    // 而终态 true 可绕过；旧前缀里的同值历史事件同理不能背书。
+    const appendedEvents = nextShot.events.slice(previousShot.events.length);
+    let lastLockChanged: { locked: boolean } | undefined;
+    for (const event of appendedEvents) {
+      if (event.kind === "lock-changed") {
+        lastLockChanged = event;
       }
+    }
+    if (
+      previousShot.locked !== nextShot.locked &&
+      lastLockChanged === undefined
+    ) {
+      throw new VideoProjectMutationError(
+        `shots[${index}]（${previousShot.shotId}）locked ${previousShot.locked} → ${nextShot.locked} 未追加 lock-changed 事件（锁定变化必须走 setLocked 留审计事件）`,
+      );
+    }
+    if (
+      lastLockChanged !== undefined &&
+      lastLockChanged.locked !== nextShot.locked
+    ) {
+      throw new VideoProjectMutationError(
+        `shots[${index}]（${previousShot.shotId}）追加段最后一条 lock-changed（locked=${lastLockChanged.locked}）与最终 locked=${nextShot.locked} 矛盾（末条事件裁定最终状态）`,
+      );
     }
   }
   requirePrefix(
