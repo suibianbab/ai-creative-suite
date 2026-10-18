@@ -8,7 +8,7 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { buildNarrationEntries } from "./tts-sse.mjs";
+import { buildNarrationEntries, readSubtitleCues } from "./tts-sse.mjs";
 
 const WORKDIR = mkdtempSync(path.join(tmpdir(), "acs-narration-"));
 test.after(() => rmSync(WORKDIR, { recursive: true, force: true }));
@@ -145,4 +145,52 @@ test("纯空白 narrationText 与空串同待遇：不装配、不算缺失（tr
   );
   assert.equal(entries.length, 0);
   assert.equal(notices.length, 0, "纯空白不算缺失提示");
+});
+
+// —— P1 字幕 cue 读取（spec R2/R3）——
+
+test("readSubtitleCues：words.json 精确路径 + 缺文件/坏 JSON 均匀回退 + 超尾钳制", () => {
+  const dir = mkdtempSync(path.join(tmpdir(), "acs-subcues-"));
+  test.after(() => rmSync(dir, { recursive: true, force: true }));
+  writeFileSync(
+    path.join(dir, "s1-v1.words.json"),
+    JSON.stringify({
+      sentences: [
+        {
+          index: 0,
+          words: [
+            { text: "水", begin_time: 360, end_time: 560 },
+            { text: "。", begin_time: 560, end_time: 700 },
+          ],
+        },
+      ],
+    }),
+  );
+  // 精确路径：cue 时间取字级 begin/end，标点并入 cue 文本
+  const exact = readSubtitleCues(dir, "s1-v1", "水。", 2000);
+  assert.equal(exact.fallback, false);
+  assert.deepEqual(exact.cues, [{ text: "水。", startMs: 360, endMs: 700 }]);
+
+  // 缺文件 → 均匀近似（fallback=true 供上层告警），末条覆盖 span
+  const missing = readSubtitleCues(dir, "s2-v2", "水。", 1600);
+  assert.equal(missing.fallback, true);
+  assert.equal(missing.cues.length, 1);
+  assert.equal(missing.cues[0].startMs, 0);
+  assert.equal(missing.cues[0].endMs, 1600);
+
+  // 坏 JSON → 同均匀回退
+  writeFileSync(path.join(dir, "s3-v3.words.json"), "{ 不是 JSON");
+  const corrupt = readSubtitleCues(dir, "s3-v3", "水。", 1600);
+  assert.equal(corrupt.fallback, true);
+  assert.equal(corrupt.cues[0].endMs, 1600);
+
+  // 超尾钳制（Review Focus #3）：--allow-truncate 路径音轨截到 span，
+  // cue 的 endMs 不得悬空到 span 之外
+  const clamped = readSubtitleCues(dir, "s1-v1", "水。", 500);
+  assert.equal(clamped.cues[clamped.cues.length - 1].endMs, 500);
+
+  // 空白旁白 → 无 cue、不算回退
+  const blank = readSubtitleCues(dir, "s1-v1", "  ", 500);
+  assert.equal(blank.cues.length, 0);
+  assert.equal(blank.fallback, false);
 });

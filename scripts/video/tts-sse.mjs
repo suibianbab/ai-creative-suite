@@ -5,8 +5,20 @@
 //         "usage":{"characters":34},"request_id":"…"}
 // 纪律：音频必须逐 chunk 解码（output.audio.data）后 Buffer.concat——
 // 把整条流的 base64 先拼再解会得到损坏字节（spike 实测 8KB ≠ 223KB）。
-import { existsSync, renameSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
+
+// scripts/ 不进 workspace 包图，按预检裁决用相对路径引 dist（与 render-scene
+// 同款）。字幕 cue 构建必须与 web 预览同一实现源（spec R1 派生投影单一事实）。
+const { buildSubtitleCues } = await import(
+  pathToFileURL(
+    path.join(
+      path.dirname(fileURLToPath(import.meta.url)),
+      "../../packages/video-document/dist/index.js",
+    ),
+  ).href
+);
 
 // 计费估算：仅供台账预算 sanity，真实计费以服务端 usage.characters 为准
 // （中文按每字 2 计费字符）。已知价目：cosyvoice-v3-flash ¥1/万字符。
@@ -268,4 +280,35 @@ export function planDurationAlignments(project, wavMsByBase) {
     });
   }
   return plan;
+}
+
+// 字幕 cue 读取（spec R2/R3 + Review Focus #2/#3）：words.json 坏/缺/时间戳
+// 全非法 → 均匀近似（fallback=true 供上层告警不阻断）；cue 越过 span 钳到
+// span（--allow-truncate 路径音轨截断，字幕不能悬空显示到不存在的帧）。
+export function readSubtitleCues(dir, base, narrationText, spanMs) {
+  let words = [];
+  try {
+    const parsed = JSON.parse(
+      readFileSync(path.join(dir, `${base}.words.json`), "utf8"),
+    );
+    words = (parsed.sentences ?? []).flatMap((sentence) =>
+      (sentence.words ?? []).map((word) => ({
+        text: String(word.text ?? ""),
+        beginMs: Number(word.begin_time),
+        endMs: Number(word.end_time),
+      })),
+    );
+  } catch {
+    words = []; // 文件缺失/坏 JSON → 均匀回退
+  }
+  const built = buildSubtitleCues({ narrationText, words, spanMs });
+  const fallback = words.length === 0 && narrationText.trim().length > 0;
+  const cues = built
+    .map((cue) => ({
+      ...cue,
+      startMs: Math.min(cue.startMs, spanMs),
+      endMs: Math.min(cue.endMs, spanMs),
+    }))
+    .filter((cue) => cue.endMs > cue.startMs);
+  return { cues, fallback };
 }

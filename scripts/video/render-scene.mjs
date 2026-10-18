@@ -22,7 +22,7 @@ import {
   DEFAULT_BUDGET_MS,
   dryRunJobs,
 } from "./frame-dryrun.mjs";
-import { buildNarrationEntries } from "./tts-sse.mjs";
+import { buildNarrationEntries, readSubtitleCues } from "./tts-sse.mjs";
 
 const ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -99,11 +99,14 @@ const { values } = parseArgs({
     narration: { type: "string" },
     "skip-dryrun": { type: "boolean" },
     "budget-ms": { type: "string" },
+    // spec R4 渲染期防线：旁白溢出默认拒绝渲染；--allow-truncate 显式选择
+    // 保留旧行为（告警 + Sequence 截断），与 tts-narration 的同名旗标配套。
+    "allow-truncate": { type: "boolean" },
   },
 });
 if (!values.project || !values.out)
   fail(
-    "用法: node scripts/video/render-scene.mjs --project <path.json> --out <dir> [--narration <dir>] [--skip-dryrun] [--budget-ms 500]",
+    "用法: node scripts/video/render-scene.mjs --project <path.json> --out <dir> [--narration <dir>] [--skip-dryrun] [--budget-ms 500] [--allow-truncate]",
   );
 
 const projectPath = path.resolve(values.project);
@@ -165,6 +168,13 @@ if (values.narration) {
     console.log(`[render-scene] 旁白提示: ${notice}`);
   for (const warning of assembled.warnings)
     console.warn(`[render-scene] 旁白警告: ${warning}`);
+  // spec R4 渲染期防线：溢出默认拒绝——静默截断只经 --allow-truncate 到达。
+  if (assembled.warnings.length > 0 && !values["allow-truncate"]) {
+    fail(
+      `旁白溢出未对齐，拒绝渲染（${assembled.warnings.length} 个镜头）：\n  ${assembled.warnings.join("\n  ")}\n` +
+        "出路二选一：先跑 tts-narration 重合成（自动时长对齐写新版本），或显式加 --allow-truncate 接受截断",
+    );
+  }
   if (narrationEntries.length > 0) {
     console.log(
       `[render-scene] 旁白音轨 ${narrationEntries.length}/${timeline.shots.length} 镜头`,
@@ -272,20 +282,50 @@ const manifest = {
 };
 // Timeline props：量化帧图 + 逐镜头 spec（TimelineScene 要求 spans 连续无缝）。
 // 旁白（若有）：audioSrc 用装配块注入的 http://127.0.0.1:<port>/ URL（见上方探针裁决）。
+// 字幕（spec R3）：words.json 字级时间戳 → 镜头本地 cue（asset-backed 旁白轨的
+// 派生投影，缺 words → 均匀近似告警不阻断；cue 越界钳到 span）。
 const narrationByShot = new Map(
   narrationEntries.map((entry) => [entry.shotIndex, entry]),
 );
+const subtitleSummary = [];
 const timelineProps = {
-  shots: timeline.shots.map((span) => ({
-    spec: shotEntries[span.shotIndex].spec,
-    startFrame: span.startFrame,
-    frames: span.frames,
-    ...(narrationByShot.has(span.shotIndex)
-      ? {
-          narration: { audioSrc: narrationByShot.get(span.shotIndex).propsSrc },
-        }
-      : {}),
-  })),
+  shots: timeline.shots.map((span) => {
+    const subtitlesBlock = {};
+    if (values.narration && narrationByShot.has(span.shotIndex)) {
+      const entry = narrationByShot.get(span.shotIndex);
+      const spanMs = Math.round((span.frames / FPS) * 1000);
+      const subtitle = readSubtitleCues(
+        path.resolve(values.narration),
+        path.basename(entry.audioSrc).replace(/\.wav$/, ""),
+        shotEntries[span.shotIndex].version.narrationText ?? "",
+        spanMs,
+      );
+      if (subtitle.fallback) {
+        console.warn(
+          `[render-scene] 镜头 ${span.shotIndex + 1} 无有效字级时间戳，字幕按均匀近似（出片对齐以 words.json 为准）`,
+        );
+      }
+      if (subtitle.cues.length > 0) {
+        subtitlesBlock.subtitles = { cues: subtitle.cues };
+        subtitleSummary.push({
+          shotIndex: span.shotIndex,
+          cues: subtitle.cues.length,
+          textSha256: sha256(subtitle.cues.map((cue) => cue.text).join("\n")),
+        });
+      }
+    }
+    return {
+      spec: shotEntries[span.shotIndex].spec,
+      startFrame: span.startFrame,
+      frames: span.frames,
+      ...(narrationByShot.has(span.shotIndex)
+        ? {
+            narration: { audioSrc: narrationByShot.get(span.shotIndex).propsSrc },
+          }
+        : {}),
+      ...subtitlesBlock,
+    };
+  }),
 };
 
 for (const aspect of aspects) {
@@ -405,6 +445,8 @@ for (const aspect of aspects) {
           })),
         }
       : {}),
+    // P1 字幕证据（spec R5）：逐镜头 cue 数与文本 SHA-256（烧进画面的派生投影摘要）
+    ...(subtitleSummary.length > 0 ? { subtitleCues: subtitleSummary } : {}),
   };
 
   // RenderRecord 追加：每画幅 × 每镜头一条（frames = 该镜头 span，输出为整片）
