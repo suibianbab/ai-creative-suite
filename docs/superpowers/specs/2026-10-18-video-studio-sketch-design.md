@@ -77,13 +77,13 @@
 | staggerMs 越 120..1200 | `sketch-note params.staggerMs 必须是 120..1200 的整数` |
 | 颜色非 #rrggbb | `… 必须是 #rrggbb` |
 | title 超 40 字符 | `sketch-note params.title 必须是 ≤40 个字符` |
-| 工作台数据行格式错/强调词未知/文本超长 | `buildSketchRevisePatch` 返回行内错误（含行号定位），不落 patch |
+| 工作台数据行文本为空/文本超长（1..12 字） | `buildSketchRevisePatch` 返回行内错误（含行号定位），不落 patch（从右取字段语义下无「未知强调词」分支——末段非枚举即整行作文本） |
 | 未知 templateId | `applySketchTemplate` 返回 `未知手绘模板 templateId` |
 
 ## 验收（A）
 
 - **A1 注册表追加无害**：stick e2e（VID-020）复跑 exit 0，媒体哈希 = P2-④ 已档 `1b12050d…`/`6e59b169…` 逐字节一致（组件追加不改旧渲染）。
-- **A2 手绘几何与写入**：单测断言逐字写入字数（进度 0/中途/1、单字条目）、下划线折线点序（含抖动公式采样值）、圈椭圆 rx 随文本宽、梯次 delay、双描第二遍相位差、textarea 解析 round-trip（含强调缺省与含逗号文本）。
+- **A2 手绘几何与写入**：单测断言逐字写入字数（进度 0/中途/1、单字条目）、下划线折线点序（含抖动公式采样值）、圈椭圆 rx 随文本宽、梯次 delay、双描第二遍相位差、textarea 解析 round-trip（含强调缺省、含逗号文本与含逗号+尾缀强调）。
 - **A3 帧确定性**：组件同 spec 同帧双调 deepEqual；e2e 双跑出片逐字节一致。
 - **A4 工作台闭环**：e2e 换模板（含并发旁白合并）→ 保存导出全程 `validateVideoProject` 过、控制台零 error。
 - **A5 零计费 + 登记**：全程无 TTS；VID-021 登记，qa 计数更新，CURRENT_STATE 顶部条目。
