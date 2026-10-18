@@ -19,6 +19,7 @@
 - TTS：4 wav + 4 字级时间戳档案，计费字符 37（7+14+7+9）；每条 `.words.json` 含 requestId/model/voice/usage/sentences（字级 begin/end_time ms）。
 - 音轨：横竖两片独立 ffprobe 核对均为 aac，容器时长 8.00s 与视频一致（±0.1s 内）；`render-manifest.json` 双画幅 `narration` 数组各 4 条（shotIndex/versionId/audioBytes/durationMs/wordsFile）。
 - 控制台门禁：全程零 error。
+- 旁白溢出告警实录（此前漏记，补录）：收口运行中要点镜头（span 2000ms）旁白 wav 实测 2640ms，CLI 打印 `[render-scene] 旁白警告: 镜头 2 旁白 2640ms 超镜头 span 2000ms，播放将截断到 span 末`，Remotion Sequence 按引擎保证截到 span 末出片（aac/时长核对均过）——溢出是告警不阻断，符合装配纪律。
 
 ## 计费台账（逐笔，DashScope ¥1/万字符；用户授权累计 ≤¥50）
 

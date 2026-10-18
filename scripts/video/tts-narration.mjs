@@ -3,23 +3,22 @@
 //   产物：<out>/<shotId>-<versionId>.wav（PCM16 24k mono）+ .words.json（句/字时间戳）。
 //   计费：每次调用 append artifacts/tts-usage.jsonl（用户授权累计 ≤¥50，超限即停）。
 // 密钥纪律：DASHSCOPE_API_KEY 只从环境读，绝不写盘/入产物/入日志。
-// 原子性：单镜头先完整合成再落盘——API 失败不产生半个资产；已完成的镜头保留。
+// 原子性：单镜头先完整合成再落盘（tmp+rename 原子替换）——API 失败不产生半个
+//   资产；写盘中途崩溃也只留 .tmp，不会被下次装配误用；已完成的镜头保留。
 // 用法: node scripts/video/tts-narration.mjs --project <path.json> --out <dir>
-//       [--voice longanyang] [--model cosyvoice-v3-flash] [--budget-cny 50]
-import {
-  appendFileSync,
-  mkdirSync,
-  readFileSync,
-  writeFileSync,
-} from "node:fs";
+//       [--voice longanyang] [--model cosyvoice-v3-flash]
+import { appendFileSync, mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
 import {
+  atomicWriteFile,
   buildNarrationJobs,
+  describeHttpFailure,
   estimateTtsCostCny,
   parseTtsSse,
   parseUsageLedger,
+  ttsFetchInit,
 } from "./tts-sse.mjs";
 
 const ROOT = path.resolve(
@@ -98,29 +97,32 @@ for (const job of jobs) {
     );
   }
 
-  const response = await fetch(ENDPOINT, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-      "X-DashScope-SSE": "enable",
-      Accept: "text/event-stream",
-    },
-    body: JSON.stringify({
-      model,
-      input: {
-        text: job.text,
-        voice,
-        format: "wav",
-        sample_rate: 24000,
-        word_timestamp_enabled: true,
-      },
-    }),
-  });
-  if (!response.ok) {
-    const detail = await response.text();
+  // ttsFetchInit：认证/SSE 头 + 120s AbortSignal——DashScope 挂起时掐断请求
+  // 而非永等（裸跑 CLI 无 e2e 包装的 300s 兜底，终评 minor#3）
+  let response;
+  try {
+    response = await fetch(ENDPOINT, {
+      ...ttsFetchInit(apiKey),
+      body: JSON.stringify({
+        model,
+        input: {
+          text: job.text,
+          voice,
+          format: "wav",
+          sample_rate: 24000,
+          word_timestamp_enabled: true,
+        },
+      }),
+    });
+  } catch (error) {
     fail(
-      `镜头 ${job.shotIndex + 1}（${job.shotId}）TTS HTTP ${response.status}：${detail.slice(0, 500)}`,
+      `镜头 ${job.shotIndex + 1}（${job.shotId}）TTS 请求失败（120s 超时或网络错误）: ${error.message}`,
+    );
+  }
+  if (!response.ok) {
+    // request_id 显式点名（终评 minor#2）：DashScope 对账/工单必填
+    fail(
+      `镜头 ${job.shotIndex + 1}（${job.shotId}）TTS ${describeHttpFailure(response.status, await response.text())}`,
     );
   }
 
@@ -138,8 +140,10 @@ for (const job of jobs) {
   }
 
   const base = path.join(values.out, `${job.shotId}-${job.versionId}`);
-  writeFileSync(`${base}.wav`, wav);
-  writeFileSync(
+  // tmp+rename 原子写（终评 minor#4）：写盘中途崩溃只留 .tmp，
+  // 不会留半个 wav 被下次装配当正常资产
+  atomicWriteFile(`${base}.wav`, wav);
+  atomicWriteFile(
     `${base}.words.json`,
     `${JSON.stringify(
       {

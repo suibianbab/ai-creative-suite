@@ -7,13 +7,24 @@
 //  - 行前缀 id:/event:/:HTTP_STATUS/data:，finish_reason 中间事件是字符串 "null"。
 
 import assert from "node:assert/strict";
+import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import test from "node:test";
 import {
+  atomicWriteFile,
   buildNarrationJobs,
+  decodePathName,
+  describeHttpFailure,
   estimateTtsCostCny,
   parseTtsSse,
   parseUsageLedger,
+  ttsFetchInit,
 } from "./tts-sse.mjs";
+
+// minor#4 原子写的落盘目录（测完即清）
+const ATOMIC_DIR = mkdtempSync(path.join(tmpdir(), "acs-atomic-"));
+test.after(() => rmSync(ATOMIC_DIR, { recursive: true, force: true }));
 
 // 两个合成 chunk + 一句 begin/end：镜像真实流的字段结构（字节量缩小）。
 const WAV_HEAD = Buffer.from(
@@ -205,4 +216,66 @@ test("parseUsageLedger：合法逐行求和；坏行 throw 点名行号，不静
     /第 2 行/,
     "坏行必须点名行号（其后条目不得被静默丢弃）",
   );
+});
+
+// ── 终评 minor×7 补充 pass（用户裁决全修） ──────────────────────────────
+
+// minor#7：纯空白 narrationText 是 schema 合法但 planner 不产的输入——
+// 不 trim 会真金白银合成一段静音。合成/计费必须按 trim 后文本。
+test("buildNarrationJobs：纯空白旁白跳过；首尾空白 trim 后再合成计费", () => {
+  const jobs = buildNarrationJobs(
+    project([shot("s1", "v1", "   "), shot("s2", "v2", "  要点。 ")]),
+  );
+  assert.deepEqual(
+    jobs.map((j) => j.shotId),
+    ["s2"],
+    "纯空白镜头被过滤，不产生计费作业",
+  );
+  assert.equal(jobs[0].text, "要点。", "合成与计费按 trim 后文本");
+});
+
+// minor#1：narration-server 收到畸形 percent-encoding（如 /%zz）时
+// decodeURIComponent 抛 URIError 会把服务进程带崩、连累当次渲染——
+// 必须降级为 400。纯函数层返回 null，服务层据此回 400。
+test("decodePathName：正常名还原；畸形 percent-encoding 返回 null（服务回 400 不崩）", () => {
+  assert.equal(decodePathName("a-b.wav"), "a-b.wav");
+  assert.equal(decodePathName("%E6%B0%B4.wav"), "水.wav");
+  assert.equal(decodePathName("%zz.wav"), null);
+  assert.equal(decodePathName("%"), null);
+});
+
+// minor#2：HTTP 失败时 request_id 埋在 body 里，排障要对账（DashScope 工单
+// 必填）——必须显式点名，而不是指望它在 body 前 500 字里碰巧可见。
+test("describeHttpFailure：JSON body 提取 request_id 单独点名；非 JSON body 不炸", () => {
+  const msg = describeHttpFailure(
+    429,
+    '{"request_id":"req-abc","message":"throttled"}',
+  );
+  assert.match(msg, /HTTP 429/);
+  assert.match(msg, /request_id=req-abc/);
+  const plain = describeHttpFailure(502, "<html>Bad Gateway");
+  assert.match(plain, /HTTP 502/);
+  assert.match(plain, /Bad Gateway/);
+});
+
+// minor#3：裸跑 CLI 时 DashScope 挂起会让 fetch 永等（e2e 包装有 300s 兜底，
+// 手工路径没有）——请求必须自带 AbortSignal 超时。
+test("ttsFetchInit：带认证/SSE 头与 AbortSignal 超时（挂起调用被掐断而非永等）", () => {
+  const init = ttsFetchInit("sk-test", 60000);
+  assert.equal(init.method, "POST");
+  assert.equal(init.headers.Authorization, "Bearer sk-test");
+  assert.equal(init.headers.Accept, "text/event-stream");
+  assert.ok(init.signal instanceof AbortSignal);
+  assert.equal(init.signal.aborted, false);
+});
+
+// minor#4：直接写目标文件，崩溃在写盘中途会留半个 wav 被下次装配当正常资产
+// （装配只看文件存在）——tmp+rename 让崩溃最多留下没用的 .tmp。
+test("atomicWriteFile：tmp+rename 落盘完整内容，不留 .tmp 残留；覆盖写生效", () => {
+  const file = path.join(ATOMIC_DIR, "s1-v1.wav");
+  atomicWriteFile(file, Buffer.from("RIFF-full"));
+  assert.equal(readFileSync(file, "utf8"), "RIFF-full");
+  assert.equal(existsSync(`${file}.tmp`), false, "rename 后不留临时文件");
+  atomicWriteFile(file, Buffer.from("RIFF-full-v2"));
+  assert.equal(readFileSync(file, "utf8"), "RIFF-full-v2", "重写覆盖旧内容");
 });

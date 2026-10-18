@@ -10,6 +10,7 @@ import { readFileSync } from "node:fs";
 import http from "node:http";
 import path from "node:path";
 import { parseArgs } from "node:util";
+import { decodePathName } from "./tts-sse.mjs";
 
 const { values } = parseArgs({
   options: {
@@ -27,10 +28,16 @@ const allowed = new Set(values.files.split(",").filter(Boolean));
 const dir = path.resolve(values.dir);
 
 const server = http.createServer((req, res) => {
-  const name = decodeURIComponent(
-    new URL(req.url ?? "/", "http://x").pathname.slice(1),
-  );
-  if (!allowed.has(name)) {
+  // 畸形 percent-encoding（/%zz）会让 decode 抛 URIError 崩掉整个服务进程
+  // （终评 minor#1）——decodePathName 返回 null，回 400 拒掉这次请求。
+  const name = decodePathName(new URL(req.url ?? "/", "http://x").pathname);
+  if (name === null) {
+    res.statusCode = 400;
+    res.end("bad request");
+    return;
+  }
+  const member = name.slice(1); // 去掉前导 /
+  if (!allowed.has(member)) {
     res.statusCode = 404;
     res.end("not found");
     return;
@@ -39,7 +46,7 @@ const server = http.createServer((req, res) => {
   res.setHeader("Access-Control-Allow-Private-Network", "true");
   res.setHeader("Content-Type", "audio/wav");
   res.setHeader("Accept-Ranges", "none");
-  const body = readFileSync(path.join(dir, name)); // wav 几十 KB，整读 + Content-Length
+  const body = readFileSync(path.join(dir, member)); // wav 几十 KB，整读 + Content-Length
   res.setHeader("Content-Length", body.byteLength);
   res.end(body);
 });

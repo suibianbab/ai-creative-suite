@@ -1237,8 +1237,9 @@
       "checks": [
         "parseTtsSse decodes sentence-synthesis audio chunks per chunk (base64 to Buffer) and prefers complete sentence-end words over the sentence-begin prefix, exposing requestId/usage/finishReason",
         "estimateTtsCostCny prices cosyvoice-v3-flash at the documented CNY rate and refuses unknown models instead of guessing",
-        "buildNarrationJobs filters empty narrationText and refuses shots over the 2000-character TTS limit, naming the shot",
-        "buildNarrationEntries maps <shotId>-<versionId>.wav assets onto timeline spans: missing wav is a notice (no track), audio longer than the span is flagged overflow, and span duration is computed from frames/fps",
+        "buildNarrationJobs filters empty and whitespace-only narrationText (trimmed before billing) and refuses shots over the 2000-character TTS limit, naming the shot",
+        "buildNarrationEntries maps <shotId>-<versionId>.wav assets onto timeline spans: missing wav is a notice (no track), audio longer than the span is flagged overflow, and span duration is computed from frames/fps; whitespace-only narrationText is treated like empty (no entry, no notice)",
+        "decodePathName returns null for malformed percent-encoding so narration-server answers 400 instead of crashing; describeHttpFailure names request_id from JSON error bodies; ttsFetchInit attaches an AbortSignal timeout; atomicWriteFile lands content via tmp+rename with no .tmp left behind",
         "Unit tests make zero network calls; billing is exercised only by the opted-in e2e run"
       ]
     }

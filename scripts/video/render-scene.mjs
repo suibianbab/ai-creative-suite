@@ -348,9 +348,10 @@ for (const aspect of aspects) {
     );
   }
 
-  // D2：带旁白出片时核对音轨——必须有 aac 流，且容器时长与视频一致（±0.1s）。
+  // D2：带旁白出片时核对音轨——必须有 aac 流。
   // 注意 probe() 用了 -select_streams v:0，其 streams 里永远不会出现音频流，
   // 音轨必须单独探（探针实测：用 probe() 的输出查音频=结构性误报「无音频流」）。
+  // 容器时长不再复查：上方 ±0.05s 视频检查更严，会先拦（终评 minor#5 删冗余）。
   if (narrationEntries.length > 0) {
     const audioProbe = spawnSync(
       "ffprobe",
@@ -370,12 +371,6 @@ for (const aspect of aspects) {
     const audioCodec = `${audioProbe.stdout}`.trim();
     if (audioCodec !== "aac") {
       fail(`${aspect}.mp4 期望 aac 音轨但得到: ${audioCodec || "无音频流"}`);
-    }
-    // 容器时长 = 视频轨时长；音频流对齐由 Remotion 的混音时移保证
-    if (Math.abs(durationSeconds - totalFrames / FPS) > 0.1) {
-      fail(
-        `${aspect}.mp4 容器时长 ${durationSeconds}s 与视频 ${totalFrames / FPS}s 不一致（>±0.1s）`,
-      );
     }
   }
 

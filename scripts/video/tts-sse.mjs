@@ -5,7 +5,7 @@
 //         "usage":{"characters":34},"request_id":"…"}
 // 纪律：音频必须逐 chunk 解码（output.audio.data）后 Buffer.concat——
 // 把整条流的 base64 先拼再解会得到损坏字节（spike 实测 8KB ≠ 223KB）。
-import { existsSync } from "node:fs";
+import { existsSync, renameSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 // 计费估算：仅供台账预算 sanity，真实计费以服务端 usage.characters 为准
@@ -83,7 +83,7 @@ export function parseTtsSse(text) {
 }
 
 // 旁白任务构建：working version 的 narrationText → 合成作业。
-// 空 narrationText 镜头跳过（单镜头 P0 落档时为空串，属正常）；
+// 空/纯空白 narrationText 镜头跳过（空白不 trim 会花钱合成静音——终评 minor#7）；
 // >2000 字符（ContentVersion 上限）在计费前拒绝，点名镜头序号与长度。
 export function buildNarrationJobs(project) {
   if (project.shots.length === 0) {
@@ -94,7 +94,7 @@ export function buildNarrationJobs(project) {
     const working = shot.contentVersions.find(
       (version) => version.versionId === shot.workingVersionId,
     );
-    const text = working?.narrationText ?? "";
+    const text = (working?.narrationText ?? "").trim();
     if (text.length === 0) return;
     if (text.length > 2000) {
       throw new Error(
@@ -145,7 +145,8 @@ export function buildNarrationEntries(project, dir, timeline, fps, probeWavMs) {
     const version = shot.contentVersions.find(
       (candidate) => candidate.versionId === shot.workingVersionId,
     );
-    if ((version?.narrationText ?? "").length === 0) continue;
+    // 纯空白与空串同待遇（minor#7）：TTS 侧已 trim 跳过，这里不 trim 会报缺失噪音
+    if ((version?.narrationText ?? "").trim().length === 0) continue;
     const base = `${shot.shotId}-${version.versionId}`;
     const wav = path.join(dir, `${base}.wav`);
     if (!existsSync(wav)) {
@@ -171,4 +172,56 @@ export function buildNarrationEntries(project, dir, timeline, fps, probeWavMs) {
     }
   }
   return { entries, notices, warnings };
+}
+
+// ── 终评 minor×7 补充 pass 的纯函数层 ────────────────────────────────────
+
+// minor#1：URL 路径段安全解码。畸形 percent-encoding（/%zz）会让
+// decodeURIComponent 抛 URIError——在 narration-server 的请求回调里抛出
+// 会崩掉整个服务进程、连累当次渲染。返回 null，服务层据此回 400。
+export function decodePathName(pathname) {
+  try {
+    return decodeURIComponent(pathname);
+  } catch {
+    return null;
+  }
+}
+
+// minor#2：HTTP 失败的可对账描述。request_id 埋在 body JSON 里，DashScope
+// 工单必填——显式点名，而不是指望它碰巧落在 body 前 500 字里可见。
+export function describeHttpFailure(status, body) {
+  let requestId = null;
+  try {
+    requestId = JSON.parse(body).request_id ?? null;
+  } catch {
+    // body 非 JSON（网关 502 页面等）——没有 request_id 可提
+  }
+  const prefix = requestId
+    ? `HTTP ${status}（request_id=${requestId}）`
+    : `HTTP ${status}（body 无 request_id）`;
+  return `${prefix}: ${body.slice(0, 500)}`;
+}
+
+// minor#3：TTS 请求 init（认证 + SSE 头 + 超时）。裸跑 CLI 时 DashScope 挂起
+// 会让无 signal 的 fetch 永等（e2e 包装有 300s 兜底，手工路径没有）。
+export function ttsFetchInit(apiKey, timeoutMs = 120000) {
+  return {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+      "X-DashScope-SSE": "enable",
+      Accept: "text/event-stream",
+    },
+    signal: AbortSignal.timeout(timeoutMs),
+  };
+}
+
+// minor#4：原子落盘（tmp + rename）。直接写目标文件，崩溃在写盘中途会留半个
+// wav 被下次装配当正常资产（装配只看文件存在）。rename 原子替换，崩溃最多
+// 留下没用的 .tmp。Node 的 renameSync 在 Windows 上也覆盖已存在目标。
+export function atomicWriteFile(file, data) {
+  const tmp = `${file}.tmp`;
+  writeFileSync(tmp, data);
+  renameSync(tmp, file);
 }

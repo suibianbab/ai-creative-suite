@@ -130,3 +130,19 @@ test("narrationText 为空的镜头即使目录有同名 wav 也不装配（旁�
   // 空文本不算「缺失资产」提示（本来就不该有旁白）
   assert.equal(notices.length, 0);
 });
+
+// 终评 minor#7：纯空白 narrationText 与空串同待遇——TTS 侧跳过合成后，
+// 装配侧若仍按非空处理会对着不存在的 wav 报「资产缺失」噪音。
+test("纯空白 narrationText 与空串同待遇：不装配、不算缺失（trim 后为空）", () => {
+  const proj = project([shot("s1", "v1", 7500, "   ")]);
+  placeWav("s1-v1.wav");
+  const { entries, notices } = buildNarrationEntries(
+    proj,
+    WORKDIR,
+    timelineOf([180]),
+    FPS,
+    () => 1000,
+  );
+  assert.equal(entries.length, 0);
+  assert.equal(notices.length, 0, "纯空白不算缺失提示");
+});
