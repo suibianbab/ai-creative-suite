@@ -224,3 +224,42 @@ test("跨镜头 order 重复 → 拒绝", () => {
   });
   assert.throws(() => validateVideoProject(project), /order/);
 });
+
+// —— P1 转场（Feature ④ spec R1）：可变编排元数据，schema 层查形状/枚举/范围/重复 ——
+test("transitions 合法条目通过并原样返回", () => {
+  const project = withSecondShot(baseProject());
+  project.transitions = [{ boundary: 0, kind: "fade", durationMs: 500 }];
+  assert.deepEqual(
+    validateVideoProject(project).transitions,
+    project.transitions,
+  );
+});
+
+test("transitions 单镜头 boundary 越界 → 拒绝并指路清理", () => {
+  const project = baseProject(); // 单镜头：合法 0..-1 为空集
+  project.transitions = [{ boundary: 0, kind: "fade", durationMs: 500 }];
+  assert.throws(() => validateVideoProject(project), /boundary 越界/);
+});
+
+test("transitions kind/durationMs 非法 → 拒绝", () => {
+  const project = withSecondShot(baseProject());
+  project.transitions = [
+    { boundary: 0, kind: "wipe" as never, durationMs: 500 },
+  ];
+  assert.throws(() => validateVideoProject(project), /kind 须为 fade/);
+  project.transitions = [{ boundary: 0, kind: "fade", durationMs: 99 }];
+  assert.throws(() => validateVideoProject(project), /durationMs/);
+  project.transitions = [{ boundary: 0, kind: "fade", durationMs: 2001 }];
+  assert.throws(() => validateVideoProject(project), /durationMs/);
+  project.transitions = [{ boundary: 0, kind: "fade", durationMs: 500.5 }];
+  assert.throws(() => validateVideoProject(project), /durationMs/);
+});
+
+test("transitions 同 boundary 重复 → 拒绝", () => {
+  const project = withSecondShot(baseProject());
+  project.transitions = [
+    { boundary: 0, kind: "fade", durationMs: 500 },
+    { boundary: 0, kind: "fade", durationMs: 300 },
+  ];
+  assert.throws(() => validateVideoProject(project), /重复/);
+});

@@ -458,5 +458,44 @@ export function validateVideoProject(value: unknown): VideoProject {
       fail(`${field}.frameMap must be an array of positive integers`);
     }
   }
+  // —— P1 转场（Feature ④ spec R1）：可变编排元数据，查形状/枚举/范围/重复；
+  // 缺省字段与现状行为完全一致（不加键）——
+  if (parsed.transitions !== undefined) {
+    if (
+      !Array.isArray(parsed.transitions) ||
+      parsed.transitions.length > MAX_ARRAY
+    ) {
+      fail(`transitions must be an array of at most ${MAX_ARRAY} entries`);
+    }
+    const seen = new Set<number>();
+    const maxBoundary = parsed.shots.length - 2;
+    for (const [index, transition] of parsed.transitions.entries()) {
+      const field = `transitions[${index}]`;
+      if (!isRecord(transition)) fail(`${field} must be an object`);
+      const boundary = transition.boundary as number;
+      const durationMs = transition.durationMs as number;
+      if (
+        !Number.isInteger(boundary) ||
+        boundary < 0 ||
+        boundary > maxBoundary
+      ) {
+        fail(
+          `${field}.boundary 越界（合法 0..${maxBoundary}，镜头增删后需同步清理）`,
+        );
+      }
+      if (transition.kind !== "fade") fail(`${field}.kind 须为 fade`);
+      if (
+        !Number.isInteger(durationMs) ||
+        durationMs < 100 ||
+        durationMs > 2000
+      ) {
+        fail(`${field}.durationMs 须为 100..2000 的整数毫秒`);
+      }
+      if (seen.has(boundary)) {
+        fail(`${field}.boundary 与前条重复（同一边界至多一条转场）`);
+      }
+      seen.add(boundary);
+    }
+  }
   return parsed as VideoProject;
 }

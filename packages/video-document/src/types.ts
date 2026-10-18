@@ -94,4 +94,14 @@ export type VideoProject = {
   renderRecords: RenderRecord[];
   deliveries: DeliveryRecord[];
   savedVersion: number; // 文档版本，乐观并发用
+  // —— P1 转场（Feature ④ spec）：project 级编排元数据，可自由改写（title 同级），
+  // 不进 shots/events/renderRecords/deliveries 的只追加纪律；缺省/空 = 全硬切 ——
+  transitions?: ShotTransition[];
+};
+
+export type TransitionKind = "fade";
+export type ShotTransition = {
+  boundary: number; // 0 基：shots[boundary] 出场 → shots[boundary+1] 入场
+  kind: TransitionKind;
+  durationMs: number; // 100..2000
 };
