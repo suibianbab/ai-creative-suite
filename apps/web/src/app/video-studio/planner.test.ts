@@ -5,6 +5,7 @@ import {
   isStoryboardSentence,
   planFromSentence,
   planStoryboard,
+  speechAwareDurationMs,
   splitShotDurations,
 } from "./planner.js";
 
@@ -216,4 +217,37 @@ test("分镜：splitShotDurations 均分且末镜头吸收余数", () => {
     splitShotDurations(10000, 3).reduce((x, y) => x + y, 0),
     10000,
   );
+});
+
+// —— 语速感知时长（spec R4 规划期）：镜头时长 = max(等分, 400ms + 300ms/字) ——
+// 用户总时长是目标值，容纳旁白优先；totalMs 如实反映 Σ 实际。
+
+test("speechAwareDurationMs：短旁白取等分，长旁白取语音预估，空白=无声", () => {
+  assert.equal(speechAwareDurationMs(2000, "水。"), 2000); // 400+300 < 2000
+  assert.equal(
+    speechAwareDurationMs(2000, "水循环，要点 1。"),
+    400 + [..."水循环，要点 1。"].length * 300,
+  );
+  assert.equal(speechAwareDurationMs(2000, "   "), 2000);
+});
+
+test("分镜：3s/4 镜头水循环 → 语音需求撑大镜头，totalMs=Σ实际(8200)", () => {
+  const result = planStoryboard(
+    "做一个3秒的STEM解说视频，主题是水循环，分4个镜头",
+  );
+  assert.ok(result.ok);
+  const durations = result.shots.map((shot) => shot.plan.spec.durationMs);
+  for (const [i, ms] of durations.entries()) {
+    const text = result.shots[i]!.narrationText;
+    assert.ok(
+      ms >= 400 + [...text].length * 300 - 1,
+      `镜头 ${i + 1} 时长 ${ms}ms < 语音需求`,
+    );
+  }
+  assert.equal(
+    result.totalMs,
+    durations.reduce((a, b) => a + b, 0),
+  );
+  assert.deepEqual(durations, [1600, 3100, 1600, 1900]);
+  assert.ok(result.totalMs > 3000);
 });

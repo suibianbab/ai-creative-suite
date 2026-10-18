@@ -265,9 +265,11 @@ test("两次应用分镜：applications 追加第二条，brief.sentence 为最�
   const app1 = apps![1]!;
   assert.equal(app1.sentence, secondSentence);
   assert.equal(app1.appendedShotCount, 3);
-  assert.equal(app1.appendedDurationMs, 10000);
+  // 语速感知（spec R4）：二次方程要点镜头 10 字 → 3400ms > 等分 3333ms，
+  // Σ=10067；用户要的 10s 是目标值，容纳旁白优先。
+  assert.equal(app1.appendedDurationMs, 10067);
   assert.equal(app1.filmShotCountAfter, 7);
-  assert.equal(app1.filmTotalMsAfter, 40000);
+  assert.equal(app1.filmTotalMsAfter, 40067);
   assert.equal(second.document.brief.sentence, secondSentence);
 });
 

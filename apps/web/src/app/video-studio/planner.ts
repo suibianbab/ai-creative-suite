@@ -241,6 +241,23 @@ export function splitShotDurations(totalMs: number, shots: number): number[] {
   );
 }
 
+// 语速常数（spec R4，2026-10-18 实测校准）：现有 words.json 样本
+// lastEnd ≈ 400ms 起始 + 300ms/字 全覆盖（最大过冲 19%，保守方向正确——
+// 宁可镜头略长也不截语音）。
+export const SPEECH_LEAD_IN_MS = 400;
+export const SPEECH_MS_PER_CHAR = 300;
+
+// 语速感知时长：max(等分, 语音预估)。用户总时长是目标值，容纳旁白优先；
+// 合成期 tts-narration 还有实测兜底对齐（spec R4 双管）。
+export function speechAwareDurationMs(
+  baseMs: number,
+  narrationText: string,
+): number {
+  const chars = [...narrationText.trim()].length;
+  if (chars === 0) return baseMs;
+  return Math.max(baseMs, SPEECH_LEAD_IN_MS + chars * SPEECH_MS_PER_CHAR);
+}
+
 export type StoryboardShot = {
   label: string;
   // D2：该镜头的旁白朗读文本——只读画面实际展示/表达的事实（标题/要点序号/
@@ -286,20 +303,13 @@ export function planStoryboard(sentence: string): StoryboardResult {
   }
 
   const totalMs = seconds * 1000;
-  const durations = splitShotDurations(totalMs, shotCount);
-  // 零帧预检（评审关注 #1）：当前边界（最短 3000ms/8=375ms≈9 帧@24fps）下不可能
-  // 零帧，预检为将来放宽秒数/镜头数边界时的兜底——零帧是编排错误，不许静默过。
-  try {
-    quantizeTimeline(durations, STORYBOARD_FPS);
-  } catch (error) {
-    if (error instanceof ZeroFrameShotError)
-      return rejectStoryboard(error.message);
-    throw error;
-  }
+  const split = splitShotDurations(totalMs, shotCount);
 
   let pointIndex = 0;
   let shapeIndex = 0;
-  const shots: StoryboardShot[] = durations.map((durationMs, index) => {
+  const shots: StoryboardShot[] = Array.from(
+    { length: shotCount },
+    (_, index) => {
     const seed = hashSentence(`${sentence}#${index}`);
     const isMiddle = index > 0 && index < shotCount - 1;
     const useShapes = isMiddle && (index - 1) % 2 === 1;
@@ -351,6 +361,9 @@ export function planStoryboard(sentence: string): StoryboardResult {
       renderHint = `要点镜头：标题「${title}」与占位副标题「要点 ${pointIndex}」进入画面`;
       narrationText = `${title}，要点 ${pointIndex}。`;
     }
+    // 语速感知时长（spec R4）：等分是目标，语音预估是下限——旁白读不完的
+    // 镜头不许出厂；totalMs 随实际 Σ 走，确认卡如实预告。
+    const durationMs = speechAwareDurationMs(split[index]!, narrationText);
     const spec: SceneSpec = {
       specVersion: 1,
       componentId: useShapes ? "basic-shapes" : "text-animation",
@@ -368,5 +381,22 @@ export function planStoryboard(sentence: string): StoryboardResult {
     };
   });
 
-  return { ok: true, sentence, title, totalMs, shots };
+  // 零帧预检（评审关注 #1）：语速感知后最短镜头也 ≥400+300ms，零帧更不可
+  // 能——预检为将来放宽秒数/镜头数边界时的兜底，零帧是编排错误不许静默过。
+  const actualTotalMs = shots.reduce(
+    (sum, shot) => sum + shot.plan.spec.durationMs,
+    0,
+  );
+  try {
+    quantizeTimeline(
+      shots.map((shot) => shot.plan.spec.durationMs),
+      STORYBOARD_FPS,
+    );
+  } catch (error) {
+    if (error instanceof ZeroFrameShotError)
+      return rejectStoryboard(error.message);
+    throw error;
+  }
+
+  return { ok: true, sentence, title, totalMs: actualTotalMs, shots };
 }
