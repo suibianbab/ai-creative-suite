@@ -35,11 +35,18 @@ export function findRenderBlock(project, aspect) {
     i--
   )
     block.unshift(project.renderRecords[i]);
-  if (block.length !== project.shots.length)
+  const shotCount = project.shots.length;
+  // outputAssetRef 纯路径派生：同 --out 重复出片会追加同 ref 的整趟记录
+  // （终评 I1：旧「块长 ≠ 镜头数」判定让单画幅项目同目录重渲后永久报错，
+  // 且指路的重渲染无法解除）。整倍数 → 尾部一趟即最近一次渲染。
+  if (block.length % shotCount !== 0)
     throw new Error(
-      `${aspect} 最近渲染块长度 ${block.length} ≠ 当前镜头数 ${project.shots.length}（渲染后镜头已变更，需重渲染）`,
+      `${aspect} 最近渲染块长度 ${block.length} 不是当前镜头数 ${shotCount} 的整倍数（渲染后镜头已增删，需重渲染）`,
     );
-  return { records: block, outputAssetRef: ref };
+  return {
+    records: block.slice(-shotCount),
+    outputAssetRef: ref,
+  };
 }
 
 export function gifFrameMap(records, fps) {
@@ -47,7 +54,22 @@ export function gifFrameMap(records, fps) {
     throw new Error(
       `--fps ${fps} 不整除渲染帧率 ${RENDER_FPS}，合法值: ${GIF_FPS_CHOICES.join("/")}`,
     );
-  return records.map((record) => (record.frames * fps) / RENDER_FPS);
+  // fps 整除 24 只保证采样步长整数，不保证每镜头 帧数×fps/24 整数
+  // （49 帧 @12fps = 24.5）。小数 frameMap 过不了 DeliveryRecord 的
+  // 正整数 schema，且旧实现崩在转码完成后——这里前置拒绝并给出恒整数的 fps 24。
+  const frameMap = records.map((record) => (record.frames * fps) / RENDER_FPS);
+  const fractional = frameMap
+    .map((value, index) => ({ value, index }))
+    .filter((entry) => !Number.isInteger(entry.value));
+  if (fractional.length > 0) {
+    const detail = fractional
+      .map((entry) => `镜头 ${entry.index + 1}: ${entry.value}`)
+      .join("、");
+    throw new Error(
+      `--fps ${fps} 对帧图 [${records.map((record) => record.frames).join(",")}] 产出非整数 frameMap（${detail}）；改用 --fps 24（恒整数）或能整除全部镜头帧数的 fps`,
+    );
+  }
+  return frameMap;
 }
 
 export function buildGifFilter({ fps, width, colors }) {

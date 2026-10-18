@@ -19,7 +19,7 @@
 ## 结果（退出码 0）
 
 - 交付 4 条全落档：GIF 1 条（renderIds 4 条引用真实渲染记录）+ SVG 3 条（renderIds 空数组——SVG 直出场景树，不派生自 MP4）；每条追加后 `savedVersion` +1，脏引用会被 `appendDelivery` 内置重校验拦截。
-- GIF：18.6s @12fps、480px 宽、149KB 级；ffprobe 复核 codec=gif/width=480（CLI 内门禁 + e2e 独立复核双保险）。
+- GIF：9.08s @12fps（109 采样帧 ← 整片 218 帧 ÷2）、480px 宽、125,191 字节；ffprobe 复核 codec=gif/width=480（CLI 内门禁 + e2e 独立复核双保险；终评 I2 整改：本行原误记 18.6s/149KB——那是另一份冒烟项目的数值，本片基线为 9.1s 整片）。
 - SVG 动画：37 段 keyframes 与 74 帧 @2:1 采样精确对应；静态帧零动画样式。
 - 确定性：GIF 与 SVG 双跑哈希均逐字节一致（源 MP4 本身已被 VID-013 确定性门禁覆盖）。
 - 计费：零新增（本刀无 TTS 合成；`tts-usage.jsonl` 行数前后一致，累计仍 34 笔 ¥0.0370/¥50）。

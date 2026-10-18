@@ -133,6 +133,51 @@ test("gifFrameMap 整除时精确整数，非整除拒绝并列合法值", () =>
   );
 });
 
+test("gifFrameMap 帧数不被采样步长整除时产出非整数 → 拒绝并指路 fps 24（终评 C1）", () => {
+  // fps 整除 24 只保证步长整数，不保证每镜头帧数/步长整数：
+  // 49 帧 @12fps = 24.5；74 帧 @8fps = 24.67。旧实现放行小数，
+  // 在 appendDelivery 的 schema 校验处以裸栈崩（转码已完成、交付未落档）。
+  assert.throws(
+    () => gifFrameMap([{ frames: 49 }, { frames: 74 }], 12),
+    /fps 24/,
+  );
+  assert.throws(() => gifFrameMap([{ frames: 74 }], 8), /fps 24/);
+  // fps 24 恒等于原帧数，任何帧图都整数。
+  assert.deepEqual(gifFrameMap([{ frames: 49 }, { frames: 74 }], 24), [49, 74]);
+});
+
+test("findRenderBlock 同目录重复出片（单画幅同 ref 连续块）取最近一趟（终评 I1）", () => {
+  // render-scene 的 outputAssetRef 纯路径派生：同 --out 重渲追加同 ref 记录。
+  // 单画幅项目两趟 = 2N 条连续同 ref；旧实现按块长 ≠ N 永久报错，
+  // 且其指路的「重渲染」补救无法解除。整倍数 → 取尾部最近一趟。
+  const p = project();
+  const [a, b] = p.shots.map((s) => s.contentVersions[0].versionId);
+  p.renderRecords = [
+    record("portrait", "o/portrait.mp4", a, 48),
+    record("portrait", "o/portrait.mp4", b, 72),
+    record("portrait", "o/portrait.mp4", a, 48),
+    record("portrait", "o/portrait.mp4", b, 72),
+  ];
+  const block = findRenderBlock(p, "portrait");
+  assert.equal(block.records.length, 2);
+  // 尾部一趟 = 第 3、4 条记录
+  assert.deepEqual(
+    block.records.map((r) => r.renderId),
+    p.renderRecords.slice(2).map((r) => r.renderId),
+  );
+});
+
+test("findRenderBlock 块长非镜头数整倍数仍拒绝（防镜头增删后误派生）", () => {
+  const p = project();
+  const [a, b] = p.shots.map((s) => s.contentVersions[0].versionId);
+  p.renderRecords = [
+    record("landscape", "r/landscape.mp4", a, 48),
+    record("landscape", "r/landscape.mp4", b, 72),
+    record("landscape", "r/landscape.mp4", a, 48),
+  ];
+  assert.throws(() => findRenderBlock(p, "landscape"), /重渲染/);
+});
+
 test("buildGifFilter 含 fps/scale/palettegen/paletteuse", () => {
   const filter = buildGifFilter({ fps: 12, width: 480, colors: 128 });
   assert.ok(filter.includes("fps=12"));
