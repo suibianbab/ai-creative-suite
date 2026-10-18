@@ -7,6 +7,7 @@ import {
   seededRandom,
   validateSceneSpec,
 } from "@acs/video-scene";
+import { activeSubtitleCue, type SubtitleCue } from "@acs/video-document";
 import { createElement, type FC, type JSX } from "react";
 import {
   AbsoluteFill,
@@ -100,6 +101,9 @@ export type TimelineShotProps = {
   // D2：镜头旁白音轨。audioSrc 由装配方给绝对路径（CLI 渲染）；
   // 无 narration 的镜头不出 Sequence，画面与既有渲染逐字节一致。
   narration?: { audioSrc: string };
+  // P1 字幕轨（spec R3）：cues 为镜头本地时间（音频从镜头起点播，同口径）。
+  // 缺省不渲染字幕分支——输出与 D2 现状逐字节一致（帧确定性纪律）。
+  subtitles?: { cues: SubtitleCue[] };
 };
 
 export type TimelineProps = { shots?: TimelineShotProps[] };
@@ -136,6 +140,14 @@ export const TimelineScene: FC<TimelineProps> = ({ shots }) => {
   if (!active) {
     throw new Error(`Timeline 第 ${frame} 帧不属任何镜头（总帧数之外？）`);
   }
+  // 字幕层（spec R3）：全局帧 → 活跃镜头本地毫秒 → 活跃 cue。白底场景
+  // 用半透明深色药丸衬白字（Review Focus #1），横竖按画幅高度定字号。
+  const subtitleCue = active.subtitles
+    ? activeSubtitleCue(
+        active.subtitles.cues,
+        ((frame - active.startFrame) / fps) * 1000,
+      )
+    : undefined;
   return (
     <>
       {narrationTracks}
@@ -146,6 +158,34 @@ export const TimelineScene: FC<TimelineProps> = ({ shots }) => {
         width,
         height,
       })}
+      {subtitleCue ? (
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            bottom: "8%",
+            display: "flex",
+            justifyContent: "center",
+            pointerEvents: "none",
+          }}
+        >
+          <span
+            style={{
+              background: "rgba(27,25,23,0.55)",
+              borderRadius: Math.round(height * 0.018),
+              padding: `${Math.round(height * 0.008)}px ${Math.round(height * 0.022)}px`,
+              color: "#ffffff",
+              fontWeight: 600,
+              fontSize: Math.round(height * (width > height ? 0.05 : 0.045)),
+              lineHeight: 1.35,
+              whiteSpace: "nowrap",
+            }}
+          >
+            {subtitleCue.text}
+          </span>
+        </div>
+      ) : null}
     </>
   );
 };
