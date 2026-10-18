@@ -1,9 +1,10 @@
 // 文档演进只允许追加（ADR 0003 §3.1「不可变文档版本」）。保存新版本前，
 // 调用方必须证明：旧镜头的内容版本与事件、渲染记录、交付记录在新文档中
 // 原样保留（旧序列是新序列的前缀），旧内容版本逐字段未改。标题、brief、
-// workingVersionId 等当前态/元数据可变；locked 可变但最终状态由本次追加段
-// 最后一条 lock-changed 事件裁定（setLocked 的审计契约，见下方不变量）。savedVersion
-// 不参与判定。
+// workingVersionId 等当前态/元数据可变（brief.sentence/aspectTargets 亦然）；
+// 但 brief.applications（分镜应用快照）例外——只追加，见下方校验。locked 可变
+// 但最终状态由本次追加段最后一条 lock-changed 事件裁定（setLocked 的审计契约）。
+// savedVersion 不参与判定。
 import { canonicalJson } from "./canonical-json.js";
 import type { VideoProject } from "./types.js";
 
@@ -103,4 +104,14 @@ export function assertAppendOnlyEvolution(
     next.deliveries,
     (slot) => `deliveries[${slot}]`,
   );
+  // brief.applications（分镜应用快照）：逐次审计记录，与 shots/events 同一
+  // 只追加纪律——已保存条目不得删除或改写；此前无记录（单镜头/旧项目路径）
+  // 则不受约束。
+  if (previous.brief.applications !== undefined) {
+    requirePrefix(
+      previous.brief.applications,
+      next.brief.applications ?? [],
+      (slot) => `brief.applications[${slot}]`,
+    );
+  }
 }

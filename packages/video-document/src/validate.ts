@@ -268,6 +268,57 @@ export function validateVideoProject(value: unknown): VideoProject {
   ) {
     fail("brief.aspectTargets must not contain duplicates");
   }
+  // brief.applications（分镜应用快照，P1 追加语义）：可省略；一旦存在必须
+  // 是形状完整的数组——导入校验在这里挡住非数组/字段错型，不能等再应用
+  // 分镜时才炸运行时错（is not iterable）。film*After 是与 shots 的对账值，
+  // 必须不小于本次追加的量。
+  if (parsed.brief.applications !== undefined) {
+    if (!Array.isArray(parsed.brief.applications)) {
+      fail("brief.applications must be an array when present");
+    }
+    for (const [index, entry] of (
+      parsed.brief.applications as unknown[]
+    ).entries()) {
+      const field = `brief.applications[${index}]`;
+      if (!isRecord(entry)) fail(`${field} must be an object`);
+      if (typeof entry.sentence !== "string" || entry.sentence.length > 2000) {
+        fail(`${field}.sentence must be a string of at most 2000 characters`);
+      }
+      if (
+        !Number.isInteger(entry.appendedShotCount) ||
+        (entry.appendedShotCount as number) < 1
+      ) {
+        fail(`${field}.appendedShotCount must be an integer of at least 1`);
+      }
+      if (
+        !Number.isInteger(entry.appendedDurationMs) ||
+        (entry.appendedDurationMs as number) < 1
+      ) {
+        fail(`${field}.appendedDurationMs must be a positive integer`);
+      }
+      if (
+        !Number.isInteger(entry.filmShotCountAfter) ||
+        (entry.filmShotCountAfter as number) <
+          (entry.appendedShotCount as number)
+      ) {
+        fail(
+          `${field}.filmShotCountAfter must be an integer of at least appendedShotCount`,
+        );
+      }
+      if (
+        !Number.isInteger(entry.filmTotalMsAfter) ||
+        (entry.filmTotalMsAfter as number) <
+          (entry.appendedDurationMs as number)
+      ) {
+        fail(
+          `${field}.filmTotalMsAfter must be an integer of at least appendedDurationMs`,
+        );
+      }
+      if (!isIsoTime(entry.appliedAt)) {
+        fail(`${field}.appliedAt must be an ISO 8601 string`);
+      }
+    }
+  }
   if (!Array.isArray(parsed.shots) || parsed.shots.length > MAX_ARRAY) {
     fail(`shots must be an array of at most ${MAX_ARRAY} entries`);
   }

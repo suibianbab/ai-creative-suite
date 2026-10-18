@@ -61,6 +61,50 @@ test("合法项目通过并原样返回", () => {
   const p = baseProject();
   assert.equal(validateVideoProject(p).id, p.id);
 });
+
+// —— brief.applications 数据契约（2026-10-18 Codex 复核反馈第三轮）——
+// 应用快照一旦落档就是审计记录：导入校验必须查形状——非数组/字段错型在
+// 导入时拒绝，而不是等再应用分镜时炸 is not iterable。
+function applicationEntry() {
+  return {
+    sentence: "做一个30秒的STEM解说视频，主题是勾股定理",
+    appendedShotCount: 4,
+    appendedDurationMs: 30000,
+    filmShotCountAfter: 4,
+    filmTotalMsAfter: 30000,
+    appliedAt: "2026-10-18T00:00:00.000Z",
+  };
+}
+
+test("brief.applications 非数组（普通对象）→ 拒绝", () => {
+  const p = baseProject();
+  (p.brief as Record<string, unknown>).applications = {
+    entry: applicationEntry(),
+  };
+  assert.throws(() => validateVideoProject(p), /applications/);
+});
+
+test("brief.applications 条目字段错型 → 拒绝", () => {
+  const p = baseProject();
+  p.brief.applications = [
+    { ...applicationEntry(), appendedShotCount: "4" as unknown as number }, // 字符串冒充数字
+  ];
+  assert.throws(() => validateVideoProject(p), /applications\[0\]/);
+});
+
+test("brief.applications appliedAt 非 ISO → 拒绝", () => {
+  const p = baseProject();
+  p.brief.applications = [
+    { ...applicationEntry(), appliedAt: "2026/10/18 00:00" },
+  ];
+  assert.throws(() => validateVideoProject(p), /appliedAt/);
+});
+
+test("brief.applications 合法快照 → 通过", () => {
+  const p = baseProject();
+  p.brief.applications = [applicationEntry()];
+  assert.equal(validateVideoProject(p).brief.applications?.length, 1);
+});
 test("workingVersionId 指向不存在版本则拒绝", () => {
   const p = baseProject();
   p.shots[0]!.workingVersionId = "0b0b13a2-6c63-4d3d-9a52-a70f6a3b1999";

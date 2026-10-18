@@ -398,3 +398,97 @@ test("locked 未变但追加段末条 lock-changed 与终态矛盾 → 拒绝", 
     "审计链末条必须与终态一致，无论状态是否翻转",
   );
 });
+
+// —— brief.applications 只追加（2026-10-18 Codex 复核反馈第三轮）——
+// 应用快照是逐次审计记录：下一版本不得删除/改写已保存的条目
+// （与 shots/events/renderRecords 同一只追加纪律；此前无记录则不受约束）。
+function applicationEntry(sentence: string, appliedAt: string) {
+  return {
+    sentence,
+    appendedShotCount: 4,
+    appendedDurationMs: 30000,
+    filmShotCountAfter: 4,
+    filmTotalMsAfter: 30000,
+    appliedAt,
+  };
+}
+
+test("brief.applications 已存条目被删除 → 拒绝", () => {
+  const history = appendedProject();
+  history.brief.applications = [
+    applicationEntry(
+      "做一个30秒的STEM解说视频，主题是勾股定理",
+      "2026-10-18T00:00:00.000Z",
+    ),
+    applicationEntry(
+      "做一个10秒的STEM解说视频，主题是二次方程",
+      "2026-10-18T01:00:00.000Z",
+    ),
+  ];
+  const next = structuredClone(history);
+  next.brief.applications = next.brief.applications!.slice(0, 1); // 删掉第二条
+  assert.throws(
+    () => assertAppendOnlyEvolution(history, next),
+    /applications/,
+    "应用快照只允许追加",
+  );
+});
+
+test("brief.applications 整体被抹掉 → 拒绝", () => {
+  const history = appendedProject();
+  history.brief.applications = [
+    applicationEntry(
+      "做一个30秒的STEM解说视频，主题是勾股定理",
+      "2026-10-18T00:00:00.000Z",
+    ),
+  ];
+  const next = structuredClone(history);
+  delete next.brief.applications;
+  assert.throws(
+    () => assertAppendOnlyEvolution(history, next),
+    /applications/,
+    "已保存的应用记录不能凭空消失",
+  );
+});
+
+test("brief.applications 旧条目被改写 → 拒绝", () => {
+  const history = appendedProject();
+  history.brief.applications = [
+    applicationEntry(
+      "做一个30秒的STEM解说视频，主题是勾股定理",
+      "2026-10-18T00:00:00.000Z",
+    ),
+  ];
+  const next = structuredClone(history);
+  next.brief.applications![0]!.filmTotalMsAfter = 999999; // 篡改对账值
+  assert.throws(
+    () => assertAppendOnlyEvolution(history, next),
+    /applications\[0\]/,
+    "旧快照逐字段原样",
+  );
+});
+
+test("brief.applications 追加新条目、旧条目原样 → 通过", () => {
+  const history = appendedProject();
+  history.brief.applications = [
+    applicationEntry(
+      "做一个30秒的STEM解说视频，主题是勾股定理",
+      "2026-10-18T00:00:00.000Z",
+    ),
+  ];
+  const next = structuredClone(history);
+  next.brief.applications = [
+    ...next.brief.applications!,
+    applicationEntry(
+      "做一个10秒的STEM解说视频，主题是二次方程",
+      "2026-10-18T02:00:00.000Z",
+    ),
+  ];
+  assert.doesNotThrow(() => assertAppendOnlyEvolution(history, next));
+});
+
+test("双方都无 brief.applications → 不受约束（单镜头项目路径）", () => {
+  const next = appendedProject();
+  next.brief.sentence = "改一句需求";
+  assert.doesNotThrow(() => assertAppendOnlyEvolution(baseProject(), next));
+});
