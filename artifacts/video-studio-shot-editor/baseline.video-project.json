@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "id": "ce79c2e2-db8a-4115-af0d-d40525dc0773",
+  "id": "cf83d826-1bc5-4b79-a1e1-03229d169d82",
   "title": "水循环",
   "brief": {
     "sentence": "做一个8秒的STEM解说视频，主题是水循环，分4个镜头",
@@ -15,20 +15,20 @@
         "appendedDurationMs": 9100,
         "filmShotCountAfter": 4,
         "filmTotalMsAfter": 9100,
-        "appliedAt": "2026-10-18T05:48:57.968Z"
+        "appliedAt": "2026-10-18T06:08:56.286Z"
       }
     ]
   },
   "shots": [
     {
-      "shotId": "0652dda9-8923-4599-9030-94f692528640",
+      "shotId": "b7f68bf4-1950-4be1-9f1e-607c3d69fb1a",
       "order": 0,
       "locked": false,
-      "workingVersionId": "e463b178-7333-460a-97f8-26029e3a5516",
+      "workingVersionId": "c678fc18-1a0a-43bd-b494-332229455669",
       "contentVersions": [
         {
-          "versionId": "e463b178-7333-460a-97f8-26029e3a5516",
-          "createdAt": "2026-10-18T05:48:57.968Z",
+          "versionId": "c678fc18-1a0a-43bd-b494-332229455669",
+          "createdAt": "2026-10-18T06:08:56.286Z",
           "durationMs": 2000,
           "description": "开场（文字动画）：水循环",
           "narrationText": "水循环。",
@@ -59,21 +59,21 @@
       "events": [
         {
           "kind": "submitted",
-          "versionId": "e463b178-7333-460a-97f8-26029e3a5516",
-          "at": "2026-10-18T05:48:57.968Z",
+          "versionId": "c678fc18-1a0a-43bd-b494-332229455669",
+          "at": "2026-10-18T06:08:56.286Z",
           "actor": "human"
         }
       ]
     },
     {
-      "shotId": "5c5e6762-d1c5-48f4-84e0-aa2e906ae748",
+      "shotId": "3bfebe15-f1fd-41d2-80f9-96c8c9b776d7",
       "order": 1,
       "locked": false,
-      "workingVersionId": "beb377b4-ca95-4f42-9a8f-8ee7953fd5b2",
+      "workingVersionId": "ba09c36b-844e-4750-a6c2-7581619886bf",
       "contentVersions": [
         {
-          "versionId": "beb377b4-ca95-4f42-9a8f-8ee7953fd5b2",
-          "createdAt": "2026-10-18T05:48:57.968Z",
+          "versionId": "ba09c36b-844e-4750-a6c2-7581619886bf",
+          "createdAt": "2026-10-18T06:08:56.286Z",
           "durationMs": 3100,
           "description": "要点 1（文字动画）：水循环",
           "narrationText": "水循环，要点 1。",
@@ -105,21 +105,21 @@
       "events": [
         {
           "kind": "submitted",
-          "versionId": "beb377b4-ca95-4f42-9a8f-8ee7953fd5b2",
-          "at": "2026-10-18T05:48:57.968Z",
+          "versionId": "ba09c36b-844e-4750-a6c2-7581619886bf",
+          "at": "2026-10-18T06:08:56.286Z",
           "actor": "human"
         }
       ]
     },
     {
-      "shotId": "5d47c403-ab6c-4195-9b23-0cc622998a2e",
+      "shotId": "5f41250a-1b71-4732-a401-ffa3567e2cc3",
       "order": 2,
       "locked": false,
-      "workingVersionId": "08964e75-8746-48bf-8052-27a8f16dd548",
+      "workingVersionId": "e4a4ed6c-e95e-471c-a012-aec6c4913ce5",
       "contentVersions": [
         {
-          "versionId": "08964e75-8746-48bf-8052-27a8f16dd548",
-          "createdAt": "2026-10-18T05:48:57.968Z",
+          "versionId": "e4a4ed6c-e95e-471c-a012-aec6c4913ce5",
+          "createdAt": "2026-10-18T06:08:56.286Z",
           "durationMs": 2000,
           "description": "示意 1（图形动画）：水循环",
           "narrationText": "水循环。",
@@ -167,21 +167,21 @@
       "events": [
         {
           "kind": "submitted",
-          "versionId": "08964e75-8746-48bf-8052-27a8f16dd548",
-          "at": "2026-10-18T05:48:57.968Z",
+          "versionId": "e4a4ed6c-e95e-471c-a012-aec6c4913ce5",
+          "at": "2026-10-18T06:08:56.286Z",
           "actor": "human"
         }
       ]
     },
     {
-      "shotId": "e39d4e1f-6539-4a1c-ae9a-55134df44d91",
+      "shotId": "ed2ec0a7-bccd-44a0-9ccb-8f92df4de47a",
       "order": 3,
       "locked": false,
-      "workingVersionId": "ce4a8bb7-d6c5-454b-bed2-ebf8de29e4fc",
+      "workingVersionId": "1e965ef1-e83c-4c58-a33b-f88f5c8509ec",
       "contentVersions": [
         {
-          "versionId": "ce4a8bb7-d6c5-454b-bed2-ebf8de29e4fc",
-          "createdAt": "2026-10-18T05:48:57.968Z",
+          "versionId": "1e965ef1-e83c-4c58-a33b-f88f5c8509ec",
+          "createdAt": "2026-10-18T06:08:56.286Z",
           "durationMs": 2000,
           "description": "结语（文字动画）：水循环",
           "narrationText": "谢谢观看。",
@@ -213,8 +213,8 @@
       "events": [
         {
           "kind": "submitted",
-          "versionId": "ce4a8bb7-d6c5-454b-bed2-ebf8de29e4fc",
-          "at": "2026-10-18T05:48:57.968Z",
+          "versionId": "1e965ef1-e83c-4c58-a33b-f88f5c8509ec",
+          "at": "2026-10-18T06:08:56.286Z",
           "actor": "human"
         }
       ]

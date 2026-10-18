@@ -31,13 +31,15 @@
 
 以下产物因 gitignore 约定（媒体不入库）仅存本地，**不构成可独立复核的视觉证据**；其 SHA-256 供本机比对：
 
-| 文件 | SHA-256（2026-10-18 首跑终值） |
+| 文件 | SHA-256（2026-10-18 终评整改后复跑终值） |
 | --- | --- |
-| e2e.video-project.json | `4f51eb764d0a972df23eb14e14d214bcbf16e3e51419eae532ed0d72be026cc7` |
+| e2e.video-project.json | `a35515e6c7f35f54cdc299ac90a42b7304cec94e99ed97a9bf67740768ac6ef0` |
 | baseline.video-project.json | 入库件（git 可 diff，无需哈希对照） |
-| e2e-render/landscape.mp4 | `e7ceab1a96e0e4ab82f422c07fa43ea1d465764e92eb94b96d4d152709487d6e` |
-| e2e-render/portrait.mp4 | `ad09a372a3a92ff883c1a4c98b27d9647d1c234a05556a1b585cb7945e490bff` |
-| shot-editor-card.png | `2fec6322c22a139e56cb9b3a9ba799482e26ee103753a4f6c0a0bb520fcfac9e` |
+| e2e-render/landscape.mp4 | `e7ceab1a96e0e4ab82f422c07fa43ea1d465764e92eb94b96d4d152709487d6e`（与首跑逐字节一致） |
+| e2e-render/portrait.mp4 | `ad09a372a3a92ff883c1a4c98b27d9647d1c234a05556a1b585cb7945e490bff`（与首跑逐字节一致） |
+| shot-editor-card.png | `85a82f264f80767e44ad8d97ba2899fb6baa704feb2bdd995269b2dd27122873` |
+
+终评整改复跑说明（同日）：终评修复（注册表校验进 `buildRevisePatch`、清空副标题删键、锁定切换不清草稿）后复跑本 e2e 全绿，并新增「编辑中途解锁/锁回，草稿全程保持」回归步骤；两个 MP4 哈希与首跑一致（编辑路径改动不影响渲染确定性）。首跑终值存档：json `4f51eb76…`、png `2fec6322…`。
 
 复跑方式（需本地 dev server、TCP 代理、Playwright Chromium；每次复跑项目 ID 变，无 TTS 计费）：
 

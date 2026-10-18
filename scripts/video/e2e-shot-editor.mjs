@@ -229,6 +229,21 @@ console.log("[e2e-shot-editor] 重做: 锁定拒 → 解锁后镜头 4 重做成
 await shot1.locator(".shot-lock-toggle input").check();
 await waitForMessage("镜头 1 已锁定", "再锁定");
 await shot1.locator(".shot-narration-input").fill("锁定下的人工修订。");
+// 终评整改回归：编辑中途切换锁定不得清空进行中的草稿（锁定只改事件与
+// 标志，working 版本未动）。先解锁再锁回，草稿应全程保持。
+await shot1.locator(".shot-lock-toggle input").uncheck();
+await waitForMessage("镜头 1 已解锁", "解锁不清草稿");
+const draftKept = await shot1.locator(".shot-narration-input").inputValue();
+if (draftKept !== "锁定下的人工修订。")
+  fail("草稿保持", `锁定切换后草稿被重置: ${draftKept}`);
+await shot1.locator(".shot-lock-toggle input").check();
+await waitForMessage("镜头 1 已锁定", "再锁定(草稿保持)");
+// 二次确认：锁回后的渲染已提交，此刻草稿仍在才说明锁定切换全程不清稿。
+const draftKeptAfterRelock = await shot1
+  .locator(".shot-narration-input")
+  .inputValue();
+if (draftKeptAfterRelock !== "锁定下的人工修订。")
+  fail("草稿保持", `锁回后草稿被重置: ${draftKeptAfterRelock}`);
 await shot1.locator(".shot-apply").click();
 await waitForMessage("镜头 1 已修订", "锁定下人工修订");
 console.log("[e2e-shot-editor] 锁定下人工修订: 可用（audit 事件由导出件断言）");

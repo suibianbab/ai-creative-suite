@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-10-18T05:48:59.551Z",
-  "projectId": "ce79c2e2-db8a-4115-af0d-d40525dc0773",
+  "generatedAt": "2026-10-18T06:08:57.962Z",
+  "projectId": "cf83d826-1bc5-4b79-a1e1-03229d169d82",
   "remotion": "4.0.534",
   "browser": "Google Chrome 155.0.8059.41",
   "fontDigests": {
@@ -17,39 +17,39 @@
       "frameMap": [
         {
           "shotIndex": 0,
-          "shotId": "0652dda9-8923-4599-9030-94f692528640",
-          "versionId": "7238d14b-692b-43a9-b3d4-7b058b60e314",
+          "shotId": "b7f68bf4-1950-4be1-9f1e-607c3d69fb1a",
+          "versionId": "348b30b1-18cb-414e-b967-c09723ef912e",
           "componentId": "text-animation",
           "startFrame": 0,
           "frames": 84,
-          "contentDigest": "68dc2add162be8b879a811bb371bff7afcd6e4cfe83ae35a7cdab69a37d76296"
+          "contentDigest": "88ae4404b43b61200586b498819ab6e28ca9b63c1207c74d72cbda00035d3782"
         },
         {
           "shotIndex": 1,
-          "shotId": "5c5e6762-d1c5-48f4-84e0-aa2e906ae748",
-          "versionId": "beb377b4-ca95-4f42-9a8f-8ee7953fd5b2",
+          "shotId": "3bfebe15-f1fd-41d2-80f9-96c8c9b776d7",
+          "versionId": "ba09c36b-844e-4750-a6c2-7581619886bf",
           "componentId": "text-animation",
           "startFrame": 84,
           "frames": 74,
-          "contentDigest": "d4ecee1afb20ce6742d329ba05e5639ab4cd7e781bdfae870661d44dd8ede8e6"
+          "contentDigest": "7a338d0112d87e1d80a183496a9d8ff68c64e8163722c80521c86703b8c48243"
         },
         {
           "shotIndex": 2,
-          "shotId": "5d47c403-ab6c-4195-9b23-0cc622998a2e",
-          "versionId": "f9daec93-961e-4624-9f45-a96a4d150caa",
+          "shotId": "5f41250a-1b71-4732-a401-ffa3567e2cc3",
+          "versionId": "e03c8d14-05ae-4205-8973-4d50b49343b0",
           "componentId": "basic-shapes",
           "startFrame": 158,
           "frames": 48,
-          "contentDigest": "bdc3a6aaa072f7b154bbca2b5ced474305f28d35b8ba1a45f721052e889ef121"
+          "contentDigest": "4506fcf5abbe7939e2dfb548335b5d282cdad2acb3daccb675c5f0875da870d4"
         },
         {
           "shotIndex": 3,
-          "shotId": "e39d4e1f-6539-4a1c-ae9a-55134df44d91",
-          "versionId": "052cf461-5c77-4ebc-8263-1141272822a8",
+          "shotId": "ed2ec0a7-bccd-44a0-9ccb-8f92df4de47a",
+          "versionId": "afad8e1e-ca6d-4ff4-8ac9-ef6136700c44",
           "componentId": "basic-shapes",
           "startFrame": 206,
           "frames": 240,
-          "contentDigest": "71d9487af925db9b0a11f51f833b60cea95e5a52db7fa4a24696b21fd12d828e"
+          "contentDigest": "e1733fc668ea70610ecfe15ff619d5be710c26977e91050d5fa5f6c8f95d195a"
         }
       ]
     },
@@ -63,39 +63,39 @@
       "frameMap": [
         {
           "shotIndex": 0,
-          "shotId": "0652dda9-8923-4599-9030-94f692528640",
-          "versionId": "7238d14b-692b-43a9-b3d4-7b058b60e314",
+          "shotId": "b7f68bf4-1950-4be1-9f1e-607c3d69fb1a",
+          "versionId": "348b30b1-18cb-414e-b967-c09723ef912e",
           "componentId": "text-animation",
           "startFrame": 0,
           "frames": 84,
-          "contentDigest": "68dc2add162be8b879a811bb371bff7afcd6e4cfe83ae35a7cdab69a37d76296"
+          "contentDigest": "88ae4404b43b61200586b498819ab6e28ca9b63c1207c74d72cbda00035d3782"
         },
         {
           "shotIndex": 1,
-          "shotId": "5c5e6762-d1c5-48f4-84e0-aa2e906ae748",
-          "versionId": "beb377b4-ca95-4f42-9a8f-8ee7953fd5b2",
+          "shotId": "3bfebe15-f1fd-41d2-80f9-96c8c9b776d7",
+          "versionId": "ba09c36b-844e-4750-a6c2-7581619886bf",
           "componentId": "text-animation",
           "startFrame": 84,
           "frames": 74,
-          "contentDigest": "d4ecee1afb20ce6742d329ba05e5639ab4cd7e781bdfae870661d44dd8ede8e6"
+          "contentDigest": "7a338d0112d87e1d80a183496a9d8ff68c64e8163722c80521c86703b8c48243"
         },
         {
           "shotIndex": 2,
-          "shotId": "5d47c403-ab6c-4195-9b23-0cc622998a2e",
-          "versionId": "f9daec93-961e-4624-9f45-a96a4d150caa",
+          "shotId": "5f41250a-1b71-4732-a401-ffa3567e2cc3",
+          "versionId": "e03c8d14-05ae-4205-8973-4d50b49343b0",
           "componentId": "basic-shapes",
           "startFrame": 158,
           "frames": 48,
-          "contentDigest": "bdc3a6aaa072f7b154bbca2b5ced474305f28d35b8ba1a45f721052e889ef121"
+          "contentDigest": "4506fcf5abbe7939e2dfb548335b5d282cdad2acb3daccb675c5f0875da870d4"
         },
         {
           "shotIndex": 3,
-          "shotId": "e39d4e1f-6539-4a1c-ae9a-55134df44d91",
-          "versionId": "052cf461-5c77-4ebc-8263-1141272822a8",
+          "shotId": "ed2ec0a7-bccd-44a0-9ccb-8f92df4de47a",
+          "versionId": "afad8e1e-ca6d-4ff4-8ac9-ef6136700c44",
           "componentId": "basic-shapes",
           "startFrame": 206,
           "frames": 240,
-          "contentDigest": "71d9487af925db9b0a11f51f833b60cea95e5a52db7fa4a24696b21fd12d828e"
+          "contentDigest": "e1733fc668ea70610ecfe15ff619d5be710c26977e91050d5fa5f6c8f95d195a"
         }
       ]
     }

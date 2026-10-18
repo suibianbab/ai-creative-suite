@@ -69,6 +69,8 @@ export function ShotEditorCard({
   const [selectedVersion, setSelectedVersion] = useState(shot.workingVersionId);
 
   // working 版本变了（应用修订/重做/回滚后）→ 草稿重置到新工作版本。
+  // 只盯 workingVersionId（终评整改）：锁定切换会换 shot 对象身份但不动
+  // working 版本，不得清掉进行中的编辑草稿。
   useEffect(() => {
     setSelectedVersion(shot.workingVersionId);
     const nextWorking = shot.contentVersions.find(
@@ -87,7 +89,8 @@ export function ShotEditorCard({
       );
       setEditError(null);
     }
-  }, [shot.workingVersionId, shot]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 依赖收紧是有意的（见上注）
+  }, [shot.workingVersionId]);
 
   const overflowMs = canEdit ? speechOverflowMs(draft) : 0;
   const templateLabels =
@@ -198,6 +201,7 @@ export function ShotEditorCard({
                 标题
                 <input
                   className="shot-title-input"
+                  maxLength={80}
                   value={draft.title}
                   onChange={(event) =>
                     setDraft({ ...draft, title: event.target.value })
@@ -208,6 +212,7 @@ export function ShotEditorCard({
                 副标题
                 <input
                   className="shot-subtitle-input"
+                  maxLength={80}
                   value={draft.subtitle}
                   onChange={(event) =>
                     setDraft({ ...draft, subtitle: event.target.value })

@@ -121,6 +121,50 @@ test("buildRevisePatch：不换模板 → params/seed 原样", () => {
   assert.deepEqual(nextSpec.params, spec.params);
 });
 
+test("buildRevisePatch：超长标题被注册表校验拒绝（不进文档）", () => {
+  // 终评 Critical：81 字标题越过草稿校验会把非法 spec 写进仅追加文档，
+  // 整片时间线随之降级——注册表校验必须在本模块内把关。
+  const { patch, error } = buildRevisePatch(
+    draft({ title: "字".repeat(81) }),
+    textSpec(),
+  );
+  assert.equal(patch, null);
+  assert.match(error!, /1\.\.80/);
+  const subtitleTooLong = buildRevisePatch(
+    draft({ title: "水循环", subtitle: "副".repeat(81) }),
+    textSpec(),
+  );
+  assert.equal(subtitleTooLong.patch, null);
+  assert.match(subtitleTooLong.error!, /subtitle/);
+});
+
+test("buildRevisePatch：80 字标题与空副标题合法（门禁不过严）", () => {
+  const { patch, error } = buildRevisePatch(
+    draft({ title: "字".repeat(80), subtitle: "" }),
+    textSpec(),
+  );
+  assert.equal(error, null);
+  const nextSpec = patch!.spec as ReturnType<typeof textSpec>;
+  assert.equal((nextSpec.params as { title: string }).title.length, 80);
+  assert.equal("subtitle" in (nextSpec.params as object), false);
+});
+
+test("buildRevisePatch：清空副标题后旧副标题不残留", () => {
+  // 终评 Important：subtitle 条件展开会让既有副标题永远删不掉。
+  const spec = {
+    ...textSpec(),
+    params: { ...(textSpec().params as object), subtitle: "旧副标题" },
+  };
+  const d = draftFromWorking(
+    { narrationText: "水循环。", durationMs: spec.durationMs },
+    spec,
+  );
+  const { patch, error } = buildRevisePatch({ ...d, subtitle: "" }, spec);
+  assert.equal(error, null);
+  const nextSpec = patch!.spec as typeof spec;
+  assert.equal("subtitle" in (nextSpec.params as object), false);
+});
+
 test("speechOverflowMs：语速估计超时长为正，否则 0", () => {
   // 5 字旁白（无标点）→ 400 + 5*300 = 1900ms；2s 时长容得下，1s 溢出 900
   assert.equal(

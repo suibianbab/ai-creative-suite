@@ -1,4 +1,8 @@
-import type { SceneSpec } from "@acs/video-scene";
+import {
+  defaultRegistry,
+  type SceneSpec,
+  validateSceneSpec,
+} from "@acs/video-scene";
 import { reseedSpecParams, speechAwareDurationMs } from "./planner";
 
 // 分镜编辑器纯逻辑（组件只做渲染/状态接线，行为在此可测）：
@@ -45,7 +49,8 @@ export function speechOverflowMs(draft: ShotEditDraft): number {
 }
 
 // 草稿 → 已校验 patch；有错误则 patch 为 null（文档不被碰）。
-// 产出的 spec 仍属原组件、过 hex/时长边界；调用方负责整体落库前校验。
+// 产出的 spec 仍属原组件、过 hex/时长边界，并在返回前过注册表整体校验
+// （终评整改：超长标题等组件契约违规在此拦截，非法 spec 不进仅追加文档）。
 export function buildRevisePatch(
   draft: ShotEditDraft,
   spec: SceneSpec,
@@ -66,12 +71,11 @@ export function buildRevisePatch(
     if (draft.title.trim().length === 0) {
       return { patch: null, error: "文字动画标题不能为空" };
     }
-    const prev = spec.params as TextParams;
-    params = {
-      ...prev,
-      title: draft.title,
-      ...(draft.subtitle ? { subtitle: draft.subtitle } : {}),
-    };
+    const { subtitle: _prevSubtitle, ...rest } = spec.params as TextParams;
+    // 清空副标题 = 移除键（终评整改：条件展开会让既有副标题删不掉）。
+    params = draft.subtitle
+      ? { ...rest, title: draft.title, subtitle: draft.subtitle }
+      : { ...rest, title: draft.title };
   } else if (draft.templateAdvanced) {
     seed = spec.seed + 1;
     params = reseedSpecParams(spec, seed).params;
@@ -83,6 +87,14 @@ export function buildRevisePatch(
     durationMs,
     params,
   };
+  try {
+    validateSceneSpec(nextSpec, defaultRegistry);
+  } catch (error) {
+    return {
+      patch: null,
+      error: error instanceof Error ? error.message : "场景参数不合法",
+    };
+  }
   return {
     patch: { narrationText: draft.narrationText, spec: nextSpec },
     error: null,
