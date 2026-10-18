@@ -77,7 +77,7 @@
 | qa:video-determinism | 72/72 帧解码像素一致 |
 | e2e 三链路 | closed-loop ✅（10-18 修复后复跑，MP4 与原证逐字节一致）/ multishot ✅ / narrated ✅（真实计费 ~¥0.0037/次，按需复跑） |
 
-证据文档：`artifacts/video-studio-multishot/E2E_MULTISHOT.md`、`artifacts/video-studio-narrated/E2E_NARRATED.md`、`artifacts/video-studio-e2e/E2E_CLOSED_LOOP.md`。媒体不入库（gitignore 约定），视听结论为本机复核 + SHA-256 锚定；跨运行 MP4 字节一致已多次实证（UUID 不进渲染路径）。
+证据文档：`artifacts/video-studio-multishot/E2E_MULTISHOT.md`、`artifacts/video-studio-narrated/E2E_NARRATED.md`、`artifacts/video-studio-e2e/E2E_CLOSED_LOOP.md`。媒体不入库（gitignore 约定），视听结论为本机复核 + SHA-256 锚定；跨运行 MP4 字节一致已多次实证（UUID 不进渲染路径）。**复核者与本仓库同机**：上表各证据目录下的媒体本体（MP4/PNG/WAV）与计费台账 `artifacts/tts-usage.jsonl` 都可直接从文件系统打开查验，SHA-256 可用 `certutil -hashfile <文件> SHA256` 现场复算，不依赖 GitHub 传输。
 
 ### 复跑环境（Windows 工作站）
 
