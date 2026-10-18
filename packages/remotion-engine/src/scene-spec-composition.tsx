@@ -1,4 +1,10 @@
-import { activeSubtitleCue, type SubtitleCue } from "@acs/video-document";
+import {
+  activeSubtitleCue,
+  resolveTransitionWindows,
+  type ShotTransition,
+  type SubtitleCue,
+  transitionOverlayAt,
+} from "@acs/video-document";
 import {
   assertNodeBudget,
   defaultRegistry,
@@ -106,9 +112,14 @@ export type TimelineShotProps = {
   subtitles?: { cues: SubtitleCue[] };
 };
 
-export type TimelineProps = { shots?: TimelineShotProps[] };
+// P1 转场（Feature ④ spec R3）：project 级编排元数据透传。缺省/空 → 叠层
+// 恒 opacity 0 → 不进 DOM → 渲染树与现状逐字节一致（A1 金标准）。
+export type TimelineProps = {
+  shots?: TimelineShotProps[];
+  transitions?: ShotTransition[];
+};
 
-export const TimelineScene: FC<TimelineProps> = ({ shots }) => {
+export const TimelineScene: FC<TimelineProps> = ({ shots, transitions }) => {
   const { fps, width, height } = useVideoConfig();
   const frame = useCurrentFrame();
   if (!shots || shots.length === 0) return null; // Studio 空预览
@@ -148,6 +159,20 @@ export const TimelineScene: FC<TimelineProps> = ({ shots }) => {
         ((frame - active.startFrame) / fps) * 1000,
       )
     : undefined;
+  // P1 转场：与 web 预览同一 resolve/overlay helper（同斜率同 split，A3 双端一致）。
+  // span 不足在此大声抛错（错误消息指路缩短 durationMs/加长镜头）。
+  const transitionWindows =
+    transitions && transitions.length > 0
+      ? resolveTransitionWindows(
+          transitions,
+          shots.map((shot) => ({
+            startFrame: shot.startFrame,
+            frames: shot.frames,
+          })),
+          fps,
+        )
+      : [];
+  const overlayOpacity = transitionOverlayAt(transitionWindows, frame);
   return (
     <>
       {narrationTracks}
@@ -158,6 +183,11 @@ export const TimelineScene: FC<TimelineProps> = ({ shots }) => {
         width,
         height,
       })}
+      {overlayOpacity > 0 ? (
+        <AbsoluteFill
+          style={{ backgroundColor: "#000", opacity: overlayOpacity }}
+        />
+      ) : null}
       {subtitleCue ? (
         <div
           style={{

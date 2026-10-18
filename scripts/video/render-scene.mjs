@@ -330,6 +330,25 @@ const timelineProps = {
   }),
 };
 
+// P1 转场（Feature ④ spec R3）：project 级编排元数据透传（回读已过
+// validateVideoProject）。缺省/空不加键：props 文件与无转场现状逐字节一致
+// （A1 金标准）。manifest 摘要与画幅无关，记顶层：逐边界 kind/durationMs/换算帧窗。
+if (Array.isArray(project.transitions) && project.transitions.length > 0) {
+  timelineProps.transitions = project.transitions;
+  manifest.transitions = project.transitions.map((transition) => {
+    const left = timeline.shots[transition.boundary];
+    const total = Math.round((transition.durationMs * FPS) / 1000);
+    const halfOut = Math.ceil(total / 2);
+    return {
+      boundary: transition.boundary,
+      kind: transition.kind,
+      durationMs: transition.durationMs,
+      startFrame: left.startFrame + left.frames - halfOut,
+      frames: total,
+    };
+  });
+}
+
 for (const aspect of aspects) {
   const compositionId = `Timeline-${aspect === "landscape" ? "Landscape" : "Portrait"}`;
   const videoPath = path.join(outDir, `${aspect}.mp4`);
