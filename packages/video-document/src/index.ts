@@ -3,5 +3,6 @@ export * from "./events.js";
 export * from "./evolve.js";
 export * from "./operations.js";
 export * from "./quantize.js";
+export * from "./subtitles.js";
 export * from "./types.js";
 export * from "./validate.js";
