@@ -130,9 +130,9 @@ test("diagram 数据修订：菱形标记 + 边标进 params", () => {
     to: "通过",
     label: "是",
   });
-  // 未触碰字段保留
-  assert.equal(p.enterMs, 1000);
-  assert.equal(p.drawMs, 800);
+  // 未触碰字段保留（时序预算修复后模板缺省 600/500）
+  assert.equal(p.enterMs, 600);
+  assert.equal(p.drawMs, 500);
   assert.equal(p.arrowColor, "#2f6f4f");
 });
 
@@ -273,4 +273,32 @@ test("逗号与「菱形」标记消歧（文档化取舍）", () => {
     to: "乙,丙",
     label: "丁",
   });
+});
+
+// P2-③ 终评 Important 修复：模板时序预算——最慢边（两端末节点落定后描画）
+// 的边标完成点 = (N−1)×梯次 + enterMs + drawMs + 箭头 160 + 边标淡入 240，
+// 必须落在规划器默认 2000ms 镜头内（STAGGER/ARROWHEAD/LABEL_FADE 为组件
+// 常量镜像，见 flow-diagram.ts）。
+test("flow-diagram 模板时序预算：最慢边标在 2000ms 默认镜头内完成", () => {
+  const STAGGER_MS = 120;
+  const ARROWHEAD_MS = 160;
+  const EDGE_LABEL_FADE_MS = 240;
+  for (const template of FLOW_TEMPLATES) {
+    if (template.componentId !== "flow-diagram") continue;
+    const params = template.params as {
+      nodes: unknown[];
+      enterMs: number;
+      drawMs: number;
+    };
+    const worstLabelEnd =
+      (params.nodes.length - 1) * STAGGER_MS +
+      params.enterMs +
+      params.drawMs +
+      ARROWHEAD_MS +
+      EDGE_LABEL_FADE_MS;
+    assert.ok(
+      worstLabelEnd <= 2000,
+      `${template.templateId}: 最慢边标 ${worstLabelEnd}ms > 2000ms 默认镜头`,
+    );
+  }
 });

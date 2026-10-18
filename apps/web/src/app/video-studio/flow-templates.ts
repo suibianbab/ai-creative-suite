@@ -74,8 +74,8 @@ export const FLOW_TEMPLATES: FlowTemplate[] = [
         { from: "检查", to: "退回", label: "否" },
       ],
       ...FLOW_COLORS,
-      enterMs: 1000,
-      drawMs: 800,
+      enterMs: 600,
+      drawMs: 500,
     },
   },
   {
@@ -95,8 +95,8 @@ export const FLOW_TEMPLATES: FlowTemplate[] = [
         { from: "改进", to: "谋划" },
       ],
       ...FLOW_COLORS,
-      enterMs: 1000,
-      drawMs: 800,
+      enterMs: 600,
+      drawMs: 500,
     },
   },
   {
@@ -115,8 +115,8 @@ export const FLOW_TEMPLATES: FlowTemplate[] = [
         { from: "方案乙", to: "评估" },
       ],
       ...FLOW_COLORS,
-      enterMs: 1000,
-      drawMs: 800,
+      enterMs: 600,
+      drawMs: 500,
     },
   },
 ];

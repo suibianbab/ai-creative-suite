@@ -261,8 +261,9 @@ console.log(
 // —— 4. CLI 双画幅出片 + 双跑一致 + 流程帧 YAVG ——
 // spans [2000,3100,2000,2000]ms @24fps → 总 218 帧：镜头 2 帧域 48..121，
 // 镜头 3 帧域 122..169。帧 80（镜头 2 内 1333ms）：steps-4 enterMs 1200 +
-// 梯次 3×120 → 首两盒成形、末盒 appear≈0.81；帧 140（镜头 3 内 750ms）：
-// flow-decision enterMs 1000 → 首节点 appear 0.75（边未动笔），白底深字。
+// 梯次 3×120 → 首两盒成形、末盒 appear≈0.81；帧 140（镜头 3 内 733ms）：
+// flow-decision enterMs 600（终评时序预算修复，最慢边标 1860ms ≤ 2000ms
+// 镜头内完成）→ 末节点 appear≈0.62、首边 startT 720ms 刚动笔，白底深字。
 // 两帧均断言 YAVG ≥100（非全黑）。
 const RENDER_DIR = path.join(OUT_DIR, "render");
 renderProject(EXPORTED, RENDER_DIR, "CLI 出片");
