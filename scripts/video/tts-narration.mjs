@@ -8,12 +8,7 @@
 // 用法: node scripts/video/tts-narration.mjs --project <path.json> --out <dir>
 //       [--voice longanyang] [--model cosyvoice-v3-flash]
 import { randomUUID } from "node:crypto";
-import {
-  appendFileSync,
-  mkdirSync,
-  readFileSync,
-  renameSync,
-} from "node:fs";
+import { appendFileSync, mkdirSync, readFileSync, renameSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";

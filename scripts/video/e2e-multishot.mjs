@@ -119,9 +119,13 @@ const totalMs = exported.shots.reduce(
   (acc, shot) => acc + shot.contentVersions[0].durationMs,
   0,
 );
-if (totalMs !== 8000) fail("导出", `镜头时长之和 ${totalMs} ≠ 8000`);
+// P1 speech-aware 规划：等分 8s/4=2000ms vs 语速 400+300×字数 取大者。
+// 本句 4 镜头旁白语速估计 [1600,3100,1600,1900] → 取大 [2000,3100,2000,2000]
+// Σ9100ms（>8s 目标：用户秒数是目标非承诺，规划透明告知）。
+if (totalMs !== 9100)
+  fail("导出", `镜头时长之和 ${totalMs} ≠ 9100（speech-aware 期望）`);
 console.log(
-  `[e2e-multishot] 去程完成: 项目 ${projectId} v${exported.savedVersion}，${SHOT_COUNT} 镜头 Σ8s`,
+  `[e2e-multishot] 去程完成: 项目 ${projectId} v${exported.savedVersion}，${SHOT_COUNT} 镜头 Σ${totalMs / 1000}s（speech-aware）`,
 );
 
 // —— CLI：整片双画幅出片（含逐帧干跑）+ RenderRecord×8 回写同一 JSON ——

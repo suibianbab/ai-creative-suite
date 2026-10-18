@@ -2,8 +2,10 @@
 // D2 有声端到端闭环验收（真实工作台链路 + 真实计费 TTS）：
 //   浏览器新建→STEM 分镜规划→分镜确认卡→追加应用（4 镜头，旁白文本镜头卡可见）
 //   →保存→导出 JSON→tts-narration CLI（DashScope 计费合成 wav+字级时间戳）
-//   →render-scene --narration 整片双画幅出片（aac 音轨）→浏览器导入同一 JSON
-//   →旁白文本与渲染记录回显。控制台零 error；SHA-256 与计费台账逐笔打印。
+//   →render-scene --narration 整片双画幅出片（aac 音轨 + 字幕烧录）→浏览器导入
+//   同一 JSON →旁白文本与渲染记录回显。字幕双核验：manifest cue 摘要 +
+//   底带暗像素（cue 时刻 vs pre-cue 时刻）。控制台零 error；SHA-256 与计费
+//   台账逐笔打印。
 // 前置: @acs/web dev server 已在 BASE_URL（默认 http://localhost:3210）；
 //       packages/{video-document,video-scene} 已 build；env DASHSCOPE_API_KEY（只从
 //       环境读，绝不落盘）；ffprobe 在 PATH。
@@ -20,6 +22,8 @@ import {
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright-core";
+// cue 时刻从首镜头字级时间戳推导，必须与渲染器同一实现源（spec R1 单一事实）
+import { readSubtitleCues } from "./tts-sse.mjs";
 
 const ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -207,6 +211,34 @@ console.log(
   `[e2e-narrated] TTS 完成: ${wavs.length} wav + ${words.length} 字级时间戳，计费字符 ${billedCharacters}`,
 );
 
+// TTS 后项目可能被时长对齐回写（spec R4 合成期兜底）：重读落盘件核对——
+// 资产键必须 = working versionId（对齐发生时 tts-narration 已 rename 重键），
+// 对齐版本时长只增不减且 provenance 点名 tts-duration-align。
+const afterTts = JSON.parse(readFileSync(EXPORTED, "utf8"));
+if (afterTts.id !== projectId) fail("TTS 时长对齐", "项目 ID 被改写");
+let alignedCount = 0;
+for (const [index, shot] of afterTts.shots.entries()) {
+  const working = shot.contentVersions.find(
+    (v) => v.versionId === shot.workingVersionId,
+  );
+  if (!working?.narrationText)
+    fail("TTS 时长对齐", `镜头 ${index + 1} working version 旁白缺失`);
+  const base = `${shot.shotId}-${shot.workingVersionId}`;
+  if (!existsSync(path.join(NARRATION_DIR, `${base}.wav`)))
+    fail("TTS 时长对齐", `对齐后资产键脱节: ${base}.wav 缺失`);
+  const original = versions[index];
+  if (working.versionId !== original.versionId) {
+    alignedCount += 1;
+    if (working.durationMs <= original.durationMs)
+      fail("TTS 时长对齐", `镜头 ${index + 1} 对齐版本时长未增长`);
+    if (working.provenance?.engineId !== "tts-duration-align")
+      fail("TTS 时长对齐", `镜头 ${index + 1} 对齐版本 provenance 异常`);
+  }
+}
+console.log(
+  `[e2e-narrated] 时长对齐: ${alignedCount} 个镜头${alignedCount > 0 ? `（v${exported.savedVersion} → v${afterTts.savedVersion}）` : "（语速预估已覆盖，无需对齐）"}`,
+);
+
 // —— CLI：整片双画幅出片（含逐帧干跑）+ 旁白音轨装配 + RenderRecord×8 回写 ——
 const render = spawnSync(
   process.execPath,
@@ -225,18 +257,39 @@ if (render.status !== 0)
   fail("CLI 整片渲染", `${render.stdout ?? ""}\n${render.stderr ?? ""}`);
 const rendered = JSON.parse(readFileSync(EXPORTED, "utf8"));
 if (rendered.id !== projectId) fail("CLI 整片渲染", "项目 ID 被改写");
-if (rendered.savedVersion !== exported.savedVersion + 1)
-  fail("CLI 整片渲染", `savedVersion 应 +1，实际 ${rendered.savedVersion}`);
+if (rendered.savedVersion !== afterTts.savedVersion + 1)
+  fail(
+    "CLI 整片渲染",
+    `savedVersion 应比对齐后再 +1（${afterTts.savedVersion} → ${rendered.savedVersion}）`,
+  );
 if (rendered.renderRecords.length !== exported.renderRecords.length + 8)
   fail(
     "CLI 整片渲染",
     `RenderRecord 应 +8，实际 +${rendered.renderRecords.length - exported.renderRecords.length}`,
   );
 
-// 独立音轨核对：双画幅都要 aac + 时长与视频一致（±0.1s）
-const totalMs = rendered.shots.reduce(
-  (acc, shot) => acc + shot.contentVersions[0].durationMs,
-  0,
+// 独立音轨核对：双画幅都要 aac + 时长与视频一致（±0.1s）。
+// 整片时长 = Σ working version durationMs（对齐版本在最后，contentVersions[0]
+// 是规划版本——T5 后不能再按下标 0 取），从实际值推导不写死秒数。
+const totalMs = rendered.shots.reduce((acc, shot) => {
+  const working = shot.contentVersions.find(
+    (v) => v.versionId === shot.workingVersionId,
+  );
+  return acc + working.durationMs;
+}, 0);
+const plannedTotalMs = versions.reduce((acc, v) => acc + v.durationMs, 0);
+if (plannedTotalMs <= 8000)
+  fail(
+    "时长推导",
+    `speech-aware 规划总时长 ${plannedTotalMs}ms 未超过 8s 目标`,
+  );
+if (totalMs < plannedTotalMs)
+  fail(
+    "时长推导",
+    `整片 ${totalMs}ms < 规划 ${plannedTotalMs}ms（对齐只增不减）`,
+  );
+console.log(
+  `[e2e-narrated] 时长: 规划 ${plannedTotalMs}ms（speech-aware）→ 出片 ${totalMs}ms`,
 );
 const expectedSeconds = Math.round((totalMs / 1000) * FPS) / FPS;
 for (const aspect of ["landscape", "portrait"]) {
@@ -258,6 +311,103 @@ for (const aspect of ["landscape", "portrait"]) {
   if (!Array.isArray(narration) || narration.length !== SHOT_COUNT)
     fail("manifest 旁白", `${aspect}.narration 缺失或镜头数 ≠ ${SHOT_COUNT}`);
 }
+
+// 字幕烧录核验之一（spec R5）：manifest 摘要——逐镜头 cue 数 + 文本 SHA-256。
+for (const aspect of ["landscape", "portrait"]) {
+  const summary = manifest.aspects[aspect]?.subtitleCues;
+  if (!Array.isArray(summary) || summary.length !== SHOT_COUNT)
+    fail(
+      "manifest 字幕",
+      `${aspect}.subtitleCues 缺失或镜头数 ≠ ${SHOT_COUNT}`,
+    );
+  const cueTotal = summary.reduce((acc, item) => acc + item.cues, 0);
+  if (cueTotal < 3) fail("manifest 字幕", `${aspect} cue 总数 ${cueTotal} < 3`);
+  for (const item of summary) {
+    if (!/^[0-9a-f]{64}$/.test(item.textSha256 ?? ""))
+      fail("manifest 字幕", `镜头 ${item.shotIndex + 1} textSha256 异常`);
+  }
+}
+
+// 字幕烧录核验之二：底带暗像素。药丸底 rgba(27,25,23,.55) 叠白底 ≈ 灰度 130，
+// <200 计暗；cue 进行中底带（80%~90% 高度）必有暗像素，首字之前应为纯背景。
+// cue 时刻从首镜头 words.json 推导（取最长 cue 中点，必在轨上）——首镜头旁白
+// 仅 4 字，写死 1.5s 会落在 cue 结束后的空窗。
+function bottomBandDarkRatio(mp4, tSeconds) {
+  const out = path.join(OUT_DIR, `band-${tSeconds}.gray`);
+  const r = spawnSync(
+    "ffmpeg",
+    [
+      "-y",
+      "-ss",
+      String(tSeconds),
+      "-i",
+      mp4,
+      "-frames:v",
+      "1",
+      "-vf",
+      "crop=iw:ih*0.10:0:ih*0.80,format=gray",
+      "-f",
+      "rawvideo",
+      out,
+    ],
+    { stdio: "ignore" },
+  );
+  if (r.status !== 0) fail("字幕像素核验", `ffmpeg 失败 @${tSeconds}s`);
+  const buf = readFileSync(out);
+  rmSync(out, { force: true });
+  let dark = 0;
+  for (const byte of buf) if (byte < 200) dark += 1;
+  return dark / buf.length;
+}
+const firstWorking = afterTts.shots[0].contentVersions.find(
+  (v) => v.versionId === afterTts.shots[0].workingVersionId,
+);
+const firstCues = readSubtitleCues(
+  NARRATION_DIR,
+  `${afterTts.shots[0].shotId}-${afterTts.shots[0].workingVersionId}`,
+  firstWorking.narrationText ?? "",
+  firstWorking.durationMs,
+).cues;
+if (firstCues.length === 0)
+  fail("字幕像素核验", "首镜头无 cue，无法取采样时刻");
+const longestCue = firstCues.reduce((a, b) =>
+  b.endMs - b.startMs > a.endMs - a.startMs ? b : a,
+);
+const cueTime = (longestCue.startMs + longestCue.endMs) / 2 / 1000;
+const preCueTime = 0.1; // TTS 首字有自然起音静音段（实测 ~0.36s），0.1s 必在轨前
+const landscapeMp4 = path.join(RENDER_DIR, "landscape.mp4");
+const cueRatio = bottomBandDarkRatio(landscapeMp4, cueTime);
+const preRatio = bottomBandDarkRatio(landscapeMp4, preCueTime);
+if (cueRatio <= 0.01)
+  fail(
+    "字幕像素核验",
+    `cue ${cueTime.toFixed(2)}s 底带暗像素比 ${(cueRatio * 100).toFixed(2)}% ≤ 1%`,
+  );
+if (preRatio >= 0.005)
+  fail(
+    "字幕像素核验",
+    `pre-cue ${preCueTime}s 底带暗像素比 ${(preRatio * 100).toFixed(2)}% ≥ 0.5%`,
+  );
+// 证据存档：cue 时刻底部 38% 带区裁片（含药丸全貌）
+spawnSync(
+  "ffmpeg",
+  [
+    "-y",
+    "-ss",
+    String(cueTime),
+    "-i",
+    landscapeMp4,
+    "-frames:v",
+    "1",
+    "-vf",
+    "crop=iw:ih*0.38:0:ih*0.62",
+    path.join(OUT_DIR, "subtitle-band-cue.png"),
+  ],
+  { stdio: "ignore" },
+);
+console.log(
+  `[e2e-narrated] 字幕像素: cue ${cueTime.toFixed(2)}s（最长 cue「${longestCue.text}」中点）暗带比 ${(cueRatio * 100).toFixed(2)}%，pre-cue ${preCueTime}s ${(preRatio * 100).toFixed(2)}%`,
+);
 console.log(
   `[e2e-narrated] CLI 完成: v${rendered.savedVersion}，双画幅 aac 音轨 + manifest.narration ×${SHOT_COUNT}`,
 );
@@ -299,6 +449,7 @@ for (const name of [
   "e2e-render/landscape.mp4",
   "e2e-render/portrait.mp4",
   "e2e-render/render-manifest.json",
+  "subtitle-band-cue.png",
   "narrated-editor.png",
 ]) {
   console.log(`  ${name}: ${sha256(path.join(OUT_DIR, name))}`);

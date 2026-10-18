@@ -320,7 +320,9 @@ const timelineProps = {
       frames: span.frames,
       ...(narrationByShot.has(span.shotIndex)
         ? {
-            narration: { audioSrc: narrationByShot.get(span.shotIndex).propsSrc },
+            narration: {
+              audioSrc: narrationByShot.get(span.shotIndex).propsSrc,
+            },
           }
         : {}),
       ...subtitlesBlock,

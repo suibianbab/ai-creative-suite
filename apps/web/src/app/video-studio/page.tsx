@@ -98,7 +98,10 @@ export default function VideoStudioPage() {
         (version) => version.versionId === shot.workingVersionId,
       );
       return working
-        ? { durationMs: working.durationMs, narrationText: working.narrationText }
+        ? {
+            durationMs: working.durationMs,
+            narrationText: working.narrationText,
+          }
         : { durationMs: 0, narrationText: undefined };
     });
     const durations = workingMeta.map((meta) => meta.durationMs);

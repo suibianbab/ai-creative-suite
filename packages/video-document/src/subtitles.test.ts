@@ -4,9 +4,11 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { activeSubtitleCue, buildSubtitleCues } from "./subtitles.js";
 
-const WORDS = "水循环，要点、一。"
-  .split("")
-  .map((text, i) => ({ text, beginMs: 360 + i * 260, endMs: 360 + i * 260 + 200 }));
+const WORDS = "水循环，要点、一。".split("").map((text, i) => ({
+  text,
+  beginMs: 360 + i * 260,
+  endMs: 360 + i * 260 + 200,
+}));
 
 test("字级时间戳：停顿标点（含顿号）各切一条 cue，时间取首末字", () => {
   const cues = buildSubtitleCues({
@@ -63,7 +65,10 @@ test("均匀分布多 cue：时序单调不重叠且 Σ 覆盖 span", () => {
 
 test("空白旁白 → 无 cue；无 words 无 spanMs → 无 cue", () => {
   assert.deepEqual(buildSubtitleCues({ narrationText: "  " }), []);
-  assert.deepEqual(buildSubtitleCues({ narrationText: "水循环。", words: [] }), []);
+  assert.deepEqual(
+    buildSubtitleCues({ narrationText: "水循环。", words: [] }),
+    [],
+  );
 });
 
 test("非法时间戳字（begin≥end）被剔除后全废则回退均匀", () => {
@@ -72,7 +77,11 @@ test("非法时间戳字（begin≥end）被剔除后全废则回退均匀", () 
     beginMs: 500,
     endMs: 400,
   }));
-  const cues = buildSubtitleCues({ narrationText: "水循环。", words: bad, spanMs: 1200 });
+  const cues = buildSubtitleCues({
+    narrationText: "水循环。",
+    words: bad,
+    spanMs: 1200,
+  });
   assert.equal(cues.length, 1); // 回退均匀
   assert.equal(cues[0]!.endMs, 1200);
 });

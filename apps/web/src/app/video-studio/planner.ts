@@ -310,76 +310,77 @@ export function planStoryboard(sentence: string): StoryboardResult {
   const shots: StoryboardShot[] = Array.from(
     { length: shotCount },
     (_, index) => {
-    const seed = hashSentence(`${sentence}#${index}`);
-    const isMiddle = index > 0 && index < shotCount - 1;
-    const useShapes = isMiddle && (index - 1) % 2 === 1;
-    let label: string;
-    let params: unknown;
-    let renderHint: string;
-    let narrationText: string;
-    if (index === 0) {
-      label = "开场";
-      params = {
-        title,
-        titleColor: "#1b2c29",
-        subtitleColor: "#5d7469",
-        entrance: "fade-up",
-        enterMs: DEFAULT_ENTER_MS,
+      const seed = hashSentence(`${sentence}#${index}`);
+      const isMiddle = index > 0 && index < shotCount - 1;
+      const useShapes = isMiddle && (index - 1) % 2 === 1;
+      let label: string;
+      let params: unknown;
+      let renderHint: string;
+      let narrationText: string;
+      if (index === 0) {
+        label = "开场";
+        params = {
+          title,
+          titleColor: "#1b2c29",
+          subtitleColor: "#5d7469",
+          entrance: "fade-up",
+          enterMs: DEFAULT_ENTER_MS,
+        };
+        renderHint = `开场镜头：标题「${title}」进入画面`;
+        narrationText = `${title}。`;
+      } else if (!isMiddle) {
+        label = "结语";
+        params = {
+          title,
+          subtitle: "谢谢观看",
+          titleColor: "#1b2c29",
+          subtitleColor: "#5d7469",
+          entrance: "fade-up",
+          enterMs: DEFAULT_ENTER_MS,
+        };
+        renderHint = `结语镜头：标题「${title}」与副标题「谢谢观看」进入画面`;
+        narrationText = "谢谢观看。";
+      } else if (useShapes) {
+        shapeIndex += 1;
+        label = `示意 ${shapeIndex}`;
+        params = basicShapesParams(seed);
+        renderHint = `示意镜头：从固定模板库按镜头 seed 抽取模板「${SHAPE_TEMPLATE_LABELS[seed % SHAPE_TEMPLATE_LABELS.length]}」依次入场，不含讲解文字`;
+        // 画面无文字：旁白只读主题这个不争事实
+        narrationText = `${title}。`;
+      } else {
+        pointIndex += 1;
+        label = `要点 ${pointIndex}`;
+        params = {
+          title,
+          subtitle: `要点 ${pointIndex}`,
+          titleColor: "#1b2c29",
+          subtitleColor: "#5d7469",
+          entrance: "fade-up",
+          enterMs: DEFAULT_ENTER_MS,
+        };
+        renderHint = `要点镜头：标题「${title}」与占位副标题「要点 ${pointIndex}」进入画面`;
+        narrationText = `${title}，要点 ${pointIndex}。`;
+      }
+      // 语速感知时长（spec R4）：等分是目标，语音预估是下限——旁白读不完的
+      // 镜头不许出厂；totalMs 随实际 Σ 走，确认卡如实预告。
+      const durationMs = speechAwareDurationMs(split[index]!, narrationText);
+      const spec: SceneSpec = {
+        specVersion: 1,
+        componentId: useShapes ? "basic-shapes" : "text-animation",
+        componentVersion: 1,
+        durationMs,
+        seed,
+        background: DEFAULT_BACKGROUND,
+        params,
       };
-      renderHint = `开场镜头：标题「${title}」进入画面`;
-      narrationText = `${title}。`;
-    } else if (!isMiddle) {
-      label = "结语";
-      params = {
-        title,
-        subtitle: "谢谢观看",
-        titleColor: "#1b2c29",
-        subtitleColor: "#5d7469",
-        entrance: "fade-up",
-        enterMs: DEFAULT_ENTER_MS,
+      validateSceneSpec(spec, defaultRegistry); // 兜底：构造结果必须过注册表校验
+      return {
+        label,
+        narrationText,
+        plan: { ok: true, spec, title, renderHint },
       };
-      renderHint = `结语镜头：标题「${title}」与副标题「谢谢观看」进入画面`;
-      narrationText = "谢谢观看。";
-    } else if (useShapes) {
-      shapeIndex += 1;
-      label = `示意 ${shapeIndex}`;
-      params = basicShapesParams(seed);
-      renderHint = `示意镜头：从固定模板库按镜头 seed 抽取模板「${SHAPE_TEMPLATE_LABELS[seed % SHAPE_TEMPLATE_LABELS.length]}」依次入场，不含讲解文字`;
-      // 画面无文字：旁白只读主题这个不争事实
-      narrationText = `${title}。`;
-    } else {
-      pointIndex += 1;
-      label = `要点 ${pointIndex}`;
-      params = {
-        title,
-        subtitle: `要点 ${pointIndex}`,
-        titleColor: "#1b2c29",
-        subtitleColor: "#5d7469",
-        entrance: "fade-up",
-        enterMs: DEFAULT_ENTER_MS,
-      };
-      renderHint = `要点镜头：标题「${title}」与占位副标题「要点 ${pointIndex}」进入画面`;
-      narrationText = `${title}，要点 ${pointIndex}。`;
-    }
-    // 语速感知时长（spec R4）：等分是目标，语音预估是下限——旁白读不完的
-    // 镜头不许出厂；totalMs 随实际 Σ 走，确认卡如实预告。
-    const durationMs = speechAwareDurationMs(split[index]!, narrationText);
-    const spec: SceneSpec = {
-      specVersion: 1,
-      componentId: useShapes ? "basic-shapes" : "text-animation",
-      componentVersion: 1,
-      durationMs,
-      seed,
-      background: DEFAULT_BACKGROUND,
-      params,
-    };
-    validateSceneSpec(spec, defaultRegistry); // 兜底：构造结果必须过注册表校验
-    return {
-      label,
-      narrationText,
-      plan: { ok: true, spec, title, renderHint },
-    };
-  });
+    },
+  );
 
   // 零帧预检（评审关注 #1）：语速感知后最短镜头也 ≥400+300ms，零帧更不可
   // 能——预检为将来放宽秒数/镜头数边界时的兜底，零帧是编排错误不许静默过。

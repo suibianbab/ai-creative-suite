@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "id": "35f59255-818b-4998-be76-6a6a2cc04f48",
+  "id": "f6d78487-1ca4-4226-88c1-97635e1bb656",
   "title": "水循环",
   "brief": {
     "sentence": "做一个8秒的STEM解说视频，主题是水循环，分4个镜头",
@@ -12,23 +12,23 @@
       {
         "sentence": "做一个8秒的STEM解说视频，主题是水循环，分4个镜头",
         "appendedShotCount": 4,
-        "appendedDurationMs": 8000,
+        "appendedDurationMs": 9100,
         "filmShotCountAfter": 4,
-        "filmTotalMsAfter": 8000,
-        "appliedAt": "2026-10-18T03:26:33.859Z"
+        "filmTotalMsAfter": 9100,
+        "appliedAt": "2026-10-18T04:42:10.296Z"
       }
     ]
   },
   "shots": [
     {
-      "shotId": "59bac59b-4bf5-4e15-b654-79307058fc20",
+      "shotId": "7bd56988-a1f1-45d1-8db9-28d8f40fd5cd",
       "order": 0,
       "locked": false,
-      "workingVersionId": "900b5e98-beb2-47d9-95ac-90523b912426",
+      "workingVersionId": "27642f41-bf32-4e76-b6c6-1299cdeffb20",
       "contentVersions": [
         {
-          "versionId": "900b5e98-beb2-47d9-95ac-90523b912426",
-          "createdAt": "2026-10-18T03:26:33.859Z",
+          "versionId": "27642f41-bf32-4e76-b6c6-1299cdeffb20",
+          "createdAt": "2026-10-18T04:42:10.296Z",
           "durationMs": 2000,
           "description": "开场（文字动画）：水循环",
           "narrationText": "水循环。",
@@ -59,22 +59,22 @@
       "events": [
         {
           "kind": "submitted",
-          "versionId": "900b5e98-beb2-47d9-95ac-90523b912426",
-          "at": "2026-10-18T03:26:33.859Z",
+          "versionId": "27642f41-bf32-4e76-b6c6-1299cdeffb20",
+          "at": "2026-10-18T04:42:10.296Z",
           "actor": "human"
         }
       ]
     },
     {
-      "shotId": "1d603f98-2aef-4cab-8c6a-78634201af19",
+      "shotId": "3d122989-ab21-478a-8732-39900b1d6999",
       "order": 1,
       "locked": false,
-      "workingVersionId": "3f228dfa-314e-4e62-bbc8-06e34a4e7fc3",
+      "workingVersionId": "8214fac8-2f16-4a96-b734-34b547b64e5e",
       "contentVersions": [
         {
-          "versionId": "3f228dfa-314e-4e62-bbc8-06e34a4e7fc3",
-          "createdAt": "2026-10-18T03:26:33.859Z",
-          "durationMs": 2000,
+          "versionId": "8214fac8-2f16-4a96-b734-34b547b64e5e",
+          "createdAt": "2026-10-18T04:42:10.296Z",
+          "durationMs": 3100,
           "description": "要点 1（文字动画）：水循环",
           "narrationText": "水循环，要点 1。",
           "sceneSource": {
@@ -83,7 +83,7 @@
               "specVersion": 1,
               "componentId": "text-animation",
               "componentVersion": 1,
-              "durationMs": 2000,
+              "durationMs": 3100,
               "seed": 1937483699,
               "background": "#ffffff",
               "params": {
@@ -105,21 +105,21 @@
       "events": [
         {
           "kind": "submitted",
-          "versionId": "3f228dfa-314e-4e62-bbc8-06e34a4e7fc3",
-          "at": "2026-10-18T03:26:33.859Z",
+          "versionId": "8214fac8-2f16-4a96-b734-34b547b64e5e",
+          "at": "2026-10-18T04:42:10.296Z",
           "actor": "human"
         }
       ]
     },
     {
-      "shotId": "a7f8ca56-0160-4f51-9562-ae7d2d05d9e3",
+      "shotId": "844f27de-9c19-4e14-ad46-1440ce9e0823",
       "order": 2,
       "locked": false,
-      "workingVersionId": "88b567fd-41e0-44ba-b696-93ee3ca2a8f0",
+      "workingVersionId": "6ba5e8fd-0480-4826-be81-eda3094a7957",
       "contentVersions": [
         {
-          "versionId": "88b567fd-41e0-44ba-b696-93ee3ca2a8f0",
-          "createdAt": "2026-10-18T03:26:33.859Z",
+          "versionId": "6ba5e8fd-0480-4826-be81-eda3094a7957",
+          "createdAt": "2026-10-18T04:42:10.296Z",
           "durationMs": 2000,
           "description": "示意 1（图形动画）：水循环",
           "narrationText": "水循环。",
@@ -167,21 +167,21 @@
       "events": [
         {
           "kind": "submitted",
-          "versionId": "88b567fd-41e0-44ba-b696-93ee3ca2a8f0",
-          "at": "2026-10-18T03:26:33.859Z",
+          "versionId": "6ba5e8fd-0480-4826-be81-eda3094a7957",
+          "at": "2026-10-18T04:42:10.296Z",
           "actor": "human"
         }
       ]
     },
     {
-      "shotId": "3a741128-3b6a-460e-8dd2-d39e52078ffb",
+      "shotId": "1a2390a6-45d4-4908-b6e3-2a810a9fc86a",
       "order": 3,
       "locked": false,
-      "workingVersionId": "2c09a877-e0cf-4e5a-8120-f0857f485c73",
+      "workingVersionId": "09e7b276-49ad-4492-9d59-747ebd1ec439",
       "contentVersions": [
         {
-          "versionId": "2c09a877-e0cf-4e5a-8120-f0857f485c73",
-          "createdAt": "2026-10-18T03:26:33.859Z",
+          "versionId": "09e7b276-49ad-4492-9d59-747ebd1ec439",
+          "createdAt": "2026-10-18T04:42:10.296Z",
           "durationMs": 2000,
           "description": "结语（文字动画）：水循环",
           "narrationText": "谢谢观看。",
@@ -213,8 +213,8 @@
       "events": [
         {
           "kind": "submitted",
-          "versionId": "2c09a877-e0cf-4e5a-8120-f0857f485c73",
-          "at": "2026-10-18T03:26:33.859Z",
+          "versionId": "09e7b276-49ad-4492-9d59-747ebd1ec439",
+          "at": "2026-10-18T04:42:10.296Z",
           "actor": "human"
         }
       ]
@@ -222,9 +222,9 @@
   ],
   "renderRecords": [
     {
-      "renderId": "52d5c968-e894-489b-83c5-e4f729da67a4",
-      "versionId": "900b5e98-beb2-47d9-95ac-90523b912426",
-      "contentDigest": "3f9b47c803b79f192408def5f6580f5bb1d5d35bc01ca947e5bb674b63f545e5",
+      "renderId": "11808b9b-b997-45ea-ad5f-ace4071b26ff",
+      "versionId": "27642f41-bf32-4e76-b6c6-1299cdeffb20",
+      "contentDigest": "329366f729211bbc24f60af3cd414aae2416ea0eb01b99f62f6bfe9ca5e8c949",
       "engineId": "remotion",
       "engineVersion": "1",
       "rendererVersion": "4.0.534",
@@ -240,9 +240,27 @@
       "outputAssetRef": "e2e-render/landscape.mp4"
     },
     {
-      "renderId": "b0ca5ecf-445d-4acb-904e-534a96c9f6a6",
-      "versionId": "3f228dfa-314e-4e62-bbc8-06e34a4e7fc3",
-      "contentDigest": "d1bddacce097892bd2a51a9460faa5d99cd0afaa9c069936f01551813ec4a6e6",
+      "renderId": "4d0c0e8b-7fb6-4484-aa05-8d5b751f031e",
+      "versionId": "8214fac8-2f16-4a96-b734-34b547b64e5e",
+      "contentDigest": "61b661f287296ccbc7591cc1691b8ddfaf5cc563133dd45fe67974001411087b",
+      "engineId": "remotion",
+      "engineVersion": "1",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 74,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "e2e-render/landscape.mp4"
+    },
+    {
+      "renderId": "ed999470-f8f8-43fa-bbea-3fd8a85c810e",
+      "versionId": "6ba5e8fd-0480-4826-be81-eda3094a7957",
+      "contentDigest": "9bd8914dd616c774b31e779b0d6fbca40b8babe9530051865027669799a614e5",
       "engineId": "remotion",
       "engineVersion": "1",
       "rendererVersion": "4.0.534",
@@ -258,9 +276,9 @@
       "outputAssetRef": "e2e-render/landscape.mp4"
     },
     {
-      "renderId": "e486a7ad-eb83-4d98-b0d2-d7296b19b30a",
-      "versionId": "88b567fd-41e0-44ba-b696-93ee3ca2a8f0",
-      "contentDigest": "1b649137e9d57c9c9189a134035628ea88bd9e7023c672b63f24558bd1f36f3c",
+      "renderId": "335be8e3-8ac1-4949-a17f-744c00803fdb",
+      "versionId": "09e7b276-49ad-4492-9d59-747ebd1ec439",
+      "contentDigest": "c71f44bdc4f185c66e2c5aa478f0becc6fc299530b9242019b37ea165a79eb90",
       "engineId": "remotion",
       "engineVersion": "1",
       "rendererVersion": "4.0.534",
@@ -276,27 +294,9 @@
       "outputAssetRef": "e2e-render/landscape.mp4"
     },
     {
-      "renderId": "5f367707-1901-4c66-b203-2a8dd08455e3",
-      "versionId": "2c09a877-e0cf-4e5a-8120-f0857f485c73",
-      "contentDigest": "1c6fce8357a0e46ab94cdcb5a2e6107dbeab6ef79b402eb7e0f0ec5407dc21c8",
-      "engineId": "remotion",
-      "engineVersion": "1",
-      "rendererVersion": "4.0.534",
-      "browser": "Google Chrome 155.0.8059.41",
-      "fps": 24,
-      "width": 1280,
-      "height": 720,
-      "codec": "h264",
-      "frames": 48,
-      "fontDigests": {
-        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
-      },
-      "outputAssetRef": "e2e-render/landscape.mp4"
-    },
-    {
-      "renderId": "ce90688d-fdc6-4f39-8c4e-c3f22ae2d320",
-      "versionId": "900b5e98-beb2-47d9-95ac-90523b912426",
-      "contentDigest": "3f9b47c803b79f192408def5f6580f5bb1d5d35bc01ca947e5bb674b63f545e5",
+      "renderId": "2cbe0e9b-ac05-485c-84db-46ad5ffd529a",
+      "versionId": "27642f41-bf32-4e76-b6c6-1299cdeffb20",
+      "contentDigest": "329366f729211bbc24f60af3cd414aae2416ea0eb01b99f62f6bfe9ca5e8c949",
       "engineId": "remotion",
       "engineVersion": "1",
       "rendererVersion": "4.0.534",
@@ -312,9 +312,27 @@
       "outputAssetRef": "e2e-render/portrait.mp4"
     },
     {
-      "renderId": "9ada1a64-201e-4eaf-adb7-3158df4e5527",
-      "versionId": "3f228dfa-314e-4e62-bbc8-06e34a4e7fc3",
-      "contentDigest": "d1bddacce097892bd2a51a9460faa5d99cd0afaa9c069936f01551813ec4a6e6",
+      "renderId": "e7e4590b-23a3-4f78-871f-675673ad50a2",
+      "versionId": "8214fac8-2f16-4a96-b734-34b547b64e5e",
+      "contentDigest": "61b661f287296ccbc7591cc1691b8ddfaf5cc563133dd45fe67974001411087b",
+      "engineId": "remotion",
+      "engineVersion": "1",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 74,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "e2e-render/portrait.mp4"
+    },
+    {
+      "renderId": "c19a8601-05a5-4412-b8b6-16bfd8f31542",
+      "versionId": "6ba5e8fd-0480-4826-be81-eda3094a7957",
+      "contentDigest": "9bd8914dd616c774b31e779b0d6fbca40b8babe9530051865027669799a614e5",
       "engineId": "remotion",
       "engineVersion": "1",
       "rendererVersion": "4.0.534",
@@ -330,27 +348,9 @@
       "outputAssetRef": "e2e-render/portrait.mp4"
     },
     {
-      "renderId": "b4961e5d-b47b-49b3-936c-b703a1881c75",
-      "versionId": "88b567fd-41e0-44ba-b696-93ee3ca2a8f0",
-      "contentDigest": "1b649137e9d57c9c9189a134035628ea88bd9e7023c672b63f24558bd1f36f3c",
-      "engineId": "remotion",
-      "engineVersion": "1",
-      "rendererVersion": "4.0.534",
-      "browser": "Google Chrome 155.0.8059.41",
-      "fps": 24,
-      "width": 720,
-      "height": 1280,
-      "codec": "h264",
-      "frames": 48,
-      "fontDigests": {
-        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
-      },
-      "outputAssetRef": "e2e-render/portrait.mp4"
-    },
-    {
-      "renderId": "aca26b0f-53be-4f08-8174-5adcecdc02a1",
-      "versionId": "2c09a877-e0cf-4e5a-8120-f0857f485c73",
-      "contentDigest": "1c6fce8357a0e46ab94cdcb5a2e6107dbeab6ef79b402eb7e0f0ec5407dc21c8",
+      "renderId": "f6cf49f1-b214-4f6b-92d0-bd3798487907",
+      "versionId": "09e7b276-49ad-4492-9d59-747ebd1ec439",
+      "contentDigest": "c71f44bdc4f185c66e2c5aa478f0becc6fc299530b9242019b37ea165a79eb90",
       "engineId": "remotion",
       "engineVersion": "1",
       "rendererVersion": "4.0.534",

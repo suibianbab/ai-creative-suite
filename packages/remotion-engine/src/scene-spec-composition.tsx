@@ -1,3 +1,4 @@
+import { activeSubtitleCue, type SubtitleCue } from "@acs/video-document";
 import {
   assertNodeBudget,
   defaultRegistry,
@@ -7,7 +8,6 @@ import {
   seededRandom,
   validateSceneSpec,
 } from "@acs/video-scene";
-import { activeSubtitleCue, type SubtitleCue } from "@acs/video-document";
 import { createElement, type FC, type JSX } from "react";
 import {
   AbsoluteFill,

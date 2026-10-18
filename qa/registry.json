@@ -1966,7 +1966,7 @@
     {
       "id": "VID-009",
       "title": "Video Studio multi-shot storyboard closed loop",
-      "fixture": "Dev server on :3210 plus Playwright Chromium; scripted run documented in artifacts/video-studio-multishot/E2E_MULTISHOT.md (rerun: PORT=3210 pnpm --filter @acs/web dev, then node scripts/video/e2e-multishot.mjs)",
+      "fixture": "Dev server on :3210 plus Playwright Chromium (via the header-stripping TCP proxy on :3211 to dodge the Next16/Node22 HMR websocket bug; rerun: PORT=3210 pnpm --filter @acs/web dev, then BASE_URL=http://127.0.0.1:3211 node scripts/video/e2e-multishot.mjs); scripted run documented in artifacts/video-studio-multishot/E2E_MULTISHOT.md",
       "steps": [
         "Create a project in the browser and plan the storyboard sentence 做一个8秒的STEM解说视频，主题是水循环，分4个镜头",
         "Check the storyboard confirmation card previews all four shots honestly (opening names the title, placeholder point shots, template shape shots, closing)",
@@ -1976,14 +1976,14 @@
       ],
       "passCriteria": [
         "The same project id and all four content version ids survive browser to CLI to browser without rewrite",
-        "CLI lands on v3 with 8 render records (4 shots x 2 aspects) whose per-record frames match the quantized spans (48+48+48+48 at 8s/24fps)",
+        "CLI lands on v3 with 8 render records (4 shots x 2 aspects) whose per-record frames match the quantized spans (48+74+48+48 = 218 frames at the speech-aware 9100ms plan / 24fps; the scripted run asserts the 9100ms span sum)",
         "Import shows the shot timeline (4 shot cards), both aspect records and the whole-piece preview; browser console stays free of errors"
       ]
     },
     {
       "id": "VID-011",
       "title": "Video Studio narrated closed loop with billed TTS",
-      "fixture": "Dev server on :3210, Playwright Chromium, DASHSCOPE_API_KEY in env (billed ~0.004 CNY per run, cumulative cap 50 CNY with per-call ledger in artifacts/tts-usage.jsonl); scripted run documented in artifacts/video-studio-narrated/E2E_NARRATED.md (rerun: node scripts/video/e2e-narrated.mjs)",
+      "fixture": "Dev server on :3210 (via the header-stripping TCP proxy on :3211, see VID-009), Playwright Chromium, DASHSCOPE_API_KEY in env (billed ~0.004 CNY per run, cumulative cap 50 CNY with per-call ledger in artifacts/tts-usage.jsonl); scripted run documented in artifacts/video-studio-narrated/E2E_NARRATED.md (rerun: BASE_URL=http://127.0.0.1:3211 DASHSCOPE_API_KEY=... node scripts/video/e2e-narrated.mjs)",
       "steps": [
         "Create a project in the browser and plan 做一个8秒的STEM解说视频，主题是水循环，分4个镜头, then apply the storyboard",
         "Check each shot card shows its narration text (opening 水循环。, point shot 水循环，要点 1。, closing 谢谢观看。), then save and export the project JSON",
@@ -1993,9 +1993,43 @@
       ],
       "passCriteria": [
         "All four narrationText fields survive browser to CLI to browser; imported shot cards echo the narration text",
-        "Both aspect MP4s carry an aac audio track and container duration within 0.1s of the 8.00s video; render-manifest.json lists narration entries for all shots (audioBytes/durationMs/wordsFile)",
+        "Both aspect MP4s carry an aac audio track and container duration within 0.1s of the 9.1s speech-aware video (218 frames at 24fps); render-manifest.json lists narration entries for all shots (audioBytes/durationMs/wordsFile); subtitle burn-in on this loop is asserted by VID-012",
         "A no-narration rerender of the same project is frame-identical (sampled decoded-pixel hashes) in both aspects - audio assembly never touches video frames",
         "Browser console stays free of errors during the whole loop; billing ledger shows the run's characters and stays within the 50 CNY cap"
+      ]
+    },
+    {
+      "id": "VID-012",
+      "title": "Video Studio subtitle track burned into narration piece",
+      "fixture": "Same loop as VID-011 (dev server + proxy + billed TTS); word-level cues come from the per-shot .words.json written next to each wav; scripted assertions live in scripts/video/e2e-narrated.mjs and the evidence frame is artifacts/video-studio-narrated/subtitle-band-cue.png (SHA-256 in E2E_NARRATED.md)",
+      "steps": [
+        "Complete the VID-011 loop so narration assets with .words.json exist, then render with scripts/video/render-scene.mjs --narration",
+        "Check render-manifest.json carries subtitleCues per shot per aspect (cue count and cue-text SHA-256) derived from buildSubtitleCues - the same implementation the web whole-piece preview uses",
+        "At a cue midpoint derived from the first shot's words.json (longest cue), crop the bottom 10% band of the rendered MP4 and measure the dark-pixel ratio; repeat before any cue starts",
+        "Corrupt or delete a .words.json and re-run the narration assembly path to observe the uniform-fallback notice (non-blocking)"
+      ],
+      "passCriteria": [
+        "Both aspect manifests list subtitleCues for all narrated shots with cue text hashes; shots without narration assets carry no cues",
+        "The bottom band at the cue time shows a dark pill (ratio > 1%) while the pre-cue frame stays clean (ratio < 0.5%) - the pill is present exactly when a cue is active",
+        "The evidence crop shows a legible rounded translucent dark pill with white text over the white background (independently confirmed by a vision model pass)",
+        "Missing or malformed words.json falls back to evenly spread cues with a warning and never blocks the render; cues that would exceed the shot span are clamped to the span"
+      ]
+    },
+    {
+      "id": "VID-013",
+      "title": "Video Studio narration overflow closure (speech-aware plan, duration align, explicit truncate)",
+      "fixture": "Unit tests in packages/video-document (planner speech-aware durations) and scripts/video/*.test.mjs (wavDurationMs sentinel clamp, planDurationAlignments, readSubtitleCues clamping); live behavior exercised by the VID-011/VID-012 loop with the water-cycle sentence",
+      "steps": [
+        "Plan the 8s/4-shot water-cycle sentence and inspect shot durations: each span is max(equal-split, 400 + 300 x narration chars) ms",
+        "Run tts-narration and check the duration-align pass: a wav longer than its version duration (50ms tail guard) appends a tts-duration-align ContentVersion with re-keyed <shotId>-<newVersionId>.wav assets, validated as append-only evolution",
+        "Feed render-scene a project where a wav exceeds its span and run without flags, then with --allow-truncate",
+        "Re-check the calibrated constants against the four real wavs of the e2e sentence"
+      ],
+      "passCriteria": [
+        "The e2e sentence plans to [2000,3100,2000,2000] = 9100ms and the scripted run asserts the span sum; the four real wavs all fit their spans (0 alignments, 0 overflow warnings on the calibration run)",
+        "Duration alignment only appends: original versions and their assets stay untouched, the aligned version carries provenance engineId tts-duration-align, and wav duration is computed from actual data bytes (streaming sentinel size in the data header is clamped)",
+        "Without --allow-truncate the render fails loudly on any narration-overflow warning; with the flag it renders with the audio cut at the span end and says so in the log",
+        "Billing stays within the 50 CNY cap with every call logged"
       ]
     },
     {
