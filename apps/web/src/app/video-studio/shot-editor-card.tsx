@@ -1,6 +1,7 @@
 "use client";
 
 import type { Shot } from "@acs/video-document";
+import type { SceneSpec } from "@acs/video-scene";
 import { useEffect, useState } from "react";
 import {
   applyChartTemplate,
@@ -10,6 +11,14 @@ import {
   draftChartFromSpec,
   isChartComponentId,
 } from "./chart-templates";
+import {
+  applyMapTemplate,
+  buildMapRevisePatch,
+  draftMapFromSpec,
+  isMapComponentId,
+  MAP_TEMPLATES,
+  type MapEditDraft,
+} from "./map-templates";
 import { LINE_TEMPLATE_LABELS, SHAPE_TEMPLATE_LABELS } from "./planner";
 import {
   buildRevisePatch,
@@ -21,7 +30,8 @@ import { shotWorkingSpec } from "./shot-specs";
 
 // 分镜编辑器镜头卡：只读信息 + 展开式编辑（旁白/画面修订、单镜头重做、
 // 版本回滚、锁定）。草稿是本地状态，点「应用修订」才经回调落文档；
-// 校验全走 shot-edit.ts / chart-templates.ts 纯逻辑，非法草稿不回调。
+// 校验全走 shot-edit.ts / chart-templates.ts / map-templates.ts 纯逻辑，
+// 非法草稿不回调。
 
 const EMPTY_CHART_DRAFT: ChartEditDraft = {
   title: "",
@@ -30,6 +40,20 @@ const EMPTY_CHART_DRAFT: ChartEditDraft = {
   prefix: "",
   suffix: "",
 };
+
+const EMPTY_MAP_DRAFT: MapEditDraft = { title: "", data: "" };
+
+// 模板下拉跨图表/地图两族解析：先按图表找，找不到再按地图找。
+function resolveAnyTemplate(
+  spec: SceneSpec,
+  templateId: string,
+): { spec: SceneSpec | null; error: string | null } {
+  const chart = applyChartTemplate(spec, templateId);
+  if (chart.spec) return { spec: chart.spec, error: null };
+  const map = applyMapTemplate(spec, templateId);
+  if (map.spec) return { spec: map.spec, error: null };
+  return { spec: null, error: map.error ?? chart.error };
+}
 
 export type ShotEditorCardProps = {
   shot: Shot;
@@ -90,6 +114,12 @@ export function ShotEditorCard({
       : EMPTY_CHART_DRAFT,
   );
   const [chartError, setChartError] = useState<string | null>(null);
+  const [mapDraft, setMapDraft] = useState<MapEditDraft>(() =>
+    spec && isMapComponentId(spec.componentId)
+      ? draftMapFromSpec(spec)
+      : EMPTY_MAP_DRAFT,
+  );
+  const [mapError, setMapError] = useState<string | null>(null);
 
   // working 版本变了（应用修订/重做/回滚后）→ 草稿重置到新工作版本。
   // 只盯 workingVersionId（终评整改）：锁定切换会换 shot 对象身份但不动
@@ -118,6 +148,12 @@ export function ShotEditorCard({
       nextSpec && isChartComponentId(nextSpec.componentId)
         ? draftChartFromSpec(nextSpec)
         : EMPTY_CHART_DRAFT,
+    );
+    setMapError(null);
+    setMapDraft(
+      nextSpec && isMapComponentId(nextSpec.componentId)
+        ? draftMapFromSpec(nextSpec)
+        : EMPTY_MAP_DRAFT,
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps -- 依赖收紧是有意的（见上注）
   }, [shot.workingVersionId]);
@@ -270,7 +306,7 @@ export function ShotEditorCard({
             </span>
           ) : null}
           <label className="shot-edit-field">
-            组件模板（换成图表）
+            组件模板（图表 / 地图）
             <select
               className="chart-template-select"
               value={pendingTemplateId}
@@ -278,22 +314,36 @@ export function ShotEditorCard({
                 const templateId = event.target.value;
                 setPendingTemplateId(templateId);
                 setChartError(null);
+                setMapError(null);
                 if (!templateId) return;
-                const applied = applyChartTemplate(spec, templateId);
+                const applied = resolveAnyTemplate(spec, templateId);
                 if (applied.error || !applied.spec) {
                   setChartError(applied.error ?? "模板无效");
                   return;
                 }
                 // 选中即预填该模板数据到编辑字段（应用时才落文档）
-                setChartDraft(draftChartFromSpec(applied.spec));
+                if (isChartComponentId(applied.spec.componentId)) {
+                  setChartDraft(draftChartFromSpec(applied.spec));
+                } else if (isMapComponentId(applied.spec.componentId)) {
+                  setMapDraft(draftMapFromSpec(applied.spec));
+                }
               }}
             >
               <option value="">— 保持当前组件 —</option>
-              {CHART_TEMPLATES.map((template) => (
-                <option key={template.templateId} value={template.templateId}>
-                  {template.label}
-                </option>
-              ))}
+              <optgroup label="图表">
+                {CHART_TEMPLATES.map((template) => (
+                  <option key={template.templateId} value={template.templateId}>
+                    {template.label}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="地图">
+                {MAP_TEMPLATES.map((template) => (
+                  <option key={template.templateId} value={template.templateId}>
+                    {template.label}
+                  </option>
+                ))}
+              </optgroup>
             </select>
           </label>
           {isChartComponentId(spec.componentId) ? (
@@ -373,6 +423,37 @@ export function ShotEditorCard({
               ) : null}
             </>
           ) : null}
+          {isMapComponentId(spec.componentId) ? (
+            <>
+              <label className="shot-edit-field">
+                地图标题
+                <input
+                  className="map-title-input"
+                  maxLength={40}
+                  value={mapDraft.title}
+                  onChange={(event) =>
+                    setMapDraft({ ...mapDraft, title: event.target.value })
+                  }
+                />
+              </label>
+              <label className="shot-edit-field">
+                数据（每行{" "}
+                {spec.componentId === "map-grid"
+                  ? "标签,行,列[,数值]（行/列 0..7）"
+                  : "名称,x,y（首行起点、末行终点，中间为途经；可省名称）"}
+                ）
+                <textarea
+                  className="map-data-input"
+                  rows={6}
+                  value={mapDraft.data}
+                  onChange={(event) =>
+                    setMapDraft({ ...mapDraft, data: event.target.value })
+                  }
+                />
+              </label>
+              {mapError ? <p className="map-edit-error">{mapError}</p> : null}
+            </>
+          ) : null}
           {overflowMs > 0 ? (
             <span className="shot-overflow-note">
               旁白按语速需{" "}
@@ -404,11 +485,11 @@ export function ShotEditorCard({
               className="shot-apply"
               onClick={() => {
                 // 换模板 = 以模板 spec 为基底；与同草稿的并发编辑（旁白/背景/
-                // 时长 + 图表数据——选中模板时已预填该模板默认值）一次应用
-                // 一并落库，不静默丢弃（终评 I1 合并语义）。
+                // 时长 + 图表/地图数据——选中模板时已预填该模板默认值）一次
+                // 应用一并落库，不静默丢弃（终评 I1 合并语义）。
                 let baseSpec = spec;
                 if (pendingTemplateId) {
-                  const applied = applyChartTemplate(spec, pendingTemplateId);
+                  const applied = resolveAnyTemplate(spec, pendingTemplateId);
                   if (applied.error || !applied.spec) {
                     setEditError(applied.error ?? "模板无效");
                     return;
@@ -422,9 +503,18 @@ export function ShotEditorCard({
                   setChartError(chartResult.error ?? "图表数据无效");
                   return;
                 }
+                const mapResult = isMapComponentId(
+                  (chartResult?.spec ?? baseSpec).componentId,
+                )
+                  ? buildMapRevisePatch(chartResult?.spec ?? baseSpec, mapDraft)
+                  : null;
+                if (mapResult && (mapResult.error || !mapResult.spec)) {
+                  setMapError(mapResult.error ?? "地图数据无效");
+                  return;
+                }
                 const { patch, error } = buildRevisePatch(
                   draft,
-                  chartResult?.spec ?? baseSpec,
+                  mapResult?.spec ?? chartResult?.spec ?? baseSpec,
                 );
                 if (error || !patch) {
                   setEditError(error ?? "草稿无效");
@@ -432,6 +522,7 @@ export function ShotEditorCard({
                 }
                 setEditError(null);
                 setChartError(null);
+                setMapError(null);
                 onRevise(patch);
               }}
             >

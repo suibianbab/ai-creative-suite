@@ -691,6 +691,31 @@
   color: #a3230f;
 }
 
+/* P2-② 地图编辑字段（沿图表控件同款外观） */
+.map-title-input {
+  font-size: 13px;
+  padding: 4px 8px;
+  border: 1px solid #bfd6c8;
+  border-radius: 6px;
+  font-family: inherit;
+}
+
+.map-data-input {
+  font-size: 13px;
+  padding: 6px 8px;
+  border: 1px solid #bfd6c8;
+  border-radius: 6px;
+  min-height: 120px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.map-edit-error {
+  margin: 0;
+  font-size: 12px;
+  color: #a3230f;
+}
+
 .shot-edit-actions,
 .shot-redo-row {
   display: flex;
