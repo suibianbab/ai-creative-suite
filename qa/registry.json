@@ -2069,6 +2069,24 @@
       ]
     },
     {
+      "id": "VID-016",
+      "title": "Video Studio shot transitions (dip-to-black, frame-borrowing within adjacent spans)",
+      "fixture": "Unit tests in packages/video-document/src/{transitions,validate}.test.ts (half split windows, exact ramp boundary opacities, span-insufficient rejection, schema shape/enum/range/duplicate) and apps/web transitions-draft.test.ts (draft rows, out-of-range drop, patch semantics); live loop scripted in scripts/video/e2e-transitions.mjs and documented in artifacts/video-studio-transitions/E2E_TRANSITIONS.md (rerun: node scripts/video/e2e-transitions.mjs, needs dev server + proxy, zero TTS billing)",
+      "steps": [
+        "Create a 4-shot STEM project in the workbench, configure boundary 1->2 fade 500ms in the transitions editor (no inline error), save and export the project JSON",
+        "Assert exported transitions is exactly [{boundary:0,kind:fade,durationMs:500}], then render both aspects via render-scene and check props passthrough plus the manifest window summary (startFrame 42, frames 12)",
+        "Extract per-frame luminance with ffmpeg signalstats YAVG on both aspects: boundary midpoint frames 47/48 must be full black (<=30) while out-of-window control frames 20/60 stay bright (>=100)",
+        "Re-render a copy of the exported project and compare both aspect MP4s byte-for-byte via SHA-256",
+        "Re-render the committed no-transition baseline project and compare hashes against the Feature 3 archived values, then diff the billing ledger line count"
+      ],
+      "passCriteria": [
+        "e2e exits 0 with YAVG 16 at both boundary midpoint frames on both aspects and bright controls (A2 numeric, not eyeball)",
+        "Double run of the with-transition project is byte-identical on both aspects (frame determinism holds with overlays)",
+        "No-transition baseline re-render hashes equal the archived Feature 3 values exactly (absence is byte-identical; props files carry no transitions key)",
+        "Billing ledger line count is unchanged and the browser console logs zero errors"
+      ]
+    },
+    {
       "id": "3D-001",
       "title": "Exact product model advertisement",
       "fixture": "Rights-cleared customer-approved accurate 3D model and product reference photos",
