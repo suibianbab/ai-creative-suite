@@ -200,7 +200,10 @@ export function buildStickRevisePatch(
   for (let i = 0; i < lines.length; i += 1) {
     const head = lines[i]!.split(",")[0]!.trim();
     if (!STICK_ACTIONS.has(head)) {
-      return { spec: null, error: `第 ${i + 1} 行：动作必须是 走/站/挥手/指/跳` };
+      return {
+        spec: null,
+        error: `第 ${i + 1} 行：动作必须是 走/站/挥手/指/跳`,
+      };
     }
     const parsed = parseFigureLine(lines[i]!);
     if (!parsed) {

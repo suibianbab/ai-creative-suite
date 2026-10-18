@@ -94,7 +94,10 @@ test("draftStickFromSpec：toX=fromX 省略段、toX≠fromX 展开三段", () =
 });
 
 test("buildStickRevisePatch：round-trip + CRLF/空行/trim 容错 + toX 缺省", () => {
-  const draft = { title: "相遇问好", data: "走, 80 ,420\r\n\r\n走,920,580\n指,500" };
+  const draft = {
+    title: "相遇问好",
+    data: "走, 80 ,420\r\n\r\n走,920,580\n指,500",
+  };
   const result = buildStickRevisePatch(STICK_SPEC, draft);
   assert.equal(result.error, null);
   assert.deepEqual((result.spec!.params as { figures: unknown[] }).figures, [
@@ -106,7 +109,10 @@ test("buildStickRevisePatch：round-trip + CRLF/空行/trim 容错 + toX 缺省"
   // 未触碰字段保留（groundY/颜色/时间窗来自模板基底）
   assert.equal((result.spec!.params as { groundY: number }).groundY, 800);
   // round-trip：draft 出去再读回来
-  assert.equal(draftStickFromSpec(result.spec!).data, "走,80,420\n走,920,580\n指,500");
+  assert.equal(
+    draftStickFromSpec(result.spec!).data,
+    "走,80,420\n走,920,580\n指,500",
+  );
 });
 
 test("buildStickRevisePatch：非火柴人组件拒绝", () => {
@@ -119,7 +125,10 @@ test("buildStickRevisePatch：行级错误（行号定位、动作/坐标/数量
   const cases: Array<[string, string]> = [
     ["站,500\n跑,100\n跳,600", "第 2 行：动作必须是 走/站/挥手/指/跳"],
     ["站,500\n走,abc", "第 2 行：动作,起点x[,终点x] 格式不符（坐标 0..1000）"],
-    ["站,500\n走,100,,300", "第 2 行：动作,起点x[,终点x] 格式不符（坐标 0..1000）"],
+    [
+      "站,500\n走,100,,300",
+      "第 2 行：动作,起点x[,终点x] 格式不符（坐标 0..1000）",
+    ],
     ["走,100,300,900", "第 1 行：动作,起点x[,终点x] 格式不符（坐标 0..1000）"],
     ["走,-5", "第 1 行：动作,起点x[,终点x] 格式不符（坐标 0..1000）"],
     ["走,100,1001", "第 1 行：动作,起点x[,终点x] 格式不符（坐标 0..1000）"],

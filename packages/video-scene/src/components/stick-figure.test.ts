@@ -34,11 +34,20 @@ function specWith(params: unknown) {
   };
 }
 function makeCtx(overrides: Partial<FrameContext> = {}): FrameContext {
-  return { frame: 24, fps: 24, width: 1920, height: 1080, ...overrides } as FrameContext;
+  return {
+    frame: 24,
+    fps: 24,
+    width: 1920,
+    height: 1080,
+    ...overrides,
+  } as FrameContext;
 }
 // tMs = frame/fps×1000；at(10.8) → 450ms 等，测试全部走可整除断言值
 const at = (tMs: number) =>
-  stickFigure.render(specWith(BASE), makeCtx({ frame: (tMs / 1000) * 24 }) as never);
+  stickFigure.render(
+    specWith(BASE),
+    makeCtx({ frame: (tMs / 1000) * 24 }) as never,
+  );
 // 唯一 figure 的 <g>：嵌套 svg children = [标题, 地面线, ...figures]
 const figureGroup = (root: SvgNode, i = 0) =>
   collect(root, "g").filter((g) => "transform" in g.attrs)[i]!;
@@ -64,7 +73,10 @@ test("站姿几何：呼吸 bob 与关节端点逐条断言（tMs=1000）", () =
 });
 
 test("走循环：φ=0.25 摆极值（腿 26°/臂 −20°/bob 4）", () => {
-  const spec = specWith({ ...BASE, figures: [{ action: "走", fromX: 500, toX: 500 }] });
+  const spec = specWith({
+    ...BASE,
+    figures: [{ action: "走", fromX: 500, toX: 500 }],
+  });
   const root = stickFigure.render(spec, makeCtx({ frame: 10.8 }) as never); // tMs=450, φ=0.25
   const g = collect(root, "g").filter((x) => "transform" in x.attrs)[0]!;
   assert.equal(g.attrs.transform, "translate(500.00 676.00)");
@@ -77,7 +89,10 @@ test("走循环：φ=0.25 摆极值（腿 26°/臂 −20°/bob 4）", () => {
 });
 
 test("走循环：φ=0.5 回中（swing≈0）", () => {
-  const spec = specWith({ ...BASE, figures: [{ action: "走", fromX: 500, toX: 500 }] });
+  const spec = specWith({
+    ...BASE,
+    figures: [{ action: "走", fromX: 500, toX: 500 }],
+  });
   const root = stickFigure.render(spec, makeCtx({ frame: 16.8 }) as never); // tMs=700, φ=0.5
   const g = collect(root, "g").filter((x) => "transform" in x.attrs)[0]!;
   assert.equal(g.attrs.transform, "translate(500.00 680.00)");
@@ -99,15 +114,19 @@ test("行进窗口：travelMs 中途线性、到点后原地循环", () => {
   );
   const done = stickFigure.render(spec, makeCtx({ frame: 120 }) as never); // tMs=5000 → x=920（踏步继续）
   assert.equal(
-    (collect(done, "g").filter((x) => "transform" in x.attrs)[0]!.attrs.transform as string).startsWith(
-      "translate(920.00 ",
-    ),
+    (
+      collect(done, "g").filter((x) => "transform" in x.attrs)[0]!.attrs
+        .transform as string
+    ).startsWith("translate(920.00 "),
     true,
   );
 });
 
 test("跳：φ=0.5 抛物线顶点（yOff 120、腿 ±10°、臂 ±120°）与 φ=0.25 落地段同站", () => {
-  const spec = specWith({ ...BASE, figures: [{ action: "跳", fromX: 500, toX: 500 }] });
+  const spec = specWith({
+    ...BASE,
+    figures: [{ action: "跳", fromX: 500, toX: 500 }],
+  });
   const peak = stickFigure.render(spec, makeCtx({ frame: 16.8 }) as never); // tMs=700, φ=0.5
   const g = collect(peak, "g").filter((x) => "transform" in x.attrs)[0]!;
   // bob=2·sin(2π·700/1600)=0.76537 → hipY=800−120−0.76537−120=559.23
@@ -127,7 +146,10 @@ test("跳：φ=0.5 抛物线顶点（yOff 120、腿 ±10°、臂 ±120°）与 �
 });
 
 test("挥手：前臂每周期摆 3 次（φ=0.25 与 φ=1/12 手 y 相差 40.57）", () => {
-  const spec = specWith({ ...BASE, figures: [{ action: "挥手", fromX: 500, toX: 500 }] });
+  const spec = specWith({
+    ...BASE,
+    figures: [{ action: "挥手", fromX: 500, toX: 500 }],
+  });
   const a = stickFigure.render(spec, makeCtx({ frame: 10.8 }) as never); // φ=0.25 → rel=−85
   const b = stickFigure.render(spec, makeCtx({ frame: 6.8 }) as never); // tMs=283.33, φ=1/12 → rel=−35
   const la = collect(
@@ -145,13 +167,19 @@ test("挥手：前臂每周期摆 3 次（φ=0.25 与 φ=1/12 手 y 相差 40.57
 });
 
 test("镜像：toX<fromX 整组 scale(-1,1)，向右无 scale", () => {
-  const left = specWith({ ...BASE, figures: [{ action: "走", fromX: 800, toX: 200 }] });
+  const left = specWith({
+    ...BASE,
+    figures: [{ action: "走", fromX: 800, toX: 200 }],
+  });
   const gl = collect(
     stickFigure.render(left, makeCtx({ frame: 10.8 }) as never),
     "g",
   ).filter((x) => "transform" in x.attrs)[0]!;
   assert.equal(gl.attrs.transform, "translate(650.00 676.00) scale(-1,1)");
-  const right = specWith({ ...BASE, figures: [{ action: "走", fromX: 80, toX: 920 }] });
+  const right = specWith({
+    ...BASE,
+    figures: [{ action: "走", fromX: 80, toX: 920 }],
+  });
   const gr = collect(
     stickFigure.render(right, makeCtx({ frame: 10.8 }) as never),
     "g",
@@ -233,10 +261,22 @@ test("校验表：越界/非法输入逐项拒绝（消息逐字）", () => {
       },
       /figures 必须是 1\.\.3 个/,
     ],
-    [{ ...BASE, figures: [{ action: "跑", fromX: 100, toX: 100 }] }, /action 必须是 走\/站\/挥手\/指\/跳/],
-    [{ ...BASE, figures: [{ action: "走", fromX: "300", toX: 300 }] }, /fromX \/ toX 必须是 0\.\.1000 的数/],
-    [{ ...BASE, figures: [{ action: "走", fromX: -1, toX: 300 }] }, /fromX \/ toX 必须是 0\.\.1000 的数/],
-    [{ ...BASE, figures: [{ action: "走", fromX: 100, toX: 1001 }] }, /fromX \/ toX 必须是 0\.\.1000 的数/],
+    [
+      { ...BASE, figures: [{ action: "跑", fromX: 100, toX: 100 }] },
+      /action 必须是 走\/站\/挥手\/指\/跳/,
+    ],
+    [
+      { ...BASE, figures: [{ action: "走", fromX: "300", toX: 300 }] },
+      /fromX \/ toX 必须是 0\.\.1000 的数/,
+    ],
+    [
+      { ...BASE, figures: [{ action: "走", fromX: -1, toX: 300 }] },
+      /fromX \/ toX 必须是 0\.\.1000 的数/,
+    ],
+    [
+      { ...BASE, figures: [{ action: "走", fromX: 100, toX: 1001 }] },
+      /fromX \/ toX 必须是 0\.\.1000 的数/,
+    ],
     [{ ...BASE, groundY: 399 }, /groundY 必须是 400\.\.900 的数/],
     [{ ...BASE, groundY: 901 }, /groundY 必须是 400\.\.900 的数/],
     [{ ...BASE, enterMs: 199 }, /enterMs 必须是 200\.\.6000 的整数/],

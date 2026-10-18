@@ -181,10 +181,28 @@ function poseAt(action: StickAction, phi: number, tMs: number): Pose {
             bob: breath,
             yOff: 120 * 4 * phi * (1 - phi),
           }
-        : { legL: -4, legR: 4, armL: -6, armR: 6, foreL: 0, foreR: 0, bob: breath, yOff: 0 };
+        : {
+            legL: -4,
+            legR: 4,
+            armL: -6,
+            armR: 6,
+            foreL: 0,
+            foreR: 0,
+            bob: breath,
+            yOff: 0,
+          };
     }
     default:
-      return { legL: -4, legR: 4, armL: -6, armR: 6, foreL: 0, foreR: 0, bob: breath, yOff: 0 };
+      return {
+        legL: -4,
+        legR: 4,
+        armL: -6,
+        armR: 6,
+        foreL: 0,
+        foreR: 0,
+        bob: breath,
+        yOff: 0,
+      };
   }
 }
 
