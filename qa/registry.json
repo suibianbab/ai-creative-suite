@@ -1302,6 +1302,21 @@
         "Renders both aspects deterministic: double run byte-identical via SHA-256, stickman frames non-empty (signalstats YAVG >= 100 at frames 80 and 140), flow baseline unchanged (VID-019 rerun inside reproduces archived hashes, registry v5 append harmless)",
         "No TTS billing: ledger line count unchanged and browser console logs zero errors"
       ]
+    },
+    {
+      "id": "VID-021",
+      "tier": "integration",
+      "title": "Video Studio hand-sketch templates and edit loop (write-on emphasis)",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/e2e-sketch.mjs"],
+      "requiresPorts": [3211],
+      "checks": [
+        "Template dropdown fifth group applies sketch-note: shot 2 swaps to sketch-underline-3 and shot 3 to sketch-highlight-mix through the real editor card with data textarea prefilled from template defaults",
+        "Data edit round-trips items with from-right emphasis parsing: per-line text[,emphasis] parses emphasis only when the last segment is an enum word, so comma-bearing text (关键,丙,圈 -> text 关键,丙) and emphasis-omitted lines (补充丁 -> 无) both survive",
+        "Narration edit merges in single apply: working-version narration equals the concurrently edited text, durationMs 3100 survives the swap, inkColor kept",
+        "Renders both aspects deterministic: double run byte-identical via SHA-256, sketch frames non-empty (signalstats YAVG >= 100 at frames 80 and 140), stick baseline unchanged (VID-020 rerun inside reproduces archived hashes, registry v6 append harmless)",
+        "No TTS billing: ledger line count unchanged and browser console logs zero errors"
+      ]
     }
   ],
   "manual": [
