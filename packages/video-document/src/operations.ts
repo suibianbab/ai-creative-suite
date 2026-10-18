@@ -107,7 +107,9 @@ export function reviseWorkingVersion(
     (v) => v.versionId === shot.workingVersionId,
   );
   if (!base) {
-    throw new Error(`镜头 ${shotId} 的工作版本 ${shot.workingVersionId} 不存在`);
+    throw new Error(
+      `镜头 ${shotId} 的工作版本 ${shot.workingVersionId} 不存在`,
+    );
   }
   const version: ContentVersion = {
     ...base,
@@ -135,7 +137,12 @@ export function reviseWorkingVersion(
     contentVersions: [...s.contentVersions, version],
     events: [
       ...s.events,
-      { kind: "submitted", versionId: newVersionId, at, actor: "human" as const },
+      {
+        kind: "submitted",
+        versionId: newVersionId,
+        at,
+        actor: "human" as const,
+      },
       ...(s.locked
         ? [
             {

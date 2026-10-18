@@ -152,7 +152,12 @@ test("reviseWorkingVersion 追加 human 版本并前移指针", () => {
 });
 
 test("reviseWorkingVersion 锁定镜头允许且追加 audit 事件", () => {
-  const p = setLocked(editableProject(), editableProject().shots[0]!.shotId, true, T0);
+  const p = setLocked(
+    editableProject(),
+    editableProject().shots[0]!.shotId,
+    true,
+    T0,
+  );
   const next = reviseWorkingVersion(
     p,
     p.shots[0]!.shotId,
@@ -197,7 +202,8 @@ test("reviseWorkingVersion spec patch 同步 durationMs 与 sceneSource", () => 
 test("reviseWorkingVersion 未知镜头抛错且入参不变", () => {
   const p = editableProject();
   assert.throws(
-    () => reviseWorkingVersion(p, "no-such-shot", { narrationText: "x" }, UUID2, T),
+    () =>
+      reviseWorkingVersion(p, "no-such-shot", { narrationText: "x" }, UUID2, T),
     /不存在/,
   );
   assert.equal(p.shots[0]!.contentVersions.length, 1);
