@@ -4,6 +4,7 @@ export * from "./components/line-chart.js";
 export * from "./components/line-drawing.js";
 // 命名再导出（非 export *）：hexLerp 留在组件模块内私有（spec YAGNI 裁定）
 export { mapGrid } from "./components/map-grid.js";
+export { mapJourney } from "./components/map-journey.js";
 export * from "./components/number-counter.js";
 export * from "./components/text-animation.js";
 export * from "./default-registry.js";
