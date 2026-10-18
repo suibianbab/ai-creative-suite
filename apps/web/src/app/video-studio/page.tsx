@@ -73,6 +73,16 @@ export default function VideoStudioPage() {
     );
   }, [refreshProjects]);
 
+  // 客户端就绪标记：useEffect 只在水合完成后执行。SSR 的 HTML 里按钮已经
+  // 可见 ≠ React 已接管点击（外部复核实测：domcontentloaded 后立即点击会被
+  // 丢）。e2e 等 html[data-studio-ready] 出现再交互，取代对网络时序的猜测。
+  useEffect(() => {
+    document.documentElement.dataset.studioReady = "1";
+    return () => {
+      delete document.documentElement.dataset.studioReady;
+    };
+  }, []);
+
   if (editor) {
     const { document, message, busy, sentence, plan, storyboard } = editor;
     // 镜头时间线（量化帧图 @24fps）：镜头卡 + 时间条 + 整片预览共用。

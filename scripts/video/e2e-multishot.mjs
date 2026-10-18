@@ -59,6 +59,12 @@ await page.goto(`${BASE_URL}/video-studio`, {
   waitUntil: "domcontentloaded",
   timeout: 60_000,
 });
+// 客户端就绪：SSR 的 HTML 里按钮已可见 ≠ React 已接管点击（外部复核实测
+// domcontentloaded 后立即点击会被丢、随后输入框超时）。html[data-studio-ready]
+// 由水合后的 useEffect 设置，是确定性就绪信号。
+await page
+  .waitForSelector("html[data-studio-ready]", { timeout: 20_000 })
+  .catch(() => fail("打开工作台", "客户端未就绪（data-studio-ready 未出现）"));
 await expectVisible(page, ".project-create", "打开工作台");
 await page.click(".project-create");
 await page.fill("#planner-sentence", SENTENCE);

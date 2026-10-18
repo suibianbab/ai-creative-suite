@@ -38,7 +38,9 @@
 | --- | --- |
 | render/landscape.mp4 | `3deed94613b78ff0bf49136a109be51a1ca26cc526bd10cf9d764011e70ce607` |
 | render/portrait.mp4 | `d0e59d4bbb26a7f0f76df7997f41d83d6ef68f065f961986787595352d1cb7e0` |
-| imported-editor.png | `4d3fec437a9ca70c72c2e20d5cbef820ebed416024907ce20fe86edeeaabc2ec` |
+| imported-editor.png | `e5a3f018bd0d0df30419a1394d026ce7003a7a66cb05f88491c64a22dd78e038` |
+
+2026-10-18 复跑备注（e2e 客户端就绪修复的验证运行）：全链路一次通过；两片 MP4 与上表 SHA **逐字节一致**（跨运行确定性再次实证，UUID 不进渲染路径）；`imported-editor.png` 因项目列表状态不同（历次 e2e 累积的项目条目）刷新为上表新值；`exported.video-project.json` / `render-manifest.json` 随新运行刷新（新项目 UUID 与时间戳，属预期）。
 
 复跑方式（需本地起 dev server 与 Playwright Chromium）：
 
