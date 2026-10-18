@@ -12,6 +12,14 @@ import {
   isChartComponentId,
 } from "./chart-templates";
 import {
+  applyFlowTemplate,
+  buildFlowRevisePatch,
+  draftFlowFromSpec,
+  FLOW_TEMPLATES,
+  type FlowEditDraft,
+  isFlowComponentId,
+} from "./flow-templates";
+import {
   applyMapTemplate,
   buildMapRevisePatch,
   draftMapFromSpec,
@@ -30,7 +38,8 @@ import { shotWorkingSpec } from "./shot-specs";
 
 // 分镜编辑器镜头卡：只读信息 + 展开式编辑（旁白/画面修订、单镜头重做、
 // 版本回滚、锁定）。草稿是本地状态，点「应用修订」才经回调落文档；
-// 校验全走 shot-edit.ts / chart-templates.ts / map-templates.ts 纯逻辑，
+// 校验全走 shot-edit.ts / chart-templates.ts / map-templates.ts /
+// flow-templates.ts 纯逻辑，
 // 非法草稿不回调。
 
 const EMPTY_CHART_DRAFT: ChartEditDraft = {
@@ -43,16 +52,20 @@ const EMPTY_CHART_DRAFT: ChartEditDraft = {
 
 const EMPTY_MAP_DRAFT: MapEditDraft = { title: "", data: "" };
 
-// 模板下拉跨图表/地图两族解析：先按图表找，找不到再按地图找。
+const EMPTY_FLOW_DRAFT: FlowEditDraft = { title: "", data: "" };
+
+// 模板下拉跨图表/地图/流程三族解析：先按图表找，找不到再按流程、地图找。
 function resolveAnyTemplate(
   spec: SceneSpec,
   templateId: string,
 ): { spec: SceneSpec | null; error: string | null } {
   const chart = applyChartTemplate(spec, templateId);
   if (chart.spec) return { spec: chart.spec, error: null };
+  const flow = applyFlowTemplate(spec, templateId);
+  if (flow.spec) return { spec: flow.spec, error: null };
   const map = applyMapTemplate(spec, templateId);
   if (map.spec) return { spec: map.spec, error: null };
-  return { spec: null, error: map.error ?? chart.error };
+  return { spec: null, error: flow.error ?? map.error ?? chart.error };
 }
 
 export type ShotEditorCardProps = {
@@ -120,6 +133,12 @@ export function ShotEditorCard({
       : EMPTY_MAP_DRAFT,
   );
   const [mapError, setMapError] = useState<string | null>(null);
+  const [flowDraft, setFlowDraft] = useState<FlowEditDraft>(() =>
+    spec && isFlowComponentId(spec.componentId)
+      ? draftFlowFromSpec(spec)
+      : EMPTY_FLOW_DRAFT,
+  );
+  const [flowError, setFlowError] = useState<string | null>(null);
 
   // working 版本变了（应用修订/重做/回滚后）→ 草稿重置到新工作版本。
   // 只盯 workingVersionId（终评整改）：锁定切换会换 shot 对象身份但不动
@@ -154,6 +173,12 @@ export function ShotEditorCard({
       nextSpec && isMapComponentId(nextSpec.componentId)
         ? draftMapFromSpec(nextSpec)
         : EMPTY_MAP_DRAFT,
+    );
+    setFlowError(null);
+    setFlowDraft(
+      nextSpec && isFlowComponentId(nextSpec.componentId)
+        ? draftFlowFromSpec(nextSpec)
+        : EMPTY_FLOW_DRAFT,
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps -- 依赖收紧是有意的（见上注）
   }, [shot.workingVersionId]);
@@ -306,7 +331,7 @@ export function ShotEditorCard({
             </span>
           ) : null}
           <label className="shot-edit-field">
-            组件模板（图表 / 地图）
+            组件模板（图表 / 地图 / 流程）
             <select
               className="chart-template-select"
               value={pendingTemplateId}
@@ -315,6 +340,7 @@ export function ShotEditorCard({
                 setPendingTemplateId(templateId);
                 setChartError(null);
                 setMapError(null);
+                setFlowError(null);
                 if (!templateId) return;
                 const applied = resolveAnyTemplate(spec, templateId);
                 if (applied.error || !applied.spec) {
@@ -326,6 +352,8 @@ export function ShotEditorCard({
                   setChartDraft(draftChartFromSpec(applied.spec));
                 } else if (isMapComponentId(applied.spec.componentId)) {
                   setMapDraft(draftMapFromSpec(applied.spec));
+                } else if (isFlowComponentId(applied.spec.componentId)) {
+                  setFlowDraft(draftFlowFromSpec(applied.spec));
                 }
               }}
             >
@@ -339,6 +367,13 @@ export function ShotEditorCard({
               </optgroup>
               <optgroup label="地图">
                 {MAP_TEMPLATES.map((template) => (
+                  <option key={template.templateId} value={template.templateId}>
+                    {template.label}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="流程">
+                {FLOW_TEMPLATES.map((template) => (
                   <option key={template.templateId} value={template.templateId}>
                     {template.label}
                   </option>
@@ -454,6 +489,39 @@ export function ShotEditorCard({
               {mapError ? <p className="map-edit-error">{mapError}</p> : null}
             </>
           ) : null}
+          {isFlowComponentId(spec.componentId) ? (
+            <>
+              <label className="shot-edit-field">
+                流程标题
+                <input
+                  className="flow-title-input"
+                  maxLength={40}
+                  value={flowDraft.title}
+                  onChange={(event) =>
+                    setFlowDraft({ ...flowDraft, title: event.target.value })
+                  }
+                />
+              </label>
+              <label className="shot-edit-field">
+                数据（
+                {spec.componentId === "flow-steps"
+                  ? "每行一个步骤标签，2..8 行、1..10 字符"
+                  : "节点段每行 标签,x,y[,菱形]；单独一行 --- 分隔；边段每行 标签->标签[,边标]"}
+                ）
+                <textarea
+                  className="flow-data-input"
+                  rows={8}
+                  value={flowDraft.data}
+                  onChange={(event) =>
+                    setFlowDraft({ ...flowDraft, data: event.target.value })
+                  }
+                />
+              </label>
+              {flowError ? (
+                <p className="flow-edit-error">{flowError}</p>
+              ) : null}
+            </>
+          ) : null}
           {overflowMs > 0 ? (
             <span className="shot-overflow-note">
               旁白按语速需{" "}
@@ -485,7 +553,7 @@ export function ShotEditorCard({
               className="shot-apply"
               onClick={() => {
                 // 换模板 = 以模板 spec 为基底；与同草稿的并发编辑（旁白/背景/
-                // 时长 + 图表/地图数据——选中模板时已预填该模板默认值）一次
+                // 时长 + 图表/地图/流程数据——选中模板时已预填该模板默认值）一次
                 // 应用一并落库，不静默丢弃（终评 I1 合并语义）。
                 let baseSpec = spec;
                 if (pendingTemplateId) {
@@ -512,9 +580,25 @@ export function ShotEditorCard({
                   setMapError(mapResult.error ?? "地图数据无效");
                   return;
                 }
+                const flowResult = isFlowComponentId(
+                  (mapResult?.spec ?? chartResult?.spec ?? baseSpec)
+                    .componentId,
+                )
+                  ? buildFlowRevisePatch(
+                      mapResult?.spec ?? chartResult?.spec ?? baseSpec,
+                      flowDraft,
+                    )
+                  : null;
+                if (flowResult && (flowResult.error || !flowResult.spec)) {
+                  setFlowError(flowResult.error ?? "流程数据无效");
+                  return;
+                }
                 const { patch, error } = buildRevisePatch(
                   draft,
-                  mapResult?.spec ?? chartResult?.spec ?? baseSpec,
+                  flowResult?.spec ??
+                    mapResult?.spec ??
+                    chartResult?.spec ??
+                    baseSpec,
                 );
                 if (error || !patch) {
                   setEditError(error ?? "草稿无效");
@@ -523,6 +607,7 @@ export function ShotEditorCard({
                 setEditError(null);
                 setChartError(null);
                 setMapError(null);
+                setFlowError(null);
                 onRevise(patch);
               }}
             >
