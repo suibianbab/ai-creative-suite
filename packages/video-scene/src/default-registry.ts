@@ -7,6 +7,7 @@ import { lineDrawing } from "./components/line-drawing.js";
 import { mapGrid } from "./components/map-grid.js";
 import { mapJourney } from "./components/map-journey.js";
 import { numberCounter } from "./components/number-counter.js";
+import { stickFigure } from "./components/stick-figure.js";
 import { textAnimation } from "./components/text-animation.js";
 import { createRegistry, type SceneRegistry } from "./registry.js";
 
@@ -16,6 +17,7 @@ import { createRegistry, type SceneRegistry } from "./registry.js";
 // 同一分支内原子落地，版本维持 2。
 // v3（P2-② 地图动画）：追加 map-grid / map-journey，同一分支内原子落地。
 // v4（P2-③ 流程图/示意图）：追加流程组件，同一分支内原子落地。
+// v5（P2-④ 火柴人）：追加 stick-figure，同一分支内原子落地。
 export const defaultRegistry: SceneRegistry = createRegistry(
   [
     textAnimation,
@@ -28,6 +30,7 @@ export const defaultRegistry: SceneRegistry = createRegistry(
     mapJourney,
     flowSteps,
     flowDiagram,
+    stickFigure,
   ],
-  4,
+  5,
 );
