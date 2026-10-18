@@ -1287,6 +1287,21 @@
         "Double run of the exported project is byte-identical on both aspects via SHA-256 and the whole e2e re-run reproduces the same MP4 hashes (cross-process frame determinism)",
         "Billing ledger line count is unchanged and the browser console logs zero errors (zero TTS synthesis in this cut)"
       ]
+    },
+    {
+      "id": "VID-020",
+      "tier": "integration",
+      "title": "Video Studio stickman templates and edit loop (figure actions)",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/e2e-stick.mjs"],
+      "requiresPorts": [3211],
+      "checks": [
+        "Template dropdown fourth group applies stick-figure: shot 2 swaps to stick-walk-across and shot 3 to stick-meet through the real editor card with data textarea prefilled from template defaults",
+        "Data edit round-trips figures with action words: per-line action,fromX[,toX] parses into figure objects including a toX-omitted line defaulting to fromX, groundY kept",
+        "Narration edit merges in single apply: working-version narration equals the concurrently edited text and durationMs 3100 survives the swap",
+        "Renders both aspects deterministic: double run byte-identical via SHA-256, stickman frames non-empty (signalstats YAVG >= 100 at frames 80 and 140), flow baseline unchanged (VID-019 rerun inside reproduces archived hashes, registry v5 append harmless)",
+        "No TTS billing: ledger line count unchanged and browser console logs zero errors"
+      ]
     }
   ],
   "manual": [
