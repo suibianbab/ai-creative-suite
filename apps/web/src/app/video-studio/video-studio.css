@@ -310,6 +310,16 @@
   pointer-events: none;
 }
 
+.preview-transition-warning {
+  margin: 6px 0 0;
+  padding: 6px 10px;
+  border: 1px solid #f3c2bd;
+  border-radius: 6px;
+  background: #fdf1f0;
+  color: #b3261e;
+  font-size: 12px;
+}
+
 /* 字幕近似层：与出片同构（半透明深色药丸衬白字，比例取 engine 换算：
  * 画布高 = 56.25cqw → 字号 5%高=2.8cqw、底距 8%高=4.5cqw） */
 .preview-subtitle {

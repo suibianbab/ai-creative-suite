@@ -5,7 +5,6 @@ import {
   buildSubtitleCues,
   mapGlobalFrame,
   type QuantizedTimeline,
-  resolveTransitionWindows,
   type ShotTransition,
   transitionOverlayAt,
 } from "@acs/video-document";
@@ -20,6 +19,7 @@ import {
 } from "@acs/video-scene";
 import { createElement, useEffect, useMemo, useRef, useState } from "react";
 import { advanceGlobalFrame, shotCanvasContext } from "./piece-preview";
+import { previewTransitionWindows } from "./transitions-draft";
 
 // SvgNode 数据树 → React 元素（自 remotion-engine 同名渲染器复制，web 不依赖
 // remotion-engine；属性名经 reactSvgAttrs 转 React 驏峰，text 与 children 二选一）。
@@ -208,11 +208,10 @@ export function TimelinePreview({
   }, [active, mapping.localFrame]);
 
   // P1 转场：与出片同斜率同 split（共享 helper）；无转场恒 0 不渲染。
-  // span 不足在此抛错 → React 渲染错误边界/控制台呈现（错误消息已指路缩短）。
-  const transitionWindows =
-    transitions && transitions.length > 0 && timeline.shots.length > 1
-      ? resolveTransitionWindows(transitions, timeline.shots, PIECE_FPS)
-      : [];
+  // span 不足/相邻合计借空等装配拒绝在此降级：无叠层 + 告警标记（spec 错误
+  // 表：预览告警；CLI 出片路径仍大声失败），不炸整个工作台页面。
+  const { windows: transitionWindows, warning: transitionWarning } =
+    previewTransitionWindows(transitions, timeline.shots, PIECE_FPS);
   const overlayOpacity = transitionOverlayAt(
     transitionWindows,
     Math.floor(frame),
@@ -243,6 +242,11 @@ export function TimelinePreview({
           </div>
         ) : null}
       </div>
+      {transitionWarning ? (
+        <div className="preview-transition-warning" role="alert">
+          转场预览已停用：{transitionWarning}
+        </div>
+      ) : null}
       <div className="preview-controls">
         <button
           type="button"

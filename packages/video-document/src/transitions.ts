@@ -16,7 +16,11 @@ export function resolveTransitionWindows(
   spans: Array<{ startFrame: number; frames: number }>,
   fps: number,
 ): TransitionWindow[] {
-  return transitions.map((transition) => {
+  // 逐 span 合计借帧：相邻边界共享中 span（左界 halfIn + 右界 halfOut），
+  // 合计 ≥ span 帧数 = 窗口重叠或该镜头无可见帧（spec：无重叠、无悬空帧，
+  // 与单边界「halfOut ≥ left.frames 即拒绝」同一口径：每 span 至少留 1 帧）。
+  const borrowed = spans.map(() => 0);
+  const windows = transitions.map((transition) => {
     const left = spans[transition.boundary];
     const right = spans[transition.boundary + 1];
     // schema 已保证 boundary 范围；装配期防御（spans 与 shots 错位属编程错误）
@@ -38,6 +42,10 @@ export function resolveTransitionWindows(
         `镜头 ${transition.boundary + 1}→${transition.boundary + 2} 的转场 ${transition.durationMs}ms 借帧（${halfOut}+${halfIn}）超出相邻 span（${left.frames}+${right.frames} 帧）：缩短 durationMs 或加长镜头`,
       );
     }
+    borrowed[transition.boundary] =
+      (borrowed[transition.boundary] ?? 0) + halfOut;
+    borrowed[transition.boundary + 1] =
+      (borrowed[transition.boundary + 1] ?? 0) + halfIn;
     return {
       boundary: transition.boundary,
       startFrame: left.startFrame + left.frames - halfOut,
@@ -46,6 +54,15 @@ export function resolveTransitionWindows(
       halfIn,
     };
   });
+  for (let spanIndex = 0; spanIndex < spans.length; spanIndex += 1) {
+    const total = borrowed[spanIndex] ?? 0;
+    if (total > 0 && total >= spans[spanIndex]!.frames) {
+      throw new Error(
+        `镜头 ${spanIndex + 1} 被相邻转场合计借帧 ${total} ≥ 该镜头 ${spans[spanIndex]!.frames} 帧（窗口重叠或无可见帧）：缩短 durationMs 或加长镜头`,
+      );
+    }
+  }
+  return windows;
 }
 
 // 0 = 无叠加；左窗线性升至 1（左尾帧全黑），右窗自 1 线性降（右首帧全黑）。

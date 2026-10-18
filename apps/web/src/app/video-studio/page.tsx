@@ -42,8 +42,8 @@ import {
 import { ShotEditorCard } from "./shot-editor-card";
 import { shotWorkingSpec } from "./shot-specs";
 import {
-  buildTransitionsPatch,
   type TransitionDraftRow,
+  transitionsAfterEdit,
   transitionsDraftFromProject,
 } from "./transitions-draft";
 import "./video-studio.css";
@@ -153,14 +153,18 @@ export default function VideoStudioPage() {
         narrationText: workingMeta[index]!.narrationText,
       }));
     }
-    // 转场草稿落文档：合法 patch 才写（非法仅行内提示，文档保持上一合法态）；
-    // 全无 → 删 transitions 键（老项目字节不变口径）。
+    // 转场草稿落文档：transitionsAfterEdit 决定字段值——非法编辑返回 previous
+    // 同引用（文档保持上一合法态，草稿重建 effect 不触发，行内提示指路）；
+    // 合法 patch 落键；全无 → 删 transitions 键（老项目字节不变口径）。
     const applyTransitionRows = (rows: TransitionDraftRow[]) => {
       setTransitionRows(rows);
-      const { patch, error } = buildTransitionsPatch(rows);
+      const { transitions, error } = transitionsAfterEdit(
+        rows,
+        document.transitions,
+      );
       setTransitionError(error);
       const next = { ...document };
-      if (patch) next.transitions = patch;
+      if (transitions) next.transitions = transitions;
       else delete next.transitions;
       setEditor({ ...editor, document: next });
     };

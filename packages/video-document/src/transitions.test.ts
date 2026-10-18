@@ -77,3 +77,45 @@ test("resolveTransitionWindows span 不足大声拒绝并指路", () => {
     /缩短|durationMs/,
   );
 });
+
+test("resolveTransitionWindows 相邻边界合计借空共享中 span → 大声拒绝", () => {
+  // [48, 11, 48] 两条 500ms：逐边界 6+6 各自合法，但中 span 合计 12 ≥ 11
+  // → 窗口重叠且中镜头无可见帧（spec：无重叠、每 span 至少 1 帧可见）
+  const shared = [
+    { startFrame: 0, frames: 48 },
+    { startFrame: 48, frames: 11 },
+    { startFrame: 59, frames: 48 },
+  ];
+  assert.throws(
+    () =>
+      resolveTransitionWindows(
+        [
+          { boundary: 0, kind: "fade", durationMs: 500 },
+          { boundary: 1, kind: "fade", durationMs: 500 },
+        ],
+        shared,
+        24,
+      ),
+    /合计|缩短/,
+  );
+});
+
+test("resolveTransitionWindows 相邻边界合计留有余量 → 窗口不重叠（钉住现状）", () => {
+  // [48, 13, 48]：窗口 [42,54) 与 [55,67)，中镜头帧 54 可见——钉住合计校验
+  // 不误伤有余量的相邻配置
+  const shared = [
+    { startFrame: 0, frames: 48 },
+    { startFrame: 48, frames: 13 },
+    { startFrame: 61, frames: 48 },
+  ];
+  const ws = resolveTransitionWindows(
+    [
+      { boundary: 0, kind: "fade", durationMs: 500 },
+      { boundary: 1, kind: "fade", durationMs: 500 },
+    ],
+    shared,
+    24,
+  );
+  assert.equal(ws.length, 2);
+  assert.ok(ws[1]!.startFrame >= ws[0]!.startFrame + ws[0]!.frames);
+});
