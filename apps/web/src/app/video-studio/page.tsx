@@ -1,8 +1,13 @@
 "use client";
 
 import {
+  addCandidateVersion,
   type QuantizedTimeline,
   quantizeTimeline,
+  reviseWorkingVersion,
+  rollbackWorkingVersion,
+  ShotLockedError,
+  setLocked,
   type VideoProject,
 } from "@acs/video-document";
 import type { SceneSpec } from "@acs/video-scene";
@@ -34,6 +39,7 @@ import {
   TimelinePreview,
   type TimelinePreviewItem,
 } from "./scene-preview";
+import { ShotEditorCard } from "./shot-editor-card";
 import { shotWorkingSpec } from "./shot-specs";
 import "./video-studio.css";
 
@@ -65,6 +71,11 @@ export default function VideoStudioPage() {
   const [projects, setProjects] = useState<VideoProjectSummary[]>([]);
   const [editor, setEditor] = useState<EditorState | null>(null);
   const [listMessage, setListMessage] = useState<string | null>(null);
+  // 分镜编辑器：单镜头重做的失败文案按 shotId 存（锁定/句式不合等），
+  // 修订/回滚/锁定的结果走 editor.message。
+  const [redoErrors, setRedoErrors] = useState<Record<string, string | null>>(
+    {},
+  );
   const importInputRef = useRef<HTMLInputElement>(null);
 
   const refreshProjects = useCallback(async () => {
@@ -338,31 +349,134 @@ export default function VideoStudioPage() {
                 ))}
               </div>
               <ol className="shot-list">
-                {document.shots.map((shot, index) => {
-                  const working = shot.contentVersions.find(
-                    (version) => version.versionId === shot.workingVersionId,
-                  );
-                  return (
-                    <li key={shot.shotId} className="shot-card">
-                      <span className="shot-order">
-                        {index + 1}（order {shot.order}）
-                        {shot.locked ? " · 锁定" : ""}
-                      </span>
-                      <span className="shot-description">
-                        {working ? working.description : "（无工作版本）"}
-                      </span>
-                      {working?.narrationText ? (
-                        <span className="shot-narration">
-                          旁白：{working.narrationText}
-                        </span>
-                      ) : null}
-                      <span className="shot-duration">
-                        {working ? `${working.durationMs / 1000}s` : ""} ·{" "}
-                        {pieceTimeline!.shots[index]!.frames} 帧
-                      </span>
-                    </li>
-                  );
-                })}
+                {document.shots.map((shot, index) => (
+                  <ShotEditorCard
+                    key={shot.shotId}
+                    shot={shot}
+                    index={index}
+                    frames={pieceTimeline!.shots[index]!.frames}
+                    editable={shotSpecs[index] !== null}
+                    redoError={redoErrors[shot.shotId] ?? null}
+                    onRevise={(patch) => {
+                      try {
+                        const next = reviseWorkingVersion(
+                          document,
+                          shot.shotId,
+                          patch,
+                          crypto.randomUUID(),
+                        );
+                        setEditor({
+                          ...editor,
+                          document: next,
+                          message: `镜头 ${index + 1} 已修订（${patch.spec ? "画面" : "旁白"}）`,
+                        });
+                      } catch (error) {
+                        setEditor({
+                          ...editor,
+                          message:
+                            error instanceof Error ? error.message : "修订失败",
+                        });
+                      }
+                    }}
+                    onRedo={(directive) => {
+                      // 单镜头重做：规划器只认固定句式；锁定镜头按 ADR 0003 §1.3
+                      // 拒机器改写。重做只换画面，旁白从当前 working 版本继承。
+                      const plan = planFromSentence(directive);
+                      if (!plan.ok) {
+                        setRedoErrors({
+                          ...redoErrors,
+                          [shot.shotId]: `${plan.reason}${plan.guidance}`,
+                        });
+                        return;
+                      }
+                      const working = shot.contentVersions.find(
+                        (version) =>
+                          version.versionId === shot.workingVersionId,
+                      );
+                      if (!working) {
+                        setRedoErrors({
+                          ...redoErrors,
+                          [shot.shotId]: "镜头没有工作版本，无法重做",
+                        });
+                        return;
+                      }
+                      const versionId = crypto.randomUUID();
+                      try {
+                        const next = addCandidateVersion(
+                          document,
+                          shot.shotId,
+                          {
+                            versionId,
+                            createdAt: new Date().toISOString(),
+                            durationMs: plan.spec.durationMs,
+                            description: `镜头重做：${plan.title}`,
+                            narrationText: working.narrationText,
+                            sceneSource: { type: "spec", spec: plan.spec },
+                            provenance: {
+                              engineId: "planner-rules",
+                              engineVersion: "1",
+                              parentVersionId: working.versionId,
+                            },
+                          },
+                        );
+                        setRedoErrors({ ...redoErrors, [shot.shotId]: null });
+                        setEditor({
+                          ...editor,
+                          document: next,
+                          message: `镜头 ${index + 1} 已重做（${plan.title}）`,
+                        });
+                      } catch (error) {
+                        setRedoErrors({
+                          ...redoErrors,
+                          [shot.shotId]:
+                            error instanceof ShotLockedError
+                              ? "镜头已锁定，先解锁再重做"
+                              : error instanceof Error
+                                ? error.message
+                                : "重做失败",
+                        });
+                      }
+                    }}
+                    onRollback={(versionId) => {
+                      try {
+                        const next = rollbackWorkingVersion(
+                          document,
+                          shot.shotId,
+                          versionId,
+                        );
+                        setEditor({
+                          ...editor,
+                          document: next,
+                          message: `镜头 ${index + 1} 已回滚到所选版本`,
+                        });
+                      } catch (error) {
+                        setEditor({
+                          ...editor,
+                          message:
+                            error instanceof Error ? error.message : "回滚失败",
+                        });
+                      }
+                    }}
+                    onToggleLock={(locked) => {
+                      try {
+                        const next = setLocked(document, shot.shotId, locked);
+                        setEditor({
+                          ...editor,
+                          document: next,
+                          message: `镜头 ${index + 1} 已${locked ? "锁定" : "解锁"}`,
+                        });
+                      } catch (error) {
+                        setEditor({
+                          ...editor,
+                          message:
+                            error instanceof Error
+                              ? error.message
+                              : "锁定操作失败",
+                        });
+                      }
+                    }}
+                  />
+                ))}
               </ol>
               <TimelinePreview items={pieceItems} timeline={pieceTimeline} />
             </section>

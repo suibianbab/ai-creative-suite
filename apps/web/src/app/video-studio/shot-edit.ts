@@ -1,5 +1,5 @@
 import type { SceneSpec } from "@acs/video-scene";
-import { reseedSpecParams, speechAwareDurationMs } from "./planner.js";
+import { reseedSpecParams, speechAwareDurationMs } from "./planner";
 
 // 分镜编辑器纯逻辑（组件只做渲染/状态接线，行为在此可测）：
 // 草稿构造 draftFromWorking、校验 buildRevisePatch、语速溢出 speechOverflowMs。
