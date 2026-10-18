@@ -19,7 +19,9 @@ import {
   estimateTtsCostCny,
   parseTtsSse,
   parseUsageLedger,
+  planDurationAlignments,
   ttsFetchInit,
+  wavDurationMs,
 } from "./tts-sse.mjs";
 
 // minor#4 原子写的落盘目录（测完即清）
@@ -278,4 +280,73 @@ test("atomicWriteFile：tmp+rename 落盘完整内容，不留 .tmp 残留；覆
   assert.equal(existsSync(`${file}.tmp`), false, "rename 后不留临时文件");
   atomicWriteFile(file, Buffer.from("RIFF-full-v2"));
   assert.equal(readFileSync(file, "utf8"), "RIFF-full-v2", "重写覆盖旧内容");
+});
+
+// —— 时长对齐（spec R4 合成期兜底）——
+
+// 构造最小合法 WAV 头（RIFF/fmt PCM16/mono/24k + data 块）
+function wavBuffer(dataBytes, byteRate = 48000) {
+  const buf = Buffer.alloc(44 + dataBytes);
+  buf.write("RIFF", 0);
+  buf.writeUInt32LE(36 + dataBytes, 4);
+  buf.write("WAVE", 8);
+  buf.write("fmt ", 12);
+  buf.writeUInt32LE(16, 16);
+  buf.writeUInt16LE(1, 20); // PCM
+  buf.writeUInt16LE(1, 22); // mono
+  buf.writeUInt32LE(24000, 24);
+  buf.writeUInt32LE(byteRate, 28);
+  buf.writeUInt16LE(2, 32);
+  buf.writeUInt16LE(16, 34);
+  buf.write("data", 36);
+  buf.writeUInt32LE(dataBytes, 40);
+  return buf;
+}
+
+test("wavDurationMs：PCM16 24k mono 头解析；非 RIFF/无 data 拒绝", () => {
+  assert.equal(wavDurationMs(wavBuffer(48000 * 2)), 2000); // 2 秒
+  assert.equal(wavDurationMs(wavBuffer(24000)), 500);
+  assert.throws(() => wavDurationMs(Buffer.from("NOTAWAV!")), /非 RIFF/);
+  assert.throws(() => wavDurationMs(wavBuffer(0).subarray(0, 40)), /无 data/);
+});
+
+test("planDurationAlignments：只报超出的镜头，newDurationMs=wav+50 尾样保护", () => {
+  const project = {
+    shots: [
+      {
+        shotId: "s1",
+        workingVersionId: "v1",
+        contentVersions: [
+          { versionId: "v1", durationMs: 2000, narrationText: "水循环。" },
+        ],
+      },
+      {
+        shotId: "s2",
+        workingVersionId: "v2",
+        contentVersions: [
+          { versionId: "v2", durationMs: 3000, narrationText: "谢谢观看。" },
+        ],
+      },
+    ],
+  };
+  const overflow = new Map([
+    ["s1-v1", 2640],
+    ["s2-v2", 1500],
+  ]);
+  const plan = planDurationAlignments(project, overflow);
+  assert.equal(plan.length, 1, "只报超出版本时长的镜头");
+  assert.equal(plan[0].shotIndex, 0);
+  assert.equal(plan[0].shotId, "s1");
+  assert.equal(plan[0].versionId, "v1");
+  assert.equal(plan[0].oldDurationMs, 2000);
+  assert.equal(plan[0].wavMs, 2640);
+  assert.equal(plan[0].newDurationMs, 2690);
+  // 恰好等长（2640+50 > 2690?否——2640+50=2690 === 2690 不算超出）
+  const edge = new Map([
+    ["s1-v1", 1950],
+    ["s2-v2", 1500],
+  ]);
+  assert.equal(planDurationAlignments(project, edge).length, 0);
+  // 无对应 wav 记录的镜头不报（未合成）
+  assert.equal(planDurationAlignments(project, new Map()).length, 0);
 });

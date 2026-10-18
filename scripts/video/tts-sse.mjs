@@ -225,3 +225,47 @@ export function atomicWriteFile(file, data) {
   writeFileSync(tmp, data);
   renameSync(tmp, file);
 }
+
+// ── 时长对齐（spec R4 合成期兜底）───────────────────────────────────────
+
+// WAV 实测时长：遍历 RIFF chunk 找 data 块，按 fmt 的 byteRate 换算毫秒。
+// chunk 按 2 字节对齐（奇数 size 补 pad 字节，规范要求）。
+export function wavDurationMs(wav) {
+  if (wav.subarray(0, 4).toString("ascii") !== "RIFF") {
+    throw new Error("wavDurationMs: 非 RIFF 开头");
+  }
+  let offset = 12;
+  while (offset + 8 <= wav.length) {
+    const id = wav.subarray(offset, offset + 4).toString("ascii");
+    const size = wav.readUInt32LE(offset + 4);
+    if (id === "data") {
+      const byteRate = wav.readUInt32LE(28); // fmt 块字段：字节/秒（偏移 12+16 内）
+      return Math.round((size / byteRate) * 1000);
+    }
+    offset += 8 + size + (size % 2);
+  }
+  throw new Error("wavDurationMs: 无 data 块");
+}
+
+// 对齐计划：逐镜头比对 wav 实测时长 vs working version durationMs，
+// 超出（含 50ms 尾样保护：wav+50 仍 > durationMs 才算安全）才入计划。
+export function planDurationAlignments(project, wavMsByBase) {
+  const plan = [];
+  for (const [shotIndex, shot] of project.shots.entries()) {
+    const version = shot.contentVersions.find(
+      (candidate) => candidate.versionId === shot.workingVersionId,
+    );
+    if (!version) continue;
+    const wavMs = wavMsByBase.get(`${shot.shotId}-${version.versionId}`);
+    if (wavMs === undefined || wavMs + 50 <= version.durationMs) continue;
+    plan.push({
+      shotIndex,
+      shotId: shot.shotId,
+      versionId: version.versionId,
+      oldDurationMs: version.durationMs,
+      wavMs,
+      newDurationMs: Math.ceil(wavMs + 50),
+    });
+  }
+  return plan;
+}
