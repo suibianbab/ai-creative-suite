@@ -1,7 +1,9 @@
 // 文档演进只允许追加（ADR 0003 §3.1「不可变文档版本」）。保存新版本前，
 // 调用方必须证明：旧镜头的内容版本与事件、渲染记录、交付记录在新文档中
 // 原样保留（旧序列是新序列的前缀），旧内容版本逐字段未改。标题、brief、
-// workingVersionId、locked 等当前态/元数据可变。savedVersion 不参与判定。
+// workingVersionId 等当前态/元数据可变；locked 可变但每次变化必须在本帧
+// 追加段留下值匹配的 lock-changed 事件（setLocked 的审计契约）。savedVersion
+// 不参与判定。
 import { canonicalJson } from "./canonical-json.js";
 import type { VideoProject } from "./types.js";
 
@@ -61,6 +63,21 @@ export function assertAppendOnlyEvolution(
       nextShot.events,
       (slot) => `shots[${index}].events[${slot}]`,
     );
+    // 锁定审计不变量（Codex 复核反馈）：locked 每次变化必须走 setLocked 留
+    // lock-changed(human) 事件。背书只认本次追加段——旧前缀里同值的历史
+    // 事件不能为本次翻转背书（否则锁→解锁→直改回旧值可绕过审计）。
+    if (previousShot.locked !== nextShot.locked) {
+      const appendedEvents = nextShot.events.slice(previousShot.events.length);
+      const justified = appendedEvents.some(
+        (event) =>
+          event.kind === "lock-changed" && event.locked === nextShot.locked,
+      );
+      if (!justified) {
+        throw new VideoProjectMutationError(
+          `shots[${index}]（${previousShot.shotId}）locked ${previousShot.locked} → ${nextShot.locked} 未追加值匹配的 lock-changed 事件（锁定变化必须走 setLocked 留审计事件）`,
+        );
+      }
+    }
   }
   requirePrefix(
     previous.renderRecords,

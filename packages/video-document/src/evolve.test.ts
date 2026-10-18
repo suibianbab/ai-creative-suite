@@ -252,3 +252,85 @@ test("删除已有交付记录 → 拒绝；旧 delivery 的来源在追加编�
     /deliveries/,
   );
 });
+
+// Codex 复核反馈（P0 整改补充）：locked 是审计字段——每次变化必须留下
+// lock-changed(human) 事件（operations.setLocked 的契约）。绕过 setLocked
+// 直改 locked 曾被演进检查接受，审计链有洞；且旧前缀里的同值历史事件
+// 不能为本次翻转背书，只认本次追加段。
+test("locked 翻转但未追加 lock-changed 事件 → 拒绝（绕过 setLocked 的直改）", () => {
+  const next = appendedProject();
+  next.shots[0]!.locked = true;
+  assert.throws(
+    () => assertAppendOnlyEvolution(baseProject(), next),
+    /lock-changed|locked/,
+    "锁定状态变化必须留审计事件",
+  );
+});
+
+test("locked 翻转且本次追加段有匹配的 lock-changed 事件 → 通过（setLocked 路径）", () => {
+  const next = appendedProject();
+  const shot = next.shots[0]!;
+  shot.locked = true;
+  shot.events.push({
+    kind: "lock-changed",
+    locked: true,
+    at: "2026-10-17T04:00:00.000Z",
+    actor: "human",
+  });
+  assert.doesNotThrow(() => assertAppendOnlyEvolution(baseProject(), next));
+});
+
+test("locked 翻转但事件的 locked 与新状态不符 → 拒绝", () => {
+  const next = appendedProject();
+  const shot = next.shots[0]!;
+  shot.locked = true;
+  shot.events.push({
+    kind: "lock-changed",
+    locked: false, // 事件值对不上新状态
+    at: "2026-10-17T04:00:00.000Z",
+    actor: "human",
+  });
+  assert.throws(
+    () => assertAppendOnlyEvolution(baseProject(), next),
+    /lock-changed|locked/,
+  );
+});
+
+test("旧前缀里的同值 lock-changed 事件不能为本次翻转背书 → 拒绝", () => {
+  // 历史上锁过又解锁（前缀有 locked:false 事件），本次再直改回 false：
+  // 背书必须来自本次追加段，不能翻旧账
+  const history = appendedProject();
+  const historyShot = history.shots[0]!;
+  historyShot.locked = true;
+  historyShot.events.push({
+    kind: "lock-changed",
+    locked: true,
+    at: "2026-10-17T04:00:00.000Z",
+    actor: "human",
+  });
+  historyShot.locked = false;
+  historyShot.events.push({
+    kind: "lock-changed",
+    locked: false,
+    at: "2026-10-17T05:00:00.000Z",
+    actor: "human",
+  });
+
+  const next = structuredClone(history);
+  next.shots[0]!.locked = true; // 直改，不追加事件
+  assert.throws(
+    () => assertAppendOnlyEvolution(history, next),
+    /lock-changed|locked/,
+  );
+});
+
+test("locked 未变时追加 lock-changed 事件 → 不禁止（无害的冗余留痕）", () => {
+  const next = appendedProject();
+  next.shots[0]!.events.push({
+    kind: "lock-changed",
+    locked: false, // 与旧状态一致，状态没翻
+    at: "2026-10-17T04:00:00.000Z",
+    actor: "human",
+  });
+  assert.doesNotThrow(() => assertAppendOnlyEvolution(baseProject(), next));
+});
