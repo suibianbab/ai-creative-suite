@@ -81,7 +81,8 @@
 
 ### 复跑环境（Windows 工作站）
 
-- pnpm 11.19.0（`packageManager` 钉死；经 fnm 的 shell 里直接 `pnpm` 可用）
+- pnpm 11.19.0（`packageManager` 钉死；经 fnm 的 shell——如 Git Bash——里直接 `pnpm` 可用；**PowerShell 直呼 pnpm 是 9.0.0，报 ERR_PNPM_BAD_PM_VERSION**）
+- 单测：`pnpm --filter @acs/video-document build && pnpm --filter @acs/video-document test`（video-scene 的 `test` 自带 build）；web 侧必须在 `apps/web` 目录跑 `node --import tsx --test src/app/video-studio/*.test.ts`（tsx 是 web 依赖，仓库根下跑会 ERR_MODULE_NOT_FOUND）；脚本侧 `node --test scripts/video/`；`pnpm typecheck`、`pnpm lint`（biome）
 - `pnpm --filter @acs/video-document build && pnpm --filter @acs/video-scene build`（CLI 引 dist）
 - dev server：`PORT=3210 pnpm --filter @acs/web dev`
 - e2e：`node scripts/video/e2e-closed-loop.mjs`（等 `html[data-studio-ready]` 水合标记后再交互——10-18 修复）
