@@ -2,6 +2,7 @@ import { barChart } from "./components/bar-chart.js";
 import { basicShapes } from "./components/basic-shapes.js";
 import { lineChart } from "./components/line-chart.js";
 import { lineDrawing } from "./components/line-drawing.js";
+import { mapGrid } from "./components/map-grid.js";
 import { numberCounter } from "./components/number-counter.js";
 import { textAnimation } from "./components/text-animation.js";
 import { createRegistry, type SceneRegistry } from "./registry.js";
@@ -10,7 +11,17 @@ import { createRegistry, type SceneRegistry } from "./registry.js";
 // 新视觉能力 = 追加组件并 bump registryVersion，不是放开自由代码生成。
 // v2（P2-① 数据可视化）：追加 bar-chart / line-chart / number-counter，
 // 同一分支内原子落地，版本维持 2。
+// v3（P2-② 地图动画）：追加 map-grid / map-journey（map-journey 下一提交
+// 落地，同一分支内版本维持 3）。
 export const defaultRegistry: SceneRegistry = createRegistry(
-  [textAnimation, lineDrawing, basicShapes, barChart, lineChart, numberCounter],
-  2,
+  [
+    textAnimation,
+    lineDrawing,
+    basicShapes,
+    barChart,
+    lineChart,
+    numberCounter,
+    mapGrid,
+  ],
+  3,
 );
