@@ -1272,6 +1272,21 @@
         "Double run of the exported project is byte-identical on both aspects via SHA-256 and the whole e2e re-run reproduces the same MP4 hashes (cross-process frame determinism)",
         "Billing ledger line count is unchanged and the browser console logs zero errors (zero TTS synthesis in this cut)"
       ]
+    },
+    {
+      "id": "VID-019",
+      "tier": "integration",
+      "title": "Video Studio flow templates and edit loop (steps/diagram)",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/e2e-flow.mjs"],
+      "requiresPorts": [3211],
+      "checks": [
+        "Workbench flow template selector (third optgroup) swaps shot 2 to flow-steps and shot 3 to flow-diagram through the real editor card, edited step labels and diamond-marked node/edge data land in the saved and exported project JSON while narration text and duration survive the swap",
+        "Exported working specs assert componentId plus params shape: steps join to the edited label list with direction horizontal and durationMs 3100 kept, and diagram nodes/edges round-trip including a diamond kind and a labeled edge",
+        "CLI render-scene outputs both aspects and flow frames stay non-empty: ffmpeg signalstats YAVG >= 100 at frame 80 (four boxes entering late stage) and frame 140 (decision nodes mid entrance) on landscape and portrait",
+        "Double run of the exported project is byte-identical on both aspects via SHA-256 and the whole e2e re-run reproduces the same MP4 hashes (cross-process frame determinism)",
+        "Billing ledger line count is unchanged and the browser console logs zero errors (zero TTS synthesis in this cut)"
+      ]
     }
   ],
   "manual": [
