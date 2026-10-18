@@ -766,6 +766,31 @@
   color: #a3230f;
 }
 
+/* P2-⑤ 手绘编辑字段（沿火柴人控件同款外观） */
+.sketch-title-input {
+  font-size: 13px;
+  padding: 4px 8px;
+  border: 1px solid #bfd6c8;
+  border-radius: 6px;
+  font-family: inherit;
+}
+
+.sketch-data-input {
+  font-size: 13px;
+  padding: 6px 8px;
+  border: 1px solid #bfd6c8;
+  border-radius: 6px;
+  min-height: 96px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.sketch-edit-error {
+  margin: 0;
+  font-size: 12px;
+  color: #a3230f;
+}
+
 .shot-edit-actions,
 .shot-redo-row {
   display: flex;

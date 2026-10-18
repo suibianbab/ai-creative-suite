@@ -36,6 +36,14 @@ import {
 } from "./shot-edit";
 import { shotWorkingSpec } from "./shot-specs";
 import {
+  applySketchTemplate,
+  buildSketchRevisePatch,
+  draftSketchFromSpec,
+  isSketchComponentId,
+  SKETCH_TEMPLATES,
+  type SketchEditDraft,
+} from "./sketch-templates";
+import {
   applyStickTemplate,
   buildStickRevisePatch,
   draftStickFromSpec,
@@ -47,7 +55,7 @@ import {
 // 分镜编辑器镜头卡：只读信息 + 展开式编辑（旁白/画面修订、单镜头重做、
 // 版本回滚、锁定）。草稿是本地状态，点「应用修订」才经回调落文档；
 // 校验全走 shot-edit.ts / chart-templates.ts / map-templates.ts /
-// flow-templates.ts / stick-templates.ts 纯逻辑，
+// flow-templates.ts / stick-templates.ts / sketch-templates.ts 纯逻辑，
 // 非法草稿不回调。
 
 const EMPTY_CHART_DRAFT: ChartEditDraft = {
@@ -64,8 +72,10 @@ const EMPTY_FLOW_DRAFT: FlowEditDraft = { title: "", data: "" };
 
 const EMPTY_STICK_DRAFT: StickEditDraft = { title: "", data: "" };
 
-// 模板下拉跨图表/地图/流程/火柴人四族解析：先按图表找，找不到再按流程、
-// 地图、火柴人找。
+const EMPTY_SKETCH_DRAFT: SketchEditDraft = { title: "", data: "" };
+
+// 模板下拉跨图表/地图/流程/火柴人/手绘五族解析：先按图表找，找不到再按
+// 流程、地图、火柴人、手绘找。
 function resolveAnyTemplate(
   spec: SceneSpec,
   templateId: string,
@@ -78,6 +88,8 @@ function resolveAnyTemplate(
   if (map.spec) return { spec: map.spec, error: null };
   const stick = applyStickTemplate(spec, templateId);
   if (stick.spec) return { spec: stick.spec, error: null };
+  const sketch = applySketchTemplate(spec, templateId);
+  if (sketch.spec) return { spec: sketch.spec, error: null };
   return { spec: null, error: flow.error ?? map.error ?? chart.error };
 }
 
@@ -158,6 +170,12 @@ export function ShotEditorCard({
       : EMPTY_STICK_DRAFT,
   );
   const [stickError, setStickError] = useState<string | null>(null);
+  const [sketchDraft, setSketchDraft] = useState<SketchEditDraft>(() =>
+    spec && isSketchComponentId(spec.componentId)
+      ? draftSketchFromSpec(spec)
+      : EMPTY_SKETCH_DRAFT,
+  );
+  const [sketchError, setSketchError] = useState<string | null>(null);
 
   // working 版本变了（应用修订/重做/回滚后）→ 草稿重置到新工作版本。
   // 只盯 workingVersionId（终评整改）：锁定切换会换 shot 对象身份但不动
@@ -204,6 +222,12 @@ export function ShotEditorCard({
       nextSpec && isStickComponentId(nextSpec.componentId)
         ? draftStickFromSpec(nextSpec)
         : EMPTY_STICK_DRAFT,
+    );
+    setSketchError(null);
+    setSketchDraft(
+      nextSpec && isSketchComponentId(nextSpec.componentId)
+        ? draftSketchFromSpec(nextSpec)
+        : EMPTY_SKETCH_DRAFT,
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps -- 依赖收紧是有意的（见上注）
   }, [shot.workingVersionId]);
@@ -356,7 +380,7 @@ export function ShotEditorCard({
             </span>
           ) : null}
           <label className="shot-edit-field">
-            组件模板（图表 / 地图 / 流程 / 火柴人）
+            组件模板（图表 / 地图 / 流程 / 火柴人 / 手绘）
             <select
               className="chart-template-select"
               value={pendingTemplateId}
@@ -367,6 +391,7 @@ export function ShotEditorCard({
                 setMapError(null);
                 setFlowError(null);
                 setStickError(null);
+                setSketchError(null);
                 if (!templateId) return;
                 const applied = resolveAnyTemplate(spec, templateId);
                 if (applied.error || !applied.spec) {
@@ -382,6 +407,8 @@ export function ShotEditorCard({
                   setFlowDraft(draftFlowFromSpec(applied.spec));
                 } else if (isStickComponentId(applied.spec.componentId)) {
                   setStickDraft(draftStickFromSpec(applied.spec));
+                } else if (isSketchComponentId(applied.spec.componentId)) {
+                  setSketchDraft(draftSketchFromSpec(applied.spec));
                 }
               }}
             >
@@ -409,6 +436,13 @@ export function ShotEditorCard({
               </optgroup>
               <optgroup label="火柴人">
                 {STICK_TEMPLATES.map((template) => (
+                  <option key={template.templateId} value={template.templateId}>
+                    {template.label}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="手绘">
+                {SKETCH_TEMPLATES.map((template) => (
                   <option key={template.templateId} value={template.templateId}>
                     {template.label}
                   </option>
@@ -587,6 +621,38 @@ export function ShotEditorCard({
               ) : null}
             </>
           ) : null}
+          {isSketchComponentId(spec.componentId) ? (
+            <>
+              <label className="shot-edit-field">
+                手绘标题
+                <input
+                  className="sketch-title-input"
+                  maxLength={40}
+                  value={sketchDraft.title}
+                  onChange={(event) =>
+                    setSketchDraft({
+                      ...sketchDraft,
+                      title: event.target.value,
+                    })
+                  }
+                />
+              </label>
+              <label className="shot-edit-field">
+                数据（每行 文本[,下划线|圈]（强调缺省无，文本可含逗号））
+                <textarea
+                  className="sketch-data-input"
+                  rows={5}
+                  value={sketchDraft.data}
+                  onChange={(event) =>
+                    setSketchDraft({ ...sketchDraft, data: event.target.value })
+                  }
+                />
+              </label>
+              {sketchError ? (
+                <p className="sketch-edit-error">{sketchError}</p>
+              ) : null}
+            </>
+          ) : null}
           {overflowMs > 0 ? (
             <span className="shot-overflow-note">
               旁白按语速需{" "}
@@ -618,8 +684,9 @@ export function ShotEditorCard({
               className="shot-apply"
               onClick={() => {
                 // 换模板 = 以模板 spec 为基底；与同草稿的并发编辑（旁白/背景/
-                // 时长 + 图表/地图/流程/火柴人数据——选中模板时已预填该模板
-                // 默认值）一次应用一并落库，不静默丢弃（终评 I1 合并语义）。
+                // 时长 + 图表/地图/流程/火柴人/手绘数据——选中模板时已预填
+                // 该模板默认值）一次应用一并落库，不静默丢弃（终评 I1 合并
+                // 语义）。
                 let baseSpec = spec;
                 if (pendingTemplateId) {
                   const applied = resolveAnyTemplate(spec, pendingTemplateId);
@@ -678,9 +745,35 @@ export function ShotEditorCard({
                   setStickError(stickResult.error ?? "火柴人数据无效");
                   return;
                 }
+                const sketchResult = isSketchComponentId(
+                  (
+                    stickResult?.spec ??
+                    flowResult?.spec ??
+                    mapResult?.spec ??
+                    chartResult?.spec ??
+                    baseSpec
+                  ).componentId,
+                )
+                  ? buildSketchRevisePatch(
+                      stickResult?.spec ??
+                        flowResult?.spec ??
+                        mapResult?.spec ??
+                        chartResult?.spec ??
+                        baseSpec,
+                      sketchDraft,
+                    )
+                  : null;
+                if (
+                  sketchResult &&
+                  (sketchResult.error || !sketchResult.spec)
+                ) {
+                  setSketchError(sketchResult.error ?? "手绘数据无效");
+                  return;
+                }
                 const { patch, error } = buildRevisePatch(
                   draft,
-                  stickResult?.spec ??
+                  sketchResult?.spec ??
+                    stickResult?.spec ??
                     flowResult?.spec ??
                     mapResult?.spec ??
                     chartResult?.spec ??
@@ -695,6 +788,7 @@ export function ShotEditorCard({
                 setMapError(null);
                 setFlowError(null);
                 setStickError(null);
+                setSketchError(null);
                 onRevise(patch);
               }}
             >
