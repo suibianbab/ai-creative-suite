@@ -368,7 +368,9 @@ export default function VideoStudioPage() {
                         setEditor({
                           ...editor,
                           document: next,
-                          message: `镜头 ${index + 1} 已修订（${patch.spec ? "画面" : "旁白"}）`,
+                          // 修订总是旁白+画面一体落新版本（buildRevisePatch 全量产
+                          // spec），文案不区分类型，避免误标。
+                          message: `镜头 ${index + 1} 已修订`,
                         });
                       } catch (error) {
                         setEditor({

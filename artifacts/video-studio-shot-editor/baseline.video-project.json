@@ -1,0 +1,226 @@
+{
+  "schemaVersion": 1,
+  "id": "ce79c2e2-db8a-4115-af0d-d40525dc0773",
+  "title": "水循环",
+  "brief": {
+    "sentence": "做一个8秒的STEM解说视频，主题是水循环，分4个镜头",
+    "aspectTargets": [
+      "landscape",
+      "portrait"
+    ],
+    "applications": [
+      {
+        "sentence": "做一个8秒的STEM解说视频，主题是水循环，分4个镜头",
+        "appendedShotCount": 4,
+        "appendedDurationMs": 9100,
+        "filmShotCountAfter": 4,
+        "filmTotalMsAfter": 9100,
+        "appliedAt": "2026-10-18T05:48:57.968Z"
+      }
+    ]
+  },
+  "shots": [
+    {
+      "shotId": "0652dda9-8923-4599-9030-94f692528640",
+      "order": 0,
+      "locked": false,
+      "workingVersionId": "e463b178-7333-460a-97f8-26029e3a5516",
+      "contentVersions": [
+        {
+          "versionId": "e463b178-7333-460a-97f8-26029e3a5516",
+          "createdAt": "2026-10-18T05:48:57.968Z",
+          "durationMs": 2000,
+          "description": "开场（文字动画）：水循环",
+          "narrationText": "水循环。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 2000,
+              "seed": 1920706080,
+              "background": "#ffffff",
+              "params": {
+                "title": "水循环",
+                "titleColor": "#1b2c29",
+                "subtitleColor": "#5d7469",
+                "entrance": "fade-up",
+                "enterMs": 900
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-rules",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "e463b178-7333-460a-97f8-26029e3a5516",
+          "at": "2026-10-18T05:48:57.968Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "5c5e6762-d1c5-48f4-84e0-aa2e906ae748",
+      "order": 1,
+      "locked": false,
+      "workingVersionId": "beb377b4-ca95-4f42-9a8f-8ee7953fd5b2",
+      "contentVersions": [
+        {
+          "versionId": "beb377b4-ca95-4f42-9a8f-8ee7953fd5b2",
+          "createdAt": "2026-10-18T05:48:57.968Z",
+          "durationMs": 3100,
+          "description": "要点 1（文字动画）：水循环",
+          "narrationText": "水循环，要点 1。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 3100,
+              "seed": 1937483699,
+              "background": "#ffffff",
+              "params": {
+                "title": "水循环",
+                "subtitle": "要点 1",
+                "titleColor": "#1b2c29",
+                "subtitleColor": "#5d7469",
+                "entrance": "fade-up",
+                "enterMs": 900
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-rules",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "beb377b4-ca95-4f42-9a8f-8ee7953fd5b2",
+          "at": "2026-10-18T05:48:57.968Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "5d47c403-ab6c-4195-9b23-0cc622998a2e",
+      "order": 2,
+      "locked": false,
+      "workingVersionId": "08964e75-8746-48bf-8052-27a8f16dd548",
+      "contentVersions": [
+        {
+          "versionId": "08964e75-8746-48bf-8052-27a8f16dd548",
+          "createdAt": "2026-10-18T05:48:57.968Z",
+          "durationMs": 2000,
+          "description": "示意 1（图形动画）：水循环",
+          "narrationText": "水循环。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "basic-shapes",
+              "componentVersion": 1,
+              "durationMs": 2000,
+              "seed": 1954261318,
+              "background": "#ffffff",
+              "params": {
+                "shapes": [
+                  {
+                    "kind": "circle",
+                    "x": 0.35,
+                    "y": 0.3,
+                    "w": 0.3,
+                    "h": 0.3,
+                    "color": "#497a61",
+                    "delayMs": 0,
+                    "enterMs": 900
+                  },
+                  {
+                    "kind": "rect",
+                    "x": 0.3,
+                    "y": 0.65,
+                    "w": 0.4,
+                    "h": 0.08,
+                    "color": "#1b2c29",
+                    "delayMs": 200,
+                    "enterMs": 900
+                  }
+                ]
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-rules",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "08964e75-8746-48bf-8052-27a8f16dd548",
+          "at": "2026-10-18T05:48:57.968Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "e39d4e1f-6539-4a1c-ae9a-55134df44d91",
+      "order": 3,
+      "locked": false,
+      "workingVersionId": "ce4a8bb7-d6c5-454b-bed2-ebf8de29e4fc",
+      "contentVersions": [
+        {
+          "versionId": "ce4a8bb7-d6c5-454b-bed2-ebf8de29e4fc",
+          "createdAt": "2026-10-18T05:48:57.968Z",
+          "durationMs": 2000,
+          "description": "结语（文字动画）：水循环",
+          "narrationText": "谢谢观看。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 2000,
+              "seed": 1971038937,
+              "background": "#ffffff",
+              "params": {
+                "title": "水循环",
+                "subtitle": "谢谢观看",
+                "titleColor": "#1b2c29",
+                "subtitleColor": "#5d7469",
+                "entrance": "fade-up",
+                "enterMs": 900
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-rules",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "ce4a8bb7-d6c5-454b-bed2-ebf8de29e4fc",
+          "at": "2026-10-18T05:48:57.968Z",
+          "actor": "human"
+        }
+      ]
+    }
+  ],
+  "renderRecords": [],
+  "deliveries": [],
+  "savedVersion": 2
+}
