@@ -22,6 +22,7 @@
 | D2 第一刀（如复核范围含） | `954cf04..a51dc7f` + `99b97a5`，8 提交 | TTS 旁白全链路 + 终评 Important×3 / minor×7 修复 |
 | P0 复核反馈整改 | `0e95bef`、`6c98eca` | Codex 10-18 上午两条反馈（e2e 水合就绪、locked 审计不变量） |
 | **P1/D2 复核反馈整改** | `05b532f`、`cf07a37` | Codex 10-18 下午两条反馈（锁定审计末条裁定、分镜追加语义），见 §7 |
+| 同上第三轮 | `1bfe025` | Codex 对 `991e830` 的复核反馈：brief.applications 导入格式校验 + 只追加校验（见 §6） |
 
 ## 2. P1 第一刀：方案
 
@@ -67,16 +68,16 @@
 
 ## 4. 验证状态（HEAD = `6c98eca` 实测）
 
-| 门禁 | 结果（HEAD = `cf07a37`） |
+| 门禁 | 结果（HEAD = `1bfe025`） |
 | --- | --- |
-| video-document 单测（含 locked 审计 +5、末条裁定 +3） | 38/38 |
+| video-document 单测（含 locked 审计 +5、末条裁定 +3、applications 契约 +6） | 47/47 |
 | video-scene 单测（含 determinism-gate 巡检） | 33/33 |
 | web 单测（apply-plan/planner，含追加语义 +5） | 45/45 |
 | scripts 单测（TTS 解析/装配/干跑等，零网络） | 25/25 |
 | typecheck / biome | 全过 / 238 files clean |
 | qa:validate | 76 automated / 46 manual 登记完整 |
 | qa:video-determinism | 72/72 帧解码像素一致 |
-| e2e 三链路 | closed-loop ✅ / multishot ✅ / narrated ✅（10-18 复核整改后三链路全部复跑通过；multishot/narrated MP4 与原证逐字节一致第 4/3 次实证，narrated 四条 wav 内容哈希跨运行全同） |
+| e2e 三链路 | closed-loop ✅ / multishot ✅ / narrated ✅（10-18 三轮复核整改后全部复跑通过；multishot MP4 跨运行逐字节一致累计第 6 次实证（第三轮 +2）、narrated 第 3 次，narrated 四条 wav 内容哈希跨运行全同） |
 
 证据文档：`artifacts/video-studio-multishot/E2E_MULTISHOT.md`、`artifacts/video-studio-narrated/E2E_NARRATED.md`、`artifacts/video-studio-e2e/E2E_CLOSED_LOOP.md`。媒体不入库（gitignore 约定），视听结论为本机复核 + SHA-256 锚定；跨运行 MP4 字节一致已多次实证（UUID 不进渲染路径）。**复核者与本仓库同机**：上表各证据目录下的媒体本体（MP4/PNG/WAV）与计费台账 `artifacts/tts-usage.jsonl` 都可直接从文件系统打开查验，SHA-256 可用 `certutil -hashfile <文件> SHA256` 现场复算，不依赖 GitHub 传输。
 
@@ -116,7 +117,7 @@
 - 计费台账 `artifacts/tts-usage.jsonl` 是本地文件（gitignore 挡），预算闸跨会话以它为准；至 10-18 累计 18 笔 ¥0.0222 / ¥50。
 - P1 里程碑未做部分见 §0 完成度表。
 
-## 6. 2026-10-18 复核反馈整改记录（两轮）
+## 6. 2026-10-18 复核反馈整改记录（三轮）
 
 复核结论原话：「P1/D2 第一刀技术验收通过，锁定审计与追加时长语义待修；有声成片质量待收口。字幕、逐镜头编辑、转场及 GIF/SVG 导出属于后续完整 P1 工作，不计入本次缺陷。」两条待修项已整改：
 
@@ -124,10 +125,13 @@
 | --- | --- | --- | --- | --- |
 | 1 | 锁定审计仍有洞：旧校验只查追加段**存在过**与终态同值的 lock-changed（`some()`），「追加锁 true、再解 false、终态 true」被接受，末条审计事件与终态矛盾 | **末条裁定**：locked 变化 ⇒ 追加段必须有 lock-changed；追加段存在 lock-changed ⇒ 末条值必须等于最终 locked（无翻转但末条矛盾同样拒绝） | `05b532f` | +3 测试（构造矛盾轨迹拒绝 / 合法同帧两次 setLocked 通过 / 无翻转矛盾拒绝），video-document 38/38 |
 | 2 | 追加分镜时需求时长与整片时长不一致：brief.sentence 无条件覆写为新输入（8s 项目再应用 8s 分镜 → 成片 16s、需求仍 8s）；且句子取调用方当下输入，规划后改句会写过期句 | **追加语义**：`planStoryboard` 快照句子进 `StoryboardResult`（apply 不再收当下输入）；`brief.applications` 逐次记录应用快照（`BriefApplication`：appended* 记本次要的，film*After 记应用后整片的，可与 shots 对账）；确认卡 `describeStoryboardAppend` 算术预告行；notice 分首镜头/追加两种措辞 | `cf07a37` | +5 测试（快照句、首条对账、追加对账 8s+30s→38s、两次应用、确认卡算术），web 45/45 |
+| 3 | `991e830` 复核（2026-10-18 第三轮）：① locked 审计与分镜追加用户可见行为均通过；② 但 `brief.applications` 尚未形成可靠数据契约——[validate] 不查该字段（实测设为普通对象可过导入校验，再应用分镜报 `is not iterable`）；③ [evolve] 允许下一版本删除已保存的 applications，与「逐次记录应用快照」承诺不符 | **数据契约补全**：validate 增 applications 格式校验（可省略；存在时必须数组，逐条查 sentence/appended*/film*After/appliedAt 形状及 film*After ≥ appended* 交叉约束——导入时挡住，不等运行时炸）；evolve 增只追加校验（previous 有记录时走 `requirePrefix`，删除/改写已保存条目拒绝） | `1bfe025` | +6 反例测试（非数组 / 字段错型 / appliedAt 非 ISO / 删条目 / 整体抹掉 / 旧条目改写，均先 RED 后 GREEN），video-document 47/47；e2e-multishot 复跑 ×2 全绿（apply→save→CLI 再保存→导入 全程过新校验，产物 `brief.applications` 落档实证） |
 
 「有声成片质量待收口」（2.64s 旁白被 2s 镜头截断只告警）：接受该边界定性——在「有声解说成片」作为可交付功能前需调整镜头时长/语速/文案，已记录于 §5 其他边界，不计入第一刀缺陷。
 
-整改后全量回归：四套单测 38/33/45/25、typecheck/Biome、qa:validate 76A/46M、三条 e2e 复跑全绿；multishot/narrated 的 MP4 与原证 SHA **逐字节一致**（第 4/3 次跨运行实证——两修复均不进渲染路径），narrated 四条 wav 内容哈希跨运行全同，计费累计 22 笔 ¥0.0259 / ¥50。
+第一、二轮整改后全量回归：四套单测 38/33/45/25、typecheck/Biome、qa:validate 76A/46M、三条 e2e 复跑全绿；multishot/narrated 的 MP4 与原证 SHA **逐字节一致**（第 4/3 次跨运行实证——两修复均不进渲染路径），narrated 四条 wav 内容哈希跨运行全同，计费累计 22 笔 ¥0.0259 / ¥50。
+
+第三轮整改后全量回归：四套单测 **47/33/45/25**、typecheck/Biome 全过；e2e-multishot 复跑 ×2 全绿，MP4 与原证逐字节一致（跨运行一致实证累计至第 6 次——校验代码不进渲染路径）；产物 json 中 `brief.applications` 完整落档且 v2→v3 演进导入均过新校验。
 
 ## 7. 复核指引
 
