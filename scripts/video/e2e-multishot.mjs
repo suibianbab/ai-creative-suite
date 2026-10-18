@@ -83,9 +83,9 @@ if (!/标题「水循环」/.test(storyboardHint ?? ""))
   fail("分镜确认卡", `首镜头预告未点名标题: ${storyboardHint}`);
 await page.click(".plan-apply");
 await page
-  .locator(".editor-message", { hasText: "追加 4 个镜头" })
+  .locator(".editor-message", { hasText: "首个 4 个镜头" })
   .waitFor({ timeout: 10_000 })
-  .catch(() => fail("追加应用", "未出现 追加提示"));
+  .catch(() => fail("追加应用", "未出现 首个镜头 提示"));
 
 // 时间线与整片预览就位
 await expectVisible(page, ".editor-shots", "镜头时间线");

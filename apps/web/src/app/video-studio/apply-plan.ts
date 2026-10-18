@@ -114,15 +114,45 @@ export function applyPlan(
 // 与 P2-B 单镜头的 save-as-new 不同：分镜是对整片的编排，语义就是往当前
 // 项目追加镜头（evolve.ts 允许 shots 增长）。已有镜头逐字段不动，
 // order 接续现有最大 +1；每镜头落初始内容版本 + submitted(human) 事件。
+//
+// 追加语义（2026-10-18 Codex 复核整改）：句子用规划期快照（storyboard.
+// sentence），不收调用方当下输入；brief.applications 追加一条应用快照，
+// film*After 与 shots 对账——「8s 项目再应用 8s 分镜」时数据明说整片变 16s，
+// 需求句与成片长度不再各说各话。
 export type StoryboardApplyResult = {
   mode: "storyboard-append";
   notice: string;
   document: VideoProject;
 };
 
+function filmWorkingDurationMs(document: VideoProject): number {
+  return document.shots.reduce((total, shot) => {
+    const working = shot.contentVersions.find(
+      (version) => version.versionId === shot.workingVersionId,
+    );
+    return total + (working?.durationMs ?? 0);
+  }, 0);
+}
+
+function secondsLabel(ms: number): string {
+  return `${Math.round(ms / 100) / 10}s`;
+}
+
+// 确认卡/预告用：应用前把追加算术说清楚（追加 N 个镜头后整片变多少）。
+export function describeStoryboardAppend(
+  document: VideoProject,
+  storyboard: StoryboardResult & { ok: true },
+): string {
+  if (document.shots.length === 0) {
+    return `整片将从本分镜开始：${storyboard.shots.length} 个镜头 / ${secondsLabel(storyboard.totalMs)}`;
+  }
+  const shotCountAfter = document.shots.length + storyboard.shots.length;
+  const totalAfter = filmWorkingDurationMs(document) + storyboard.totalMs;
+  return `当前整片 ${document.shots.length} 个镜头 / ${secondsLabel(filmWorkingDurationMs(document))}，应用后 ${shotCountAfter} 个镜头 / ${secondsLabel(totalAfter)}（追加 ${storyboard.shots.length} 个镜头，+${secondsLabel(storyboard.totalMs)}）`;
+}
+
 export function applyStoryboard(
   document: VideoProject,
-  sentence: string,
   storyboard: StoryboardResult & { ok: true },
   ids: { shot: () => string; version: () => string },
 ): StoryboardApplyResult {
@@ -159,13 +189,33 @@ export function applyStoryboard(
       ],
     };
   });
+  const filmShotCountAfter = document.shots.length + newShots.length;
+  const filmTotalMsAfter = filmWorkingDurationMs(document) + storyboard.totalMs;
+  const isFirst = document.shots.length === 0;
+  const notice = isFirst
+    ? `已应用分镜（首个 ${newShots.length} 个镜头 / ${secondsLabel(storyboard.totalMs)}）到当前项目，确认无误后点「保存」`
+    : `已追加 ${newShots.length} 个镜头（+${secondsLabel(storyboard.totalMs)}）到当前项目，整片现为 ${filmShotCountAfter} 个镜头 / ${secondsLabel(filmTotalMsAfter)}，确认无误后点「保存」`;
   return {
     mode: "storyboard-append",
-    notice: `已应用分镜（追加 ${newShots.length} 个镜头）到当前项目，确认无误后点「保存」`,
+    notice,
     document: {
       ...document,
-      title: document.shots.length === 0 ? storyboard.title : document.title,
-      brief: { ...document.brief, sentence },
+      title: isFirst ? storyboard.title : document.title,
+      brief: {
+        ...document.brief,
+        sentence: storyboard.sentence,
+        applications: [
+          ...(document.brief.applications ?? []),
+          {
+            sentence: storyboard.sentence,
+            appendedShotCount: newShots.length,
+            appendedDurationMs: storyboard.totalMs,
+            filmShotCountAfter,
+            filmTotalMsAfter,
+            appliedAt: now,
+          },
+        ],
+      },
       shots: [...document.shots, ...newShots],
     },
   };

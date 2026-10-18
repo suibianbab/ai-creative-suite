@@ -119,9 +119,9 @@ await page.click(".planner-run");
 await expectVisible(page, ".storyboard-card", "分镜确认卡");
 await page.click(".plan-apply");
 await page
-  .locator(".editor-message", { hasText: "追加 4 个镜头" })
+  .locator(".editor-message", { hasText: "首个 4 个镜头" })
   .waitFor({ timeout: 10_000 })
-  .catch(() => fail("追加应用", "未出现 追加提示"));
+  .catch(() => fail("追加应用", "未出现 首个镜头 提示"));
 
 // 旁白文本在镜头卡可见（D2 Task5：工作台不藏旁白）
 await expectVisible(page, ".editor-shots", "镜头时间线");

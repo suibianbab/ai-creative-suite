@@ -233,6 +233,13 @@
   margin-bottom: 10px;
 }
 
+/* 追加语义算术预告：应用前说清「整片会变成多少」，与需求句区分 */
+.plan-append-summary {
+  font-size: 12px;
+  color: #5d7469;
+  margin: 2px 0 10px;
+}
+
 .plan-render-hint {
   font-size: 12px;
   color: #5d7469;

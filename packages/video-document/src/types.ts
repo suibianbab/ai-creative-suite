@@ -68,11 +68,28 @@ export type DeliveryRecord = {
 
 export type AspectTarget = "landscape" | "portrait";
 
+// 分镜应用快照（P1 追加语义，2026-10-18 复核整改）：brief.sentence 只能表达
+// 「最近一次要了什么」，与整片实际长度是两回事。每次分镜应用往 applications
+// 追加一条——sentence/appended* 是本次的「要」，film*After 是应用后整片的
+// 「是」，可直接与 shots 的 working 版本总时长对账，需求与成片不再打架。
+export type BriefApplication = {
+  sentence: string;
+  appendedShotCount: number;
+  appendedDurationMs: number;
+  filmShotCountAfter: number;
+  filmTotalMsAfter: number;
+  appliedAt: string;
+};
+
 export type VideoProject = {
   schemaVersion: 1;
   id: string;
   title: string;
-  brief: { sentence: string; aspectTargets: AspectTarget[] };
+  brief: {
+    sentence: string;
+    aspectTargets: AspectTarget[];
+    applications?: BriefApplication[];
+  };
   shots: Shot[];
   renderRecords: RenderRecord[];
   deliveries: DeliveryRecord[];

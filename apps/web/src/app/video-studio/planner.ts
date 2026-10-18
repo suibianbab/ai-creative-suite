@@ -250,7 +250,16 @@ export type StoryboardShot = {
 };
 
 export type StoryboardResult =
-  | { ok: true; title: string; totalMs: number; shots: StoryboardShot[] }
+  | {
+      ok: true;
+      // 规划句快照（2026-10-18 复核整改）：应用时以此为准，不收调用方
+      // 当下的输入——规划后编辑器里改了句子，应用写进 brief 的仍是规划时
+      // 那句（过期 sentence 写档的路被结构性消灭）。
+      sentence: string;
+      title: string;
+      totalMs: number;
+      shots: StoryboardShot[];
+    }
   | { ok: false; reason: string; guidance: string };
 
 function rejectStoryboard(reason: string): StoryboardResult {
@@ -359,5 +368,5 @@ export function planStoryboard(sentence: string): StoryboardResult {
     };
   });
 
-  return { ok: true, title, totalMs, shots };
+  return { ok: true, sentence, title, totalMs, shots };
 }

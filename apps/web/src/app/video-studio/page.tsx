@@ -8,7 +8,11 @@ import {
 import type { SceneSpec } from "@acs/video-scene";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { applyPlan, applyStoryboard } from "./apply-plan";
+import {
+  applyPlan,
+  applyStoryboard,
+  describeStoryboardAppend,
+} from "./apply-plan";
 import {
   importVideoProject,
   listVideoProjects,
@@ -220,21 +224,21 @@ export default function VideoStudioPage() {
                   </li>
                 ))}
               </ol>
+              {/* 追加语义（2026-10-18 复核整改）：应用前把算术说清——
+                  已有镜头的项目会变长，不许让需求句暗示「整片就是这个时长」 */}
+              <p className="plan-append-summary">
+                {describeStoryboardAppend(document, storyboard)}
+              </p>
               <div className="plan-actions">
                 <button
                   type="button"
                   className="plan-apply"
                   onClick={() => {
                     // P1：分镜应用 = 在当前项目上只追加 N 个镜头
-                    const applied = applyStoryboard(
-                      document,
-                      sentence.trim(),
-                      storyboard,
-                      {
-                        shot: () => crypto.randomUUID(),
-                        version: () => crypto.randomUUID(),
-                      },
-                    );
+                    const applied = applyStoryboard(document, storyboard, {
+                      shot: () => crypto.randomUUID(),
+                      version: () => crypto.randomUUID(),
+                    });
                     setEditor({
                       document: applied.document,
                       message: applied.notice,
