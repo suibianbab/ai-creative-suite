@@ -1,5 +1,9 @@
 # Current State v2
 
+## 2026-10-18 Codex P1/D2 复核反馈整改（锁定审计末条裁定、分镜追加语义）
+
+外部复核（`docs/VIDEO_STUDIO_P1_REVIEW_BRIEF_2026-10-18.md` 交接，基线 6c98eca）给出「第一刀技术验收通过」结论并指出两处待修，均已 TDD 修复：① 锁定审计仍有洞——旧校验只查追加段**存在过**与终态同值的 `lock-changed` 事件（`some()`），构造「追加锁 true、再解 false、终态却 true」可绕过（末条审计事件与终态矛盾）；现改为**末条裁定**：locked 变化 ⇒ 追加段必须有 `lock-changed`，且追加段最后一条 `lock-changed` 的值必须等于最终 locked（无翻转但末条矛盾同样拒绝），+3 测试（video-document 35→38）。② 分镜追加语义含糊——已有镜头项目再应用分镜时 `brief.sentence` 被无条件覆写为新输入（8s 项目再应用「8s 分镜」成片 16s 而需求仍写 8s），且句子取自调用方**当下**输入（规划后改句子会把过期句写档，即原延后 minor #13）；现裁决为**追加语义**并三处落地：`planStoryboard` 把句子快照进 `StoryboardResult`（应用不再收当下输入，过期句路径结构性消灭）、`brief.applications` 逐次记录应用快照（`appended*` 记本次的「要」，`film*After` 记应用后整片的「是」，可与 shots 对账；`BriefApplication` 类型入 `@acs/video-document`）、确认卡新增 `describeStoryboardAppend` 算术预告行 + notice 分首镜头/追加两种措辞（web 测试 40→45）；两个 e2e 脚本的提示断言随措辞更新。复核同时声明「有声成片质量待收口」（2.64s 旁白被 2s 镜头截断只告警）——维持既有边界记录，属「有声解说成片」可交付前的收口项，不计入本刀缺陷。回归：四套单测 38/33/45/25 全绿、typecheck/Biome 过、qa:validate 76A/46M、三条 e2e 全绿（multishot/narrated MP4 与原证逐字节一致第 4/3 次实证；narrated 四条 wav 内容哈希跨运行全同，计费累计 22 笔 ¥0.0259/¥50）。
+
 ## 2026-10-18 Codex P0 复核反馈整改（E2E 就绪判断、locked 审计不变量）
 
 外部复核（基线 63c3ed2）确认 P1-A~E / P2-B,C / P3 整改成立并独立复跑通过（video-document 28/28、video-scene 33/33、Web 21/21、帧比较 6/6、typecheck 与 Biome），另指出两处遗留，已逐条 TDD 修复：① e2e-closed-loop 独立重跑不稳定——`domcontentloaded` 后 SSR 的 HTML 里按钮已可见但 React 未水合，点击被丢、随后输入框等待超时（复核者以 networkidle 临时副本证实链路本身是通的）；修正为确定性就绪信号：video-studio 页水合后 `useEffect` 设置 `html[data-studio-ready]`，三个 e2e 脚本（closed-loop/multishot/narrated）goto 后统一等该标记再交互，closed-loop 全链路复跑通过（浏览器 v2 → 双画幅出片 → 导入 v3；两片 MP4 与原证 SHA 逐字节一致，确定性再实证）。② locked 审计不变量可绕过——`assertAppendOnlyEvolution` 此前把 `locked` 当可变元数据，直改 `locked` 不追加 `lock-changed` 事件也被接受，与 `setLocked` 的审计契约（每次锁定变化留 human 事件）不符；现演进检查强制 locked 翻转必须在本帧**追加段**有值匹配的 `lock-changed(human)` 事件（旧前缀同值历史事件不背书，防「锁→解锁→直改回旧值」绕审计），+5 测试（video-document 30→35）。复核建议的「小尺寸抽帧入库供独立视觉验收」涉及「媒体不入库」既定约定，留用户决策未动；复核残留备份 `.tools/codex-review-e2e-backup-63c3ed2` 已清理。

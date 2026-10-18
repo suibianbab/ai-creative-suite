@@ -42,6 +42,8 @@
 
 2026-10-18 复跑备注（e2e 客户端就绪修复的验证运行）：全链路一次通过；两片 MP4 与上表 SHA **逐字节一致**（跨运行确定性再次实证，UUID 不进渲染路径）；`imported-editor.png` 因项目列表状态不同（历次 e2e 累积的项目条目）刷新为上表新值；`exported.video-project.json` / `render-manifest.json` 随新运行刷新（新项目 UUID 与时间戳，属预期）。
 
+2026-10-18 二次复跑备注（locked 末条裁定 + 分镜追加语义整改后的回归运行）：全链路一次通过；两片 MP4、`imported-editor.png` 与上表 SHA **全部逐字节一致**（本机复算）；`exported.video-project.json` / `render-manifest.json` 随新运行刷新（新项目 UUID，属预期）。本次运行同时证明 evolve 校验收紧（末条裁定）未破坏单镜头保存路径。
+
 复跑方式（需本地起 dev server 与 Playwright Chromium）：
 
 ```

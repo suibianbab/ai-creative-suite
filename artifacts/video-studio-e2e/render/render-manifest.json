@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-10-18T01:48:46.757Z",
-  "projectId": "7af239c1-e87b-4dfc-809f-2404133a18e4",
+  "generatedAt": "2026-10-18T02:43:26.126Z",
+  "projectId": "489f2144-dadd-4e19-9f25-050b11954b5f",
   "remotion": "4.0.534",
   "browser": "Google Chrome 155.0.8059.41",
   "fontDigests": {
@@ -17,12 +17,12 @@
       "frameMap": [
         {
           "shotIndex": 0,
-          "shotId": "14cd59fb-9634-4595-8332-bd89385cc90a",
-          "versionId": "20c5c544-83d2-4616-b653-053e4fa1f0d4",
+          "shotId": "c3adea6e-8901-4d93-b4b4-ad56e0bf7df5",
+          "versionId": "4846de43-f1a3-435a-b1b3-7b05730817a1",
           "componentId": "text-animation",
           "startFrame": 0,
           "frames": 96,
-          "contentDigest": "1c16aa14b186fa6dc6fbcdd2dff1bd647e873fafd20bc04863b27bf0c3015720"
+          "contentDigest": "9f7c0f963911d838a569df1e91efbbc8c1578b03c97ae38ae4386df93749f173"
         }
       ]
     },
@@ -36,12 +36,12 @@
       "frameMap": [
         {
           "shotIndex": 0,
-          "shotId": "14cd59fb-9634-4595-8332-bd89385cc90a",
-          "versionId": "20c5c544-83d2-4616-b653-053e4fa1f0d4",
+          "shotId": "c3adea6e-8901-4d93-b4b4-ad56e0bf7df5",
+          "versionId": "4846de43-f1a3-435a-b1b3-7b05730817a1",
           "componentId": "text-animation",
           "startFrame": 0,
           "frames": 96,
-          "contentDigest": "1c16aa14b186fa6dc6fbcdd2dff1bd647e873fafd20bc04863b27bf0c3015720"
+          "contentDigest": "9f7c0f963911d838a569df1e91efbbc8c1578b03c97ae38ae4386df93749f173"
         }
       ]
     }

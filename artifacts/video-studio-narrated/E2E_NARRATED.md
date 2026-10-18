@@ -31,7 +31,8 @@
 | 2026-10-17T18:00 | e2e 首跑 ×4 镜头（闭环通过，SHA 打印段路径 bug 后修） | 7/14/7/9 | ¥0.0037 |
 | 2026-10-17T18:01 | e2e 收口跑 ×4 镜头（一次通过） | 7/14/7/9 | ¥0.0037 |
 | 2026-10-17T18:0x | e2e 收口回归复跑 ×4 镜头（Step3 全量回归） | 7/14/7/9 | ¥0.0037 |
-| **累计** | 18 笔 | 230 | **¥0.0222**（预算 ¥50，余 ¥49.98） |
+| 2026-10-18T02:44 | e2e 复核整改后复跑 ×4 镜头（locked 末条裁定 + 分镜追加语义落地后回归） | 7/14/7/9 | ¥0.0037 |
+| **累计** | 22 笔 | 264 | **¥0.0259**（预算 ¥50，余 ¥49.97） |
 
 原始逐笔台账在本地 `artifacts/tts-usage.jsonl`（.gitignore 挡 .jsonl，不入库）；上表为全量誊录。
 
@@ -45,17 +46,19 @@
 
 以下产物因 gitignore 约定（媒体/音频不入库）仅存本地，**不构成可独立复核的视听证据**；其 SHA-256 供本机比对（用户裁决：维持 SHA-256 证据制；取收口回归运行值）：
 
-| 文件 | SHA-256（收口回归运行） |
+| 文件 | SHA-256（2026-10-18 复核整改后复跑） |
 | --- | --- |
-| e2e.video-project.json | `a7eda22d549d984423c7e44077d0ea6494ad341601755a65d84ba64ae2de6de1` |
-| narration/33055ebb-…-01a1979c-….wav（结语「谢谢观看。」） | `77fcebc27fb93c3fc998e5bcbdf8d45c305224b7d4a28d01a9073cad7bec211f` |
-| narration/69a480e0-…-d13ccc4f-….wav（开场/示意「水循环。」之一） | `3c25bff823349f79a40463cc3fbaf59e7255c45a0cfe59081180d6c9c27afa0d` |
-| narration/71fade80-…-b9ca0eb1-….wav（要点「水循环，要点 1。」） | `3f02f89d1da627ae46ecff5a1d67c0756cb29ae474230b9929f26038bba09ac5` |
-| narration/84336457-…-1f977249-….wav（开场/示意「水循环。」之二，与上一条同文本同哈希） | `3c25bff823349f79a40463cc3fbaf59e7255c45a0cfe59081180d6c9c27afa0d` |
+| e2e.video-project.json | `9b3fca2eea34704809f0950de5a72a5231a02efac2fc3479809d42d9353ff1d8` |
+| narration/57286db4-…-440a44e3-….wav（结语「谢谢观看。」） | `77fcebc27fb93c3fc998e5bcbdf8d45c305224b7d4a28d01a9073cad7bec211f` |
+| narration/5e90227f-…-09e5c797-….wav（要点「水循环，要点 1。」） | `3f02f89d1da627ae46ecff5a1d67c0756cb29ae474230b9929f26038bba09ac5` |
+| narration/b234cfa9-…-26389144-….wav（开场/示意「水循环。」之一） | `3c25bff823349f79a40463cc3fbaf59e7255c45a0cfe59081180d6c9c27afa0d` |
+| narration/e2189c52-…-0c79383d-….wav（开场/示意「水循环。」之二，与上一条同文本同哈希） | `3c25bff823349f79a40463cc3fbaf59e7255c45a0cfe59081180d6c9c27afa0d` |
 | e2e-render/landscape.mp4 | `f777006c22c7a39baa591fb076cf6bb01769ce4916d334f3956288da19a20511` |
 | e2e-render/portrait.mp4 | `2bedf48ab331241e03dea6b9b43ac0333c22031ce1bb79840ff6504fd98385dd` |
-| e2e-render/render-manifest.json | `875d6e9ee862f4d9d63af6578e516cd847a56b66570f1e513921beb44137b6ee` |
-| narrated-editor.png | `a37c064f84adc0522cb6de20aa469dc39f881a479810a0ecb17ce303b63fe9a5` |
+| e2e-render/render-manifest.json | `80ff425650242746b699affda1f50a1cb836722e213dbeb1c586aff9a46a7c2a` |
+| narrated-editor.png | `945ae59a7d95f5a336d1f92cf4f61e3db83668c07e671d96559a6d83ad6b58af` |
+
+**2026-10-18 复跑备注（复核整改后的回归运行）**：全链路一次通过；landscape/portrait MP4 与上表两值**逐字节一致**（第 3 次跨运行实证）；四条旁白 wav 的**内容哈希与历史记录完全相同**（`77fcebc2`/`3f02f89d`/`3c25bff8`×2，仅文件名中的 version UUID 随新运行变化）——TTS 与装配链路跨运行确定。项目 JSON / manifest / 截图因内嵌新 UUID 与 brief 新增的 applications 快照而刷新（属预期，已取新值入表）。
 
 **跨运行字节一致性（本机复核）**：两次完整运行（项目 ID `adc0ad92-…` / `64da2804-…`，UUID 不同）的 landscape/portrait MP4 SHA-256 **逐字节相同**（即上表两值）——UUID 不进入渲染路径，旁白装配后的整片仍然跨运行确定；四条旁白文本各自的重复合成 wav 哈希亦跨运行相同（同文本同输出）。项目 JSON / manifest / 截图因内嵌新 UUID 与随机端口而不同，属预期。
 

@@ -37,12 +37,14 @@
 
 以下产物因 gitignore 约定（媒体不入库）仅存本地，**不构成可独立复核的视觉证据**；其 SHA-256 供本机比对：
 
-| 文件 | SHA-256（Task 7 收口运行） |
+| 文件 | SHA-256（2026-10-18 复核整改后复跑） |
 | --- | --- |
-| e2e.video-project.json | `8df57085cea7c64f29e887b65480e7f6c858a20a271cdd55394c93732bd0975e` |
+| e2e.video-project.json | `5f3578f98de2f6b3aeda1ff6895af5f9ec72846d570e2f15149d185fa0e5a836` |
 | e2e-render/landscape.mp4 | `e4df78e972fe802d6f2818fce1bf44022d9e2a6e8e9cc89ec7718d5ae26aace3` |
 | e2e-render/portrait.mp4 | `85bac1b82a8e5988f69faf85de761545ef747d7805099384fda83eaa606ba499` |
-| multishot-editor.png | `44ef87a5d8e2f9b72b6c2f55b67ffb6bca6a3cefcd9c0ddc926ba14b15bfcc7f` |
+| multishot-editor.png | `945ae59a7d95f5a336d1f92cf4f61e3db83668c07e671d96559a6d83ad6b58af` |
+
+**2026-10-18 复跑备注（复核整改后的回归运行）**：locked 末条裁定 + 分镜追加语义（brief.applications 快照）落地后全链路一次通过；两片 MP4 与上表**逐字节一致**（第 4 次跨运行实证——复核修复不进渲染路径）；项目 JSON 因 brief 新增 applications 快照与新 UUID 刷新、截图因预览相位刷新（均属预期，已取新值入表）。
 
 **跨运行确定性（本机复核）**：三次完整独立运行（项目 ID 分别为 `933899a4-…`、`01650859-…`、`ac21fe76-…`，全部 UUID 不同；第三次在终评修复后复跑）的 landscape/portrait MP4 SHA-256 **逐字节一致**（即上表两值，三次相同）——同一句话→同一种子→同一 spec→同一像素，UUID 不进入渲染路径；终评的预览侧修复（fps 对齐、spec 安全解析）不触碰渲染路径，第三次哈希不变即为佐证。项目 JSON 与截图因内嵌新 UUID/预览相位而不同，属预期，表中取收口运行值（复跑会更新盘上文件）。
 

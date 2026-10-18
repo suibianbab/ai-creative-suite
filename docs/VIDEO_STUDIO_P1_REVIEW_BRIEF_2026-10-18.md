@@ -20,7 +20,8 @@
 | --- | --- | --- |
 | **P1 第一刀**（复核主对象） | `676a445..ed598bb`，8 提交 | 多镜头编排全链路 + 终评 Important×2 修复 |
 | D2 第一刀（如复核范围含） | `954cf04..a51dc7f` + `99b97a5`，8 提交 | TTS 旁白全链路 + 终评 Important×3 / minor×7 修复 |
-| P0 复核反馈整改 | `0e95bef`、`6c98eca` | Codex 10-18 两条反馈（e2e 水合就绪、locked 审计不变量），可直接验证修复对应性 |
+| P0 复核反馈整改 | `0e95bef`、`6c98eca` | Codex 10-18 上午两条反馈（e2e 水合就绪、locked 审计不变量） |
+| **P1/D2 复核反馈整改** | `05b532f`、`cf07a37` | Codex 10-18 下午两条反馈（锁定审计末条裁定、分镜追加语义），见 §7 |
 
 ## 2. P1 第一刀：方案
 
@@ -46,7 +47,7 @@
 ### 设计裁决（复核时值得对照代码验证的点）
 
 - **量化**：24fps 半进位累计边界；总时长取整余数由末镜头吸收，断言 Σ durationMs = 需求总时长；零帧镜头在**规划期**预检拒绝（人话报错），不到渲染期。
-- **只追加**：分镜应用只追加镜头与内容版本；locked 翻转必须伴随本帧追加段值匹配的 `lock-changed` 事件（`6c98eca` 新增的审计不变量，含「旧前缀同值事件不背书」防绕）。
+- **只追加**：分镜应用只追加镜头与内容版本；locked 终态由本帧追加段**最后一条** `lock-changed` 事件裁定（`6c98eca` 引入审计不变量，`05b532f` 补末条裁定——追加段任意位置出现过同值事件不再足够，末条与终态矛盾即拒绝）。
 - **渲染前门禁**：全镜头 spec 经 `validateSceneSpec` 校验（未注册组件/时长不一致在出片前失败）+ 逐帧干跑（worker 隔离，单帧预算默认 500ms，`--skip-dryrun` 可跳）。
 - **预览/出片同源**：同一 `quantizeTimeline` 帧图；预览侧 24fps + 量化 span 帧数（终评修复后与出片一致）。
 
@@ -66,16 +67,16 @@
 
 ## 4. 验证状态（HEAD = `6c98eca` 实测）
 
-| 门禁 | 结果 |
+| 门禁 | 结果（HEAD = `cf07a37`） |
 | --- | --- |
-| video-document 单测（含 locked 审计 +5） | 35/35 |
+| video-document 单测（含 locked 审计 +5、末条裁定 +3） | 38/38 |
 | video-scene 单测（含 determinism-gate 巡检） | 33/33 |
-| web 单测（apply-plan/page 相关） | 40/40 |
+| web 单测（apply-plan/planner，含追加语义 +5） | 45/45 |
 | scripts 单测（TTS 解析/装配/干跑等，零网络） | 25/25 |
 | typecheck / biome | 全过 / 238 files clean |
 | qa:validate | 76 automated / 46 manual 登记完整 |
 | qa:video-determinism | 72/72 帧解码像素一致 |
-| e2e 三链路 | closed-loop ✅（10-18 修复后复跑，MP4 与原证逐字节一致）/ multishot ✅ / narrated ✅（真实计费 ~¥0.0037/次，按需复跑） |
+| e2e 三链路 | closed-loop ✅ / multishot ✅ / narrated ✅（10-18 复核整改后三链路全部复跑通过；multishot/narrated MP4 与原证逐字节一致第 4/3 次实证，narrated 四条 wav 内容哈希跨运行全同） |
 
 证据文档：`artifacts/video-studio-multishot/E2E_MULTISHOT.md`、`artifacts/video-studio-narrated/E2E_NARRATED.md`、`artifacts/video-studio-e2e/E2E_CLOSED_LOOP.md`。媒体不入库（gitignore 约定），视听结论为本机复核 + SHA-256 锚定；跨运行 MP4 字节一致已多次实证（UUID 不进渲染路径）。**复核者与本仓库同机**：上表各证据目录下的媒体本体（MP4/PNG/WAV）与计费台账 `artifacts/tts-usage.jsonl` 都可直接从文件系统打开查验，SHA-256 可用 `certutil -hashfile <文件> SHA256` 现场复算，不依赖 GitHub 传输。
 
@@ -90,7 +91,7 @@
 
 ## 5. 已知边界与延后项（如实声明，未修）
 
-**P1 终评延后 minor（14 条，台账恢复，均未修，等用户裁决）**：
+**P1 终评延后 minor（13 条，台账恢复，均未修，等用户裁决；原 14 条中的「规划后改句子再应用写过期 sentence」已随 `cf07a37` 追加语义整改顺带修复——句子现快照进 StoryboardResult）**：
 
 1. `render-scene --budget-ms` 对 NaN/0/负数可给更友好的用法错误（当前 fail-fast 可接受）
 2. Remotion 渲染中途失败会在 outDir 留截断 MP4——可改临时名 + ffprobe 过核后改名
@@ -104,8 +105,7 @@
 10. 宽拉丁字符可击穿 0.6em 宽度钳制启发式（后续刀换测量式排版）
 11. 已打开项目上再次「确认应用」静默替换编辑器（当时裁决接受，评审建议加确认提示）
 12. 干跑只测 1280×720——portrait 特异异常过不了门禁；且超时击杀后续镜头帧不再干跑（VID-008 措辞应为「抛错继续、超时终止」）
-13. 规划后改句子再应用会把过期 sentence 写进 brief——可把句子快照进 StoryboardResult
-14. review-focus #5 的 CLI 半边（未注册组件项目 exit≠0）目前靠单元 + 代码检查，无 CLI 集成测试
+13. review-focus #5 的 CLI 半边（未注册组件项目 exit≠0）目前靠单元 + 代码检查，无 CLI 集成测试
 
 （另有个别条目原文在台账销毁后不可考，已略。）
 
@@ -116,7 +116,20 @@
 - 计费台账 `artifacts/tts-usage.jsonl` 是本地文件（gitignore 挡），预算闸跨会话以它为准；至 10-18 累计 18 笔 ¥0.0222 / ¥50。
 - P1 里程碑未做部分见 §0 完成度表。
 
-## 6. 复核指引
+## 6. 2026-10-18 复核反馈整改记录（两轮）
+
+复核结论原话：「P1/D2 第一刀技术验收通过，锁定审计与追加时长语义待修；有声成片质量待收口。字幕、逐镜头编辑、转场及 GIF/SVG 导出属于后续完整 P1 工作，不计入本次缺陷。」两条待修项已整改：
+
+| # | 反馈 | 整改 | 提交 | 验证 |
+| --- | --- | --- | --- | --- |
+| 1 | 锁定审计仍有洞：旧校验只查追加段**存在过**与终态同值的 lock-changed（`some()`），「追加锁 true、再解 false、终态 true」被接受，末条审计事件与终态矛盾 | **末条裁定**：locked 变化 ⇒ 追加段必须有 lock-changed；追加段存在 lock-changed ⇒ 末条值必须等于最终 locked（无翻转但末条矛盾同样拒绝） | `05b532f` | +3 测试（构造矛盾轨迹拒绝 / 合法同帧两次 setLocked 通过 / 无翻转矛盾拒绝），video-document 38/38 |
+| 2 | 追加分镜时需求时长与整片时长不一致：brief.sentence 无条件覆写为新输入（8s 项目再应用 8s 分镜 → 成片 16s、需求仍 8s）；且句子取调用方当下输入，规划后改句会写过期句 | **追加语义**：`planStoryboard` 快照句子进 `StoryboardResult`（apply 不再收当下输入）；`brief.applications` 逐次记录应用快照（`BriefApplication`：appended* 记本次要的，film*After 记应用后整片的，可与 shots 对账）；确认卡 `describeStoryboardAppend` 算术预告行；notice 分首镜头/追加两种措辞 | `cf07a37` | +5 测试（快照句、首条对账、追加对账 8s+30s→38s、两次应用、确认卡算术），web 45/45 |
+
+「有声成片质量待收口」（2.64s 旁白被 2s 镜头截断只告警）：接受该边界定性——在「有声解说成片」作为可交付功能前需调整镜头时长/语速/文案，已记录于 §5 其他边界，不计入第一刀缺陷。
+
+整改后全量回归：四套单测 38/33/45/25、typecheck/Biome、qa:validate 76A/46M、三条 e2e 复跑全绿；multishot/narrated 的 MP4 与原证 SHA **逐字节一致**（第 4/3 次跨运行实证——两修复均不进渲染路径），narrated 四条 wav 内容哈希跨运行全同，计费累计 22 笔 ¥0.0259 / ¥50。
+
+## 7. 复核指引
 
 **重点文件**：`packages/video-document/src/{quantize,evolve,operations,validate}.ts`；`packages/video-scene/src/`（注册表与门禁）；`packages/remotion-engine/src/`（TimelineScene 与 Audio 装配）；`apps/web/src/app/video-studio/{page.tsx,apply-plan.ts,video-studio.css}` 及预览组件；`scripts/video/{render-scene,frame-dryrun,tts-narration,tts-sse,narration-server,e2e-*}.mjs`。
 
