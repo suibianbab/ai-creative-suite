@@ -20,9 +20,9 @@
 两个新组件 v1（沿五族先例：1000×1000 设计空间 + 嵌套 svg viewBox、背景 rect 首子元素、tMs=帧/fps×1000、validateParams 中文消息带定位、标题 (500,100) `fitFontSize(48, title, 880)` 300ms 淡入）：
 
 - **loading-dots**（相位弹跳等待）：N=3..6 个实心圆点横排居中，`DOT_R=28`、`GAP=36`、`BASE_Y=520`（总宽 `W = N·56 + (N−1)·36`，点 i 圆心 `x = 500 − W/2 + 28 + i·92`）；跳起 `AMP=90`；点色 accentColor，不透明度随相位 `0.35 + 0.65·max(0, sin(2π·phase_i))`（休息 0.35、峰值 1）；状态文案 (500,700) `fitFontSize(36, label, 600)` inkColor 静态。
-- **loading-progress**（弧长爬升进度环）：环心 (500,520)、`R=180`、`STROKE=22` 圆头；轨道整圆 inkColor 不透明度 0.12；进度弧 accentColor circle pathLength=1、`dashoffset = (1 − frac).toFixed(4)`、`transform rotate(-90, 500, 520)`（12 点起顺时针）；`e = easeOutCubic(clamp01(tMs/progressMs))`，弧占比 `frac = (targetPercent/100)·e`，中心百分比文本 (500,520) 字号 96 粗体 inkColor `${round(targetPercent·e)}%`，到 progressMs 后保持；状态文案 (500,780) `fitFontSize(36, label, 600)` inkColor 静态。
+- **loading-progress**（弧长爬升进度环）：环心 (500,520)、`R=180`、`STROKE=22` 圆头；轨道整圆 inkColor 不透明度 0.12；进度弧 accentColor circle pathLength=1、`dashoffset = (1 − frac).toFixed(4)`、`transform rotate(-90, 500, 520)`（12 点起顺时针）；`e = easeOutCubic(clamp01(tMs/progressMs))`，弧占比 `frac = (targetPercent/100)·e`，中心百分比文本 (500,520) 字号 96 inkColor `${round(targetPercent·e)}%`（勘误：原文「粗体」删去——组件族零 font-weight 先例，以字号 96 实现重量），到 progressMs 后保持；状态文案 (500,780) `fitFontSize(36, label, 600)` inkColor 静态。
 
-`defaultRegistry` v6→**v7**（一次 bump 追加两组件，旧 spec 渲染路径零改动；数组按组件 id 字母序插在 line-chart 与 map-grid 之间）。文本度量复用 `text-width.ts`（label 按码点计 1..12，astral 安全）。
+`defaultRegistry` v6→**v7**（一次 bump 追加两组件，旧 spec 渲染路径零改动；数组按既有**追加序**排在 sketch-note 之后——勘误：原文「按组件 id 字母序插在 line-chart 与 map-grid 之间」有误，实际数组自 v2 起即追加序）。文本度量复用 `text-width.ts`（label 按码点计 1..12，astral 安全）。
 
 ### 数据模型（params，全部过 validateParams）
 
