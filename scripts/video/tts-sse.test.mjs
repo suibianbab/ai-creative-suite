@@ -310,6 +310,17 @@ test("wavDurationMs：PCM16 24k mono 头解析；非 RIFF/无 data 拒绝", () =
   assert.throws(() => wavDurationMs(wavBuffer(0).subarray(0, 40)), /无 data/);
 });
 
+// e2e 实录（Task 7）：DashScope 流式合成在 data 头写占位 size 0x7FFFFFFB，
+// 63404B 文件被算成 44739241ms（~44.7 天）→ 对齐版本 durationMs 超 schema
+// 上限被 validate 拒绝。真实时长必须按文件内实际 data 字节换算。
+test("wavDurationMs：data 头 size 为流式哨兵（超文件长度）时按实际字节换算", () => {
+  const sentinel = wavBuffer(63360); // 63360B @48000B/s = 1320ms
+  sentinel.writeUInt32LE(0x7ffffffb, 40); // 覆写 data size 为流式占位
+  assert.equal(wavDurationMs(sentinel), 1320);
+  // 诚实 size 的结果不变（min 语义不改变合法输入）
+  assert.equal(wavDurationMs(wavBuffer(48000)), 1000);
+});
+
 test("planDurationAlignments：只报超出的镜头，newDurationMs=wav+50 尾样保护", () => {
   const project = {
     shots: [

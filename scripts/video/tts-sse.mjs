@@ -240,23 +240,33 @@ export function atomicWriteFile(file, data) {
 
 // ── 时长对齐（spec R4 合成期兜底）───────────────────────────────────────
 
-// WAV 实测时长：遍历 RIFF chunk 找 data 块，按 fmt 的 byteRate 换算毫秒。
+// WAV 实测时长：遍历 RIFF chunk，fmt 块记 byteRate、data 块记位置与 size。
 // chunk 按 2 字节对齐（奇数 size 补 pad 字节，规范要求）。
+// DashScope 流式合成在 data 头写占位 size（实测 0x7FFFFFFB）——data 字节数
+// 必须按文件内实际剩余字节封顶（诚实 size 时 min 不改变结果）。
 export function wavDurationMs(wav) {
   if (wav.subarray(0, 4).toString("ascii") !== "RIFF") {
     throw new Error("wavDurationMs: 非 RIFF 开头");
   }
+  let byteRate = 0;
+  let dataOffset = -1;
+  let dataSize = 0;
   let offset = 12;
   while (offset + 8 <= wav.length) {
     const id = wav.subarray(offset, offset + 4).toString("ascii");
     const size = wav.readUInt32LE(offset + 4);
-    if (id === "data") {
-      const byteRate = wav.readUInt32LE(28); // fmt 块字段：字节/秒（偏移 12+16 内）
-      return Math.round((size / byteRate) * 1000);
+    if (id === "fmt ") {
+      byteRate = wav.readUInt32LE(offset + 16); // fmt 体内 byteRate 字段
+    } else if (id === "data") {
+      dataOffset = offset + 8;
+      dataSize = size;
     }
     offset += 8 + size + (size % 2);
   }
-  throw new Error("wavDurationMs: 无 data 块");
+  if (dataOffset < 0) throw new Error("wavDurationMs: 无 data 块");
+  if (byteRate <= 0) throw new Error("wavDurationMs: fmt 块缺失或 byteRate=0");
+  const dataBytes = Math.min(dataSize, wav.length - dataOffset);
+  return Math.round((dataBytes / byteRate) * 1000);
 }
 
 // 对齐计划：逐镜头比对 wav 实测时长 vs working version durationMs，
