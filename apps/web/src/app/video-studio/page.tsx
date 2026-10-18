@@ -93,12 +93,15 @@ export default function VideoStudioPage() {
     // spec 解析走 shotWorkingSpec：unknown → validateSceneSpec，非法（导入件来自
     // 更新版本/手改）降级 null 走「不可预览」提示，不在渲染期抛错炸整页。
     const shotSpecs = document.shots.map((shot) => shotWorkingSpec(shot));
-    const durations = document.shots.map((shot) => {
+    const workingMeta = document.shots.map((shot) => {
       const working = shot.contentVersions.find(
         (version) => version.versionId === shot.workingVersionId,
       );
-      return working ? working.durationMs : 0;
+      return working
+        ? { durationMs: working.durationMs, narrationText: working.narrationText }
+        : { durationMs: 0, narrationText: undefined };
     });
+    const durations = workingMeta.map((meta) => meta.durationMs);
     let pieceTimeline: QuantizedTimeline | null = null;
     let pieceItems: TimelinePreviewItem[] | null = null;
     if (
@@ -111,6 +114,7 @@ export default function VideoStudioPage() {
         spec: spec as SceneSpec,
         startFrame: pieceTimeline!.shots[index]!.startFrame,
         frames: pieceTimeline!.shots[index]!.frames,
+        narrationText: workingMeta[index]!.narrationText,
       }));
     }
     return (

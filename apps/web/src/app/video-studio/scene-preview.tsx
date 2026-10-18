@@ -1,6 +1,11 @@
 "use client";
 
-import { mapGlobalFrame, type QuantizedTimeline } from "@acs/video-document";
+import {
+  activeSubtitleCue,
+  buildSubtitleCues,
+  mapGlobalFrame,
+  type QuantizedTimeline,
+} from "@acs/video-document";
 import {
   assertNodeBudget,
   defaultRegistry,
@@ -145,6 +150,8 @@ export type TimelinePreviewItem = {
   spec: SceneSpec;
   startFrame: number;
   frames: number;
+  // 字幕近似层（spec R3 预览侧）：无字级时间戳，均匀分布；出片走精确时间戳。
+  narrationText?: string;
 };
 
 export function TimelinePreview({
@@ -184,18 +191,34 @@ export function TimelinePreview({
         frames: active.frames,
       })
     : null;
+  // 字幕近似层：预览无字级时间戳，按 span 均匀分布（spec R3 近似路径）。
+  const activeCue = useMemo(() => {
+    if (!active?.narrationText) return undefined;
+    const cues = buildSubtitleCues({
+      narrationText: active.narrationText,
+      spanMs: active.spec.durationMs,
+    });
+    return activeSubtitleCue(cues, (mapping.localFrame / PIECE_FPS) * 1000);
+  }, [active, mapping.localFrame]);
 
   return (
     <div className="preview-box piece-preview">
-      {active && activeContext ? (
-        <SpecCanvas
-          key={mapping.shotIndex}
-          spec={active.spec}
-          frame={mapping.localFrame}
-          fps={activeContext.fps}
-          durationFrames={activeContext.durationFrames}
-        />
-      ) : null}
+      <div className="piece-stage">
+        {active && activeContext ? (
+          <SpecCanvas
+            key={mapping.shotIndex}
+            spec={active.spec}
+            frame={mapping.localFrame}
+            fps={activeContext.fps}
+            durationFrames={activeContext.durationFrames}
+          />
+        ) : null}
+        {activeCue ? (
+          <div className="preview-subtitle" aria-hidden="true">
+            <span>{activeCue.text}</span>
+          </div>
+        ) : null}
+      </div>
       <div className="preview-controls">
         <button
           type="button"

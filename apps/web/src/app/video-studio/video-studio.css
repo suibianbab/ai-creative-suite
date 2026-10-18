@@ -295,6 +295,35 @@
   display: block;
 }
 
+/* 整片预览舞台：字幕层定位容器（宽度容器查询，药丸随画幅等比缩放） */
+.piece-stage {
+  position: relative;
+  container-type: inline-size;
+}
+
+/* 字幕近似层：与出片同构（半透明深色药丸衬白字，比例取 engine 换算：
+ * 画布高 = 56.25cqw → 字号 5%高=2.8cqw、底距 8%高=4.5cqw） */
+.preview-subtitle {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 4.5cqw;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.preview-subtitle > span {
+  background: rgba(27, 25, 23, 0.55);
+  border-radius: 1cqw;
+  padding: 0.45cqw 1.25cqw;
+  color: #fff;
+  font-weight: 600;
+  font-size: 2.8cqw;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
 .preview-controls {
   display: flex;
   align-items: center;
