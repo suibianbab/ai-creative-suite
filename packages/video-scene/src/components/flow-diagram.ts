@@ -163,7 +163,9 @@ function render(spec: SceneSpecLike, ctx: FrameContext): SvgNode {
   );
 
   const nodeGroups: SvgNode[] = params.nodes.map((node, i) => {
-    const appear = easeOutCubic(clamp01((tMs - i * STAGGER_MS) / params.enterMs));
+    const appear = easeOutCubic(
+      clamp01((tMs - i * STAGGER_MS) / params.enterMs),
+    );
     const fontSize = fitFontSize(
       22,
       node.label,

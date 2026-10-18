@@ -180,7 +180,9 @@ export function draftFlowFromSpec(spec: SceneSpec): FlowEditDraft {
       : `${n.label},${n.x},${n.y}`,
   );
   const edgeLines = (params.edges ?? []).map((e) =>
-    e.label === undefined ? `${e.from}->${e.to}` : `${e.from}->${e.to},${e.label}`,
+    e.label === undefined
+      ? `${e.from}->${e.to}`
+      : `${e.from}->${e.to},${e.label}`,
   );
   return {
     title: params.title ?? "",
@@ -242,7 +244,8 @@ function parseEdgeLine(
   }
   if (from.length < 1 || from.length > 6) return null;
   if (to.length < 1 || to.length > 6) return null;
-  if (label !== undefined && (label.length < 1 || label.length > 6)) return null;
+  if (label !== undefined && (label.length < 1 || label.length > 6))
+    return null;
   return label === undefined ? { from, to } : { from, to, label };
 }
 
@@ -346,7 +349,10 @@ export function buildFlowRevisePatch(
         };
       }
       if (!seen.has(parsed.to)) {
-        return { spec: null, error: `第 ${lineNo} 行：节点「${parsed.to}」未声明` };
+        return {
+          spec: null,
+          error: `第 ${lineNo} 行：节点「${parsed.to}」未声明`,
+        };
       }
       edges.push(parsed);
     }

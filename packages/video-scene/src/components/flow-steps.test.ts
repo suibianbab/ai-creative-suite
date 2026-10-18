@@ -13,12 +13,7 @@ function collect(node: SvgNode, tag: string, out: SvgNode[] = []): SvgNode[] {
 
 const BASE = {
   title: "四步流程",
-  steps: [
-    { label: "甲" },
-    { label: "乙" },
-    { label: "丙" },
-    { label: "丁" },
-  ],
+  steps: [{ label: "甲" }, { label: "乙" }, { label: "丙" }, { label: "丁" }],
   direction: "horizontal",
   boxColor: "#dcebe1",
   arrowColor: "#2f6f4f",
@@ -68,7 +63,10 @@ test("校验表：越界输入逐项拒绝", () => {
       /label 必须是 1\.\.10 个字符/,
     ],
     [{ ...BASE, steps: [{ label: "甲" }, 5] }, /steps\[1\] 必须是对象/],
-    [{ ...BASE, direction: "diagonal" }, /direction 必须是 horizontal 或 vertical/],
+    [
+      { ...BASE, direction: "diagonal" },
+      /direction 必须是 horizontal 或 vertical/,
+    ],
     [{ ...BASE, boxColor: "green" }, /boxColor 必须是 #rrggbb/],
     [{ ...BASE, arrowColor: "rgb(1,2,3)" }, /arrowColor 必须是 #rrggbb/],
     [{ ...BASE, enterMs: 100 }, /enterMs 必须是 200\.\.6000 的整数/],
@@ -155,7 +153,10 @@ test("横向箭头几何与描画属性（N=4 首箭头）", () => {
 });
 
 test("梯次弹入与标签两级节奏（tMs=100，enterMs=200）", () => {
-  const node = flowSteps.render(specWith(BASE) as never, makeCtx({ frame: 2.4 }));
+  const node = flowSteps.render(
+    specWith(BASE) as never,
+    makeCtx({ frame: 2.4 }),
+  );
   const rects = collect(node, "rect").slice(1);
   // 盒 0：appear=easeOutCubic(0.5)=0.875、scale=1.4−0.4×0.875=1.05
   assert.ok(Math.abs((rects[0]!.attrs.opacity as number) - 0.875) < 1e-9);
@@ -174,13 +175,13 @@ test("梯次弹入与标签两级节奏（tMs=100，enterMs=200）", () => {
 test("箭头描画时窗与三角淡入（enterMs=200 → 首箭头 delay=200）", () => {
   const at = (frame: number) =>
     flowSteps.render(specWith(BASE) as never, makeCtx({ frame }));
-  const offsets = [4.8, 7.68, 9.408].map((f) =>
-    collect(at(f), "path")[0]!.attrs["stroke-dashoffset"],
+  const offsets = [4.8, 7.68, 9.408].map(
+    (f) => collect(at(f), "path")[0]!.attrs["stroke-dashoffset"],
   );
   // tMs=200 → p=0；320 → p=0.5；392 → p=0.8
   assert.deepEqual(offsets, [1, 0.5, 0.2]);
-  const headOps = [10.56, 12.48, 14.4].map((f) =>
-    collect(at(f), "polygon")[0]!.attrs.opacity,
+  const headOps = [10.56, 12.48, 14.4].map(
+    (f) => collect(at(f), "polygon")[0]!.attrs.opacity,
   );
   // 三角窗口 (tMs−440)/160：440 → 0；520 → 0.5；600 → 1
   assert.deepEqual(headOps, [0, 0.5, 1]);
@@ -199,7 +200,9 @@ test("标签淡入窗口：enterMs 后 300ms 线性到位", () => {
   // 560ms：标签 i 完成 = i×120+200+300 → 仅标签 0 到位（梯次，逐项 1e-9）
   const mid = at(13.44).map((v) => v as number);
   for (let i = 0; i < 4; i += 1) {
-    assert.ok(Math.abs(mid[i]! - Math.min(1, (560 - i * 120 - 200) / 300)) < 1e-9);
+    assert.ok(
+      Math.abs(mid[i]! - Math.min(1, (560 - i * 120 - 200) / 300)) < 1e-9,
+    );
   }
   // 860ms（帧 20.64）：标签 3 窗口收口 → 全部 1
   assert.deepEqual(at(20.64), [1, 1, 1, 1]);
@@ -227,8 +230,12 @@ test("八步上限几何：slot=720/7、无 NaN、箭头非负长", () => {
     assert.ok(Math.abs((r.attrs.height as number) - 96) < 1e-9);
   }
   // 首末中心 = 140 / 860（等距覆盖全区；浮点表达差异容忍 1e-9）
-  assert.ok(Math.abs((rects[0]!.attrs.x as number) - (140 - 518.4 / 14)) < 1e-9);
-  assert.ok(Math.abs((rects[7]!.attrs.x as number) - (860 - 518.4 / 14)) < 1e-9);
+  assert.ok(
+    Math.abs((rects[0]!.attrs.x as number) - (140 - 518.4 / 14)) < 1e-9,
+  );
+  assert.ok(
+    Math.abs((rects[7]!.attrs.x as number) - (860 - 518.4 / 14)) < 1e-9,
+  );
   // 7 支箭头全部 x2 > x1（长度非负）
   for (const p of collect(node, "path")) {
     const m = /M ([0-9.]+),520\.00 L ([0-9.]+),520\.00/.exec(

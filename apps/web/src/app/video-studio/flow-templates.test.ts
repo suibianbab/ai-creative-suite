@@ -248,14 +248,16 @@ test("逗号与「菱形」标记消歧（文档化取舍）", () => {
     data: "南,北,520,300\n菱形,200,520\n甲,200,520,菱形\n乙,丙,300,300\n---\n甲->乙,丙,丁",
   });
   assert.equal(revised.error, null);
-  const nodes = (revised.spec!.params as {
-    nodes: Array<{
-      label: string;
-      x: number;
-      y: number;
-      kind: string;
-    }>;
-  }).nodes;
+  const nodes = (
+    revised.spec!.params as {
+      nodes: Array<{
+        label: string;
+        x: number;
+        y: number;
+        kind: string;
+      }>;
+    }
+  ).nodes;
   // 末段非「菱形」→ 标签含逗号读法
   assert.equal(nodes[0]!.label, "南,北");
   assert.equal(nodes[0]!.kind, "box");
@@ -266,12 +268,9 @@ test("逗号与「菱形」标记消歧（文档化取舍）", () => {
   assert.equal(nodes[2]!.label, "甲");
   assert.equal(nodes[2]!.kind, "diamond");
   // 边从右消歧：甲->乙,丙,丁 → to=乙,丙、边标=丁
-  assert.deepEqual(
-    (revised.spec!.params as { edges: unknown[] }).edges[0],
-    {
-      from: "甲",
-      to: "乙,丙",
-      label: "丁",
-    },
-  );
+  assert.deepEqual((revised.spec!.params as { edges: unknown[] }).edges[0], {
+    from: "甲",
+    to: "乙,丙",
+    label: "丁",
+  });
 });

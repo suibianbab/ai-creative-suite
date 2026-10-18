@@ -83,7 +83,9 @@ function validateParams(value: unknown): FlowStepsParams {
     }
   });
   if (value.direction !== "horizontal" && value.direction !== "vertical") {
-    throw new Error("flow-steps params.direction 必须是 horizontal 或 vertical");
+    throw new Error(
+      "flow-steps params.direction 必须是 horizontal 或 vertical",
+    );
   }
   for (const key of ["boxColor", "arrowColor", "textColor"] as const) {
     if (!isHexColor(value[key])) {

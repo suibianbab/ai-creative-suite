@@ -121,7 +121,10 @@ test("校验表：越界输入逐项拒绝", () => {
       },
       /edges 必须是 1\.\.16 条/,
     ],
-    [{ ...BASE, edges: [{ from: "丙", to: "乙" }] }, /from\/to 必须引用已声明节点/],
+    [
+      { ...BASE, edges: [{ from: "丙", to: "乙" }] },
+      /from\/to 必须引用已声明节点/,
+    ],
     [
       {
         ...BASE,
@@ -160,7 +163,9 @@ test("节点几何：盒/菱形尺寸恒定，标签居中（settle 帧全局 sc
   assert.equal(boxRect.fill, "#dcebe1");
   // 菱形 polygon 与箭头三角同为 polygon——按 points 区分
   const polygons = collect(node, "polygon");
-  const diamond = polygons.find((p) => p.attrs.points === "-110,0 0,-64 110,0 0,64");
+  const diamond = polygons.find(
+    (p) => p.attrs.points === "-110,0 0,-64 110,0 0,64",
+  );
   assert.ok(diamond, "菱形 polygon 缺失");
   assert.equal(polygons.length, 2); // 菱形 + 1 支箭头三角
   // 节点标签随组、居中（短标签字号 22）
@@ -178,10 +183,7 @@ test("边端点收缩（近圆近似 100）：对角线 d 与箭头三角", () =
   assert.equal(path.attrs.pathLength, 1);
   assert.equal(path.attrs["stroke-dashoffset"], 0); // tMs=1000 已描完
   const head = collect(node, "polygon")[0]!;
-  assert.equal(
-    head.attrs.points,
-    "629.29,629.29 614.44,624.34 624.34,614.44",
-  );
+  assert.equal(head.attrs.points, "629.29,629.29 614.44,624.34 624.34,614.44");
   assert.equal(head.attrs.fill, "#2f6f4f");
 });
 
@@ -239,7 +241,10 @@ test("箭头朝向由边方向唯一决定：左向边三角朝左", () => {
 });
 
 test("节点梯次弹入（tMs=100，enterMs=200）：i×120ms", () => {
-  const node = flowDiagram.render(specWith(BASE) as never, makeCtx({ frame: 2.4 }));
+  const node = flowDiagram.render(
+    specWith(BASE) as never,
+    makeCtx({ frame: 2.4 }),
+  );
   const groups = collect(node, "g").slice(1);
   // 甲：appear=easeOutCubic(0.5)=0.875、scale=1.05
   assert.equal(groups[0]!.attrs.opacity, 0.875);
@@ -252,13 +257,13 @@ test("节点梯次弹入（tMs=100，enterMs=200）：i×120ms", () => {
 test("边描画时窗：startT=max(两节点延迟)+enterMs=320，drawMs=400", () => {
   const at = (frame: number) =>
     flowDiagram.render(specWith(BASE) as never, makeCtx({ frame }));
-  const offsets = [7.68, 12.48, 17.28].map((f) =>
-    collect(at(f), "path")[0]!.attrs["stroke-dashoffset"],
+  const offsets = [7.68, 12.48, 17.28].map(
+    (f) => collect(at(f), "path")[0]!.attrs["stroke-dashoffset"],
   );
   // tMs=320 → p=0；520 → p=0.5；720 → p=1（toFixed(4) 已吸掉浮点噪声，精确相等）
   assert.deepEqual(offsets, [1, 0.5, 0]);
-  const headOps = [17.28, 19.2, 21.12].map((f) =>
-    collect(at(f), "polygon")[0]!.attrs.opacity,
+  const headOps = [17.28, 19.2, 21.12].map(
+    (f) => collect(at(f), "polygon")[0]!.attrs.opacity,
   );
   // 三角窗口 (tMs−720)/160：720 → 0；800 → 0.5；880 → 1（raw clamp01 无 toFixed
   // 吸收，帧→tMs 换算带 1e-16 噪声——按计划 1e-9 惯例逐项近似）
