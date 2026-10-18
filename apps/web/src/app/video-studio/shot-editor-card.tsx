@@ -35,11 +35,19 @@ import {
   speechOverflowMs,
 } from "./shot-edit";
 import { shotWorkingSpec } from "./shot-specs";
+import {
+  applyStickTemplate,
+  buildStickRevisePatch,
+  draftStickFromSpec,
+  isStickComponentId,
+  STICK_TEMPLATES,
+  type StickEditDraft,
+} from "./stick-templates";
 
 // 分镜编辑器镜头卡：只读信息 + 展开式编辑（旁白/画面修订、单镜头重做、
 // 版本回滚、锁定）。草稿是本地状态，点「应用修订」才经回调落文档；
 // 校验全走 shot-edit.ts / chart-templates.ts / map-templates.ts /
-// flow-templates.ts 纯逻辑，
+// flow-templates.ts / stick-templates.ts 纯逻辑，
 // 非法草稿不回调。
 
 const EMPTY_CHART_DRAFT: ChartEditDraft = {
@@ -54,7 +62,10 @@ const EMPTY_MAP_DRAFT: MapEditDraft = { title: "", data: "" };
 
 const EMPTY_FLOW_DRAFT: FlowEditDraft = { title: "", data: "" };
 
-// 模板下拉跨图表/地图/流程三族解析：先按图表找，找不到再按流程、地图找。
+const EMPTY_STICK_DRAFT: StickEditDraft = { title: "", data: "" };
+
+// 模板下拉跨图表/地图/流程/火柴人四族解析：先按图表找，找不到再按流程、
+// 地图、火柴人找。
 function resolveAnyTemplate(
   spec: SceneSpec,
   templateId: string,
@@ -65,6 +76,8 @@ function resolveAnyTemplate(
   if (flow.spec) return { spec: flow.spec, error: null };
   const map = applyMapTemplate(spec, templateId);
   if (map.spec) return { spec: map.spec, error: null };
+  const stick = applyStickTemplate(spec, templateId);
+  if (stick.spec) return { spec: stick.spec, error: null };
   return { spec: null, error: flow.error ?? map.error ?? chart.error };
 }
 
@@ -139,6 +152,12 @@ export function ShotEditorCard({
       : EMPTY_FLOW_DRAFT,
   );
   const [flowError, setFlowError] = useState<string | null>(null);
+  const [stickDraft, setStickDraft] = useState<StickEditDraft>(() =>
+    spec && isStickComponentId(spec.componentId)
+      ? draftStickFromSpec(spec)
+      : EMPTY_STICK_DRAFT,
+  );
+  const [stickError, setStickError] = useState<string | null>(null);
 
   // working 版本变了（应用修订/重做/回滚后）→ 草稿重置到新工作版本。
   // 只盯 workingVersionId（终评整改）：锁定切换会换 shot 对象身份但不动
@@ -179,6 +198,12 @@ export function ShotEditorCard({
       nextSpec && isFlowComponentId(nextSpec.componentId)
         ? draftFlowFromSpec(nextSpec)
         : EMPTY_FLOW_DRAFT,
+    );
+    setStickError(null);
+    setStickDraft(
+      nextSpec && isStickComponentId(nextSpec.componentId)
+        ? draftStickFromSpec(nextSpec)
+        : EMPTY_STICK_DRAFT,
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps -- 依赖收紧是有意的（见上注）
   }, [shot.workingVersionId]);
@@ -331,7 +356,7 @@ export function ShotEditorCard({
             </span>
           ) : null}
           <label className="shot-edit-field">
-            组件模板（图表 / 地图 / 流程）
+            组件模板（图表 / 地图 / 流程 / 火柴人）
             <select
               className="chart-template-select"
               value={pendingTemplateId}
@@ -341,6 +366,7 @@ export function ShotEditorCard({
                 setChartError(null);
                 setMapError(null);
                 setFlowError(null);
+                setStickError(null);
                 if (!templateId) return;
                 const applied = resolveAnyTemplate(spec, templateId);
                 if (applied.error || !applied.spec) {
@@ -354,6 +380,8 @@ export function ShotEditorCard({
                   setMapDraft(draftMapFromSpec(applied.spec));
                 } else if (isFlowComponentId(applied.spec.componentId)) {
                   setFlowDraft(draftFlowFromSpec(applied.spec));
+                } else if (isStickComponentId(applied.spec.componentId)) {
+                  setStickDraft(draftStickFromSpec(applied.spec));
                 }
               }}
             >
@@ -374,6 +402,13 @@ export function ShotEditorCard({
               </optgroup>
               <optgroup label="流程">
                 {FLOW_TEMPLATES.map((template) => (
+                  <option key={template.templateId} value={template.templateId}>
+                    {template.label}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="火柴人">
+                {STICK_TEMPLATES.map((template) => (
                   <option key={template.templateId} value={template.templateId}>
                     {template.label}
                   </option>
@@ -522,6 +557,36 @@ export function ShotEditorCard({
               ) : null}
             </>
           ) : null}
+          {isStickComponentId(spec.componentId) ? (
+            <>
+              <label className="shot-edit-field">
+                火柴人标题
+                <input
+                  className="stick-title-input"
+                  maxLength={40}
+                  value={stickDraft.title}
+                  onChange={(event) =>
+                    setStickDraft({ ...stickDraft, title: event.target.value })
+                  }
+                />
+              </label>
+              <label className="shot-edit-field">
+                数据（每行 动作,起点x[,终点x]（动作 走/站/挥手/指/跳，坐标
+                0..1000；终点缺省 = 起点））
+                <textarea
+                  className="stick-data-input"
+                  rows={4}
+                  value={stickDraft.data}
+                  onChange={(event) =>
+                    setStickDraft({ ...stickDraft, data: event.target.value })
+                  }
+                />
+              </label>
+              {stickError ? (
+                <p className="stick-edit-error">{stickError}</p>
+              ) : null}
+            </>
+          ) : null}
           {overflowMs > 0 ? (
             <span className="shot-overflow-note">
               旁白按语速需{" "}
@@ -553,8 +618,8 @@ export function ShotEditorCard({
               className="shot-apply"
               onClick={() => {
                 // 换模板 = 以模板 spec 为基底；与同草稿的并发编辑（旁白/背景/
-                // 时长 + 图表/地图/流程数据——选中模板时已预填该模板默认值）一次
-                // 应用一并落库，不静默丢弃（终评 I1 合并语义）。
+                // 时长 + 图表/地图/流程/火柴人数据——选中模板时已预填该模板
+                // 默认值）一次应用一并落库，不静默丢弃（终评 I1 合并语义）。
                 let baseSpec = spec;
                 if (pendingTemplateId) {
                   const applied = resolveAnyTemplate(spec, pendingTemplateId);
@@ -593,9 +658,30 @@ export function ShotEditorCard({
                   setFlowError(flowResult.error ?? "流程数据无效");
                   return;
                 }
+                const stickResult = isStickComponentId(
+                  (
+                    flowResult?.spec ??
+                    mapResult?.spec ??
+                    chartResult?.spec ??
+                    baseSpec
+                  ).componentId,
+                )
+                  ? buildStickRevisePatch(
+                      flowResult?.spec ??
+                        mapResult?.spec ??
+                        chartResult?.spec ??
+                        baseSpec,
+                      stickDraft,
+                    )
+                  : null;
+                if (stickResult && (stickResult.error || !stickResult.spec)) {
+                  setStickError(stickResult.error ?? "火柴人数据无效");
+                  return;
+                }
                 const { patch, error } = buildRevisePatch(
                   draft,
-                  flowResult?.spec ??
+                  stickResult?.spec ??
+                    flowResult?.spec ??
                     mapResult?.spec ??
                     chartResult?.spec ??
                     baseSpec,
@@ -608,6 +694,7 @@ export function ShotEditorCard({
                 setChartError(null);
                 setMapError(null);
                 setFlowError(null);
+                setStickError(null);
                 onRevise(patch);
               }}
             >
