@@ -389,6 +389,60 @@ test("两镜头引用同一 assetId → 通过（素材复用合法）", () => {
   assert.equal(validateVideoProject(p).shots.length, 3);
 });
 
+// —— P2.5-T1 RenderRecord.assetDigests（spec R1-R2）——
+function withMediaRenderRecord(
+  p: VideoProject,
+  digests: unknown,
+): VideoProject {
+  p.mediaAssets = [mediaAsset()];
+  p.renderRecords.push({
+    renderId: "0b0b13a2-6c63-4d3d-9a52-a70f6a3b2008",
+    versionId: UUID, // 指向 baseProject 首镜头工作版本
+    contentDigest: "d".repeat(64),
+    engineId: "html-gsap",
+    engineVersion: "0",
+    rendererVersion: "remotion-4",
+    fps: 24,
+    width: 1920,
+    height: 1080,
+    codec: "h264",
+    frames: 72,
+    fontDigests: {},
+    outputAssetRef: "out.mp4",
+    assetDigests: digests as Record<string, string>,
+  });
+  return p;
+}
+
+test("assetDigests value 非 64hex → 拒绝（R1）", () => {
+  assert.throws(
+    () =>
+      validateVideoProject(
+        withMediaRenderRecord(baseProject(), { [ASSET_ID]: "XYZ" }),
+      ),
+    /assetDigests/,
+  );
+});
+
+test("assetDigests 键指向账本外资产 → 拒绝（R2）", () => {
+  assert.throws(
+    () =>
+      validateVideoProject(
+        withMediaRenderRecord(baseProject(), {
+          "0b0b13a2-6c63-4d3d-9a52-a70f6a3b2999": "e".repeat(64),
+        }),
+      ),
+    /assetDigests/,
+  );
+});
+
+test("合法 assetDigests → 通过（正路径，兼容见证：先绿）", () => {
+  const out = validateVideoProject(
+    withMediaRenderRecord(baseProject(), { [ASSET_ID]: ASSET_SHA }),
+  );
+  assert.equal(out.renderRecords[0]!.assetDigests?.[ASSET_ID], ASSET_SHA);
+});
+
 test("合法项目通过并原样返回", () => {
   const p = baseProject();
   assert.equal(validateVideoProject(p).id, p.id);

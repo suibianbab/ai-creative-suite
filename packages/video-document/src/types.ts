@@ -67,6 +67,9 @@ export type RenderRecord = {
   // ADR §2.5：无头浏览器是确定性输入，出片时记录实际浏览器标识与版本。
   // 可选：早期存储文档无此字段，重开仍须通过校验。
   browser?: string;
+  // —— P2.5 媒体混编（T1 契约，T4 写入）：渲染钉住实际素材摘要。
+  // key=mediaAssetId（须存在于 mediaAssets 账本），value=sha256（64 位小写 hex）。
+  assetDigests?: Record<string, string>;
 };
 
 export type DeliveryRecord = {

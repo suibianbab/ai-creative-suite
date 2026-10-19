@@ -614,6 +614,21 @@ export function validateVideoProject(value: unknown): VideoProject {
         `${field}.browser must be a trimmed non-empty string of at most 128 characters`,
       );
     }
+    // —— P2.5-T1：渲染钉住素材摘要（R1-R2）——
+    if (record.assetDigests !== undefined) {
+      if (!isRecord(record.assetDigests))
+        fail(`${field}.assetDigests must be an object`);
+      for (const [assetId, digest] of Object.entries(record.assetDigests)) {
+        if (!mediaAssetDurations.has(assetId)) {
+          fail(
+            `${field}.assetDigests 的键 ${assetId} 未指向 mediaAssets 账本中的资产`,
+          );
+        }
+        if (typeof digest !== "string" || !SHA256_HEX.test(digest)) {
+          fail(`${field}.assetDigests[${assetId}] 须为 64 位小写十六进制`);
+        }
+      }
+    }
   }
   if (
     !Array.isArray(parsed.deliveries) ||
