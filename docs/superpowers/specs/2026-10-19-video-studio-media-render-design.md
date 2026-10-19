@@ -51,7 +51,7 @@ apps/web
 ### 2.1 G 表（render-scene 媒体装配，纯逻辑 `render-scene.media.mjs`）
 
 - **G1（收集）**：`collectMediaShots(project) → { entries: [{shotIndex, versionId, mediaAssetId, storeKey, inMs, outMs, fit, focalX, audio, width, height, sha256}], byShotIndex: Map }`——逐镜头工作版本 `sceneSource.type === "media-clip"` 收集，`width/height/sha256/storeKey` 取自账本 `original`；资产不在账本 → 大声错（中文指路账本；文档校验已拦，此为渲染侧双保险）。
-- **G2（props 映射，aspect-agnostic）**：spec 镜头 props 形状**逐字节不变**；media 镜头 = `{ media: { videoSrc, inMs, outMs, fit, focalX, audio, width, height }, startFrame, frames, narration?, subtitles? }`——无 `spec` 键；`videoSrc` 为 media-server 注入的 `http://127.0.0.1:<port>/original/<storeKey>`；props 携带文档字段 + 素材原始画幅，**不含任何画幅特定数值**（双画幅 props 逐字节一致的既有不变量保持；裁切在合成器内按 `useVideoConfig()` 现算）。
+- **G2（props 映射，aspect-agnostic）**：spec 镜头 props 形状**逐字节不变**；media 镜头 = `{ media: { src, assetWidth, assetHeight, inMs, outMs, fit, focalX, audio, trimBefore }, startFrame, frames, narration?, subtitles? }`——无 `spec` 键；`src` 为 media-server 注入的 `http://127.0.0.1:<port>/original/<storeKey>`；`trimBefore` 为源内起始帧（B5 半进位）；props 携带文档字段 + 素材原始画幅，**不含任何画幅特定数值**（双画幅 props 逐字节一致的既有不变量保持；裁切在合成器内按 `useVideoConfig()` 现算）。
 - **G3（存在 + 摘要核验）**：渲染前逐 media 镜头 `originalPath` 解析 → 不存在 → 大声拒（消息含 storeKey 与 `ACS_MEDIA_STORE` 指路）→ 实测 `sha256(file)` ≠ `asset.original.sha256` → 大声拒（内容寻址漂移 = 仓损坏，§3 行 6「摘要不符→大声失败，不写 RenderRecord」）→ 相等则以实测值写 `assetDigests[mediaAssetId]`。核验函数 fs 注入可测。
 - **G4（aac 门拓宽）**：期望音轨条件 = `narrationEntries.length > 0 || entries.some(e => e.audio === "keep")`——mute 媒体 + 零旁白 = 合法无声片（不期望 aac）。
 - **G5（尾帧核算）**：每画幅 ffprobe 五项后追加末帧 `signalstats YAVG` 核算（`ffmpeg -sseof -0.2 -i <mp4> -frames:v 1 -vf signalstats,metadata=print -f null -` 解析 YAVG）；`YAVG ≤ 16` → 大声拒（转场 e2e 实测纯黑=16、内容帧 220+）。探针输出解析为纯函数（注入文本可测）。
@@ -61,7 +61,7 @@ apps/web
 
 ### 2.2 S 表（`media-server.mjs`）
 
-- **S1（协议）**：`node media-server.mjs --dir <仓根> --files <original/a.mp4,original/b.mp4>` → stdout 一行 `{"port":N}` 常驻；白名单 = 精确串匹配（`../`、反斜杠、未列成员一律 404，穿越天然不可达）；CORS `*` + Private-Network；`decodePathName` 复用（畸形 percent-encoding 回 400 不崩进程）；父进程 exit 钩子 kill（沿 narration-server 先例）。
+- **S1（协议）**：`node media-server.mjs --root <媒体仓根> --files <storeKey,storeKey,…>`（白名单为裸 storeKey，路径固定 `original/<storeKey>`）→ stdout 一行 `{"port":N}` 常驻；白名单 = 精确串匹配（`../`、反斜杠、未列成员一律 404，穿越天然不可达）；仅 GET（其他方法 405 + `Allow: GET`），响应带 `Accept-Ranges: none`（不承诺 Range 语义）；CORS `*` + Private-Network；`decodePathName` 复用（畸形 percent-encoding 回 400 不崩进程）；父进程 exit 钩子 kill（沿 narration-server 先例）。
 - **S2（响应）**：Content-Type 按扩展名（mp4→video/mp4、webm→video/webm、mov→video/quicktime、wav→audio/wav 防御兜底）；`statSync` 定 Content-Length + `createReadStream` 流式；`Accept-Ranges: none`（Remotion 整 GET 下载，20s 无数据超时由 data 事件续命）。
 
 ### 2.3 E 表（remotion-engine）
@@ -88,7 +88,7 @@ apps/web
 
 ## 3. 错误消息约定
 
-媒体出片域新增消息全中文（沿 T1-T3 先例）：`素材不在账本：…（请在工作台核对 mediaAssets）` / `媒体文件缺失：<storeKey>（仓根 ACS_MEDIA_STORE=<path>，请重新上传素材）` / `素材摘要不符：<storeKey> 实测 <sha> 与账本 <sha> 不一致（仓文件损坏，请重新导入）` / `末帧为黑帧（YAVG=<n>），疑似渲染缺陷，拒绝写入 RenderRecord` / aac 缺失沿现案拓宽。manifest/RenderRecord 字段名英文沿现状。
+媒体出片域新增消息全中文（沿 T1-T3 先例，以下为逐字实现口径）：`镜头 N 素材不在账本：<assetId>（mediaAssets 无此 assetId，请先上传或恢复账本）` / `镜头 N 原声设为保留但素材无音轨：<assetId>（<storeKey>，请改为静音或更换有音轨的素材）` / `媒体文件缺失：<storeKey>（仓根 ACS_MEDIA_STORE=<path>，请检查媒体仓与项目账本是否同机同步）` / `素材摘要不符：<storeKey> 账本 <sha12>… 实测 <sha12>…（仓文件被改动，内容寻址被破坏，拒绝出片）` / `素材读取失败：<storeKey>（<原因>）` / `<aspect>.mp4 末帧为黑帧（YAVG=<n>）：疑似镜头装配/时长事故，拒绝收片` / aac 缺失沿现案拓宽。manifest/RenderRecord 字段名英文沿现状。
 
 ## 4. 测试清单（全零网络；单测零 Remotion 渲染）
 
@@ -108,6 +108,6 @@ VID-023 全链路 e2e 与双跑**解码帧一致**对账（T6；本刀冒烟已�
 
 1. §4 清单全绿 + 既有套件零回归 + typecheck 零错 + biome clean。
 2. **手工冒烟**（一次性，不进自动化；证据存 `artifacts/video-studio-media-render/`，仓用临时目录）：ffmpeg `testsrc` 生成 3s 测试素材 → `media-ingest` 入临时仓 → 手写 2 镜头项目 JSON（1 spec + 1 media `audio:"keep"`，旁白轨用 ffmpeg 合成正弦 wav 假件放 narration 目录，**零计费**）→ `render-scene` 双画幅 → ffprobe 五项 + aac（keep 见证）+ 尾帧过 + RenderRecord `assetDigests` 在档 + manifest media 块在档 → 同机双跑 `decodeFrameHash` 逐帧一致（§2.3 口径：解码帧一致，不承诺字节一致）→ 再跑 `audio:"mute"` 版零旁白 → 无 aac 且全部门过（G4 反向见证）。
-3. **A1 金标准复跑**：e2e-dataviz 重跑双画幅哈希 `4ac94b11…`/`8f2b26ad…` 逐字节保持（X1 硬证明）。
+3. **A1 金标准复跑**：e2e-dataviz 重跑 props 逐字节相等 + 当前金样 contentDigest `5b016ee3…`/`5a1e16da…`/`47b85441…`/`e64ec36a…`（四条 frameMap，以 `artifacts/video-studio-dataviz/render/render-manifest.json` 为准）逐一保持；出片 MP4 SHA-256 `3c6950b9…`/`36f64db7…`（X1 硬证明）。
 4. 零计费（台账 34 行不变）；媒体不入库。
 5. 集成（merge/PR）由用户决定；Codex 交接单收口。

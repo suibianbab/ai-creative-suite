@@ -27,7 +27,7 @@
 
 （spec 隐含但无任务测试覆盖、最可能咬人的五类输入；逐条钉进归属任务的测试）
 
-1. **props 字节恒等（X1）**：Task 6/7 改造后 spec-only 项目 props 逐字节不变（含键序）。→ 钉在 Task 3（`buildTimelineShotMedia` 键序 JSON 精确串断言）+ Task 8（A1 金标准 e2e-dataviz 复跑 props 逐字节比对 + contentDigest `4ac94b11…`/`8f2b26ad…` 不变）。
+1. **props 字节恒等（X1）**：Task 6/7 改造后 spec-only 项目 props 逐字节不变（含键序）。→ 钉在 Task 3（`buildTimelineShotMedia` 键序 JSON 精确串断言）+ Task 8（A1 金标准 e2e-dataviz 复跑 props 逐字节比对 + contentDigest `5b016ee3…`/`5a1e16da…`/`47b85441…`/`e64ec36a…` 不变，以 dataviz `render-manifest.json` 为准）。
 2. **trimBefore 取整边界（B5）**：非整帧入点 half-up 两侧（×.488→下、×.512→上）。→ 钉在 Task 3 `mediaTrimBefore` 测试（1541ms@24fps→36.984→37 属正常；1562ms→37.488→37、1563ms→37.512→38 钉半进位方向）。
 3. **仓漂移失败路径（G3）**：文件缺失/sha 不符 → 大声失败且不写 RenderRecord 不回写项目。→ 钉在 Task 3 `verifyMediaAssets` 两条负路径测试 + Task 8 手工反证（删仓文件重跑 → 退出码≠0、项目文件 mtime/内容不变）。
 4. **aac 四象限（G4）**：旁白有/无 × 媒体 keep/mute 组合下 aac 存在性判定。→ 钉在 Task 3 `buildHasAudioTrack` 四象限测试 + Task 8（keep 出片有 aac；mute 无旁白重跑无音频流为反证见证）。
@@ -245,19 +245,22 @@ test("白名单外同仓文件：404（白名单是精确串，目录里有什�
   }
 });
 
-test("编码穿越：..、%2e%2e、子路径变体全 404（永不触 fs）", async () => {
+test("编码穿越：逃逸变体全 404；dot-segment 被 URL 规范化后只命中白名单原文件", async () => {
   const { child, base } = await startServer(KEY_A);
   try {
+    // WHATWG URL 在 handler 之前就把 %2e%2e 等 dot-segment 规范化：`%2e%2e` 变体
+    // 收到的是白名单原文件（200 + 字节相等），真逃逸变体（..%2fproxy 等）仍 404。
     for (const p of [
-      `/original/%2e%2e/original/${KEY_A}`,
       `/original/..%2fproxy%2fx.mp4`,
-      `/original/../original/${KEY_A}`,
       `/foo/original/${KEY_A}`,
       `/original/subdir/${KEY_A}`,
       `/original/${KEY_A}.exe`,
     ]) {
       assert.equal((await fetch(base + p)).status, 404, p);
     }
+    const norm = await fetch(`${base}/original/%2e%2e/original/${KEY_A}`);
+    assert.equal(norm.status, 200);
+    assert.deepEqual(Buffer.from(await norm.arrayBuffer()), BODY[KEY_A]);
   } finally {
     child.kill();
   }
@@ -1609,7 +1612,7 @@ cp artifacts/video-studio-dataviz/e2e.video-project.json $EVID/a1/golden.video-p
 node scripts/video/render-scene.mjs --project $EVID/a1/golden.video-project.json --out $EVID/a1/out
 # props 逐字节比对（新旧两跑的 timeline props 文件；旧跑在 artifacts/video-studio-dataviz/render/）
 diff <(cat artifacts/video-studio-dataviz/render/*.props*.json 2>/dev/null | sort) <(cat $EVID/a1/out/*.props*.json | sort) && echo "PROPS-BYTE-IDENTICAL ✓"
-# contentDigest 对账（与 dataviz 既有 render-manifest 里的 contentDigest 逐一相等，含 4ac94b11…/8f2b26ad… 前缀）
+# contentDigest 对账（与 dataviz 既有 render-manifest 里的 contentDigest 逐一相等：5b016ee3…/5a1e16da…/47b85441…/e64ec36a…）
 ```
 
 Expected: props 逐字节相等；contentDigest 集合与旧跑完全一致（黑帧门禁对纯 spec 渲染放行——dataviz 末帧是内容帧）。（若 props 文件名形状不同，按 outDir 实际产物调整 diff 目标——判定标准不变：逐字节。）
