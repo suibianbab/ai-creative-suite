@@ -7,3 +7,10 @@ export {
   storeKeyFor,
   writeAtomically,
 } from "./store.js";
+export {
+  parseFps,
+  parseProbeOutput,
+  runProbe,
+  type ProbeOutcome,
+  type ProbeResult,
+} from "./probe.js";
