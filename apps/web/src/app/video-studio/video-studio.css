@@ -726,6 +726,33 @@
   color: #5d7469;
 }
 
+/* P2.5-T3 第七族媒体编辑字段（沿各族控件同款外观） */
+.media-asset-select,
+.media-in-input,
+.media-out-input,
+.media-fit-select,
+.media-focal-input,
+.media-audio-select {
+  font-size: 13px;
+  padding: 4px 8px;
+  border: 1px solid #bfd6c8;
+  border-radius: 6px;
+  background: #fff;
+  color: #1b2c29;
+  font-family: inherit;
+}
+
+.media-span-note {
+  font-size: 12px;
+  color: #9a9aa0;
+}
+
+.media-warning {
+  margin: 0;
+  color: #d8b04a;
+  font-size: 13px;
+}
+
 .shot-overflow-note {
   font-size: 12px;
   color: #8a5a00;

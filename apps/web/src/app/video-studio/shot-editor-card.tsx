@@ -1,6 +1,6 @@
 "use client";
 
-import type { Shot } from "@acs/video-document";
+import type { MediaAsset, MediaClipPatch, Shot } from "@acs/video-document";
 import type { SceneSpec } from "@acs/video-scene";
 import { useEffect, useState } from "react";
 import {
@@ -35,6 +35,14 @@ import {
   MAP_TEMPLATES,
   type MapEditDraft,
 } from "./map-templates";
+import { assetLabel } from "./media-assets";
+import {
+  buildMediaRevisePatch,
+  draftMediaFromVersion,
+  MEDIA_TEMPLATE_ID,
+  MEDIA_TEMPLATE_LABEL,
+  type MediaEditDraft,
+} from "./media-clip-templates";
 import { LINE_TEMPLATE_LABELS, SHAPE_TEMPLATE_LABELS } from "./planner";
 import {
   buildRevisePatch,
@@ -89,6 +97,29 @@ const EMPTY_LOADING_DRAFT: LoadingEditDraft = {
   target: "",
 };
 
+const EMPTY_MEDIA_DRAFT: MediaEditDraft = {
+  assetId: "",
+  inMsText: "0",
+  outMsText: "2000",
+  fit: "cover",
+  focalPercentText: "50",
+  audio: "mute",
+};
+
+// 媒体→spec 换装的合成基底：resolveAnyTemplate 会覆写 componentId/params，
+// 基底只贡献 seed/background/durationMs（时长 ≥200ms 保 spec 合法下限）。
+function mediaSubstrateSpec(durationMs: number): SceneSpec {
+  return {
+    specVersion: 1,
+    componentId: "bar-chart",
+    componentVersion: 1,
+    durationMs: Math.max(durationMs, 200),
+    seed: 1,
+    background: "#ffffff",
+    params: {},
+  };
+}
+
 // 模板下拉跨图表/地图/流程/火柴人/手绘/加载六族解析：先按图表找，找不到
 // 再按流程、地图、火柴人、手绘、加载找。
 function resolveAnyTemplate(
@@ -114,9 +145,15 @@ export type ShotEditorCardProps = {
   shot: Shot;
   index: number;
   frames: number;
-  // shotWorkingSpec 降级（非 spec 场景源/非法 spec）时 false → 只读卡。
+  // shotWorkingSpec 降级（非 spec/媒体场景源/非法 spec）时 false → 只读卡。
   editable: boolean;
-  onRevise: (patch: { narrationText?: string; spec?: unknown }) => void;
+  // P2.5-T3：媒体镜头编辑臂所需账本（素材下拉/默认入出点）。
+  mediaAssets: MediaAsset[];
+  onRevise: (patch: {
+    narrationText?: string;
+    spec?: unknown;
+    mediaClip?: MediaClipPatch;
+  }) => void;
   onRedo: (directive: string) => void;
   onRollback: (versionId: string) => void;
   onToggleLock: (locked: boolean) => void;
@@ -128,6 +165,7 @@ export function ShotEditorCard({
   index,
   frames,
   editable,
+  mediaAssets,
   onRevise,
   onRedo,
   onRollback,
@@ -139,16 +177,22 @@ export function ShotEditorCard({
     (version) => version.versionId === shot.workingVersionId,
   );
   const spec = shotWorkingSpec(shot);
-  const canEdit = editable && working !== undefined && spec !== null;
+  const mediaSource =
+    working?.sceneSource.type === "media-clip" ? working.sceneSource : null;
+  // spec 缺席但工作版本是媒体 → 用合成基底撑起通用草稿（旁白/时长）与模板链
+  const editSpec =
+    spec ??
+    (working && mediaSource ? mediaSubstrateSpec(working.durationMs) : null);
+  const canEdit = editable && working !== undefined && editSpec !== null;
 
   const [draft, setDraft] = useState<ShotEditDraft>(() =>
-    working && spec
+    working && editSpec
       ? draftFromWorking(
           {
             narrationText: working.narrationText,
             durationMs: working.durationMs,
           },
-          spec,
+          editSpec,
         )
       : {
           narrationText: "",
@@ -163,6 +207,10 @@ export function ShotEditorCard({
   const [directive, setDirective] = useState("");
   const [selectedVersion, setSelectedVersion] = useState(shot.workingVersionId);
   const [pendingTemplateId, setPendingTemplateId] = useState("");
+  // 媒体臂启用条件：已选媒体条目，或工作版本就是媒体且未选 spec 模板
+  const editingMedia =
+    pendingTemplateId === MEDIA_TEMPLATE_ID ||
+    (mediaSource !== null && pendingTemplateId === "");
   const [chartDraft, setChartDraft] = useState<ChartEditDraft>(() =>
     spec && isChartComponentId(spec.componentId)
       ? draftChartFromSpec(spec)
@@ -199,6 +247,13 @@ export function ShotEditorCard({
       : EMPTY_LOADING_DRAFT,
   );
   const [loadingError, setLoadingError] = useState<string | null>(null);
+  // P2.5-T3 媒体草稿（第七族）：素材/入出点/fit/注视点/原声，校验与预警全走
+  // media-clip-templates.ts 纯逻辑，非法草稿不回调。
+  const [mediaDraft, setMediaDraft] = useState<MediaEditDraft | null>(
+    () => draftMediaFromVersion(working, mediaAssets).draft,
+  );
+  const [mediaError, setMediaError] = useState<string | null>(null);
+  const [mediaWarnings, setMediaWarnings] = useState<string[]>([]);
 
   // working 版本变了（应用修订/重做/回滚后）→ 草稿重置到新工作版本。
   // 只盯 workingVersionId（终评整改）：锁定切换会换 shot 对象身份但不动
@@ -209,19 +264,31 @@ export function ShotEditorCard({
       (version) => version.versionId === shot.workingVersionId,
     );
     const nextSpec = shotWorkingSpec(shot);
-    if (nextWorking && nextSpec) {
+    const nextMediaSource =
+      nextWorking?.sceneSource.type === "media-clip"
+        ? nextWorking.sceneSource
+        : null;
+    const nextEditSpec =
+      nextSpec ??
+      (nextWorking && nextMediaSource
+        ? mediaSubstrateSpec(nextWorking.durationMs)
+        : null);
+    if (nextWorking && nextEditSpec) {
       setDraft(
         draftFromWorking(
           {
             narrationText: nextWorking.narrationText,
             durationMs: nextWorking.durationMs,
           },
-          nextSpec,
+          nextEditSpec,
         ),
       );
       setEditError(null);
     }
     setPendingTemplateId("");
+    setMediaDraft(draftMediaFromVersion(nextWorking, mediaAssets).draft);
+    setMediaError(null);
+    setMediaWarnings([]);
     setChartError(null);
     setChartDraft(
       nextSpec && isChartComponentId(nextSpec.componentId)
@@ -325,7 +392,7 @@ export function ShotEditorCard({
       >
         回滚到此版本
       </button>
-      {expanded && canEdit && spec ? (
+      {expanded && canEdit && editSpec ? (
         <div className="shot-edit-form">
           <label className="shot-edit-field">
             旁白
@@ -338,467 +405,670 @@ export function ShotEditorCard({
               }
             />
           </label>
-          <label className="shot-edit-field">
-            背景色
-            <input
-              className="shot-bg-input"
-              value={draft.background}
-              onChange={(event) =>
-                setDraft({ ...draft, background: event.target.value })
-              }
-            />
-          </label>
-          <label className="shot-edit-field">
-            时长（秒）
-            <input
-              className="shot-duration-input"
-              type="number"
-              step={0.1}
-              min={0.1}
-              value={draft.durationSeconds}
-              onChange={(event) =>
-                setDraft({
-                  ...draft,
-                  durationSeconds: Number(event.target.value),
-                })
-              }
-            />
-          </label>
-          {spec.componentId === "text-animation" ? (
+          {!editingMedia ? (
             <>
               <label className="shot-edit-field">
-                标题
+                背景色
                 <input
-                  className="shot-title-input"
-                  maxLength={80}
-                  value={draft.title}
+                  className="shot-bg-input"
+                  value={draft.background}
                   onChange={(event) =>
-                    setDraft({ ...draft, title: event.target.value })
+                    setDraft({ ...draft, background: event.target.value })
                   }
                 />
               </label>
               <label className="shot-edit-field">
-                副标题
+                时长（秒）
                 <input
-                  className="shot-subtitle-input"
-                  maxLength={80}
-                  value={draft.subtitle}
+                  className="shot-duration-input"
+                  type="number"
+                  step={0.1}
+                  min={0.1}
+                  value={draft.durationSeconds}
                   onChange={(event) =>
-                    setDraft({ ...draft, subtitle: event.target.value })
+                    setDraft({
+                      ...draft,
+                      durationSeconds: Number(event.target.value),
+                    })
                   }
                 />
               </label>
-            </>
-          ) : templateLabels ? (
-            <span className="shot-edit-field">
-              <button
-                type="button"
-                className="shot-template-button"
-                onClick={() => setDraft({ ...draft, templateAdvanced: true })}
-                disabled={draft.templateAdvanced}
-              >
-                换一枚模板
-              </button>
-              <span className="shot-template-note">
-                当前第 {(spec.seed % templateLabels.length) + 1} /
-                {templateLabels.length} 枚
-                {draft.templateAdvanced
-                  ? ` → 换成第 ${((spec.seed + 1) % templateLabels.length) + 1} 枚`
-                  : ""}
-              </span>
-            </span>
-          ) : null}
-          <label className="shot-edit-field">
-            组件模板（图表 / 地图 / 流程 / 火柴人 / 手绘 / 加载）
-            <select
-              className="chart-template-select"
-              value={pendingTemplateId}
-              onChange={(event) => {
-                const templateId = event.target.value;
-                setPendingTemplateId(templateId);
-                setChartError(null);
-                setMapError(null);
-                setFlowError(null);
-                setStickError(null);
-                setSketchError(null);
-                setLoadingError(null);
-                if (!templateId) return;
-                const applied = resolveAnyTemplate(spec, templateId);
-                if (applied.error || !applied.spec) {
-                  setChartError(applied.error ?? "模板无效");
-                  return;
-                }
-                // 选中即预填该模板数据到编辑字段（应用时才落文档）
-                if (isChartComponentId(applied.spec.componentId)) {
-                  setChartDraft(draftChartFromSpec(applied.spec));
-                } else if (isMapComponentId(applied.spec.componentId)) {
-                  setMapDraft(draftMapFromSpec(applied.spec));
-                } else if (isFlowComponentId(applied.spec.componentId)) {
-                  setFlowDraft(draftFlowFromSpec(applied.spec));
-                } else if (isStickComponentId(applied.spec.componentId)) {
-                  setStickDraft(draftStickFromSpec(applied.spec));
-                } else if (isSketchComponentId(applied.spec.componentId)) {
-                  setSketchDraft(draftSketchFromSpec(applied.spec));
-                } else if (isLoadingComponentId(applied.spec.componentId)) {
-                  setLoadingDraft(draftLoadingFromSpec(applied.spec));
-                }
-              }}
-            >
-              <option value="">— 保持当前组件 —</option>
-              <optgroup label="图表">
-                {CHART_TEMPLATES.map((template) => (
-                  <option key={template.templateId} value={template.templateId}>
-                    {template.label}
-                  </option>
-                ))}
-              </optgroup>
-              <optgroup label="地图">
-                {MAP_TEMPLATES.map((template) => (
-                  <option key={template.templateId} value={template.templateId}>
-                    {template.label}
-                  </option>
-                ))}
-              </optgroup>
-              <optgroup label="流程">
-                {FLOW_TEMPLATES.map((template) => (
-                  <option key={template.templateId} value={template.templateId}>
-                    {template.label}
-                  </option>
-                ))}
-              </optgroup>
-              <optgroup label="火柴人">
-                {STICK_TEMPLATES.map((template) => (
-                  <option key={template.templateId} value={template.templateId}>
-                    {template.label}
-                  </option>
-                ))}
-              </optgroup>
-              <optgroup label="手绘">
-                {SKETCH_TEMPLATES.map((template) => (
-                  <option key={template.templateId} value={template.templateId}>
-                    {template.label}
-                  </option>
-                ))}
-              </optgroup>
-              <optgroup label="加载">
-                {LOADING_TEMPLATES.map((template) => (
-                  <option key={template.templateId} value={template.templateId}>
-                    {template.label}
-                  </option>
-                ))}
-              </optgroup>
-            </select>
-          </label>
-          {isChartComponentId(spec.componentId) ? (
-            <>
-              <label className="shot-edit-field">
-                图表标题
-                <input
-                  className="chart-title-input"
-                  maxLength={40}
-                  value={chartDraft.title}
-                  onChange={(event) =>
-                    setChartDraft({ ...chartDraft, title: event.target.value })
-                  }
-                />
-              </label>
-              {spec.componentId === "number-counter" ? (
+              {editSpec.componentId === "text-animation" ? (
                 <>
                   <label className="shot-edit-field">
-                    数值
+                    标题
                     <input
-                      className="chart-value-input"
-                      value={chartDraft.value}
+                      className="shot-title-input"
+                      maxLength={80}
+                      value={draft.title}
                       onChange={(event) =>
-                        setChartDraft({
-                          ...chartDraft,
-                          value: event.target.value,
-                        })
+                        setDraft({ ...draft, title: event.target.value })
                       }
                     />
                   </label>
                   <label className="shot-edit-field">
-                    前缀
+                    副标题
                     <input
-                      className="chart-prefix-input"
-                      maxLength={6}
-                      value={chartDraft.prefix}
+                      className="shot-subtitle-input"
+                      maxLength={80}
+                      value={draft.subtitle}
                       onChange={(event) =>
-                        setChartDraft({
-                          ...chartDraft,
-                          prefix: event.target.value,
-                        })
-                      }
-                    />
-                  </label>
-                  <label className="shot-edit-field">
-                    后缀
-                    <input
-                      className="chart-suffix-input"
-                      maxLength={6}
-                      value={chartDraft.suffix}
-                      onChange={(event) =>
-                        setChartDraft({
-                          ...chartDraft,
-                          suffix: event.target.value,
-                        })
+                        setDraft({ ...draft, subtitle: event.target.value })
                       }
                     />
                   </label>
                 </>
-              ) : (
-                <label className="shot-edit-field">
-                  数据（每行 标签,数值
-                  {spec.componentId === "line-chart" ? "，折线可只写数值" : ""}
-                  ）
-                  <textarea
-                    className="chart-data-input"
-                    rows={6}
-                    value={chartDraft.data}
-                    onChange={(event) =>
-                      setChartDraft({ ...chartDraft, data: event.target.value })
+              ) : templateLabels ? (
+                <span className="shot-edit-field">
+                  <button
+                    type="button"
+                    className="shot-template-button"
+                    onClick={() =>
+                      setDraft({ ...draft, templateAdvanced: true })
                     }
-                  />
-                </label>
-              )}
-              {chartError ? (
-                <p className="chart-edit-error">{chartError}</p>
+                    disabled={draft.templateAdvanced}
+                  >
+                    换一枚模板
+                  </button>
+                  <span className="shot-template-note">
+                    当前第 {(editSpec.seed % templateLabels.length) + 1} /
+                    {templateLabels.length} 枚
+                    {draft.templateAdvanced
+                      ? ` → 换成第 ${((editSpec.seed + 1) % templateLabels.length) + 1} 枚`
+                      : ""}
+                  </span>
+                </span>
               ) : null}
-            </>
-          ) : null}
-          {isMapComponentId(spec.componentId) ? (
-            <>
               <label className="shot-edit-field">
-                地图标题
-                <input
-                  className="map-title-input"
-                  maxLength={40}
-                  value={mapDraft.title}
-                  onChange={(event) =>
-                    setMapDraft({ ...mapDraft, title: event.target.value })
-                  }
-                />
+                组件模板（图表 / 地图 / 流程 / 火柴人 / 手绘 / 加载 / 媒体）
+                <select
+                  className="chart-template-select"
+                  value={pendingTemplateId}
+                  onChange={(event) => {
+                    const templateId = event.target.value;
+                    setPendingTemplateId(templateId);
+                    setChartError(null);
+                    setMapError(null);
+                    setFlowError(null);
+                    setStickError(null);
+                    setSketchError(null);
+                    setLoadingError(null);
+                    if (!templateId) return;
+                    // 第七族「媒体」：不走六族换装，选中即播种媒体草稿
+                    if (templateId === MEDIA_TEMPLATE_ID) {
+                      const seeded = draftMediaFromVersion(
+                        working,
+                        mediaAssets,
+                      );
+                      setMediaDraft(seeded.draft);
+                      setMediaError(seeded.error);
+                      setMediaWarnings([]);
+                      return;
+                    }
+                    const applied = resolveAnyTemplate(editSpec, templateId);
+                    if (applied.error || !applied.spec) {
+                      setChartError(applied.error ?? "模板无效");
+                      return;
+                    }
+                    // 选中即预填该模板数据到编辑字段（应用时才落文档）
+                    if (isChartComponentId(applied.spec.componentId)) {
+                      setChartDraft(draftChartFromSpec(applied.spec));
+                    } else if (isMapComponentId(applied.spec.componentId)) {
+                      setMapDraft(draftMapFromSpec(applied.spec));
+                    } else if (isFlowComponentId(applied.spec.componentId)) {
+                      setFlowDraft(draftFlowFromSpec(applied.spec));
+                    } else if (isStickComponentId(applied.spec.componentId)) {
+                      setStickDraft(draftStickFromSpec(applied.spec));
+                    } else if (isSketchComponentId(applied.spec.componentId)) {
+                      setSketchDraft(draftSketchFromSpec(applied.spec));
+                    } else if (isLoadingComponentId(applied.spec.componentId)) {
+                      setLoadingDraft(draftLoadingFromSpec(applied.spec));
+                    }
+                  }}
+                >
+                  <option value="">— 保持当前组件 —</option>
+                  <optgroup label="图表">
+                    {CHART_TEMPLATES.map((template) => (
+                      <option
+                        key={template.templateId}
+                        value={template.templateId}
+                      >
+                        {template.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="地图">
+                    {MAP_TEMPLATES.map((template) => (
+                      <option
+                        key={template.templateId}
+                        value={template.templateId}
+                      >
+                        {template.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="流程">
+                    {FLOW_TEMPLATES.map((template) => (
+                      <option
+                        key={template.templateId}
+                        value={template.templateId}
+                      >
+                        {template.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="火柴人">
+                    {STICK_TEMPLATES.map((template) => (
+                      <option
+                        key={template.templateId}
+                        value={template.templateId}
+                      >
+                        {template.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="手绘">
+                    {SKETCH_TEMPLATES.map((template) => (
+                      <option
+                        key={template.templateId}
+                        value={template.templateId}
+                      >
+                        {template.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="加载">
+                    {LOADING_TEMPLATES.map((template) => (
+                      <option
+                        key={template.templateId}
+                        value={template.templateId}
+                      >
+                        {template.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="媒体">
+                    <option value={MEDIA_TEMPLATE_ID}>
+                      {MEDIA_TEMPLATE_LABEL}
+                    </option>
+                  </optgroup>
+                </select>
               </label>
-              <label className="shot-edit-field">
-                数据（每行{" "}
-                {spec.componentId === "map-grid"
-                  ? "标签,行,列[,数值]（行/列 0..7）"
-                  : "名称,x,y（首行起点、末行终点，中间为途经；可省名称）"}
-                ）
-                <textarea
-                  className="map-data-input"
-                  rows={6}
-                  value={mapDraft.data}
-                  onChange={(event) =>
-                    setMapDraft({ ...mapDraft, data: event.target.value })
-                  }
-                />
-              </label>
-              {mapError ? <p className="map-edit-error">{mapError}</p> : null}
-            </>
-          ) : null}
-          {isFlowComponentId(spec.componentId) ? (
-            <>
-              <label className="shot-edit-field">
-                流程标题
-                <input
-                  className="flow-title-input"
-                  maxLength={40}
-                  value={flowDraft.title}
-                  onChange={(event) =>
-                    setFlowDraft({ ...flowDraft, title: event.target.value })
-                  }
-                />
-              </label>
-              <label className="shot-edit-field">
-                数据（
-                {spec.componentId === "flow-steps"
-                  ? "每行一个步骤标签，2..8 行、1..10 字符"
-                  : "节点段每行 标签,x,y[,菱形]；单独一行 --- 分隔；边段每行 标签->标签[,边标]"}
-                ）
-                <textarea
-                  className="flow-data-input"
-                  rows={8}
-                  value={flowDraft.data}
-                  onChange={(event) =>
-                    setFlowDraft({ ...flowDraft, data: event.target.value })
-                  }
-                />
-              </label>
-              {flowError ? (
-                <p className="flow-edit-error">{flowError}</p>
+              {isChartComponentId(editSpec.componentId) ? (
+                <>
+                  <label className="shot-edit-field">
+                    图表标题
+                    <input
+                      className="chart-title-input"
+                      maxLength={40}
+                      value={chartDraft.title}
+                      onChange={(event) =>
+                        setChartDraft({
+                          ...chartDraft,
+                          title: event.target.value,
+                        })
+                      }
+                    />
+                  </label>
+                  {editSpec.componentId === "number-counter" ? (
+                    <>
+                      <label className="shot-edit-field">
+                        数值
+                        <input
+                          className="chart-value-input"
+                          value={chartDraft.value}
+                          onChange={(event) =>
+                            setChartDraft({
+                              ...chartDraft,
+                              value: event.target.value,
+                            })
+                          }
+                        />
+                      </label>
+                      <label className="shot-edit-field">
+                        前缀
+                        <input
+                          className="chart-prefix-input"
+                          maxLength={6}
+                          value={chartDraft.prefix}
+                          onChange={(event) =>
+                            setChartDraft({
+                              ...chartDraft,
+                              prefix: event.target.value,
+                            })
+                          }
+                        />
+                      </label>
+                      <label className="shot-edit-field">
+                        后缀
+                        <input
+                          className="chart-suffix-input"
+                          maxLength={6}
+                          value={chartDraft.suffix}
+                          onChange={(event) =>
+                            setChartDraft({
+                              ...chartDraft,
+                              suffix: event.target.value,
+                            })
+                          }
+                        />
+                      </label>
+                    </>
+                  ) : (
+                    <label className="shot-edit-field">
+                      数据（每行 标签,数值
+                      {editSpec.componentId === "line-chart"
+                        ? "，折线可只写数值"
+                        : ""}
+                      ）
+                      <textarea
+                        className="chart-data-input"
+                        rows={6}
+                        value={chartDraft.data}
+                        onChange={(event) =>
+                          setChartDraft({
+                            ...chartDraft,
+                            data: event.target.value,
+                          })
+                        }
+                      />
+                    </label>
+                  )}
+                  {chartError ? (
+                    <p className="chart-edit-error">{chartError}</p>
+                  ) : null}
+                </>
               ) : null}
-            </>
-          ) : null}
-          {isStickComponentId(spec.componentId) ? (
-            <>
-              <label className="shot-edit-field">
-                火柴人标题
-                <input
-                  className="stick-title-input"
-                  maxLength={40}
-                  value={stickDraft.title}
-                  onChange={(event) =>
-                    setStickDraft({ ...stickDraft, title: event.target.value })
-                  }
-                />
-              </label>
-              <label className="shot-edit-field">
-                数据（每行 动作,起点x[,终点x]（动作 走/站/挥手/指/跳，坐标
-                0..1000；终点缺省 = 起点））
-                <textarea
-                  className="stick-data-input"
-                  rows={4}
-                  value={stickDraft.data}
-                  onChange={(event) =>
-                    setStickDraft({ ...stickDraft, data: event.target.value })
-                  }
-                />
-              </label>
-              {stickError ? (
-                <p className="stick-edit-error">{stickError}</p>
+              {isMapComponentId(editSpec.componentId) ? (
+                <>
+                  <label className="shot-edit-field">
+                    地图标题
+                    <input
+                      className="map-title-input"
+                      maxLength={40}
+                      value={mapDraft.title}
+                      onChange={(event) =>
+                        setMapDraft({ ...mapDraft, title: event.target.value })
+                      }
+                    />
+                  </label>
+                  <label className="shot-edit-field">
+                    数据（每行{" "}
+                    {editSpec.componentId === "map-grid"
+                      ? "标签,行,列[,数值]（行/列 0..7）"
+                      : "名称,x,y（首行起点、末行终点，中间为途经；可省名称）"}
+                    ）
+                    <textarea
+                      className="map-data-input"
+                      rows={6}
+                      value={mapDraft.data}
+                      onChange={(event) =>
+                        setMapDraft({ ...mapDraft, data: event.target.value })
+                      }
+                    />
+                  </label>
+                  {mapError ? (
+                    <p className="map-edit-error">{mapError}</p>
+                  ) : null}
+                </>
               ) : null}
-            </>
-          ) : null}
-          {isSketchComponentId(spec.componentId) ? (
-            <>
-              <label className="shot-edit-field">
-                手绘标题
-                <input
-                  className="sketch-title-input"
-                  maxLength={40}
-                  value={sketchDraft.title}
-                  onChange={(event) =>
-                    setSketchDraft({
-                      ...sketchDraft,
-                      title: event.target.value,
-                    })
-                  }
-                />
-              </label>
-              <label className="shot-edit-field">
-                数据（每行 文本[,下划线|圈]（强调缺省无，文本可含逗号））
-                <textarea
-                  className="sketch-data-input"
-                  rows={5}
-                  value={sketchDraft.data}
-                  onChange={(event) =>
-                    setSketchDraft({ ...sketchDraft, data: event.target.value })
-                  }
-                />
-              </label>
-              {sketchError ? (
-                <p className="sketch-edit-error">{sketchError}</p>
+              {isFlowComponentId(editSpec.componentId) ? (
+                <>
+                  <label className="shot-edit-field">
+                    流程标题
+                    <input
+                      className="flow-title-input"
+                      maxLength={40}
+                      value={flowDraft.title}
+                      onChange={(event) =>
+                        setFlowDraft({
+                          ...flowDraft,
+                          title: event.target.value,
+                        })
+                      }
+                    />
+                  </label>
+                  <label className="shot-edit-field">
+                    数据（
+                    {editSpec.componentId === "flow-steps"
+                      ? "每行一个步骤标签，2..8 行、1..10 字符"
+                      : "节点段每行 标签,x,y[,菱形]；单独一行 --- 分隔；边段每行 标签->标签[,边标]"}
+                    ）
+                    <textarea
+                      className="flow-data-input"
+                      rows={8}
+                      value={flowDraft.data}
+                      onChange={(event) =>
+                        setFlowDraft({ ...flowDraft, data: event.target.value })
+                      }
+                    />
+                  </label>
+                  {flowError ? (
+                    <p className="flow-edit-error">{flowError}</p>
+                  ) : null}
+                </>
               ) : null}
-            </>
-          ) : null}
-          {isLoadingComponentId(spec.componentId) ? (
-            <>
-              <label className="shot-edit-field">
-                加载标题
-                <input
-                  className="loading-title-input"
-                  maxLength={40}
-                  value={loadingDraft.title}
-                  onChange={(event) =>
-                    setLoadingDraft({
-                      ...loadingDraft,
-                      title: event.target.value,
-                    })
-                  }
-                />
-              </label>
-              <label className="shot-edit-field">
-                状态文案（1..12 字）
-                <input
-                  className="loading-label-input"
-                  maxLength={12}
-                  value={loadingDraft.label}
-                  onChange={(event) =>
-                    setLoadingDraft({
-                      ...loadingDraft,
-                      label: event.target.value,
-                    })
-                  }
-                />
-              </label>
-              {spec.componentId === "loading-dots" ? (
-                <label className="shot-edit-field">
-                  点数（3..6）
-                  <input
-                    className="loading-count-input"
-                    type="number"
-                    min={3}
-                    max={6}
-                    value={loadingDraft.count}
-                    onChange={(event) =>
-                      setLoadingDraft({
-                        ...loadingDraft,
-                        count: event.target.value,
+              {isStickComponentId(editSpec.componentId) ? (
+                <>
+                  <label className="shot-edit-field">
+                    火柴人标题
+                    <input
+                      className="stick-title-input"
+                      maxLength={40}
+                      value={stickDraft.title}
+                      onChange={(event) =>
+                        setStickDraft({
+                          ...stickDraft,
+                          title: event.target.value,
+                        })
+                      }
+                    />
+                  </label>
+                  <label className="shot-edit-field">
+                    数据（每行 动作,起点x[,终点x]（动作 走/站/挥手/指/跳，坐标
+                    0..1000；终点缺省 = 起点））
+                    <textarea
+                      className="stick-data-input"
+                      rows={4}
+                      value={stickDraft.data}
+                      onChange={(event) =>
+                        setStickDraft({
+                          ...stickDraft,
+                          data: event.target.value,
+                        })
+                      }
+                    />
+                  </label>
+                  {stickError ? (
+                    <p className="stick-edit-error">{stickError}</p>
+                  ) : null}
+                </>
+              ) : null}
+              {isSketchComponentId(editSpec.componentId) ? (
+                <>
+                  <label className="shot-edit-field">
+                    手绘标题
+                    <input
+                      className="sketch-title-input"
+                      maxLength={40}
+                      value={sketchDraft.title}
+                      onChange={(event) =>
+                        setSketchDraft({
+                          ...sketchDraft,
+                          title: event.target.value,
+                        })
+                      }
+                    />
+                  </label>
+                  <label className="shot-edit-field">
+                    数据（每行 文本[,下划线|圈]（强调缺省无，文本可含逗号））
+                    <textarea
+                      className="sketch-data-input"
+                      rows={5}
+                      value={sketchDraft.data}
+                      onChange={(event) =>
+                        setSketchDraft({
+                          ...sketchDraft,
+                          data: event.target.value,
+                        })
+                      }
+                    />
+                  </label>
+                  {sketchError ? (
+                    <p className="sketch-edit-error">{sketchError}</p>
+                  ) : null}
+                </>
+              ) : null}
+              {isLoadingComponentId(editSpec.componentId) ? (
+                <>
+                  <label className="shot-edit-field">
+                    加载标题
+                    <input
+                      className="loading-title-input"
+                      maxLength={40}
+                      value={loadingDraft.title}
+                      onChange={(event) =>
+                        setLoadingDraft({
+                          ...loadingDraft,
+                          title: event.target.value,
+                        })
+                      }
+                    />
+                  </label>
+                  <label className="shot-edit-field">
+                    状态文案（1..12 字）
+                    <input
+                      className="loading-label-input"
+                      maxLength={12}
+                      value={loadingDraft.label}
+                      onChange={(event) =>
+                        setLoadingDraft({
+                          ...loadingDraft,
+                          label: event.target.value,
+                        })
+                      }
+                    />
+                  </label>
+                  {editSpec.componentId === "loading-dots" ? (
+                    <label className="shot-edit-field">
+                      点数（3..6）
+                      <input
+                        className="loading-count-input"
+                        type="number"
+                        min={3}
+                        max={6}
+                        value={loadingDraft.count}
+                        onChange={(event) =>
+                          setLoadingDraft({
+                            ...loadingDraft,
+                            count: event.target.value,
+                          })
+                        }
+                      />
+                    </label>
+                  ) : (
+                    <label className="shot-edit-field">
+                      目标百分比（1..100）
+                      <input
+                        className="loading-target-input"
+                        type="number"
+                        min={1}
+                        max={100}
+                        value={loadingDraft.target}
+                        onChange={(event) =>
+                          setLoadingDraft({
+                            ...loadingDraft,
+                            target: event.target.value,
+                          })
+                        }
+                      />
+                    </label>
+                  )}
+                  {loadingError ? (
+                    <p className="loading-edit-error">{loadingError}</p>
+                  ) : null}
+                </>
+              ) : null}
+              {overflowMs > 0 ? (
+                <span className="shot-overflow-note">
+                  旁白按语速需{" "}
+                  {(
+                    (Math.round(draft.durationSeconds * 1000) + overflowMs) /
+                    1000
+                  ).toFixed(1)}
+                  s，超出当前 {draft.durationSeconds.toFixed(1)}s
+                  <button
+                    type="button"
+                    className="shot-align-speech"
+                    onClick={() =>
+                      setDraft({
+                        ...draft,
+                        durationSeconds:
+                          (Math.round(draft.durationSeconds * 1000) +
+                            overflowMs) /
+                          1000,
                       })
                     }
-                  />
-                </label>
-              ) : (
-                <label className="shot-edit-field">
-                  目标百分比（1..100）
-                  <input
-                    className="loading-target-input"
-                    type="number"
-                    min={1}
-                    max={100}
-                    value={loadingDraft.target}
-                    onChange={(event) =>
-                      setLoadingDraft({
-                        ...loadingDraft,
-                        target: event.target.value,
-                      })
-                    }
-                  />
-                </label>
-              )}
-              {loadingError ? (
-                <p className="loading-edit-error">{loadingError}</p>
+                  >
+                    按语速对齐
+                  </button>
+                </span>
               ) : null}
             </>
-          ) : null}
-          {overflowMs > 0 ? (
-            <span className="shot-overflow-note">
-              旁白按语速需{" "}
-              {(
-                (Math.round(draft.durationSeconds * 1000) + overflowMs) /
-                1000
-              ).toFixed(1)}
-              s，超出当前 {draft.durationSeconds.toFixed(1)}s
-              <button
-                type="button"
-                className="shot-align-speech"
-                onClick={() =>
-                  setDraft({
-                    ...draft,
-                    durationSeconds:
-                      (Math.round(draft.durationSeconds * 1000) + overflowMs) /
-                      1000,
-                  })
-                }
-              >
-                按语速对齐
-              </button>
-            </span>
-          ) : null}
+          ) : (
+            <>
+              <label className="shot-edit-field">
+                素材
+                <select
+                  className="media-asset-select"
+                  value={mediaDraft?.assetId ?? ""}
+                  onChange={(event) =>
+                    setMediaDraft({
+                      ...(mediaDraft ?? EMPTY_MEDIA_DRAFT),
+                      assetId: event.target.value,
+                    })
+                  }
+                >
+                  {mediaAssets.length === 0 ? (
+                    <option value="">（项目尚无素材）</option>
+                  ) : (
+                    mediaAssets.map((asset) => (
+                      <option key={asset.assetId} value={asset.assetId}>
+                        {assetLabel(asset, mediaAssets)}
+                      </option>
+                    ))
+                  )}
+                </select>
+              </label>
+              <label className="shot-edit-field">
+                入点（ms）
+                <input
+                  className="media-in-input"
+                  value={mediaDraft?.inMsText ?? ""}
+                  onChange={(event) =>
+                    setMediaDraft({
+                      ...(mediaDraft ?? EMPTY_MEDIA_DRAFT),
+                      inMsText: event.target.value,
+                    })
+                  }
+                />
+              </label>
+              <label className="shot-edit-field">
+                出点（ms）
+                <input
+                  className="media-out-input"
+                  value={mediaDraft?.outMsText ?? ""}
+                  onChange={(event) =>
+                    setMediaDraft({
+                      ...(mediaDraft ?? EMPTY_MEDIA_DRAFT),
+                      outMsText: event.target.value,
+                    })
+                  }
+                />
+              </label>
+              <span className="media-span-note">
+                片段时长{" "}
+                {Math.max(
+                  (Number(mediaDraft?.outMsText) || 0) -
+                    (Number(mediaDraft?.inMsText) || 0),
+                  0,
+                )}
+                ms（出点−入点，出片同长）
+              </span>
+              <label className="shot-edit-field">
+                画面适配
+                <select
+                  className="media-fit-select"
+                  value={mediaDraft?.fit ?? "cover"}
+                  onChange={(event) =>
+                    setMediaDraft({
+                      ...(mediaDraft ?? EMPTY_MEDIA_DRAFT),
+                      fit:
+                        event.target.value === "contain" ? "contain" : "cover",
+                    })
+                  }
+                >
+                  <option value="cover">cover（裁切铺满）</option>
+                  <option value="contain">contain（完整留边）</option>
+                </select>
+              </label>
+              <label className="shot-edit-field">
+                注视点（%，cover 横向裁切时生效）
+                <input
+                  className="media-focal-input"
+                  value={mediaDraft?.focalPercentText ?? ""}
+                  onChange={(event) =>
+                    setMediaDraft({
+                      ...(mediaDraft ?? EMPTY_MEDIA_DRAFT),
+                      focalPercentText: event.target.value,
+                    })
+                  }
+                />
+              </label>
+              <label className="shot-edit-field">
+                原声
+                <select
+                  className="media-audio-select"
+                  value={mediaDraft?.audio ?? "mute"}
+                  onChange={(event) =>
+                    setMediaDraft({
+                      ...(mediaDraft ?? EMPTY_MEDIA_DRAFT),
+                      audio: event.target.value === "keep" ? "keep" : "mute",
+                    })
+                  }
+                >
+                  <option value="mute">静音（预览/出片均不带原声）</option>
+                  <option value="keep">保留（出片与旁白混音，T4 兑现）</option>
+                </select>
+              </label>
+              {mediaWarnings.map((warning) => (
+                <p key={warning} className="media-warning" role="status">
+                  {warning}
+                </p>
+              ))}
+              {mediaError ? (
+                <p className="shot-edit-error">{mediaError}</p>
+              ) : null}
+            </>
+          )}
           {editError ? <p className="shot-edit-error">{editError}</p> : null}
           <div className="shot-edit-actions">
             <button
               type="button"
               className="shot-apply"
               onClick={() => {
+                // 媒体臂（第七族）：校验/预警全走 media-clip-templates 纯逻辑；
+                // 旁白沿用共享草稿，非法不回调（与 spec 臂同一纪律）。
+                if (editingMedia) {
+                  if (!mediaDraft) {
+                    setMediaError("项目尚无媒体素材，请先在素材面板上传");
+                    return;
+                  }
+                  const built = buildMediaRevisePatch(
+                    mediaDraft,
+                    mediaAssets,
+                    draft.narrationText,
+                  );
+                  if (built.error || !built.patch) {
+                    setMediaError(built.error ?? "媒体字段无效");
+                    return;
+                  }
+                  setMediaError(null);
+                  setMediaWarnings(built.warnings);
+                  setEditError(null);
+                  onRevise(built.patch);
+                  return;
+                }
                 // 换模板 = 以模板 spec 为基底；与同草稿的并发编辑（旁白/背景/
                 // 时长 + 图表/地图/流程/火柴人/手绘/加载数据——选中模板时已
                 // 预填该模板默认值）一次应用一并落库，不静默丢弃（终评 I1
                 // 合并语义）。
-                let baseSpec = spec;
+                let baseSpec = editSpec;
                 if (pendingTemplateId) {
-                  const applied = resolveAnyTemplate(spec, pendingTemplateId);
+                  const applied = resolveAnyTemplate(
+                    editSpec,
+                    pendingTemplateId,
+                  );
                   if (applied.error || !applied.spec) {
                     setEditError(applied.error ?? "模板无效");
                     return;
@@ -942,7 +1212,7 @@ export function ShotEditorCard({
                       narrationText: working.narrationText,
                       durationMs: working.durationMs,
                     },
-                    spec,
+                    editSpec,
                   ),
                 );
                 setEditError(null);

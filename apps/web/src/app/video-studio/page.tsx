@@ -492,6 +492,7 @@ export default function VideoStudioPage() {
                       shotSpecs[index] !== null ||
                       shotMediaClips[index] !== null
                     }
+                    mediaAssets={mediaAssets}
                     redoError={redoErrors[shot.shotId] ?? null}
                     onRevise={(patch) => {
                       try {
