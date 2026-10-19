@@ -109,10 +109,14 @@ test("F6：--file 不存在 → exit 1 + stderr 中文（不得英文堆栈炸�
 });
 
 test("F6：env 相对 ACS_MEDIA_STORE → exit 1 + stderr 中文", () => {
-  const run = spawnSync(process.execPath, [CLI, "--file", makeVideo("env.mp4")], {
-    encoding: "utf8",
-    env: { ...process.env, ACS_MEDIA_STORE: "relative/store" },
-  });
+  const run = spawnSync(
+    process.execPath,
+    [CLI, "--file", makeVideo("env.mp4")],
+    {
+      encoding: "utf8",
+      env: { ...process.env, ACS_MEDIA_STORE: "relative/store" },
+    },
+  );
   assert.equal(
     run.status,
     1,

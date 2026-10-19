@@ -6,7 +6,12 @@ import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { isEnoentError, parseFps, parseProbeOutput, runProbe } from "./probe.js";
+import {
+  isEnoentError,
+  parseFps,
+  parseProbeOutput,
+  runProbe,
+} from "./probe.js";
 
 const WORK = mkdtempSync(path.join(tmpdir(), "acs-probe-test-"));
 
@@ -142,7 +147,9 @@ test("runProbe ENOENT：PATH 空 → ffprobe 不在路径 → 中文大声失败
 
 test("F1：isEnoentError 分类——ENOENT 才算未装；ENOBUFS/普通 Error 不是", () => {
   assert.equal(
-    isEnoentError(Object.assign(new Error("spawn ENOBUFS"), { code: "ENOBUFS" })),
+    isEnoentError(
+      Object.assign(new Error("spawn ENOBUFS"), { code: "ENOBUFS" }),
+    ),
     false,
   );
   assert.equal(

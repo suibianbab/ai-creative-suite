@@ -316,7 +316,11 @@ test("F3：仓内已有有效代理 → 复用不重转码（转码器不得被�
   assert.ok(second.ok, second.ok ? "" : second.error);
   assert.ok(second.asset.proxy);
   assert.match(second.asset.proxy.note, /复用仓内既有代理/);
-  assert.equal(statSync(proxyFile).mtimeMs, mtimeBefore, "复用路径不得重写代理");
+  assert.equal(
+    statSync(proxyFile).mtimeMs,
+    mtimeBefore,
+    "复用路径不得重写代理",
+  );
 });
 
 test("F4：导入期间事件循环不得被阻塞（spawnSync 会冻结整条循环）", async () => {
@@ -332,7 +336,10 @@ test("F4：导入期间事件循环不得被阻塞（spawnSync 会冻结整条�
     root,
   });
   assert.ok(result.ok, result.ok ? "" : result.error);
-  assert.ok(ticked, "导入执行中 setImmediate 必须有机会跑（探测/解码须异步 spawn）");
+  assert.ok(
+    ticked,
+    "导入执行中 setImmediate 必须有机会跑（探测/解码须异步 spawn）",
+  );
 });
 
 test("幂等复用：同内容二次导入 → 同 storeKey 文件 mtime 不变（未重写）+ 新 assetId", async () => {

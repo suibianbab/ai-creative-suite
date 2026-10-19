@@ -67,7 +67,9 @@ export async function transcodeProxy(
     } catch {}
     // stderr 为空（进程根本没起来）时取 error.message，不留空前缀
     const detail =
-      captured.stderr !== "" ? captured.stderr : (captured.error?.message ?? "");
+      captured.stderr !== ""
+        ? captured.stderr
+        : (captured.error?.message ?? "");
     return {
       ok: false,
       error: `代理转码失败：${detail.slice(-300)}`,
