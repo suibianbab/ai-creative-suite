@@ -42,6 +42,7 @@ import {
   MEDIA_TEMPLATE_ID,
   MEDIA_TEMPLATE_LABEL,
   type MediaEditDraft,
+  mediaTemplateSelectValue,
 } from "./media-clip-templates";
 import { LINE_TEMPLATE_LABELS, SHAPE_TEMPLATE_LABELS } from "./planner";
 import {
@@ -405,6 +406,106 @@ export function ShotEditorCard({
               }
             />
           </label>
+          {/* M6/终评 F1：组件模板下拉在共享层（两臂恒可见恒可撤）——媒体镜头
+              换回 spec 组件的唯一入口；工作版本已是媒体且未选换装时，value
+              停在本族条目（mediaTemplateSelectValue）。 */}
+          <label className="shot-edit-field">
+            组件模板（图表 / 地图 / 流程 / 火柴人 / 手绘 / 加载 / 媒体）
+            <select
+              className="chart-template-select"
+              value={mediaTemplateSelectValue(
+                pendingTemplateId,
+                mediaSource !== null,
+              )}
+              onChange={(event) => {
+                const templateId = event.target.value;
+                setPendingTemplateId(templateId);
+                setChartError(null);
+                setMapError(null);
+                setFlowError(null);
+                setStickError(null);
+                setSketchError(null);
+                setLoadingError(null);
+                if (!templateId) return;
+                // 第七族「媒体」：不走六族换装，选中即播种媒体草稿
+                if (templateId === MEDIA_TEMPLATE_ID) {
+                  const seeded = draftMediaFromVersion(working, mediaAssets);
+                  setMediaDraft(seeded.draft);
+                  setMediaError(seeded.error);
+                  setMediaWarnings([]);
+                  return;
+                }
+                const applied = resolveAnyTemplate(editSpec, templateId);
+                if (applied.error || !applied.spec) {
+                  setChartError(applied.error ?? "模板无效");
+                  return;
+                }
+                // 选中即预填该模板数据到编辑字段（应用时才落文档）
+                if (isChartComponentId(applied.spec.componentId)) {
+                  setChartDraft(draftChartFromSpec(applied.spec));
+                } else if (isMapComponentId(applied.spec.componentId)) {
+                  setMapDraft(draftMapFromSpec(applied.spec));
+                } else if (isFlowComponentId(applied.spec.componentId)) {
+                  setFlowDraft(draftFlowFromSpec(applied.spec));
+                } else if (isStickComponentId(applied.spec.componentId)) {
+                  setStickDraft(draftStickFromSpec(applied.spec));
+                } else if (isSketchComponentId(applied.spec.componentId)) {
+                  setSketchDraft(draftSketchFromSpec(applied.spec));
+                } else if (isLoadingComponentId(applied.spec.componentId)) {
+                  setLoadingDraft(draftLoadingFromSpec(applied.spec));
+                }
+              }}
+            >
+              <option value="">— 保持当前组件 —</option>
+              <optgroup label="图表">
+                {CHART_TEMPLATES.map((template) => (
+                  <option key={template.templateId} value={template.templateId}>
+                    {template.label}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="地图">
+                {MAP_TEMPLATES.map((template) => (
+                  <option key={template.templateId} value={template.templateId}>
+                    {template.label}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="流程">
+                {FLOW_TEMPLATES.map((template) => (
+                  <option key={template.templateId} value={template.templateId}>
+                    {template.label}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="火柴人">
+                {STICK_TEMPLATES.map((template) => (
+                  <option key={template.templateId} value={template.templateId}>
+                    {template.label}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="手绘">
+                {SKETCH_TEMPLATES.map((template) => (
+                  <option key={template.templateId} value={template.templateId}>
+                    {template.label}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="加载">
+                {LOADING_TEMPLATES.map((template) => (
+                  <option key={template.templateId} value={template.templateId}>
+                    {template.label}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="媒体">
+                <option value={MEDIA_TEMPLATE_ID}>
+                  {MEDIA_TEMPLATE_LABEL}
+                </option>
+              </optgroup>
+            </select>
+          </label>
           {!editingMedia ? (
             <>
               <label className="shot-edit-field">
@@ -479,121 +580,6 @@ export function ShotEditorCard({
                   </span>
                 </span>
               ) : null}
-              <label className="shot-edit-field">
-                组件模板（图表 / 地图 / 流程 / 火柴人 / 手绘 / 加载 / 媒体）
-                <select
-                  className="chart-template-select"
-                  value={pendingTemplateId}
-                  onChange={(event) => {
-                    const templateId = event.target.value;
-                    setPendingTemplateId(templateId);
-                    setChartError(null);
-                    setMapError(null);
-                    setFlowError(null);
-                    setStickError(null);
-                    setSketchError(null);
-                    setLoadingError(null);
-                    if (!templateId) return;
-                    // 第七族「媒体」：不走六族换装，选中即播种媒体草稿
-                    if (templateId === MEDIA_TEMPLATE_ID) {
-                      const seeded = draftMediaFromVersion(
-                        working,
-                        mediaAssets,
-                      );
-                      setMediaDraft(seeded.draft);
-                      setMediaError(seeded.error);
-                      setMediaWarnings([]);
-                      return;
-                    }
-                    const applied = resolveAnyTemplate(editSpec, templateId);
-                    if (applied.error || !applied.spec) {
-                      setChartError(applied.error ?? "模板无效");
-                      return;
-                    }
-                    // 选中即预填该模板数据到编辑字段（应用时才落文档）
-                    if (isChartComponentId(applied.spec.componentId)) {
-                      setChartDraft(draftChartFromSpec(applied.spec));
-                    } else if (isMapComponentId(applied.spec.componentId)) {
-                      setMapDraft(draftMapFromSpec(applied.spec));
-                    } else if (isFlowComponentId(applied.spec.componentId)) {
-                      setFlowDraft(draftFlowFromSpec(applied.spec));
-                    } else if (isStickComponentId(applied.spec.componentId)) {
-                      setStickDraft(draftStickFromSpec(applied.spec));
-                    } else if (isSketchComponentId(applied.spec.componentId)) {
-                      setSketchDraft(draftSketchFromSpec(applied.spec));
-                    } else if (isLoadingComponentId(applied.spec.componentId)) {
-                      setLoadingDraft(draftLoadingFromSpec(applied.spec));
-                    }
-                  }}
-                >
-                  <option value="">— 保持当前组件 —</option>
-                  <optgroup label="图表">
-                    {CHART_TEMPLATES.map((template) => (
-                      <option
-                        key={template.templateId}
-                        value={template.templateId}
-                      >
-                        {template.label}
-                      </option>
-                    ))}
-                  </optgroup>
-                  <optgroup label="地图">
-                    {MAP_TEMPLATES.map((template) => (
-                      <option
-                        key={template.templateId}
-                        value={template.templateId}
-                      >
-                        {template.label}
-                      </option>
-                    ))}
-                  </optgroup>
-                  <optgroup label="流程">
-                    {FLOW_TEMPLATES.map((template) => (
-                      <option
-                        key={template.templateId}
-                        value={template.templateId}
-                      >
-                        {template.label}
-                      </option>
-                    ))}
-                  </optgroup>
-                  <optgroup label="火柴人">
-                    {STICK_TEMPLATES.map((template) => (
-                      <option
-                        key={template.templateId}
-                        value={template.templateId}
-                      >
-                        {template.label}
-                      </option>
-                    ))}
-                  </optgroup>
-                  <optgroup label="手绘">
-                    {SKETCH_TEMPLATES.map((template) => (
-                      <option
-                        key={template.templateId}
-                        value={template.templateId}
-                      >
-                        {template.label}
-                      </option>
-                    ))}
-                  </optgroup>
-                  <optgroup label="加载">
-                    {LOADING_TEMPLATES.map((template) => (
-                      <option
-                        key={template.templateId}
-                        value={template.templateId}
-                      >
-                        {template.label}
-                      </option>
-                    ))}
-                  </optgroup>
-                  <optgroup label="媒体">
-                    <option value={MEDIA_TEMPLATE_ID}>
-                      {MEDIA_TEMPLATE_LABEL}
-                    </option>
-                  </optgroup>
-                </select>
-              </label>
               {isChartComponentId(editSpec.componentId) ? (
                 <>
                   <label className="shot-edit-field">

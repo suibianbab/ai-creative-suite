@@ -7,6 +7,17 @@ import { speechAwareDurationMs } from "./planner";
 export const MEDIA_TEMPLATE_ID = "media-clip";
 export const MEDIA_TEMPLATE_LABEL = "媒体镜头（选素材设入出点）";
 
+// M6：组件模板下拉的受控 value——工作版本已是 media-clip 且未选换装模板时，
+// 下拉默认停在本族条目（媒体↔spec 换装的入口恒可见恒可撤，终评 F1）。
+export function mediaTemplateSelectValue(
+  pendingTemplateId: string,
+  mediaSourcePresent: boolean,
+): string {
+  return pendingTemplateId === "" && mediaSourcePresent
+    ? MEDIA_TEMPLATE_ID
+    : pendingTemplateId;
+}
+
 const INTEGER_TEXT = /^[0-9]+$/;
 
 export type MediaEditDraft = {

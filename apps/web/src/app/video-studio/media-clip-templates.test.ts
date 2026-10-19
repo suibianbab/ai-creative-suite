@@ -5,7 +5,9 @@ import type { MediaAsset } from "@acs/video-document";
 import {
   buildMediaRevisePatch,
   draftMediaFromVersion,
+  MEDIA_TEMPLATE_ID,
   type MediaEditDraft,
+  mediaTemplateSelectValue,
 } from "./media-clip-templates";
 
 const ASSET_ID = "1f0b13a2-6c63-4d3d-9a52-a70f6a3b2001";
@@ -198,5 +200,21 @@ test("M3：fit/audio 非法枚举兜底拒", () => {
     buildMediaRevisePatch(draft({ audio: "loud" as never }), [asset()], "")
       .error!,
     /mute 或 keep/,
+  );
+});
+
+test("M6：media 源未选模板 → 下拉默认停在本族条目（终评 F1 修复）", () => {
+  assert.equal(mediaTemplateSelectValue("", true), MEDIA_TEMPLATE_ID);
+});
+
+test("M6：已选模板或 spec 源 → 下拉保持所选/所空原值", () => {
+  assert.equal(
+    mediaTemplateSelectValue("bar-compare-4", true),
+    "bar-compare-4",
+  );
+  assert.equal(mediaTemplateSelectValue("", false), "");
+  assert.equal(
+    mediaTemplateSelectValue(MEDIA_TEMPLATE_ID, false),
+    MEDIA_TEMPLATE_ID,
   );
 });
