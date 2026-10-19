@@ -16,6 +16,7 @@ export const VIDEO_PROJECT_MAX_BYTES = 2 * 1024 * 1024;
 const UUID =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const ISO_8601 = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/;
+const SHA256_HEX = /^[0-9a-f]{64}$/;
 // TextEncoder 而非 Buffer：本包同时被浏览器（工作台）与 Node（CLI）引用。
 const encoder = new TextEncoder();
 const MAX_ARRAY = 1000;
@@ -36,6 +37,139 @@ function isUuid(value: unknown): value is string {
 
 function isIsoTime(value: unknown): value is string {
   return typeof value === "string" && ISO_8601.test(value);
+}
+
+// —— P2.5-T1：媒体资产账本校验（spec A1-A8）。
+// 返回 assetId → durationMs 映射，供 media-clip 出入点与 assetDigests 交叉校验。
+function validateMediaAssets(value: unknown): Map<string, number> {
+  if (value === undefined) return new Map();
+  if (!Array.isArray(value) || value.length > MAX_ARRAY) {
+    fail(`mediaAssets must be an array of at most ${MAX_ARRAY} entries`);
+  }
+  const durations = new Map<string, number>();
+  for (const [index, asset] of value.entries()) {
+    const field = `mediaAssets[${index}]`;
+    if (!isRecord(asset)) fail(`${field} must be an object`);
+    if (!isUuid(asset.assetId)) fail(`${field}.assetId must be a UUID`);
+    if (durations.has(asset.assetId)) fail(`${field}.assetId is duplicated`);
+    if (!isIsoTime(asset.createdAt))
+      fail(`${field}.createdAt must be an ISO 8601 string`);
+    const origin = asset.origin;
+    if (!isRecord(origin)) fail(`${field}.origin must be an object`);
+    if (origin.kind === "local-upload") {
+      if (
+        typeof origin.fileName !== "string" ||
+        origin.fileName.length < 1 ||
+        origin.fileName.length > 200
+      ) {
+        fail(`${field}.origin.fileName 须为 1..200 字符`);
+      }
+    } else if (origin.kind === "stock-source") {
+      if (origin.sourceId !== "wikimedia")
+        fail(`${field}.origin.sourceId 须为 "wikimedia"`);
+      if (
+        typeof origin.sourcePageUrl !== "string" ||
+        !/^https?:\/\//.test(origin.sourcePageUrl) ||
+        origin.sourcePageUrl.length > 2000
+      ) {
+        fail(`${field}.origin.sourcePageUrl 须为 http(s):// 开头且 ≤2000 字符`);
+      }
+      const license = origin.license;
+      if (!isRecord(license)) fail(`${field}.origin.license must be an object`);
+      if (
+        typeof license.name !== "string" ||
+        license.name.length < 1 ||
+        license.name.length > 100
+      ) {
+        fail(`${field}.origin.license.name 须为 1..100 字符`);
+      }
+      for (const key of ["author", "usageNote"] as const) {
+        const v = license[key];
+        if (
+          v !== undefined &&
+          (typeof v !== "string" || v.length < 1 || v.length > 200)
+        ) {
+          fail(`${field}.origin.license.${key} 须为 1..200 字符`);
+        }
+      }
+      if (!isIsoTime(origin.retrievedAt))
+        fail(`${field}.origin.retrievedAt must be an ISO 8601 string`);
+    } else {
+      fail(`${field}.origin.kind must be "local-upload" or "stock-source"`);
+    }
+    const o = asset.original;
+    if (!isRecord(o)) fail(`${field}.original must be an object`);
+    if (typeof o.sha256 !== "string" || !SHA256_HEX.test(o.sha256)) {
+      fail(`${field}.original.sha256 须为 64 位小写十六进制`);
+    }
+    if (!Number.isInteger(o.bytes) || (o.bytes as number) < 1) {
+      fail(`${field}.original.bytes 须为正整数`);
+    }
+    if (
+      !Number.isInteger(o.durationMs) ||
+      (o.durationMs as number) < 200 ||
+      (o.durationMs as number) > MAX_DURATION_MS
+    ) {
+      fail(
+        `${field}.original.durationMs 须为 200..${MAX_DURATION_MS} 的整数毫秒`,
+      );
+    }
+    if (
+      !Number.isInteger(o.width) ||
+      (o.width as number) < 1 ||
+      !Number.isInteger(o.height) ||
+      (o.height as number) < 1
+    ) {
+      fail(`${field}.original.width/height 须为正整数`);
+    }
+    if (
+      typeof o.fps !== "number" ||
+      !Number.isFinite(o.fps) ||
+      (o.fps as number) <= 0
+    ) {
+      fail(`${field}.original.fps 须为正数`);
+    }
+    if (typeof o.codec !== "string" || o.codec.length === 0) {
+      fail(`${field}.original.codec must be a non-empty string`);
+    }
+    if (typeof o.hasAudio !== "boolean") {
+      fail(`${field}.original.hasAudio must be boolean`);
+    }
+    if (
+      typeof o.storeKey !== "string" ||
+      !/^[0-9a-f]{16}\.(mp4|webm|mov)$/.test(o.storeKey) ||
+      (o.storeKey as string).slice(0, 16) !== (o.sha256 as string).slice(0, 16)
+    ) {
+      fail(`${field}.original.storeKey 须为 sha256 前 16 位 + .mp4/.webm/.mov`);
+    }
+    if (asset.proxy !== undefined) {
+      const p = asset.proxy;
+      if (!isRecord(p)) fail(`${field}.proxy must be an object`);
+      if (typeof p.sha256 !== "string" || !SHA256_HEX.test(p.sha256)) {
+        fail(`${field}.proxy.sha256 须为 64 位小写十六进制`);
+      }
+      if (!Number.isInteger(p.bytes) || (p.bytes as number) < 1) {
+        fail(`${field}.proxy.bytes 须为正整数`);
+      }
+      if (
+        !Number.isInteger(p.width) ||
+        (p.width as number) < 1 ||
+        !Number.isInteger(p.height) ||
+        (p.height as number) < 1
+      ) {
+        fail(`${field}.proxy.width/height 须为正整数`);
+      }
+      if (
+        typeof p.note !== "string" ||
+        p.note.length < 1 ||
+        p.note.length > 200
+      ) {
+        fail(`${field}.proxy.note 须为 1..200 字符`);
+      }
+    }
+    durations.set(asset.assetId as string, o.durationMs as number);
+  }
+  return durations;
 }
 
 function validateSceneSource(value: unknown, field: string): void {
@@ -319,6 +453,8 @@ export function validateVideoProject(value: unknown): VideoProject {
       }
     }
   }
+  // —— P2.5-T1：媒体资产账本先于镜头校验（media-clip 交叉校验需要资产时长）——
+  const mediaAssetDurations = validateMediaAssets(parsed.mediaAssets);
   if (!Array.isArray(parsed.shots) || parsed.shots.length > MAX_ARRAY) {
     fail(`shots must be an array of at most ${MAX_ARRAY} entries`);
   }

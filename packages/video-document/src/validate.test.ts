@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { type VideoProject, validateVideoProject } from "./validate.js";
+import type { MediaAsset } from "./types.js";
 
 const UUID = "0b0b13a2-6c63-4d3d-9a52-a70f6a3b1001";
 function baseProject(): VideoProject {
@@ -56,6 +57,186 @@ function baseProject(): VideoProject {
     deliveries: [],
   };
 }
+
+// —— P2.5-T1 媒体资产账本（spec A1-A8）——
+const ASSET_ID = "0b0b13a2-6c63-4d3d-9a52-a70f6a3b2002";
+const ASSET_SHA = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"; // 64 个 a
+
+function mediaAsset(overrides: Record<string, unknown> = {}): MediaAsset {
+  return {
+    assetId: ASSET_ID,
+    createdAt: "2026-10-19T00:00:00.000Z",
+    origin: { kind: "local-upload", fileName: "demo.mp4" },
+    original: {
+      sha256: ASSET_SHA,
+      bytes: 123456,
+      durationMs: 30000,
+      width: 1920,
+      height: 1080,
+      fps: 30,
+      codec: "h264",
+      hasAudio: true,
+      storeKey: "aaaaaaaaaaaaaaaa.mp4", // sha256 前 16 位 + 扩展名
+    },
+    ...overrides,
+  } as MediaAsset;
+}
+
+test("mediaAssets 非数组（对象）→ 拒绝（A1）", () => {
+  const p = baseProject();
+  (p as Record<string, unknown>).mediaAssets = { a: mediaAsset() };
+  assert.throws(() => validateVideoProject(p), /mediaAssets/);
+});
+
+test("mediaAssets assetId 重复 → 拒绝（A2）", () => {
+  const p = baseProject();
+  p.mediaAssets = [mediaAsset(), mediaAsset()];
+  assert.throws(() => validateVideoProject(p), /duplicated/);
+});
+
+test("mediaAssets assetId 非 UUID → 拒绝（A2）", () => {
+  const p = baseProject();
+  p.mediaAssets = [
+    mediaAsset({ assetId: "not-a-uuid" }),
+  ];
+  assert.throws(() => validateVideoProject(p), /assetId must be a UUID/);
+});
+
+test("stock-source 缺 license.name → 拒绝（A4）", () => {
+  const p = baseProject();
+  p.mediaAssets = [
+    mediaAsset({
+      origin: {
+        kind: "stock-source",
+        sourceId: "wikimedia",
+        sourcePageUrl: "https://commons.wikimedia.org/wiki/File:X",
+        license: { name: "" },
+        retrievedAt: "2026-10-19T00:00:00.000Z",
+      },
+    }),
+  ];
+  assert.throws(() => validateVideoProject(p), /license\.name/);
+});
+
+test("stock-source sourceId 非 wikimedia → 拒绝（A4）", () => {
+  const p = baseProject();
+  p.mediaAssets = [
+    mediaAsset({
+      origin: {
+        kind: "stock-source",
+        sourceId: "pexels",
+        sourcePageUrl: "https://example.com/x",
+        license: { name: "CC0" },
+        retrievedAt: "2026-10-19T00:00:00.000Z",
+      },
+    }),
+  ];
+  assert.throws(() => validateVideoProject(p), /sourceId/);
+});
+
+test("stock-source sourcePageUrl 非 http(s) → 拒绝（A4）", () => {
+  const p = baseProject();
+  p.mediaAssets = [
+    mediaAsset({
+      origin: {
+        kind: "stock-source",
+        sourceId: "wikimedia",
+        sourcePageUrl: "ftp://example.com/x",
+        license: { name: "CC0" },
+        retrievedAt: "2026-10-19T00:00:00.000Z",
+      },
+    }),
+  ];
+  assert.throws(() => validateVideoProject(p), /sourcePageUrl/);
+});
+
+test("original.sha256 63 位 → 拒绝（A5）", () => {
+  const p = baseProject();
+  p.mediaAssets = [
+    mediaAsset({
+      original: { ...mediaAsset().original, sha256: "a".repeat(63) },
+    }),
+  ];
+  assert.throws(() => validateVideoProject(p), /sha256/);
+});
+
+test("storeKey 前缀与 sha256 不对应 → 拒绝（A7）", () => {
+  const p = baseProject();
+  p.mediaAssets = [
+    mediaAsset({
+      original: { ...mediaAsset().original, storeKey: "bbbbbbbbbbbbbbbb.mp4" },
+    }),
+  ];
+  assert.throws(() => validateVideoProject(p), /storeKey/);
+});
+
+test("storeKey 非法扩展名 .avi → 拒绝（A7）", () => {
+  const p = baseProject();
+  p.mediaAssets = [
+    mediaAsset({
+      original: { ...mediaAsset().original, storeKey: "aaaaaaaaaaaaaaaa.avi" },
+    }),
+  ];
+  assert.throws(() => validateVideoProject(p), /storeKey/);
+});
+
+test("durationMs=199 的源 → 拒绝（A6 下界）", () => {
+  const p = baseProject();
+  p.mediaAssets = [
+    mediaAsset({
+      original: { ...mediaAsset().original, durationMs: 199 },
+    }),
+  ];
+  assert.throws(() => validateVideoProject(p), /durationMs/);
+});
+
+test("proxy 负 width → 拒绝（A8）", () => {
+  const p = baseProject();
+  p.mediaAssets = [
+    mediaAsset({
+      proxy: {
+        sha256: ASSET_SHA,
+        bytes: 1,
+        width: -1,
+        height: 720,
+        note: "h264 720p",
+      },
+    }),
+  ];
+  assert.throws(() => validateVideoProject(p), /proxy/);
+});
+
+test("合法账本（两种 origin、fps=29.97、含 proxy）→ 通过（兼容见证：先绿）", () => {
+  const p = baseProject();
+  const local = mediaAsset();
+  const stock = mediaAsset({
+    assetId: "0b0b13a2-6c63-4d3d-9a52-a70f6a3b2004",
+    origin: {
+      kind: "stock-source",
+      sourceId: "wikimedia",
+      sourcePageUrl: "https://commons.wikimedia.org/wiki/File:Clouds",
+      license: { name: "CC BY-SA 4.0", author: "Nesnad", usageNote: "署名即可" },
+      retrievedAt: "2026-10-19T00:00:00.000Z",
+    },
+    original: {
+      ...mediaAsset().original,
+      sha256: "b".repeat(64),
+      fps: 29.97,
+      storeKey: "bbbbbbbbbbbbbbbb.webm",
+      codec: "vp9",
+    },
+    proxy: {
+      sha256: "c".repeat(64),
+      bytes: 999,
+      width: 1280,
+      height: 720,
+      note: "h264 720p cap",
+    },
+  });
+  p.mediaAssets = [local, stock];
+  const out = validateVideoProject(p);
+  assert.equal(out.mediaAssets?.length ?? 0, 2);
+});
 
 test("合法项目通过并原样返回", () => {
   const p = baseProject();
