@@ -199,7 +199,15 @@ console.log(
 // rename 资产。rename 若在写档后失败，报错点名缺失资产——比旧序「先 rename
 // 后校验」的静默孤儿资产可恢复（旧档仍指旧键，重跑即修复）。
 // --allow-truncate 则跳过（保留渲染期截断，那是显式选择）。
-const alignments = planDurationAlignments(project, wavMsByBase);
+const { plan: alignments, skipped: alignmentSkipped } = planDurationAlignments(
+  project,
+  wavMsByBase,
+);
+for (const item of alignmentSkipped) {
+  console.warn(
+    `[tts-narration] 镜头 ${item.shotIndex + 1} 是媒体镜头（时长=出点−入点，不可自动拉伸），旁白 ${item.wavMs}ms 超片段 ${item.durationMs}ms，保留截断（渲染期需 --allow-truncate）`,
+  );
+}
 if (alignments.length > 0) {
   if (allowTruncate) {
     for (const item of alignments) {

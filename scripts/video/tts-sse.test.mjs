@@ -351,7 +351,8 @@ test("planDurationAlignments：只报超出的镜头，newDurationMs=wav+50 尾�
     ["s1-v1", 2640],
     ["s2-v2", 1500],
   ]);
-  const plan = planDurationAlignments(project, overflow);
+  const { plan, skipped } = planDurationAlignments(project, overflow);
+  assert.equal(skipped.length, 0, "纯 spec 项目无跳过");
   assert.equal(plan.length, 1, "只报超出版本时长的镜头");
   assert.equal(plan[0].shotIndex, 0);
   assert.equal(plan[0].shotId, "s1");
@@ -364,9 +365,95 @@ test("planDurationAlignments：只报超出的镜头，newDurationMs=wav+50 尾�
     ["s1-v1", 1950],
     ["s2-v2", 1500],
   ]);
-  assert.equal(planDurationAlignments(project, edge).length, 0);
+  assert.equal(planDurationAlignments(project, edge).plan.length, 0);
   // 无对应 wav 记录的镜头不报（未合成）
-  assert.equal(planDurationAlignments(project, new Map()).length, 0);
+  assert.equal(planDurationAlignments(project, new Map()).plan.length, 0);
+});
+
+// P2.5-T4（A1）：媒体镜头时长=出点−入点（C4 对账不变量），TTS 自动拉伸会写坏
+// 账本——溢出进 skipped，调用方提示走 --allow-truncate，不写新版本。
+test("planDurationAlignments：媒体镜头溢出跳过对齐进 skipped，plan 不收", () => {
+  const project = {
+    shots: [
+      {
+        shotId: "m1",
+        workingVersionId: "v1",
+        contentVersions: [
+          {
+            versionId: "v1",
+            durationMs: 2000,
+            narrationText: "实拍。",
+            sceneSource: {
+              type: "media-clip",
+              mediaAssetId: "a1",
+              inMs: 0,
+              outMs: 2000,
+              fit: "cover",
+              focalX: 0.5,
+              audio: "mute",
+            },
+          },
+        ],
+      },
+      {
+        shotId: "s1",
+        workingVersionId: "v2",
+        contentVersions: [
+          { versionId: "v2", durationMs: 2000, narrationText: "图表。" },
+        ],
+      },
+    ],
+  };
+  const { plan, skipped } = planDurationAlignments(
+    project,
+    new Map([
+      ["m1-v1", 2640],
+      ["s1-v2", 2640],
+    ]),
+  );
+  assert.equal(plan.length, 1, "spec 镜头照常对齐");
+  assert.equal(plan[0].shotId, "s1");
+  assert.equal(skipped.length, 1, "媒体镜头只提示不对齐");
+  assert.deepEqual(skipped[0], {
+    shotIndex: 0,
+    shotId: "m1",
+    versionId: "v1",
+    wavMs: 2640,
+    durationMs: 2000,
+  });
+});
+
+test("planDurationAlignments：媒体镜头未溢出则 plan/skipped 两不进", () => {
+  const project = {
+    shots: [
+      {
+        shotId: "m1",
+        workingVersionId: "v1",
+        contentVersions: [
+          {
+            versionId: "v1",
+            durationMs: 3000,
+            narrationText: "实拍。",
+            sceneSource: {
+              type: "media-clip",
+              mediaAssetId: "a1",
+              inMs: 0,
+              outMs: 3000,
+              fit: "cover",
+              focalX: 0.5,
+              audio: "mute",
+            },
+          },
+        ],
+      },
+    ],
+  };
+  const { plan, skipped } = planDurationAlignments(
+    project,
+    new Map([["m1-v1", 1500]]),
+  );
+  assert.equal(plan.length, 0);
+  assert.equal(skipped.length, 0);
 });
 
 // ── 终评 fix pass（Important#2/#5）────────────────────────────────────

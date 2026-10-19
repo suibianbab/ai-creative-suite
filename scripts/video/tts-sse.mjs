@@ -277,8 +277,12 @@ export function wavDurationMs(wav) {
 
 // 对齐计划：逐镜头比对 wav 实测时长 vs working version durationMs，
 // 超出（含 50ms 尾样保护：wav+50 仍 > durationMs 才算安全）才入计划。
+// P2.5-T4（A1）：媒体镜头（sceneSource=media-clip）时长=出点−入点（C4 对账
+// 不变量），自动拉伸 durationMs 会写坏账本——溢出进 skipped 交调用方提示，
+// 渲染期截断由 --allow-truncate 显式选择。
 export function planDurationAlignments(project, wavMsByBase) {
   const plan = [];
+  const skipped = [];
   for (const [shotIndex, shot] of project.shots.entries()) {
     const version = shot.contentVersions.find(
       (candidate) => candidate.versionId === shot.workingVersionId,
@@ -286,6 +290,16 @@ export function planDurationAlignments(project, wavMsByBase) {
     if (!version) continue;
     const wavMs = wavMsByBase.get(`${shot.shotId}-${version.versionId}`);
     if (wavMs === undefined || wavMs + 50 <= version.durationMs) continue;
+    if (version.sceneSource?.type === "media-clip") {
+      skipped.push({
+        shotIndex,
+        shotId: shot.shotId,
+        versionId: version.versionId,
+        wavMs,
+        durationMs: version.durationMs,
+      });
+      continue;
+    }
     plan.push({
       shotIndex,
       shotId: shot.shotId,
@@ -295,7 +309,7 @@ export function planDurationAlignments(project, wavMsByBase) {
       newDurationMs: Math.ceil(wavMs + 50),
     });
   }
-  return plan;
+  return { plan, skipped };
 }
 
 // 字幕 cue 读取（spec R2/R3 + Review Focus #2/#3）：words.json 坏/缺/时间戳
