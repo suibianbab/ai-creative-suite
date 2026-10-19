@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { type VideoProject, validateVideoProject } from "./validate.js";
 import type { MediaAsset } from "./types.js";
+import { type VideoProject, validateVideoProject } from "./validate.js";
 
 const UUID = "0b0b13a2-6c63-4d3d-9a52-a70f6a3b1001";
 function baseProject(): VideoProject {
@@ -60,7 +60,8 @@ function baseProject(): VideoProject {
 
 // —— P2.5-T1 媒体资产账本（spec A1-A8）——
 const ASSET_ID = "0b0b13a2-6c63-4d3d-9a52-a70f6a3b2002";
-const ASSET_SHA = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"; // 64 个 a
+const ASSET_SHA =
+  "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"; // 64 个 a
 
 function mediaAsset(overrides: Record<string, unknown> = {}): MediaAsset {
   return {
@@ -96,9 +97,7 @@ test("mediaAssets assetId 重复 → 拒绝（A2）", () => {
 
 test("mediaAssets assetId 非 UUID → 拒绝（A2）", () => {
   const p = baseProject();
-  p.mediaAssets = [
-    mediaAsset({ assetId: "not-a-uuid" }),
-  ];
+  p.mediaAssets = [mediaAsset({ assetId: "not-a-uuid" })];
   assert.throws(() => validateVideoProject(p), /assetId must be a UUID/);
 });
 
@@ -215,7 +214,11 @@ test("合法账本（两种 origin、fps=29.97、含 proxy）→ 通过（兼容
       kind: "stock-source",
       sourceId: "wikimedia",
       sourcePageUrl: "https://commons.wikimedia.org/wiki/File:Clouds",
-      license: { name: "CC BY-SA 4.0", author: "Nesnad", usageNote: "署名即可" },
+      license: {
+        name: "CC BY-SA 4.0",
+        author: "Nesnad",
+        usageNote: "署名即可",
+      },
       retrievedAt: "2026-10-19T00:00:00.000Z",
     },
     original: {
@@ -300,7 +303,8 @@ test("mediaAssetId 指向不存在资产 → 拒绝（C1）", () => {
 
 test("outMs 超素材时长 → 拒绝（C3）", () => {
   assert.throws(
-    () => validateVideoProject(withMediaClipShot(baseProject(), { outMs: 30001 })),
+    () =>
+      validateVideoProject(withMediaClipShot(baseProject(), { outMs: 30001 })),
     /出入点越界/,
   );
 });
@@ -321,42 +325,52 @@ test("outMs−inMs=199 → 拒绝（C3 最短 200ms）", () => {
 
 test("inMs 非整数 → 拒绝（C2）", () => {
   assert.throws(
-    () => validateVideoProject(withMediaClipShot(baseProject(), { inMs: 1000.5 })),
+    () =>
+      validateVideoProject(withMediaClipShot(baseProject(), { inMs: 1000.5 })),
     /inMs/,
   );
 });
 
 test("版本 durationMs ≠ outMs−inMs → 拒绝（C4 对账）", () => {
   assert.throws(
-    () => validateVideoProject(withMediaClipShot(baseProject(), {}, { durationMs: 2500 })),
+    () =>
+      validateVideoProject(
+        withMediaClipShot(baseProject(), {}, { durationMs: 2500 }),
+      ),
     /durationMs 须等于 outMs−inMs/,
   );
 });
 
 test("fit 非法 → 拒绝（C5）", () => {
   assert.throws(
-    () => validateVideoProject(withMediaClipShot(baseProject(), { fit: "fill" })),
+    () =>
+      validateVideoProject(withMediaClipShot(baseProject(), { fit: "fill" })),
     /fit/,
   );
 });
 
 test("focalX 为 NaN → 拒绝（C6）", () => {
   assert.throws(
-    () => validateVideoProject(withMediaClipShot(baseProject(), { focalX: Number.NaN })),
+    () =>
+      validateVideoProject(
+        withMediaClipShot(baseProject(), { focalX: Number.NaN }),
+      ),
     /focalX/,
   );
 });
 
 test("focalX=1.5 → 拒绝（C6 上界）", () => {
   assert.throws(
-    () => validateVideoProject(withMediaClipShot(baseProject(), { focalX: 1.5 })),
+    () =>
+      validateVideoProject(withMediaClipShot(baseProject(), { focalX: 1.5 })),
     /focalX/,
   );
 });
 
 test("audio 非法 → 拒绝（C5）", () => {
   assert.throws(
-    () => validateVideoProject(withMediaClipShot(baseProject(), { audio: "auto" })),
+    () =>
+      validateVideoProject(withMediaClipShot(baseProject(), { audio: "auto" })),
     /audio/,
   );
 });
@@ -441,6 +455,24 @@ test("合法 assetDigests → 通过（正路径，兼容见证：先绿）", ()
     withMediaRenderRecord(baseProject(), { [ASSET_ID]: ASSET_SHA }),
   );
   assert.equal(out.renderRecords[0]!.assetDigests?.[ASSET_ID], ASSET_SHA);
+});
+
+// —— P2.5-T1 迁移与兜底固化 ——
+test("旧项目（无 mediaAssets 键）原样通过（迁移回归）", () => {
+  const p = baseProject();
+  const out = validateVideoProject(p);
+  assert.equal(out.mediaAssets, undefined);
+});
+
+test("未知 sceneSource.type 错误消息包含三类型", () => {
+  const p = baseProject();
+  p.shots[0]!.contentVersions[0]!.sceneSource = {
+    type: "future-thing",
+  } as never;
+  assert.throws(
+    () => validateVideoProject(p),
+    /must be "spec" \| "editor-binding" \| "media-clip"/,
+  );
 });
 
 test("合法项目通过并原样返回", () => {

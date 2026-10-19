@@ -525,7 +525,11 @@ export function validateVideoProject(value: unknown): VideoProject {
   const knownShotIds = new Set<string>();
   const knownOrders = new Set<number>();
   for (const [index, shot] of parsed.shots.entries()) {
-    const parsedShot = validateShot(shot, `shots[${index}]`, mediaAssetDurations);
+    const parsedShot = validateShot(
+      shot,
+      `shots[${index}]`,
+      mediaAssetDurations,
+    );
     if (knownShotIds.has(parsedShot.shotId)) {
       fail(`shots[${index}].shotId is duplicated across shots`);
     }
