@@ -7,6 +7,7 @@
 import { spawn, spawnSync } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
 import {
+  createReadStream,
   existsSync,
   mkdirSync,
   readFileSync,
@@ -22,6 +23,16 @@ import {
   DEFAULT_BUDGET_MS,
   dryRunJobs,
 } from "./frame-dryrun.mjs";
+import {
+  buildHasAudioTrack,
+  buildManifestMedia,
+  buildShotAssetDigests,
+  buildTimelineShotMedia,
+  collectMediaShots,
+  isBlackTail,
+  parseTailYavg,
+  verifyMediaAssets,
+} from "./render-scene.media.mjs";
 import { buildNarrationEntries, readSubtitleCues } from "./tts-sse.mjs";
 
 const ROOT = path.resolve(
@@ -41,6 +52,9 @@ const { canonicalJson, quantizeTimeline, validateVideoProject } = await import(
 const { defaultRegistry, validateSceneSpec } = await import(
   pathToFileURL(path.join(ROOT, "packages/video-scene/dist/index.js")).href
 );
+const { resolveStoreRoot } = await import(
+  pathToFileURL(path.join(ROOT, "packages/media-store/dist/index.js")).href
+);
 const remotionVersion = JSON.parse(
   readFileSync(
     path.join(ROOT, "packages/remotion-engine/package.json"),
@@ -55,6 +69,50 @@ function fail(message) {
 
 function sha256(data) {
   return createHash("sha256").update(data).digest("hex");
+}
+
+// P2.5-T4 G3：大文件流式 sha256（original 可达数百 MB，不整读内存）。
+async function sha256File(file) {
+  return await new Promise((resolve, reject) => {
+    const hash = createHash("sha256");
+    createReadStream(file)
+      .on("data", (chunk) => hash.update(chunk))
+      .on("error", reject)
+      .on("end", () => resolve(hash.digest("hex")));
+  });
+}
+
+// P2.5-T4：文件服务端口等待共体（旁白/媒体两用；10s 超时 + 提前退出竞速 +
+// 定时器清理——自 D2 旁白块原样提取，行为零变化）。
+async function awaitServerPort(serverProcess, label) {
+  let output = "";
+  serverProcess.stdout.on("data", (chunk) => {
+    output += chunk;
+  });
+  const serverDead = new Promise((_, reject) => {
+    serverProcess.on("exit", () =>
+      reject(new Error(`${label}提前退出: ${output}`)),
+    );
+  });
+  let portTimer;
+  const portLine = new Promise((resolve, reject) => {
+    serverProcess.stdout.on("data", function onChunk(chunk) {
+      const match = /"port":(\d+)/.exec(`${chunk}`);
+      if (match) {
+        serverProcess.stdout.off("data", onChunk);
+        resolve(Number(match[1]));
+      }
+    });
+    portTimer = setTimeout(
+      () => reject(new Error(`${label}端口上报超时`)),
+      10000,
+    );
+  });
+  // 端口已定（或已败）就清掉 10s 定时器——否则它是进程退出前最后一只
+  // 持有事件循环的句柄，快跑完的运行也会多挂最多 10 秒
+  return await Promise.race([portLine, serverDead]).finally(() =>
+    clearTimeout(portTimer),
+  );
 }
 
 // 旁白 wav 时长（ffprobe 秒 → ms 整数）
@@ -121,25 +179,32 @@ try {
   fail(`项目校验失败: ${error.message}`);
 }
 
-// 2. 全镜头 working version 的 spec（多镜头整片；单镜头是 N=1 特例）
+// 2. 全镜头 working version 的 spec | media-clip（多镜头整片；单镜头是 N=1 特例）
+// P2.5-T4：媒体镜头不验 spec（无 params），资产核验在下方 G3 块统一做。
 const shotEntries = project.shots.map((shot, index) => {
   const version = shot.contentVersions.find(
     (candidate) => candidate.versionId === shot.workingVersionId,
   );
   if (!version) fail(`镜头 ${index + 1} 缺少 working version`);
-  if (version.sceneSource.type !== "spec")
-    fail(`镜头 ${index + 1} 的 sceneSource 不是 spec（出片仅支持 spec 镜头）`);
-  let spec;
-  try {
-    spec = validateSceneSpec(version.sceneSource.spec, defaultRegistry);
-  } catch (error) {
-    fail(`镜头 ${index + 1} scene_spec 校验失败: ${error.message}`);
+  if (version.sceneSource.type === "spec") {
+    let spec;
+    try {
+      spec = validateSceneSpec(version.sceneSource.spec, defaultRegistry);
+    } catch (error) {
+      fail(`镜头 ${index + 1} scene_spec 校验失败: ${error.message}`);
+    }
+    if (spec.durationMs !== version.durationMs)
+      fail(
+        `镜头 ${index + 1} spec.durationMs(${spec.durationMs}) 与 ContentVersion.durationMs(${version.durationMs}) 不一致`,
+      );
+    return { shot, version, spec };
   }
-  if (spec.durationMs !== version.durationMs)
-    fail(
-      `镜头 ${index + 1} spec.durationMs(${spec.durationMs}) 与 ContentVersion.durationMs(${version.durationMs}) 不一致`,
-    );
-  return { shot, version, spec };
+  if (version.sceneSource.type === "media-clip") {
+    return { shot, version, media: version.sceneSource };
+  }
+  fail(
+    `镜头 ${index + 1} 的 sceneSource 既非 spec 也非 media-clip（出片仅支持这两种）`,
+  );
 });
 if (shotEntries.length === 0) fail("项目没有镜头，无法出片");
 
@@ -149,6 +214,28 @@ const timeline = quantizeTimeline(
   FPS,
 );
 const totalFrames = timeline.totalFrames;
+
+// P2.5-T4 G1/G3：媒体镜头装配 + 渲染前仓核验（账本→仓：存在性 + sha256 双查；
+// 任何问题大声拒——不 spawn 服务、不渲染、不写 RenderRecord，修订文档 §3 行 6）。
+const { entries: mediaShots, problems: mediaProblems } = collectMediaShots(
+  project,
+  project.mediaAssets ?? [],
+);
+if (mediaProblems.length > 0)
+  fail(`媒体镜头装配失败，拒绝渲染：\n  ${mediaProblems.join("\n  ")}`);
+const mediaStoreRoot = resolveStoreRoot();
+const verifyProblems = await verifyMediaAssets(mediaShots, {
+  storeRoot: mediaStoreRoot,
+  existsSync,
+  hashFile: sha256File,
+});
+if (verifyProblems.length > 0)
+  fail(
+    `媒体仓核验失败，拒绝渲染（不写 RenderRecord）：\n  ${verifyProblems.join("\n  ")}`,
+  );
+const mediaByShot = new Map(
+  mediaShots.map((entry) => [entry.shotIndex, entry]),
+);
 
 // D2 旁白装配：--narration <dir> 指向 tts-narration.mjs 的资产目录。
 // 缺资产=该镜头无音轨（提示不阻断）；超 span 的音频 Sequence 自然截断（告警）。
@@ -208,38 +295,36 @@ if (values.narration) {
     // 服务进程会带着 ACAO:* 的监听孤儿化（重复失败渲染会累积）。exit 钩子
     // 覆盖所有退出路径（fail/正常/未捕获异常），kill 幂等。
     process.on("exit", () => narrationServer?.kill());
-    let serverOutput = "";
-    narrationServer.stdout.on("data", (chunk) => {
-      serverOutput += chunk;
-    });
-    const serverDead = new Promise((_, reject) => {
-      narrationServer.on("exit", () =>
-        reject(new Error(`narration-server 提前退出: ${serverOutput}`)),
-      );
-    });
-    let portTimer;
-    const portLine = new Promise((resolve, reject) => {
-      narrationServer.stdout.on("data", function onChunk(chunk) {
-        const match = /"port":(\d+)/.exec(`${chunk}`);
-        if (match) {
-          narrationServer.stdout.off("data", onChunk);
-          resolve(Number(match[1]));
-        }
-      });
-      portTimer = setTimeout(
-        () => reject(new Error("narration-server 端口上报超时")),
-        10000,
-      );
-    });
-    // 端口已定（或已败）就清掉 10s 定时器——否则它是进程退出前最后一只
-    // 持有事件循环的句柄，快跑完的运行也会多挂最多 10 秒
-    const port = await Promise.race([portLine, serverDead]).finally(() =>
-      clearTimeout(portTimer),
-    );
+    const port = await awaitServerPort(narrationServer, "narration-server");
     for (const [index, entry] of narrationEntries.entries()) {
       entry.propsSrc = `http://127.0.0.1:${port}/${names[index]}`;
     }
   }
+}
+
+// P2.5-T4（B1）：媒体仓托管服务——OffthreadVideo 资产下载链只认 http(s)。
+// 与旁白服务同生命周期纪律：exit 钩子兜杀（幂等 kill），白名单只放行本片
+// 涉及的 storeKey（去重）。
+let mediaServer = null;
+let mediaUrlBase = null;
+if (mediaShots.length > 0) {
+  mediaServer = spawn(
+    process.execPath,
+    [
+      path.join(ROOT, "scripts/video/media-server.mjs"),
+      "--root",
+      mediaStoreRoot,
+      "--files",
+      [...new Set(mediaShots.map((entry) => entry.asset.storeKey))].join(","),
+    ],
+    { stdio: ["ignore", "pipe", "pipe"] },
+  );
+  process.on("exit", () => mediaServer?.kill());
+  const mediaPort = await awaitServerPort(mediaServer, "media-server");
+  mediaUrlBase = `http://127.0.0.1:${mediaPort}`;
+  console.log(
+    `[render-scene] 媒体镜头 ${mediaShots.length}/${timeline.shots.length}（仓 ${mediaStoreRoot}，端口 ${mediaPort}）`,
+  );
 }
 const fontDigests = {
   "NotoSansSC-Regular.woff": sha256(readFileSync(path.join(ROOT, FONT_REL))),
@@ -314,8 +399,15 @@ const timelineProps = {
         });
       }
     }
+    const entry = shotEntries[span.shotIndex];
     return {
-      spec: shotEntries[span.shotIndex].spec,
+      ...(mediaByShot.has(span.shotIndex)
+        ? buildTimelineShotMedia(
+            mediaByShot.get(span.shotIndex),
+            `${mediaUrlBase}/original/${mediaByShot.get(span.shotIndex).asset.storeKey}`,
+            FPS,
+          )
+        : { spec: entry.spec }),
       startFrame: span.startFrame,
       frames: span.frames,
       ...(narrationByShot.has(span.shotIndex)
@@ -374,7 +466,9 @@ for (const aspect of aspects) {
   ];
   // 旁白资产来自本进程的 127.0.0.1 文件服务（跨源）：关掉渲染浏览器的同源策略
   // （Remotion 官方 CORS 出口）。只影响这次渲染的临时 Chrome，不影响别的。
-  if (narrationEntries.length > 0) command.push("--disable-web-security");
+  // P2.5-T4（G8）：有旁白或有媒体即加——媒体虽走服务端下载，放宽无代价。
+  if (narrationEntries.length > 0 || mediaShots.length > 0)
+    command.push("--disable-web-security");
   // 与 render_form01.py 同款回退：系统 Chrome 存在就用它（Remotion 自带 headless shell 需额外下载）
   if (existsSync(CHROME)) {
     command.push(`--browser-executable=${CHROME}`);
@@ -409,11 +503,44 @@ for (const aspect of aspects) {
     );
   }
 
+  // P2.5-T4（B6/G5）：末帧黑帧检测——所有渲染（纯 spec 亦然）。signalstats 的
+  // YAVG ≤16 判黑（transitions e2e 实测纯黑=16，内容帧 220+）。黑帧 = 装配/时长
+  // 事故，大声拒收（此时 mp4 已写但 RenderRecord 未写——失败语义见修订文档
+  // §3 行 6「退出码 0 ≠ 成功」的反向：这里让失败真的以非 0 退出）。
+  const tail = spawnSync(
+    "ffmpeg",
+    [
+      "-sseof",
+      "-0.2",
+      "-i",
+      videoPath,
+      "-frames:v",
+      "1",
+      "-vf",
+      "signalstats,metadata=print",
+      "-f",
+      "null",
+      "-",
+    ],
+    { encoding: "utf8" },
+  );
+  const tailYavg = parseTailYavg(`${tail.stdout}${tail.stderr}`);
+  if (tailYavg === null)
+    fail(
+      `${aspect}.mp4 末帧黑帧检测失败：无法解析 YAVG（ffmpeg status=${tail.status}）`,
+    );
+  console.log(`[render-scene] ${aspect}.mp4 末帧 YAVG=${tailYavg}`);
+  if (isBlackTail(tailYavg))
+    fail(
+      `${aspect}.mp4 末帧为黑帧（YAVG=${tailYavg}）：疑似镜头装配/时长事故，拒绝收片`,
+    );
+
   // D2：带旁白出片时核对音轨——必须有 aac 流。
   // 注意 probe() 用了 -select_streams v:0，其 streams 里永远不会出现音频流，
   // 音轨必须单独探（探针实测：用 probe() 的输出查音频=结构性误报「无音频流」）。
   // 容器时长不再复查：上方 ±0.05s 视频检查更严，会先拦（终评 minor#5 删冗余）。
-  if (narrationEntries.length > 0) {
+  // P2.5-T4（G4）：四象限——有旁白或有媒体原声（audio=keep）即必须有 aac 流。
+  if (buildHasAudioTrack(narrationEntries, mediaShots)) {
     const audioProbe = spawnSync(
       "ffprobe",
       [
@@ -447,7 +574,9 @@ for (const aspect of aspects) {
       shotIndex: span.shotIndex,
       shotId: shotEntries[span.shotIndex].shot.shotId,
       versionId: shotEntries[span.shotIndex].version.versionId,
-      componentId: shotEntries[span.shotIndex].spec.componentId,
+      componentId: shotEntries[span.shotIndex].media
+        ? "media-clip"
+        : shotEntries[span.shotIndex].spec.componentId,
       startFrame: span.startFrame,
       frames: span.frames,
       contentDigest: contentDigests[span.shotIndex],
@@ -466,6 +595,10 @@ for (const aspect of aspects) {
           })),
         }
       : {}),
+    // P2.5-T4（G6）：媒体镜头逐条证据（素材指纹/入出点/源内起始帧/原声通道）
+    ...(mediaShots.length > 0
+      ? { media: buildManifestMedia(mediaShots, timeline, FPS) }
+      : {}),
     // P1 字幕证据（spec R5）：逐镜头 cue 数与文本 SHA-256（烧进画面的派生投影摘要）
     ...(subtitleSummary.length > 0 ? { subtitleCues: subtitleSummary } : {}),
   };
@@ -482,6 +615,14 @@ for (const aspect of aspects) {
       renderId: randomUUID(),
       versionId: entry.version.versionId,
       contentDigest: contentDigests[span.shotIndex],
+      // P2.5-T4（G7）：媒体镜头专属证据——渲染源（original）的 sha256 逐资产钉死
+      ...(entry.media
+        ? {
+            assetDigests: buildShotAssetDigests(
+              mediaByShot.get(span.shotIndex),
+            ),
+          }
+        : {}),
       engineId: "remotion",
       engineVersion: String(defaultRegistry.version),
       rendererVersion: remotionVersion,
@@ -499,6 +640,7 @@ for (const aspect of aspects) {
 
 // 5. 回写项目（追加后重校验 + savedVersion 递增）
 if (narrationServer) narrationServer.kill();
+if (mediaServer) mediaServer.kill();
 project.savedVersion += 1;
 validateVideoProject(project);
 writeFileSync(projectPath, `${JSON.stringify(project, null, 2)}\n`);
