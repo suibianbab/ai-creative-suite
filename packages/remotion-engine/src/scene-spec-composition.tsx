@@ -8,6 +8,7 @@ import {
 import {
   assertNodeBudget,
   defaultRegistry,
+  mediaClipCss,
   reactSvgAttrs,
   type SceneSpec,
   type SvgNode,
@@ -18,6 +19,7 @@ import { createElement, type FC, type JSX } from "react";
 import {
   AbsoluteFill,
   Audio,
+  OffthreadVideo,
   Sequence,
   useCurrentFrame,
   useVideoConfig,
@@ -100,8 +102,24 @@ export const SceneSpecScene: FC<SceneSpecProps> = ({ spec }) => {
 // —— P1 Timeline 多镜头合成：全局帧 → (镜头, 本地帧) → 复用单镜头渲染核心 ——
 // spans 必须连续无缝（quantizeTimeline 产物天然如此）：有缝/重叠/悬空帧都是
 // 编排错误，当场抛错拒绝渲染，不产静默空帧的整片（评审关注 #5）。
+// P2.5-T4（spec §2 E1）：媒体镜头通道。spec 与 media 互斥（C4：media-clip 版本
+// 不带 spec params）——spec-only 项目 props 逐字节不变（X1），媒体镜头才出现
+// media 键。trimBefore = B5 半进位取整后的源内起始帧（装配层算好）。
+export type TimelineMediaProps = {
+  src: string; // http://127.0.0.1:<port>/original/<storeKey>（媒体仓托管，B1）
+  assetWidth: number; // 素材原始尺寸——裁切用 useVideoConfig 合成宽高现算，
+  assetHeight: number; // props 不含画幅参数，两画幅逐字节一致（G2）
+  inMs: number;
+  outMs: number;
+  fit: "cover" | "contain";
+  focalX: number;
+  audio: "mute" | "keep"; // keep = 原声与旁白轨由 Remotion 音频管线自动混音（B4）
+  trimBefore: number;
+};
+
 export type TimelineShotProps = {
-  spec: SceneSpec;
+  spec?: SceneSpec;
+  media?: TimelineMediaProps;
   startFrame: number;
   frames: number;
   // D2：镜头旁白音轨。audioSrc 由装配方给绝对路径（CLI 渲染）；
@@ -117,6 +135,40 @@ export type TimelineShotProps = {
 export type TimelineProps = {
   shots?: TimelineShotProps[];
   transitions?: ShotTransition[];
+};
+
+// P2.5-T4（E2/E3）：媒体镜头渲染层。Sequence 包裹让 OffthreadVideo 内部的
+// useCurrentFrame 取到镜头本地帧（与旁白轨同款定位），trimBefore 定源内起始帧，
+// span 的 durationInFrames 天然界定播出帧数（无 trimAfter——播满即止）。
+// muted 吃 audio 通道（B4：keep 时原声与旁白 Sequence 由 Remotion 自动混音）。
+// 裁切对象（objectFit/objectPosition）来自 video-scene 单源 mediaClipCss，
+// 画幅宽高 useVideoConfig 现算——两画幅共用同一份 props。
+const MediaClipLayer: FC<{ shot: TimelineShotProps }> = ({ shot }) => {
+  const media = shot.media!;
+  const { width, height } = useVideoConfig();
+  const crop = mediaClipCss(
+    media.assetWidth,
+    media.assetHeight,
+    width,
+    height,
+    media.fit,
+    media.focalX,
+  );
+  return (
+    <Sequence from={shot.startFrame} durationInFrames={shot.frames}>
+      <OffthreadVideo
+        src={media.src}
+        muted={media.audio === "mute"}
+        trimBefore={media.trimBefore}
+        style={{
+          width: "100%",
+          height: "100%",
+          objectFit: crop.objectFit,
+          objectPosition: crop.objectPosition,
+        }}
+      />
+    </Sequence>
+  );
 };
 
 export const TimelineScene: FC<TimelineProps> = ({ shots, transitions }) => {
@@ -176,13 +228,17 @@ export const TimelineScene: FC<TimelineProps> = ({ shots, transitions }) => {
   return (
     <>
       {narrationTracks}
-      {renderSpecLayer(active.spec, {
-        frame: frame - active.startFrame,
-        fps,
-        durationFrames: active.frames,
-        width,
-        height,
-      })}
+      {active.media ? (
+        <MediaClipLayer shot={active} />
+      ) : (
+        renderSpecLayer(active.spec!, {
+          frame: frame - active.startFrame,
+          fps,
+          durationFrames: active.frames,
+          width,
+          height,
+        })
+      )}
       {overlayOpacity > 0 ? (
         <AbsoluteFill
           style={{ backgroundColor: "#000", opacity: overlayOpacity }}
