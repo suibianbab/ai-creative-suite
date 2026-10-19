@@ -7,6 +7,7 @@ import {
   type SceneSpec,
   validateSceneSpec,
 } from "@acs/video-scene";
+import { applySceneTemplate } from "./apply-template";
 
 export type LoadingTemplate = {
   templateId: string;
@@ -91,23 +92,7 @@ export function applyLoadingTemplate(
   spec: SceneSpec,
   templateId: string,
 ): { spec: SceneSpec; error: null } | { spec: null; error: string } {
-  const template = LOADING_TEMPLATES.find((t) => t.templateId === templateId);
-  if (!template) return { spec: null, error: `未知加载模板 ${templateId}` };
-  const next: SceneSpec = {
-    ...spec,
-    componentId: template.componentId,
-    componentVersion: 1,
-    params: structuredClone(template.params),
-  };
-  try {
-    validateSceneSpec(next, defaultRegistry);
-  } catch (error) {
-    return {
-      spec: null,
-      error: error instanceof Error ? error.message : String(error),
-    };
-  }
-  return { spec: next, error: null };
+  return applySceneTemplate(LOADING_TEMPLATES, spec, templateId, "未知加载模板");
 }
 
 export type LoadingEditDraft = {

@@ -7,6 +7,7 @@ import {
   type SceneSpec,
   validateSceneSpec,
 } from "@acs/video-scene";
+import { applySceneTemplate } from "./apply-template";
 
 export type ChartTemplate = {
   templateId: string;
@@ -122,24 +123,7 @@ export function applyChartTemplate(
   spec: SceneSpec,
   templateId: string,
 ): { spec: SceneSpec; error: null } | { spec: null; error: string } {
-  const template = CHART_TEMPLATES.find((t) => t.templateId === templateId);
-  if (!template) return { spec: null, error: `未知图表模板 ${templateId}` };
-  // 深拷贝：编辑产物不得回流污染模板库
-  const next: SceneSpec = {
-    ...spec,
-    componentId: template.componentId,
-    componentVersion: 1,
-    params: structuredClone(template.params),
-  };
-  try {
-    validateSceneSpec(next, defaultRegistry);
-  } catch (error) {
-    return {
-      spec: null,
-      error: error instanceof Error ? error.message : String(error),
-    };
-  }
-  return { spec: next, error: null };
+  return applySceneTemplate(CHART_TEMPLATES, spec, templateId, "未知图表模板");
 }
 
 export type ChartEditDraft = {
