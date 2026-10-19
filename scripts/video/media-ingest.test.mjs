@@ -90,3 +90,34 @@ test("--store 相对路径 → 用法错误 exit 2", () => {
   );
   assert.equal(run.status, 2);
 });
+
+test("F6：--file 不存在 → exit 1 + stderr 中文（不得英文堆栈炸出）", () => {
+  const run = spawnSync(
+    process.execPath,
+    [CLI, "--file", path.join(WORK, "nope.mp4"), "--store", STORE],
+    {
+      encoding: "utf8",
+    },
+  );
+  assert.equal(
+    run.status,
+    1,
+    `exit 须为 1，实际 ${run.status}；stderr：${run.stderr}`,
+  );
+  assert.match(run.stderr, /无法读取文件/);
+  assert.ok(!/ENOENT/.test(run.stderr), "不得裸抛英文堆栈");
+});
+
+test("F6：env 相对 ACS_MEDIA_STORE → exit 1 + stderr 中文", () => {
+  const run = spawnSync(process.execPath, [CLI, "--file", makeVideo("env.mp4")], {
+    encoding: "utf8",
+    env: { ...process.env, ACS_MEDIA_STORE: "relative/store" },
+  });
+  assert.equal(
+    run.status,
+    1,
+    `exit 须为 1，实际 ${run.status}；stderr：${run.stderr}`,
+  );
+  assert.match(run.stderr, /ACS_MEDIA_STORE 须为绝对路径/);
+  assert.ok(!/ENOENT|\n    at /.test(run.stderr), "不得裸抛英文堆栈");
+});
