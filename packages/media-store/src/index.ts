@@ -14,3 +14,4 @@ export {
   type ProbeOutcome,
   type ProbeResult,
 } from "./probe.js";
+export { needsProxy, PROXY_MAX_EDGE, transcodeProxy } from "./proxy.js";
