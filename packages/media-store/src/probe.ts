@@ -1,6 +1,6 @@
 // P2.5-T2 P 表：ffprobe 包装 + 纯解析。runProbe 只负责进程与 P5/ENOENT；
 // P1-P4 全在 parseProbeOutput（纯函数，零进程，录制夹具可测）。
-import { spawnSync } from "node:child_process";
+import { spawn } from "node:child_process";
 
 export type ProbeResult = {
   durationMs: number;
@@ -79,29 +79,59 @@ export function parseProbeOutput(raw: string): ProbeOutcome {
   };
 }
 
-export function runProbe(filePath: string): ProbeOutcome {
-  const spawned = spawnSync(
-    "ffprobe",
-    [
-      "-v",
-      "error",
-      "-print_format",
-      "json",
-      "-show_format",
-      "-show_streams",
-      filePath,
-    ],
-    { encoding: "utf8" },
-  );
-  if (spawned.error) {
+// 异步进程采集（F4）：spawnSync 会冻结整条事件循环——Next 路由里每次上传
+// 都会卡死全部请求与 HMR。手动累积 stdout/stderr 无 maxBuffer 上限（坏文件
+// 的海量 stderr 不再变成 ENOBUFS 假 ENOENT）。
+export type CaptureResult = {
+  error?: Error;
+  status: number | null;
+  stdout: string;
+  stderr: string;
+};
+
+export function runCapture(
+  cmd: string,
+  args: string[],
+): Promise<CaptureResult> {
+  return new Promise((resolve) => {
+    const child = spawn(cmd, args);
+    let stdout = "";
+    let stderr = "";
+    child.stdout?.on("data", (chunk: Buffer) => {
+      stdout += chunk.toString("utf8");
+    });
+    child.stderr?.on("data", (chunk: Buffer) => {
+      stderr += chunk.toString("utf8");
+    });
+    // 'error' 后 'close' 仍会触发；Promise 只结算一次，双 resolve 无害
+    child.on("error", (error) => {
+      resolve({ error, status: null, stdout, stderr });
+    });
+    child.on("close", (status) => {
+      resolve({ status, stdout, stderr });
+    });
+  });
+}
+
+export async function runProbe(filePath: string): Promise<ProbeOutcome> {
+  const captured = await runCapture("ffprobe", [
+    "-v",
+    "error",
+    "-print_format",
+    "json",
+    "-show_format",
+    "-show_streams",
+    filePath,
+  ]);
+  if (captured.error) {
     return {
       ok: false,
-      error: `未找到 ffprobe（请安装 FFmpeg 并加入 PATH）：${spawned.error.message}`,
+      error: `未找到 ffprobe（请安装 FFmpeg 并加入 PATH）：${captured.error.message}`,
     };
   }
-  if (spawned.status !== 0) {
-    const tail = (spawned.stderr ?? "").slice(-200);
+  if (captured.status !== 0) {
+    const tail = captured.stderr.slice(-200);
     return { ok: false, error: `文件无法探测：ffprobe 失败（${tail}）` };
   }
-  return parseProbeOutput(spawned.stdout);
+  return parseProbeOutput(captured.stdout);
 }

@@ -245,6 +245,22 @@ test("W2 回滚分寸：转码失败 → 本次新写 original 删除；预存�
   assert.equal(statSync(preexisting).mtimeMs, mtimeBefore);
 });
 
+test("F4：导入期间事件循环不得被阻塞（spawnSync 会冻结整条循环）", async () => {
+  const bytes = makeTestVideo("small.mp4");
+  const root = storeRoot("eventloop");
+  let ticked = false;
+  setImmediate(() => {
+    ticked = true;
+  });
+  const result = await ingestMediaFile({
+    bytes,
+    fileName: "clip.mp4",
+    root,
+  });
+  assert.ok(result.ok, result.ok ? "" : result.error);
+  assert.ok(ticked, "导入执行中 setImmediate 必须有机会跑（探测/解码须异步 spawn）");
+});
+
 test("幂等复用：同内容二次导入 → 同 storeKey 文件 mtime 不变（未重写）+ 新 assetId", async () => {
   const bytes = makeTestVideo("small.mp4");
   const root = storeRoot("idem");

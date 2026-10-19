@@ -106,8 +106,8 @@ test("parseProbeOutput P3/P4：画幅非正整数 / 帧率 0 → 拒", () => {
   assert.ok(!badFps.ok && /无法读取视频帧率/.test(badFps.error));
 });
 
-test("runProbe 真文件：2s 640x360 24fps，hasAudio 随音轨", () => {
-  const silent = runProbe(makeTestVideo("silent.mp4", false));
+test("runProbe 真文件：2s 640x360 24fps，hasAudio 随音轨", async () => {
+  const silent = await runProbe(makeTestVideo("silent.mp4", false));
   assert.ok(silent.ok);
   assert.equal(silent.probe.durationMs, 2000);
   assert.equal(silent.probe.width, 640);
@@ -115,24 +115,24 @@ test("runProbe 真文件：2s 640x360 24fps，hasAudio 随音轨", () => {
   assert.equal(silent.probe.fps, 24);
   assert.equal(silent.probe.codec, "h264");
   assert.equal(silent.probe.hasAudio, false);
-  const audible = runProbe(makeTestVideo("audible.mp4", true));
+  const audible = await runProbe(makeTestVideo("audible.mp4", true));
   assert.ok(audible.ok);
   assert.equal(audible.probe.hasAudio, true);
 });
 
-test("runProbe P5：文本改名 .mp4 → 拒且消息中文", () => {
+test("runProbe P5：文本改名 .mp4 → 拒且消息中文", async () => {
   const fake = path.join(WORK, "fake.mp4");
   writeFileSync(fake, "这不是视频");
-  const outcome = runProbe(fake);
+  const outcome = await runProbe(fake);
   assert.ok(!outcome.ok);
   assert.match(outcome.error, /文件无法探测：ffprobe 失败/);
 });
 
-test("runProbe ENOENT：PATH 空 → ffprobe 不在路径 → 中文大声失败（Review Focus 2）", () => {
+test("runProbe ENOENT：PATH 空 → ffprobe 不在路径 → 中文大声失败（Review Focus 2）", async () => {
   const previousPath = process.env.PATH;
   try {
     process.env.PATH = "";
-    const outcome = runProbe(path.join(WORK, "silent.mp4"));
+    const outcome = await runProbe(path.join(WORK, "silent.mp4"));
     assert.ok(!outcome.ok);
     assert.match(outcome.error, /未找到 ffprobe（请安装 FFmpeg 并加入 PATH）/);
   } finally {

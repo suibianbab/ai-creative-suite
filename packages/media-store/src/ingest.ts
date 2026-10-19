@@ -2,7 +2,6 @@
 // → 探测(P) → 时长对账(P6) → 全片解码门(D1) → 原子落仓(S3) → 代理判定与
 // 转码(W) → MediaAsset。任何失败：临时目录清空、本次新写的仓文件回滚（预
 // 存不动）、不产半成品资产；账本写入是调用方（T3）的事。
-import { spawnSync } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
 import {
   existsSync,
@@ -14,8 +13,16 @@ import {
 import { tmpdir } from "node:os";
 import path from "node:path";
 import type { MediaAsset } from "@acs/video-document";
-import { runProbe as defaultProbe, type ProbeOutcome } from "./probe.js";
-import { transcodeProxy as defaultTranscode, needsProxy } from "./proxy.js";
+import {
+  runCapture,
+  runProbe as defaultProbe,
+  type ProbeOutcome,
+} from "./probe.js";
+import {
+  needsProxy,
+  transcodeProxy as defaultTranscode,
+  type TranscodeOutcome,
+} from "./proxy.js";
 import {
   originalPath,
   proxyPath,
@@ -49,21 +56,25 @@ export type IngestResult =
 export type RunDecodeResult = { ok: true } | { ok: false; error: string };
 
 // D1 全片解码门：退出码 0 且 stderr 干净才算过（教训：退出码 0 ≠ 成功）。
-export function runDecode(filePath: string): RunDecodeResult {
-  const spawned = spawnSync(
-    "ffmpeg",
-    ["-v", "error", "-i", filePath, "-f", "null", "-"],
-    { encoding: "utf8" },
-  );
-  if (spawned.error) {
+export async function runDecode(filePath: string): Promise<RunDecodeResult> {
+  const captured = await runCapture("ffmpeg", [
+    "-v",
+    "error",
+    "-i",
+    filePath,
+    "-f",
+    "null",
+    "-",
+  ]);
+  if (captured.error) {
     return {
       ok: false,
-      error: `未找到 ffmpeg（请安装 FFmpeg 并加入 PATH）：${spawned.error.message}`,
+      error: `未找到 ffmpeg（请安装 FFmpeg 并加入 PATH）：${captured.error.message}`,
     };
   }
-  if (spawned.status !== 0 || (spawned.stderr ?? "").trim() !== "") {
-    const detail = `${spawned.stderr ?? ""}${
-      spawned.status !== 0 ? `（退出码 ${spawned.status}）` : ""
+  if (captured.status !== 0 || captured.stderr.trim() !== "") {
+    const detail = `${captured.stderr}${
+      captured.status !== 0 ? `（退出码 ${captured.status}）` : ""
     }`.slice(-300);
     return {
       ok: false,
@@ -79,9 +90,14 @@ export async function ingestMediaFile(input: {
   root: string;
   generateProxy?: boolean;
   now?: () => string;
-  runProbe?: (filePath: string) => ProbeOutcome;
-  runDecode?: (filePath: string) => RunDecodeResult;
-  runTranscode?: typeof defaultTranscode;
+  // 注入位容纳同步假件（await 平值）——测试注入免 async 样板
+  runProbe?: (filePath: string) => ProbeOutcome | Promise<ProbeOutcome>;
+  runDecode?: (filePath: string) => RunDecodeResult | Promise<RunDecodeResult>;
+  runTranscode?: (
+    inputPath: string,
+    outputPath: string,
+    probe: Parameters<typeof defaultTranscode>[2],
+  ) => TranscodeOutcome | Promise<TranscodeOutcome>;
   tempDir?: string;
 }): Promise<IngestResult> {
   const probeFn = input.runProbe ?? defaultProbe;
@@ -114,7 +130,7 @@ export async function ingestMediaFile(input: {
     const tempFile = path.join(tempDir, `source.${extension}`);
     writeFileSync(tempFile, input.bytes);
 
-    const probed = probeFn(tempFile);
+    const probed = await probeFn(tempFile);
     if (!probed.ok) return fail(probed.error, "probe-failed");
     const probe = probed.probe;
     if (
@@ -126,7 +142,7 @@ export async function ingestMediaFile(input: {
         "duration-out-of-range",
       );
     }
-    const decoded = decodeFn(tempFile);
+    const decoded = await decodeFn(tempFile);
     if (!decoded.ok) return fail(decoded.error, "decode-failed");
 
     const dest = originalPath(input.root, storeKey);
@@ -152,7 +168,7 @@ export async function ingestMediaFile(input: {
     });
 
     if (input.generateProxy !== false && needsProxy(probe)) {
-      const transcoded = transcodeFn(
+      const transcoded = await transcodeFn(
         tempFile,
         proxyPath(input.root, storeKey),
         probe,

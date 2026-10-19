@@ -53,12 +53,12 @@ test("needsProxy W1：长边 >1280 或非浏览器 codec → true；否则 false
   assert.equal(needsProxy(probeOf(640, 360, "hevc")), true);
 });
 
-test("transcodeProxy 真转码：1080p → 1280x720 h264，note 含 ffmpeg 版本（W3 自核验内含）", () => {
+test("transcodeProxy 真转码：1080p → 1280x720 h264，note 含 ffmpeg 版本（W3 自核验内含）", async () => {
   const source = fixture("big.mp4", "1920x1080");
-  const probed = runProbe(source);
+  const probed = await runProbe(source);
   assert.ok(probed.ok);
   const output = path.join(WORK, "big.proxy.mp4");
-  const result = transcodeProxy(source, output, probed.probe);
+  const result = await transcodeProxy(source, output, probed.probe);
   assert.ok(result.ok, result.ok ? "" : result.error);
   assert.equal(result.width, 1280);
   assert.equal(result.height, 720);
@@ -66,17 +66,17 @@ test("transcodeProxy 真转码：1080p → 1280x720 h264，note 含 ffmpeg 版�
   assert.match(result.sha256, /^[0-9a-f]{64}$/);
   assert.match(result.note, /ffmpeg/i);
   assert.ok(existsSync(output));
-  const verify = runProbe(output);
+  const verify = await runProbe(output);
   assert.ok(verify.ok);
   assert.equal(verify.probe.codec, "h264");
   assert.ok(Math.abs(verify.probe.durationMs - 2000) < 500);
 });
 
-test("transcodeProxy 竖版：1080x1920 → 720x1280", () => {
+test("transcodeProxy 竖版：1080x1920 → 720x1280", async () => {
   const source = fixture("tall.mp4", "1080x1920");
-  const probed = runProbe(source);
+  const probed = await runProbe(source);
   assert.ok(probed.ok);
-  const result = transcodeProxy(
+  const result = await transcodeProxy(
     source,
     path.join(WORK, "tall.proxy.mp4"),
     probed.probe,
