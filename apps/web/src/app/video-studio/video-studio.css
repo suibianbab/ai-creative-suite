@@ -323,6 +323,71 @@
   text-align: center;
 }
 
+/* P2.5-T3 素材面板（U4/X1）：标题 + 素材清单 + 上传行内错误 */
+.media-panel {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding: 12px 14px;
+  border: 1px solid #dce5df;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 13px;
+}
+
+.media-panel h4 {
+  margin: 0;
+  font-size: 13px;
+  color: #173f3b;
+}
+
+.media-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.media-item {
+  color: #1b2c29;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: #f2f7f4;
+  overflow-wrap: anywhere;
+}
+
+.media-empty {
+  margin: 0;
+  color: #5d7469;
+}
+
+.media-upload {
+  justify-self: start;
+  border: 1px solid #cadbd1;
+  border-radius: 8px;
+  background: #fff;
+  color: #1b2c29;
+  padding: 6px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.media-upload:hover:not(:disabled) {
+  background: #ecf5ee;
+}
+
+.media-upload:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.media-upload-error {
+  margin: 0;
+  color: #a3230f;
+  font-size: 12px;
+}
+
 /* P1 转场叠层：全幅黑幕，opacity 由共享帧数学逐帧给定（镜头层之上、字幕层
  * 之下——字幕浮于暗场之上，与 TimelineScene 叠层级序一致） */
 .transition-overlay {

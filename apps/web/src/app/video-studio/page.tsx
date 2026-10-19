@@ -2,6 +2,7 @@
 
 import {
   addCandidateVersion,
+  type MediaAsset,
   type QuantizedTimeline,
   quantizeTimeline,
   reviseWorkingVersion,
@@ -25,6 +26,8 @@ import {
   saveVideoProject,
   type VideoProjectSummary,
 } from "./local-video-projects";
+import { appendMediaAsset } from "./media-assets";
+import { MediaPanel } from "./media-panel";
 import {
   isStoryboardSentence,
   type PlanResult,
@@ -40,7 +43,7 @@ import {
   type TimelinePreviewItem,
 } from "./scene-preview";
 import { ShotEditorCard } from "./shot-editor-card";
-import { shotWorkingSpec } from "./shot-specs";
+import { shotWorkingMediaClip, shotWorkingSpec } from "./shot-specs";
 import {
   type TransitionDraftRow,
   transitionsAfterEdit,
@@ -126,6 +129,15 @@ export default function VideoStudioPage() {
     // spec 解析走 shotWorkingSpec：unknown → validateSceneSpec，非法（导入件来自
     // 更新版本/手改）降级 null 走「不可预览」提示，不在渲染期抛错炸整页。
     const shotSpecs = document.shots.map((shot) => shotWorkingSpec(shot));
+    // P2.5-T3 P1：装配从工作版本出发——spec → spec 项；media-clip 且资产在
+    // 账本 → media 项；media-clip 但资产不在账本 → missing 占位（不炸页）。
+    const shotMediaClips = document.shots.map((shot) =>
+      shotWorkingMediaClip(shot),
+    );
+    const mediaAssets = document.mediaAssets ?? [];
+    const assetsById = new Map(
+      mediaAssets.map((asset) => [asset.assetId, asset]),
+    );
     const workingMeta = document.shots.map((shot) => {
       const working = shot.contentVersions.find(
         (version) => version.versionId === shot.workingVersionId,
@@ -140,17 +152,52 @@ export default function VideoStudioPage() {
     const durations = workingMeta.map((meta) => meta.durationMs);
     let pieceTimeline: QuantizedTimeline | null = null;
     let pieceItems: TimelinePreviewItem[] | null = null;
+    const perShot: (TimelinePreviewItem | null)[] = document.shots.map(
+      (shot, index) => {
+        const spec = shotSpecs[index] as SceneSpec | null;
+        const meta = workingMeta[index]!;
+        const media = shotMediaClips[index];
+        if (spec) {
+          return {
+            spec,
+            startFrame: 0,
+            frames: 0,
+            narrationText: meta.narrationText,
+          };
+        }
+        if (media) {
+          return assetsById.has(media.mediaAssetId)
+            ? {
+                kind: "media",
+                assetId: media.mediaAssetId,
+                inMs: media.inMs,
+                outMs: media.outMs,
+                fit: media.fit,
+                focalX: media.focalX,
+                startFrame: 0,
+                frames: 0,
+                narrationText: meta.narrationText,
+              }
+            : {
+                kind: "missing",
+                reason: `素材缺失：${media.mediaAssetId.slice(0, 8)} 不在账本`,
+                startFrame: 0,
+                frames: 0,
+              };
+        }
+        return null; // editor-binding 等未来成员：整片仍降级（X2）
+      },
+    );
     if (
       document.shots.length > 0 &&
       durations.every((duration) => duration > 0) &&
-      shotSpecs.every((spec) => spec !== null)
+      perShot.every((item) => item !== null)
     ) {
       pieceTimeline = quantizeTimeline(durations, 24);
-      pieceItems = shotSpecs.map((spec, index) => ({
-        spec: spec as SceneSpec,
+      pieceItems = perShot.map((item, index) => ({
+        ...item!,
         startFrame: pieceTimeline!.shots[index]!.startFrame,
         frames: pieceTimeline!.shots[index]!.frames,
-        narrationText: workingMeta[index]!.narrationText,
       }));
     }
     // 转场草稿落文档：transitionsAfterEdit 决定字段值——非法编辑返回 previous
@@ -167,6 +214,51 @@ export default function VideoStudioPage() {
       if (transitions) next.transitions = transitions;
       else delete next.transitions;
       setEditor({ ...editor, document: next });
+    };
+    // P2.5-T3 U4：上传素材 → POST /api/media/ingest → 账本追加 + 保存
+    //（乐观并发沿既有保存路径）。失败（含 503 生产门/415/413/422）行内中文
+    // 错误 + 文档零改动；两段失败都向面板抛原始错误供行内展示。
+    const uploadMedia = async (file: File) => {
+      const form = new FormData();
+      form.append("file", file);
+      setEditor({ ...editor, busy: true, message: null });
+      let asset: MediaAsset | undefined;
+      try {
+        const response = await fetch("/api/media/ingest", {
+          method: "POST",
+          body: form,
+        });
+        const payload = (await response.json().catch(() => ({}))) as {
+          asset?: MediaAsset;
+          error?: string;
+        };
+        if (!response.ok || !payload.asset) {
+          throw new Error(
+            payload.error ?? `上传失败（HTTP ${response.status}）`,
+          );
+        }
+        asset = payload.asset;
+      } catch (error) {
+        const reason = error instanceof Error ? error.message : String(error);
+        setEditor({ ...editor, busy: false, message: `上传失败：${reason}` });
+        throw error instanceof Error ? error : new Error(reason);
+      }
+      try {
+        const saved = await saveVideoProject({
+          ...document,
+          mediaAssets: appendMediaAsset(document.mediaAssets, asset),
+        });
+        setEditor({
+          ...editor,
+          document: saved,
+          message: "素材已上传并保存",
+          busy: false,
+        });
+      } catch (error) {
+        const reason = error instanceof Error ? error.message : "保存失败";
+        setEditor({ ...editor, busy: false, message: reason });
+        throw error instanceof Error ? error : new Error(reason);
+      }
     };
     return (
       <main className="studio-shell">
@@ -202,6 +294,10 @@ export default function VideoStudioPage() {
               }
             />
           </label>
+
+          {/* P2.5-T3 U4/X1：素材面板——上传入账本 + 逐条列出（含同内容提示）。
+              挂在标题下方、规划器上方：先有素材，才有媒体镜头可编辑。 */}
+          <MediaPanel assets={mediaAssets} busy={busy} onUpload={uploadMedia} />
 
           <div className="planner-field">
             <label className="planner-label" htmlFor="planner-sentence">
@@ -392,7 +488,10 @@ export default function VideoStudioPage() {
                     shot={shot}
                     index={index}
                     frames={pieceTimeline!.shots[index]!.frames}
-                    editable={shotSpecs[index] !== null}
+                    editable={
+                      shotSpecs[index] !== null ||
+                      shotMediaClips[index] !== null
+                    }
                     redoError={redoErrors[shot.shotId] ?? null}
                     onRevise={(patch) => {
                       try {
@@ -586,11 +685,12 @@ export default function VideoStudioPage() {
                 items={pieceItems}
                 timeline={pieceTimeline}
                 transitions={document.transitions}
+                assets={mediaAssets}
               />
             </section>
           ) : document.shots.length > 0 ? (
             <p className="editor-hint">
-              镜头含非 spec 场景源或时长缺失，整片预览不可用。
+              镜头含不可预览的场景源（非 spec/媒体）或时长缺失，整片预览不可用。
             </p>
           ) : null}
           <button
