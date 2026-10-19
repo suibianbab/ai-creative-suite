@@ -51,6 +51,7 @@ test("白名单命中：200 + 后缀 Content-Type + 字节相等（mp4/webm 各�
     assert.equal(mp4.status, 200);
     assert.equal(mp4.headers.get("content-type"), "video/mp4");
     assert.equal(mp4.headers.get("content-length"), String(BODY[KEY_A].length));
+    assert.equal(mp4.headers.get("accept-ranges"), "none"); // spec S2 明文
     assert.deepEqual(Buffer.from(await mp4.arrayBuffer()), BODY[KEY_A]);
     const webm = await fetch(`${base}/original/${KEY_B}`);
     assert.equal(webm.headers.get("content-type"), "video/webm");
@@ -91,6 +92,19 @@ test("编码穿越：逃逸变体全 404；dot-segment 被 URL 规范化后只�
     const norm = await fetch(`${base}/original/%2e%2e/original/${KEY_A}`);
     assert.equal(norm.status, 200);
     assert.deepEqual(Buffer.from(await norm.arrayBuffer()), BODY[KEY_A]);
+  } finally {
+    child.kill();
+  }
+});
+
+test("非 GET 方法：405（Remotion 只发整 GET；不给 POST/HEAD 返回全量）", async () => {
+  const { child, base } = await startServer(KEY_A);
+  try {
+    const post = await fetch(`${base}/original/${KEY_A}`, { method: "POST" });
+    assert.equal(post.status, 405);
+    assert.equal(post.headers.get("allow"), "GET");
+    const head = await fetch(`${base}/original/${KEY_A}`, { method: "HEAD" });
+    assert.equal(head.status, 405);
   } finally {
     child.kill();
   }

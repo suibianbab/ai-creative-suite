@@ -40,6 +40,11 @@ const allowed = new Set(
 const server = http.createServer((req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Private-Network", "true");
+  // spec S2：Remotion 只发整 GET；不提供 Range 语义，也不给 POST/HEAD 返回全量。
+  if (req.method !== "GET") {
+    res.writeHead(405, { Allow: "GET" }).end("405 Method Not Allowed");
+    return;
+  }
   let pathname;
   try {
     pathname = decodeURIComponent(
@@ -72,6 +77,7 @@ const server = http.createServer((req, res) => {
     "Content-Type":
       CONTENT_TYPES[path.extname(storeKey)] ?? "application/octet-stream",
     "Content-Length": statSync(file).size,
+    "Accept-Ranges": "none",
   });
   createReadStream(file).pipe(res);
 });

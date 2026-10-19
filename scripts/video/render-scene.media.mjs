@@ -29,6 +29,14 @@ export function collectMediaShots(project, mediaAssets) {
       );
       continue;
     }
+    // T4 终评 Important：audio=keep 是「保留素材原声」，素材本身无音轨时
+    // 既不能静默丢原声（有旁白时会成功但少一轨），也不该等整片渲完才失败。
+    if (media.audio === "keep" && !asset.original.hasAudio) {
+      problems.push(
+        `镜头 ${shotIndex + 1} 原声设为保留但素材无音轨：${asset.assetId}（${asset.original.storeKey}，请改为静音或更换有音轨的素材）`,
+      );
+      continue;
+    }
     if (media.outMs > asset.original.durationMs) {
       problems.push(
         `镜头 ${shotIndex + 1} 片段出点 ${media.outMs}ms 超素材时长 ${asset.original.durationMs}ms（媒体镜头时长=出点−入点，出点以素材时长为上限）`,
@@ -104,7 +112,17 @@ export async function verifyMediaAssets(entries, deps) {
       );
       continue;
     }
-    const sha = await deps.hashFile(file);
+    let sha;
+    try {
+      sha = await deps.hashFile(file);
+    } catch (error) {
+      // 核验后读取前的仓漂移（删除/权限）不裸抛 Node 栈——G3 失败语义是一条
+      // 中文 problems，与缺失/摘要不符同等对待。
+      problems.push(
+        `素材读取失败：${entry.asset.storeKey}（${error.message}）`,
+      );
+      continue;
+    }
     if (sha !== entry.asset.sha256) {
       problems.push(
         `素材摘要不符：${entry.asset.storeKey} 账本 ${entry.asset.sha256.slice(0, 12)}… 实测 ${sha.slice(0, 12)}…（仓文件被改动，内容寻址被破坏，拒绝出片）`,

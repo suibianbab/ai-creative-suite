@@ -122,6 +122,15 @@ export function buildMediaRevisePatch(
   if (draft.audio !== "mute" && draft.audio !== "keep") {
     return { patch: null, error: "audio 须为 mute 或 keep", warnings: [] };
   }
+  // 终评 Important：素材无音轨时 keep 无意义——行内拒，避免存进文档后才在
+  // 出片阶段大声失败（静默丢原声的旧路径已由渲染期 G1 兜底）。
+  if (draft.audio === "keep" && !asset.original.hasAudio) {
+    return {
+      patch: null,
+      error: `素材无音轨，无法保留原声：${draft.assetId}（请改选「静音」或更换素材）`,
+      warnings: [],
+    };
+  }
   const warnings: string[] = [];
   // M4 非整帧（fps=29.97 时为浮点近似，预警非阻塞，T4 兑现取整语义）
   const fps = asset.original.fps;

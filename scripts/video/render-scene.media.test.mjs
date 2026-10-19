@@ -136,6 +136,18 @@ test("G1 装配：media 镜头成 entry（带资产快照），spec 镜头跳过
   assert.match(missing.problems[0], /素材不在账本：ghost/);
 });
 
+test("G1 装配：audio=keep 但素材无音轨 → 大声拒（不静默丢原声）", () => {
+  const { entries, problems } = collectMediaShots(
+    project([mediaShot("s2", "v2", "asset-2", 0, 2000, "keep")]),
+    [mediaAsset("asset-2", { hasAudio: false })],
+  );
+  assert.equal(entries.length, 0);
+  assert.equal(problems.length, 1);
+  assert.match(problems[0], /镜头 1/);
+  assert.match(problems[0], /无音轨/);
+  assert.match(problems[0], /asset-2/);
+});
+
 test("G1 装配：出点超素材时长拒（手改 JSON 的越界兜底）", () => {
   const { problems } = collectMediaShots(
     project([mediaShot("s2", "v2", "asset-2", 0, 6000)]),
@@ -205,6 +217,23 @@ test("G3 核验：存在性缺失与 sha 漂移都大声报（含 storeKey 与�
   });
   assert.match(drifted[0], /素材摘要不符/);
   assert.match(drifted[0], /账本 a{12}… 实测 b{12}…/);
+});
+
+test("G3 核验：读取 sha 失败转中文 problems（不裸抛 Node 栈）", async () => {
+  const { entries } = collectMediaShots(
+    project([mediaShot("s2", "v2", "asset-2", 0, 2000)]),
+    [mediaAsset("asset-2")],
+  );
+  const problems = await verifyMediaAssets(entries, {
+    storeRoot: "D:/store",
+    existsSync: () => true,
+    hashFile: async () => {
+      throw new Error("EACCES: permission denied");
+    },
+  });
+  assert.equal(problems.length, 1);
+  assert.match(problems[0], /素材读取失败：0000000000000002\.mp4/);
+  assert.match(problems[0], /EACCES: permission denied/);
 });
 
 test("G3 核验：storeKey 形状异常（账本被手改）也拒绝，不触 fs", async () => {

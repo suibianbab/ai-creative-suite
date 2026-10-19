@@ -115,6 +115,27 @@ test("M3：正路径——focal 33 → focalX 0.33，patch 无 durationMs（op �
   assert.deepEqual(warnings, []);
 });
 
+test("M3：audio=keep 需素材有音轨（无音轨 → 行内拒；有音轨 → 放行）", () => {
+  const rejected = buildMediaRevisePatch(
+    draft({ audio: "keep" }),
+    [asset()], // hasAudio: false
+    "",
+  );
+  assert.equal(rejected.patch, null);
+  assert.match(rejected.error!, /无音轨/);
+  assert.match(rejected.error!, new RegExp(ASSET_ID));
+
+  const withAudio = asset();
+  withAudio.original.hasAudio = true;
+  const accepted = buildMediaRevisePatch(
+    draft({ audio: "keep" }),
+    [withAudio],
+    "",
+  );
+  assert.equal(accepted.error, null);
+  assert.equal(accepted.patch?.mediaClip.audio, "keep");
+});
+
 test("M3：素材不在账本 → 拒，不静默换首条（Review Focus #2）", () => {
   const { patch, error } = buildMediaRevisePatch(
     draft({ assetId: "gone" }),
