@@ -238,6 +238,157 @@ test("合法账本（两种 origin、fps=29.97、含 proxy）→ 通过（兼容
   assert.equal(out.mediaAssets?.length ?? 0, 2);
 });
 
+// —— P2.5-T1 media-clip 场景源（spec C1-C6）——
+const CLIP_VERSION_ID = "0b0b13a2-6c63-4d3d-9a52-a70f6a3b2003";
+
+function withMediaClipShot(
+  p: VideoProject,
+  sceneOverrides: Record<string, unknown> = {},
+  versionOverrides: Record<string, unknown> = {},
+): VideoProject {
+  p.mediaAssets = [mediaAsset()];
+  p.shots.push({
+    shotId: "0b0b13a2-6c63-4d3d-9a52-a70f6a3b2005",
+    order: 1,
+    locked: false,
+    workingVersionId: CLIP_VERSION_ID,
+    contentVersions: [
+      {
+        versionId: CLIP_VERSION_ID,
+        createdAt: "2026-10-19T00:00:00.000Z",
+        durationMs: 3000,
+        description: "实拍镜头",
+        narrationText: "",
+        sceneSource: {
+          type: "media-clip",
+          mediaAssetId: ASSET_ID,
+          inMs: 1000,
+          outMs: 4000,
+          fit: "cover",
+          focalX: 0.5,
+          audio: "mute",
+          ...sceneOverrides,
+        },
+        provenance: { engineId: "media-import", engineVersion: "0" },
+        ...versionOverrides,
+      },
+    ],
+    events: [],
+  });
+  return p;
+}
+
+test("合法 media-clip 镜头 → 通过（C1-C6 正路径）", () => {
+  const out = validateVideoProject(withMediaClipShot(baseProject()));
+  assert.equal(
+    out.shots[1]!.contentVersions[0]!.sceneSource.type,
+    "media-clip",
+  );
+});
+
+test("mediaAssetId 指向不存在资产 → 拒绝（C1）", () => {
+  assert.throws(
+    () =>
+      validateVideoProject(
+        withMediaClipShot(baseProject(), {
+          mediaAssetId: "0b0b13a2-6c63-4d3d-9a52-a70f6a3b2999",
+        }),
+      ),
+    /mediaAssetId/,
+  );
+});
+
+test("outMs 超素材时长 → 拒绝（C3）", () => {
+  assert.throws(
+    () => validateVideoProject(withMediaClipShot(baseProject(), { outMs: 30001 })),
+    /出入点越界/,
+  );
+});
+
+test("outMs−inMs=199 → 拒绝（C3 最短 200ms）", () => {
+  assert.throws(
+    () =>
+      validateVideoProject(
+        withMediaClipShot(
+          baseProject(),
+          { inMs: 1000, outMs: 1199 },
+          { durationMs: 199 },
+        ),
+      ),
+    /出入点越界/,
+  );
+});
+
+test("inMs 非整数 → 拒绝（C2）", () => {
+  assert.throws(
+    () => validateVideoProject(withMediaClipShot(baseProject(), { inMs: 1000.5 })),
+    /inMs/,
+  );
+});
+
+test("版本 durationMs ≠ outMs−inMs → 拒绝（C4 对账）", () => {
+  assert.throws(
+    () => validateVideoProject(withMediaClipShot(baseProject(), {}, { durationMs: 2500 })),
+    /durationMs 须等于 outMs−inMs/,
+  );
+});
+
+test("fit 非法 → 拒绝（C5）", () => {
+  assert.throws(
+    () => validateVideoProject(withMediaClipShot(baseProject(), { fit: "fill" })),
+    /fit/,
+  );
+});
+
+test("focalX 为 NaN → 拒绝（C6）", () => {
+  assert.throws(
+    () => validateVideoProject(withMediaClipShot(baseProject(), { focalX: Number.NaN })),
+    /focalX/,
+  );
+});
+
+test("focalX=1.5 → 拒绝（C6 上界）", () => {
+  assert.throws(
+    () => validateVideoProject(withMediaClipShot(baseProject(), { focalX: 1.5 })),
+    /focalX/,
+  );
+});
+
+test("audio 非法 → 拒绝（C5）", () => {
+  assert.throws(
+    () => validateVideoProject(withMediaClipShot(baseProject(), { audio: "auto" })),
+    /audio/,
+  );
+});
+
+test("两镜头引用同一 assetId → 通过（素材复用合法）", () => {
+  const p = withMediaClipShot(baseProject());
+  const first = p.shots[1]!;
+  p.shots.push({
+    ...first,
+    shotId: "0b0b13a2-6c63-4d3d-9a52-a70f6a3b2006",
+    order: 2,
+    workingVersionId: "0b0b13a2-6c63-4d3d-9a52-a70f6a3b2007",
+    contentVersions: [
+      {
+        ...first.contentVersions[0]!,
+        versionId: "0b0b13a2-6c63-4d3d-9a52-a70f6a3b2007",
+        sceneSource: {
+          type: "media-clip",
+          mediaAssetId: ASSET_ID,
+          inMs: 5000,
+          outMs: 8000,
+          fit: "cover",
+          focalX: 0.5,
+          audio: "mute",
+        },
+        durationMs: 3000,
+      },
+    ],
+  });
+  assert.equal(validateVideoProject(p).shots.length, 3);
+});
+
 test("合法项目通过并原样返回", () => {
   const p = baseProject();
   assert.equal(validateVideoProject(p).id, p.id);

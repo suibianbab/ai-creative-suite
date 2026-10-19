@@ -7,6 +7,17 @@ export type SceneSource =
       engineId: string;
       engineVersion: string;
       assetId: string;
+    }
+  | {
+      // —— P2.5 媒体混编：实拍片段作受控镜头源。字段平台可校验/可预览，
+      // 与 editor-binding 的「平台永不解析」语义相反（ADR 0003 §3.3 + 变更日志）——
+      type: "media-clip";
+      mediaAssetId: string; // 指向 project.mediaAssets[]
+      inMs: number; // 整数，≥0
+      outMs: number; // 整数，≥ inMs+200 且 ≤ asset.durationMs
+      fit: "cover" | "contain";
+      focalX: number; // 0..1，cover 裁切注视点（contain 时忽略）
+      audio: "mute" | "keep"; // keep = 原声与 TTS 旁白混音
     };
 
 export type ContentVersion = {

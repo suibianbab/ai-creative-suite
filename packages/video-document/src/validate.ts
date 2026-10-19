@@ -172,7 +172,11 @@ function validateMediaAssets(value: unknown): Map<string, number> {
   return durations;
 }
 
-function validateSceneSource(value: unknown, field: string): void {
+function validateSceneSource(
+  value: unknown,
+  field: string,
+  mediaAssets: Map<string, number>,
+): void {
   if (!isRecord(value)) fail(`${field}.sceneSource must be an object`);
   if (value.type === "spec") {
     if (value.spec === null || typeof value.spec !== "object") {
@@ -193,10 +197,53 @@ function validateSceneSource(value: unknown, field: string): void {
     }
     return;
   }
-  fail(`${field}.sceneSource.type must be "spec" or "editor-binding"`);
+  if (value.type === "media-clip") {
+    if (
+      typeof value.mediaAssetId !== "string" ||
+      !mediaAssets.has(value.mediaAssetId)
+    ) {
+      fail(`${field}.sceneSource.mediaAssetId 未指向 mediaAssets 账本中的资产`);
+    }
+    for (const key of ["inMs", "outMs"] as const) {
+      if (!Number.isInteger(value[key]))
+        fail(`${field}.sceneSource.${key} 须为整数毫秒`);
+    }
+    const assetDurationMs = mediaAssets.get(value.mediaAssetId as string);
+    if (
+      (value.inMs as number) < 0 ||
+      (value.outMs as number) < (value.inMs as number) + 200 ||
+      (value.outMs as number) > (assetDurationMs as number)
+    ) {
+      fail(
+        `${field}.sceneSource 出入点越界（合法 inMs ≥ 0、inMs+200 ≤ outMs ≤ 素材 durationMs=${assetDurationMs}）`,
+      );
+    }
+    if (value.fit !== "cover" && value.fit !== "contain") {
+      fail(`${field}.sceneSource.fit 须为 "cover" 或 "contain"`);
+    }
+    if (
+      typeof value.focalX !== "number" ||
+      !Number.isFinite(value.focalX) ||
+      (value.focalX as number) < 0 ||
+      (value.focalX as number) > 1
+    ) {
+      fail(`${field}.sceneSource.focalX 须为 0..1 的数`);
+    }
+    if (value.audio !== "mute" && value.audio !== "keep") {
+      fail(`${field}.sceneSource.audio 须为 "mute" 或 "keep"`);
+    }
+    return;
+  }
+  fail(
+    `${field}.sceneSource.type must be "spec" | "editor-binding" | "media-clip"`,
+  );
 }
 
-function validateContentVersion(value: unknown, field: string): ContentVersion {
+function validateContentVersion(
+  value: unknown,
+  field: string,
+  mediaAssets: Map<string, number>,
+): ContentVersion {
   if (!isRecord(value)) fail(`${field} must be an object`);
   if (!isUuid(value.versionId)) fail(`${field}.versionId must be a UUID`);
   if (!isIsoTime(value.createdAt))
@@ -223,7 +270,16 @@ function validateContentVersion(value: unknown, field: string): ContentVersion {
   ) {
     fail(`${field}.narrationText must be a string of at most 2000 characters`);
   }
-  validateSceneSource(value.sceneSource, field);
+  validateSceneSource(value.sceneSource, field, mediaAssets);
+  // C4 对账：媒体镜头时长恒等于片段长度（渲染量化与交付 frameMap 依赖此恒等）
+  if (isRecord(value.sceneSource) && value.sceneSource.type === "media-clip") {
+    if (
+      value.durationMs !==
+      (value.sceneSource.outMs as number) - (value.sceneSource.inMs as number)
+    ) {
+      fail(`${field}.durationMs 须等于 outMs−inMs（媒体镜头时长=片段长度）`);
+    }
+  }
   if (!isRecord(value.provenance))
     fail(`${field}.provenance must be an object`);
   if (
@@ -306,7 +362,11 @@ function validateShotEvent(
   }
 }
 
-function validateShot(value: unknown, field: string): Shot {
+function validateShot(
+  value: unknown,
+  field: string,
+  mediaAssets: Map<string, number>,
+): Shot {
   if (!isRecord(value)) fail(`${field} must be an object`);
   if (!isUuid(value.shotId)) fail(`${field}.shotId must be a UUID`);
   if (!Number.isInteger(value.order) || (value.order as number) < 0) {
@@ -331,6 +391,7 @@ function validateShot(value: unknown, field: string): Shot {
     const parsed = validateContentVersion(
       version,
       `${field}.contentVersions[${index}]`,
+      mediaAssets,
     );
     if (versionIds.has(parsed.versionId)) {
       fail(`${field}.contentVersions[${index}].versionId is duplicated`);
@@ -464,7 +525,7 @@ export function validateVideoProject(value: unknown): VideoProject {
   const knownShotIds = new Set<string>();
   const knownOrders = new Set<number>();
   for (const [index, shot] of parsed.shots.entries()) {
-    const parsedShot = validateShot(shot, `shots[${index}]`);
+    const parsedShot = validateShot(shot, `shots[${index}]`, mediaAssetDurations);
     if (knownShotIds.has(parsedShot.shotId)) {
       fail(`shots[${index}].shotId is duplicated across shots`);
     }
