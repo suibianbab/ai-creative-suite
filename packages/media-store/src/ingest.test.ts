@@ -18,7 +18,7 @@ import path from "node:path";
 import test from "node:test";
 import type { MediaAsset } from "@acs/video-document";
 import { ingestMediaFile } from "./ingest.js";
-import { runProbe, type ProbeOutcome } from "./probe.js";
+import { type ProbeOutcome, runProbe } from "./probe.js";
 
 const WORK = mkdtempSync(path.join(tmpdir(), "acs-ingest-test-"));
 const FIXTURE_BYTES_CACHE = new Map<string, Buffer>();
@@ -73,7 +73,10 @@ test("happy path：640x360 h264（无需代理）→ 契约合法 MediaAsset，�
   const asset: MediaAsset = result.asset;
   assert.match(asset.assetId, /^[0-9a-f-]{36}$/);
   assert.equal(asset.createdAt, FIXED_NOW);
-  assert.deepEqual(asset.origin, { kind: "local-upload", fileName: "小片.mp4" });
+  assert.deepEqual(asset.origin, {
+    kind: "local-upload",
+    fileName: "小片.mp4",
+  });
   assert.equal(asset.original.durationMs, 2000);
   assert.equal(asset.original.width, 640);
   assert.equal(asset.original.height, 360);
@@ -180,7 +183,8 @@ test("D1：残片（截断 40%）→ 全片解码门拦，零残留", async () =
   });
   assert.ok(!result.ok);
   assert.ok(
-    result.reasonCode === "decode-failed" || result.reasonCode === "probe-failed",
+    result.reasonCode === "decode-failed" ||
+      result.reasonCode === "probe-failed",
     `残片应被探针或解码门拦截，实际 ${result.reasonCode}（${result.error}）`,
   );
   assert.deepEqual(readdirSync(tempDir), []);
@@ -204,7 +208,10 @@ test("W2 回滚分寸：转码失败 → 本次新写 original 删除；预存�
       formatName: "mov,mp4",
     },
   });
-  const failTranscode = () => ({ ok: false as const, error: "代理转码失败：注入失败" });
+  const failTranscode = () => ({
+    ok: false as const,
+    error: "代理转码失败：注入失败",
+  });
   // 场景 A：仓内无预存 → 新写 original 被回滚删除
   const a = await ingestMediaFile({
     bytes,

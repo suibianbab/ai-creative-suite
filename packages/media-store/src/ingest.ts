@@ -14,9 +14,14 @@ import {
 import { tmpdir } from "node:os";
 import path from "node:path";
 import type { MediaAsset } from "@acs/video-document";
-import { needsProxy, transcodeProxy as defaultTranscode } from "./proxy.js";
 import { runProbe as defaultProbe, type ProbeOutcome } from "./probe.js";
-import { originalPath, proxyPath, storeKeyFor, writeAtomically } from "./store.js";
+import { transcodeProxy as defaultTranscode, needsProxy } from "./proxy.js";
+import {
+  originalPath,
+  proxyPath,
+  storeKeyFor,
+  writeAtomically,
+} from "./store.js";
 
 const SUPPORTED_EXTENSIONS = new Set(["mp4", "webm", "mov"]);
 const MIN_DURATION_MS = 200;
@@ -34,7 +39,12 @@ export type IngestReasonCode =
 
 export type IngestResult =
   | { ok: true; asset: MediaAsset }
-  | { ok: false; error: string; reasonCode: IngestReasonCode; cleanupDone: true };
+  | {
+      ok: false;
+      error: string;
+      reasonCode: IngestReasonCode;
+      cleanupDone: true;
+    };
 
 export type RunDecodeResult = { ok: true } | { ok: false; error: string };
 
@@ -79,7 +89,8 @@ export async function ingestMediaFile(input: {
   const transcodeFn = input.runTranscode ?? defaultTranscode;
   let tempDir: string | undefined;
   const cleanup = () => {
-    if (tempDir !== undefined) rmSync(tempDir, { recursive: true, force: true });
+    if (tempDir !== undefined)
+      rmSync(tempDir, { recursive: true, force: true });
   };
   const fail = (error: string, reasonCode: IngestReasonCode): IngestResult => {
     cleanup();
@@ -106,7 +117,10 @@ export async function ingestMediaFile(input: {
     const probed = probeFn(tempFile);
     if (!probed.ok) return fail(probed.error, "probe-failed");
     const probe = probed.probe;
-    if (probe.durationMs < MIN_DURATION_MS || probe.durationMs > MAX_DURATION_MS) {
+    if (
+      probe.durationMs < MIN_DURATION_MS ||
+      probe.durationMs > MAX_DURATION_MS
+    ) {
       return fail(
         `视频时长 ${probe.durationMs}ms 越界：仅支持 ${MIN_DURATION_MS}ms..10 分钟`,
         "duration-out-of-range",

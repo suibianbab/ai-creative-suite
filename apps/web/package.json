@@ -7,10 +7,11 @@
     "build": "next build",
     "start": "next start --hostname 0.0.0.0",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "node --import tsx --test \"src/app/video-studio/*.test.ts\""
+    "test": "node --import tsx --test \"src/app/video-studio/*.test.ts\" \"src/app/api/**/*.test.ts\""
   },
   "dependencies": {
     "@acs/image-document": "workspace:*",
+    "@acs/media-store": "workspace:*",
     "@acs/shared": "workspace:*",
     "@acs/video-document": "workspace:*",
     "@acs/video-scene": "workspace:*",

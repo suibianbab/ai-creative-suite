@@ -15,7 +15,8 @@ function makeTestVideo(name: string, withAudio: boolean): string {
   const file = path.join(WORK, name);
   const args = ["-v", "error", "-y"];
   args.push("-f", "lavfi", "-i", "testsrc=duration=2:size=640x360:rate=24");
-  if (withAudio) args.push("-f", "lavfi", "-i", "sine=frequency=440:duration=2");
+  if (withAudio)
+    args.push("-f", "lavfi", "-i", "sine=frequency=440:duration=2");
   args.push("-pix_fmt", "yuv420p");
   if (withAudio) args.push("-c:a", "aac", "-shortest");
   args.push(file);
@@ -35,7 +36,13 @@ test("parseFps：分数帧率 30000/1001 → ≈29.97；0/0 与垃圾 → 0", ()
 test("parseProbeOutput：合法 JSON → 全字段（P0 正路径）", () => {
   const raw = JSON.stringify({
     streams: [
-      { codec_type: "video", codec_name: "h264", width: 640, height: 360, r_frame_rate: "24/1" },
+      {
+        codec_type: "video",
+        codec_name: "h264",
+        width: 640,
+        height: 360,
+        r_frame_rate: "24/1",
+      },
       { codec_type: "audio", codec_name: "aac" },
     ],
     format: { duration: "2.000000", format_name: "mov,mp4,m4a,3gp,3g2,mj2" },
@@ -51,7 +58,10 @@ test("parseProbeOutput：合法 JSON → 全字段（P0 正路径）", () => {
 });
 
 test("parseProbeOutput P1：无视频流 → 拒", () => {
-  const raw = JSON.stringify({ streams: [{ codec_type: "audio" }], format: { duration: "2" } });
+  const raw = JSON.stringify({
+    streams: [{ codec_type: "audio" }],
+    format: { duration: "2" },
+  });
   const outcome = parseProbeOutput(raw);
   assert.ok(!outcome.ok);
   assert.match(outcome.error, /文件不含视频流/);
@@ -60,7 +70,18 @@ test("parseProbeOutput P1：无视频流 → 拒", () => {
 test("parseProbeOutput P2：duration 缺失/非正 → 拒", () => {
   for (const duration of ["N/A", "0", "-1"]) {
     const outcome = parseProbeOutput(
-      JSON.stringify({ streams: [{ codec_type: "video", codec_name: "h264", width: 640, height: 360, r_frame_rate: "24/1" }], format: { duration } }),
+      JSON.stringify({
+        streams: [
+          {
+            codec_type: "video",
+            codec_name: "h264",
+            width: 640,
+            height: 360,
+            r_frame_rate: "24/1",
+          },
+        ],
+        format: { duration },
+      }),
     );
     assert.ok(!outcome.ok);
     assert.match(outcome.error, /无法读取视频时长/);
@@ -69,9 +90,19 @@ test("parseProbeOutput P2：duration 缺失/非正 → 拒", () => {
 
 test("parseProbeOutput P3/P4：画幅非正整数 / 帧率 0 → 拒", () => {
   const base = { codec_type: "video", codec_name: "h264" };
-  const badSize = parseProbeOutput(JSON.stringify({ streams: [{ ...base, width: 0, height: 360, r_frame_rate: "24/1" }], format: { duration: "2" } }));
+  const badSize = parseProbeOutput(
+    JSON.stringify({
+      streams: [{ ...base, width: 0, height: 360, r_frame_rate: "24/1" }],
+      format: { duration: "2" },
+    }),
+  );
   assert.ok(!badSize.ok && /无法读取视频画幅/.test(badSize.error));
-  const badFps = parseProbeOutput(JSON.stringify({ streams: [{ ...base, width: 640, height: 360, r_frame_rate: "0/0" }], format: { duration: "2" } }));
+  const badFps = parseProbeOutput(
+    JSON.stringify({
+      streams: [{ ...base, width: 640, height: 360, r_frame_rate: "0/0" }],
+      format: { duration: "2" },
+    }),
+  );
   assert.ok(!badFps.ok && /无法读取视频帧率/.test(badFps.error));
 });
 

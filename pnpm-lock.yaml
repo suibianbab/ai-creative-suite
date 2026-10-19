@@ -75,6 +75,9 @@ importers:
       '@acs/image-document':
         specifier: workspace:*
         version: link:../../packages/image-document
+      '@acs/media-store':
+        specifier: workspace:*
+        version: link:../../packages/media-store
       '@acs/shared':
         specifier: workspace:*
         version: link:../../packages/shared

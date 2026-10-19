@@ -5,7 +5,7 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { mkdirSync, readFileSync, unlinkSync } from "node:fs";
 import path from "node:path";
-import { runProbe, type ProbeResult } from "./probe.js";
+import { type ProbeResult, runProbe } from "./probe.js";
 
 export const PROXY_MAX_EDGE = 1280;
 const BROWSER_CODECS = new Set(["h264", "vp8", "vp9", "av1"]);
@@ -80,7 +80,10 @@ export function transcodeProxy(
   }
   const longEdge = Math.max(verified.probe.width, verified.probe.height);
   const durationDrift = Math.abs(verified.probe.durationMs - probe.durationMs);
-  if (longEdge > PROXY_MAX_EDGE || durationDrift >= PROXY_DURATION_TOLERANCE_MS) {
+  if (
+    longEdge > PROXY_MAX_EDGE ||
+    durationDrift >= PROXY_DURATION_TOLERANCE_MS
+  ) {
     try {
       unlinkSync(outputPath);
     } catch {}

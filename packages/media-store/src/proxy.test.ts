@@ -6,8 +6,8 @@ import { existsSync, mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { type ProbeResult, runProbe } from "./probe.js";
 import { needsProxy, PROXY_MAX_EDGE, transcodeProxy } from "./proxy.js";
-import { runProbe, type ProbeResult } from "./probe.js";
 
 const WORK = mkdtempSync(path.join(tmpdir(), "acs-proxy-test-"));
 
