@@ -122,6 +122,19 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
+  packages/media-store:
+    dependencies:
+      '@acs/video-document':
+        specifier: workspace:*
+        version: link:../video-document
+    devDependencies:
+      '@types/node':
+        specifier: ^22.15.0
+        version: 22.20.5
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
   packages/remotion-engine:
     dependencies:
       '@acs/video-document':

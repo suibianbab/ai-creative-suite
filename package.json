@@ -4,8 +4,8 @@
   "packageManager": "pnpm@11.19.0",
   "scripts": {
     "dev": "pnpm --filter @acs/shared build && pnpm --filter @acs/image-document build && pnpm -r --parallel --filter @acs/api --filter @acs/web dev",
-    "build": "pnpm --filter @acs/shared build && pnpm --filter @acs/image-document build && pnpm --filter @acs/api build && pnpm --filter @acs/web build",
-    "typecheck": "pnpm --filter @acs/shared build && pnpm --filter @acs/image-document build && pnpm -r typecheck",
+    "build": "pnpm --filter @acs/shared build && pnpm --filter @acs/image-document build && pnpm --filter @acs/video-document run build && pnpm --filter @acs/media-store run build && pnpm --filter @acs/api build && pnpm --filter @acs/web build",
+    "typecheck": "pnpm --filter @acs/shared build && pnpm --filter @acs/image-document build && pnpm --filter @acs/video-document run build && pnpm -r typecheck",
     "test": "pnpm --filter @acs/image-document build && pnpm --filter @acs/image-document test",
     "lint": "biome check .",
     "format": "biome format --write .",
