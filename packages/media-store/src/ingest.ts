@@ -120,6 +120,13 @@ export async function ingestMediaFile(input: {
     return { ok: false, error, reasonCode, cleanupDone: true };
   };
   try {
+    // validate 契约：origin.fileName 1..200——超限在此拒收（F2）
+    if (input.fileName.length > 200) {
+      return fail(
+        `文件名过长（${input.fileName.length} 字符，上限 200）：请缩短后重传`,
+        "unsupported-format",
+      );
+    }
     const extension = input.fileName.includes(".")
       ? (input.fileName.split(".").pop() ?? "").toLowerCase()
       : "";
@@ -156,23 +163,31 @@ export async function ingestMediaFile(input: {
     const existedBefore = existsSync(dest);
     const wroteOriginal = writeAtomically(dest, input.bytes) === "written";
 
-    const buildAsset = (proxy?: MediaAsset["proxy"]): MediaAsset => ({
-      assetId: randomUUID(),
-      createdAt: input.now?.() ?? new Date().toISOString(),
-      origin: { kind: "local-upload", fileName: input.fileName },
-      original: {
-        sha256,
-        bytes: input.bytes.byteLength,
-        durationMs: probe.durationMs,
-        width: probe.width,
-        height: probe.height,
-        fps: probe.fps,
-        codec: probe.codec,
-        hasAudio: probe.hasAudio,
-        storeKey,
-      },
-      ...(proxy === undefined ? {} : { proxy }),
-    });
+    const buildAsset = (proxy?: MediaAsset["proxy"]): MediaAsset => {
+      // validate 契约：proxy.note 1..200——在契约边界统一截断（F2），
+      // 覆盖注入转码器与代理复用两条来路
+      const capped =
+        proxy === undefined
+          ? undefined
+          : { ...proxy, note: proxy.note.slice(0, 200) };
+      return {
+        assetId: randomUUID(),
+        createdAt: input.now?.() ?? new Date().toISOString(),
+        origin: { kind: "local-upload", fileName: input.fileName },
+        original: {
+          sha256,
+          bytes: input.bytes.byteLength,
+          durationMs: probe.durationMs,
+          width: probe.width,
+          height: probe.height,
+          fps: probe.fps,
+          codec: probe.codec,
+          hasAudio: probe.hasAudio,
+          storeKey,
+        },
+        ...(capped === undefined ? {} : { proxy: capped }),
+      };
+    };
 
     if (input.generateProxy !== false && needsProxy(probe)) {
       const transcoded = await transcodeFn(

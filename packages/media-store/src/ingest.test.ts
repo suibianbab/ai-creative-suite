@@ -245,6 +245,54 @@ test("W2 回滚分寸：转码失败 → 本次新写 original 删除；预存�
   assert.equal(statSync(preexisting).mtimeMs, mtimeBefore);
 });
 
+test("F2：origin.fileName 超 200 字符 → 入口拒（validate 契约上限 1..200）", async () => {
+  const bytes = makeTestVideo("small.mp4");
+  const root = storeRoot("f2name");
+  const longName = `${"长".repeat(200)}.mp4`;
+  const result = await ingestMediaFile({ bytes, fileName: longName, root });
+  assert.ok(!result.ok);
+  assert.match(result.error, /文件名过长/);
+  assert.equal(result.reasonCode, "unsupported-format");
+  assert.ok(!existsSync(path.join(root, "original")), "拒绝不得写仓");
+});
+
+test("F2：注入超长 note（300 字符）→ asset.proxy.note 截到 ≤200（契约上限）", async () => {
+  const bytes = makeTestVideo("small.mp4");
+  const root = storeRoot("f2note");
+  const fakeBigProbe = (): ProbeOutcome => ({
+    ok: true,
+    probe: {
+      durationMs: 2000,
+      width: 1920,
+      height: 1080,
+      fps: 24,
+      codec: "h264",
+      hasAudio: false,
+      formatName: "mov,mp4",
+    },
+  });
+  const longNote = "n".repeat(300);
+  const result = await ingestMediaFile({
+    bytes,
+    fileName: "big.mp4",
+    root,
+    runProbe: fakeBigProbe,
+    runDecode: () => ({ ok: true }),
+    runTranscode: () => ({
+      ok: true as const,
+      sha256: "a".repeat(64),
+      bytes: 12345,
+      width: 1280,
+      height: 720,
+      note: longNote,
+    }),
+  });
+  assert.ok(result.ok, result.ok ? "" : result.error);
+  assert.ok(result.asset.proxy);
+  assert.equal(result.asset.proxy.note.length, 200);
+  assert.equal(result.asset.proxy.note, longNote.slice(0, 200));
+});
+
 test("F4：导入期间事件循环不得被阻塞（spawnSync 会冻结整条循环）", async () => {
   const bytes = makeTestVideo("small.mp4");
   const root = storeRoot("eventloop");
