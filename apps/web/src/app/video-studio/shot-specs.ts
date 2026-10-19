@@ -4,7 +4,7 @@
 // null（工作台显示「不可预览」提示），而不是裸 cast 递进渲染路径在 React 渲染期
 // 抛错、炸掉整页编辑器（应用无 error boundary）。
 
-import type { Shot } from "@acs/video-document";
+import type { SceneSource, Shot } from "@acs/video-document";
 import {
   defaultRegistry,
   type SceneSpec,
@@ -21,4 +21,16 @@ export function shotWorkingSpec(shot: Shot): SceneSpec | null {
   } catch {
     return null; // 未注册组件/结构非法：不可预览，但不炸页
   }
+}
+
+// P2.5-T3（spec §2.4 P1）：media-clip 工作版本解析。与 shotWorkingSpec 对称：
+// 非 media-clip 或工作版本缺失 → null（调用方据此走 spec 项/降级，不炸页）。
+export function shotWorkingMediaClip(
+  shot: Shot,
+): Extract<SceneSource, { type: "media-clip" }> | null {
+  const working = shot.contentVersions.find(
+    (version) => version.versionId === shot.workingVersionId,
+  );
+  if (!working || working.sceneSource.type !== "media-clip") return null;
+  return working.sceneSource;
 }

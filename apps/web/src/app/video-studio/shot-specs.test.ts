@@ -6,7 +6,7 @@ import test from "node:test";
 import type { VideoProject } from "@acs/video-document";
 import { applyPlan, type PlanIds } from "./apply-plan.js";
 import { planFromSentence } from "./planner.js";
-import { shotWorkingSpec } from "./shot-specs.js";
+import { shotWorkingMediaClip, shotWorkingSpec } from "./shot-specs.js";
 
 const IDS: PlanIds = {
   project: "cccccccc-1111-4111-8111-111111111111",
@@ -79,4 +79,47 @@ test("shotWorkingSpec：未注册组件的 spec（导入件来自更新版本）
   // 旧实现（裸 cast）会把这份非法 spec 原样递进渲染路径 → 渲染期抛错炸页。
   // 新契约：这里就必须拦下，返回 null。
   assert.equal(shotWorkingSpec(future), null);
+});
+
+// —— P2.5-T3：media-clip 工作版本解析（P1 装配基础）——
+
+test("shotWorkingMediaClip：media-clip 工作版本 → 提取三成员；spec 版本 / 无工作版本 → null", () => {
+  const clip = {
+    type: "media-clip" as const,
+    mediaAssetId: "a1",
+    inMs: 0,
+    outMs: 2000,
+    fit: "cover" as const,
+    focalX: 0.5,
+    audio: "mute" as const,
+  };
+  const mediaShot = {
+    shotId: "s1",
+    order: 0,
+    locked: false,
+    workingVersionId: "v1",
+    contentVersions: [
+      {
+        versionId: "v1",
+        createdAt: "2026-10-19T00:00:00.000Z",
+        durationMs: 2000,
+        description: "d",
+        narrationText: "",
+        sceneSource: clip,
+        provenance: { engineId: "x", engineVersion: "1" },
+      },
+    ],
+    events: [],
+  };
+  assert.deepEqual(shotWorkingMediaClip(mediaShot as never), clip);
+  assert.equal(shotWorkingSpec(mediaShot as never), null);
+  const project = projectWithSpecShot();
+  assert.equal(shotWorkingMediaClip(project.shots[0]!), null);
+  assert.equal(
+    shotWorkingMediaClip({
+      ...mediaShot,
+      workingVersionId: "gone",
+    } as never),
+    null,
+  );
 });
