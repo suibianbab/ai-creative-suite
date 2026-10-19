@@ -6,6 +6,7 @@ import { createHash, randomUUID } from "node:crypto";
 import {
   existsSync,
   mkdtempSync,
+  readFileSync,
   rmSync,
   unlinkSync,
   writeFileSync,
@@ -21,6 +22,7 @@ import {
 } from "./probe.js";
 import {
   needsProxy,
+  PROXY_MAX_EDGE,
   transcodeProxy as defaultTranscode,
   type TranscodeOutcome,
 } from "./proxy.js";
@@ -190,11 +192,29 @@ export async function ingestMediaFile(input: {
     };
 
     if (input.generateProxy !== false && needsProxy(probe)) {
-      const transcoded = await transcodeFn(
-        tempFile,
-        proxyPath(input.root, storeKey),
-        probe,
-      );
+      const proxyDest = proxyPath(input.root, storeKey);
+      // F3：仓内已有可用代理（探测得过且长边达标）→ 复用，不重转码。
+      // 与 S3 对 original 的复用对称——预存代理背后是既有资产的预览，
+      // 重转码不但烧 CPU，瞬时失败还会 -y 覆盖毁掉它（W2 分寸）。
+      if (existsSync(proxyDest)) {
+        const recheck = await probeFn(proxyDest);
+        const longEdge = recheck.ok
+          ? Math.max(recheck.probe.width, recheck.probe.height)
+          : Number.POSITIVE_INFINITY;
+        if (recheck.ok && longEdge <= PROXY_MAX_EDGE) {
+          const existingBytes = readFileSync(proxyDest);
+          const asset = buildAsset({
+            sha256: createHash("sha256").update(existingBytes).digest("hex"),
+            bytes: existingBytes.byteLength,
+            width: recheck.probe.width,
+            height: recheck.probe.height,
+            note: `复用仓内既有代理 ${path.basename(proxyDest)}`,
+          });
+          cleanup();
+          return { ok: true, asset };
+        }
+      }
+      const transcoded = await transcodeFn(tempFile, proxyDest, probe);
       if (!transcoded.ok) {
         // W2 回滚分寸：仅删本次新写；预存文件背后是既有资产，无权销毁。
         if (wroteOriginal && !existedBefore) {

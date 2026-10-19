@@ -293,6 +293,32 @@ test("F2：注入超长 note（300 字符）→ asset.proxy.note 截到 ≤200�
   assert.equal(result.asset.proxy.note, longNote.slice(0, 200));
 });
 
+test("F3：仓内已有有效代理 → 复用不重转码（转码器不得被调）+ 文件 mtime 不变", async () => {
+  const bytes = makeTestVideo("big.mp4", "1920x1080");
+  const root = storeRoot("f3");
+  const first = await ingestMediaFile({ bytes, fileName: "big.mp4", root });
+  assert.ok(first.ok, first.ok ? "" : first.error);
+  const proxyFile = path.join(
+    root,
+    "proxy",
+    `${first.asset.original.storeKey.slice(0, 16)}.proxy.mp4`,
+  );
+  assert.ok(existsSync(proxyFile));
+  const mtimeBefore = statSync(proxyFile).mtimeMs;
+  const second = await ingestMediaFile({
+    bytes,
+    fileName: "again.mp4",
+    root,
+    runTranscode: () => {
+      throw new Error("有效代理在仓时不得重新转码（W2：无权动预存产物）");
+    },
+  });
+  assert.ok(second.ok, second.ok ? "" : second.error);
+  assert.ok(second.asset.proxy);
+  assert.match(second.asset.proxy.note, /复用仓内既有代理/);
+  assert.equal(statSync(proxyFile).mtimeMs, mtimeBefore, "复用路径不得重写代理");
+});
+
 test("F4：导入期间事件循环不得被阻塞（spawnSync 会冻结整条循环）", async () => {
   const bytes = makeTestVideo("small.mp4");
   const root = storeRoot("eventloop");
