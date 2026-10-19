@@ -90,8 +90,12 @@ export function dryRunJobs(jobs, { budgetMs = DEFAULT_BUDGET_MS } = {}) {
   });
 }
 
-// 项目 → 干跑 jobs：每个镜头一个 job，帧数取量化帧图的 span（与出片一致）。
+// 项目 → 干跑 jobs：帧数取量化帧图的 span（与出片一致）。
 // 返回 { jobs, timeline }；镜头不满足出片前提时抛带人话的错误。
+// P2.5-T4（D1）：帧图量化覆盖全部镜头（帧保真——媒体镜头占位帧数与出片
+// 一致），干跑作业只给 spec span（媒体渲染在 render-scene 走 OffthreadVideo，
+// 无需 spec 干跑）；全媒体项目 → 空 jobs 合法。未知类型大声抛错（未来通道
+// 接入时显式改）。
 export async function buildProjectDryRunJobs(project) {
   const { quantizeTimeline } = await import(
     pathToFileURL(path.join(ROOT, "packages/video-document/dist/index.js")).href
@@ -102,8 +106,6 @@ export async function buildProjectDryRunJobs(project) {
       (candidate) => candidate.versionId === shot.workingVersionId,
     );
     if (!version) throw new Error(`镜头 ${index + 1} 缺少 working version`);
-    if (version.sceneSource.type !== "spec")
-      throw new Error(`镜头 ${index + 1} 的 sceneSource 不是 spec`);
     entries.push({ version, label: `镜头 ${index + 1}` });
   });
   if (entries.length === 0) throw new Error("项目没有镜头，无帧可干跑");
@@ -111,22 +113,30 @@ export async function buildProjectDryRunJobs(project) {
     entries.map((entry) => entry.version.durationMs),
     DRY_RUN_FPS,
   );
-  const jobs = timeline.shots.map((span) => {
+  const jobs = [];
+  for (const span of timeline.shots) {
     const entry = entries[span.shotIndex];
-    return {
-      label: `${entry.label}（${span.frames} 帧）`,
-      frames: span.frames,
-      moduleUrl: SPEC_FRAME_RENDERER_URL,
-      fn: "renderSpecFrame",
-      args: {
-        spec: entry.version.sceneSource.spec,
-        fps: DRY_RUN_FPS,
-        durationFrames: span.frames,
-        width: 1280,
-        height: 720,
-      },
-    };
-  });
+    const sceneSource = entry.version.sceneSource;
+    if (sceneSource.type === "spec") {
+      jobs.push({
+        label: `${entry.label}（${span.frames} 帧）`,
+        frames: span.frames,
+        moduleUrl: SPEC_FRAME_RENDERER_URL,
+        fn: "renderSpecFrame",
+        args: {
+          spec: sceneSource.spec,
+          fps: DRY_RUN_FPS,
+          durationFrames: span.frames,
+          width: 1280,
+          height: 720,
+        },
+      });
+    } else if (sceneSource.type !== "media-clip") {
+      throw new Error(
+        `镜头 ${span.shotIndex + 1} 的 sceneSource 既非 spec 也非 media-clip`,
+      );
+    }
+  }
   return { jobs, timeline };
 }
 
@@ -163,6 +173,10 @@ if (isMain) {
     console.log(
       `[frame-dryrun] 干跑 ${timeline.totalFrames} 帧（预算 ${budgetMs}ms/帧）…`,
     );
+    if (jobs.length === 0)
+      console.log(
+        "[frame-dryrun] 干跑 0 作业（镜头全部为媒体，出片走 render-scene）",
+      );
     const result = await dryRunJobs(jobs, { budgetMs });
     if (!result.ok) {
       for (const failure of result.failures) {
