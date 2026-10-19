@@ -16,6 +16,7 @@ export * from "./components/text-animation.js";
 export * from "./default-registry.js";
 export * from "./determinism-gate.js";
 export * from "./easing.js";
+export * from "./media-crop.js";
 export * from "./random.js";
 export * from "./react-svg-attrs.js";
 export * from "./registry.js";

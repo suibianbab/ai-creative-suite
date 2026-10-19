@@ -1,22 +1,6 @@
-// P2.5-T3 媒体预览数学（spec §2.4 P2/P3）：objectFit/objectPosition 派生 +
-// 帧驱动 seek 目标与节流。cover 语义：仅横溢出轴吃 focalX（注视点），竖溢出/
-// 无溢出恒 50%（契约无 focalY）；contain 恒 letterbox 居中。
-export function mediaClipCss(
-  assetWidth: number,
-  assetHeight: number,
-  canvasWidth: number,
-  canvasHeight: number,
-  fit: "cover" | "contain",
-  focalX: number,
-): { objectFit: "cover" | "contain"; objectPosition: string } {
-  if (fit === "contain") {
-    return { objectFit: "contain", objectPosition: "50% 50%" };
-  }
-  const scale = Math.max(canvasWidth / assetWidth, canvasHeight / assetHeight);
-  const overflowX = assetWidth * scale > canvasWidth + 0.5;
-  const x = overflowX ? `${(focalX * 100).toFixed(1)}%` : "50%";
-  return { objectFit: "cover", objectPosition: `${x} 50%` };
-}
+// P2.5-T4（B2）：mediaClipCss 已南迁 @acs/video-scene（出片与预览单源），
+// 此处再导出保持既有 import 面不变（X4）。帧驱动 seek 目标与节流仍在本文件。
+export { mediaClipCss } from "@acs/video-scene";
 
 export function mediaSeekTargetSec(
   inMs: number,
