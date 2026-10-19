@@ -14,6 +14,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import type { MediaAsset } from "@acs/video-document";
 import {
+  isEnoentError,
   runCapture,
   runProbe as defaultProbe,
   type ProbeOutcome,
@@ -67,9 +68,15 @@ export async function runDecode(filePath: string): Promise<RunDecodeResult> {
     "-",
   ]);
   if (captured.error) {
+    if (isEnoentError(captured.error)) {
+      return {
+        ok: false,
+        error: `未找到 ffmpeg（请安装 FFmpeg 并加入 PATH）：${captured.error.message}`,
+      };
+    }
     return {
       ok: false,
-      error: `未找到 ffmpeg（请安装 FFmpeg 并加入 PATH）：${captured.error.message}`,
+      error: `文件无法完整解码：进程启动失败（${captured.error.message}）`,
     };
   }
   if (captured.status !== 0 || captured.stderr.trim() !== "") {

@@ -89,3 +89,23 @@ test("transcodeProxy 竖版：1080x1920 → 720x1280", async () => {
 test("PROXY_MAX_EDGE 常量钉死 1280", () => {
   assert.equal(PROXY_MAX_EDGE, 1280);
 });
+
+test("F1：转码进程启动失败（PATH 空）→ 错误消息须含诊断而非空前缀", async () => {
+  const source = fixture("small.mp4", "640x360");
+  const previousPath = process.env.PATH;
+  try {
+    process.env.PATH = "";
+    const result = await transcodeProxy(
+      source,
+      path.join(WORK, "enoent.proxy.mp4"),
+      probeOf(1920, 1080, "h264"),
+    );
+    assert.ok(!result.ok);
+    assert.ok(
+      result.error.length > "代理转码失败：".length,
+      `消息须带诊断细节，实际：${result.error}`,
+    );
+  } finally {
+    process.env.PATH = previousPath;
+  }
+});

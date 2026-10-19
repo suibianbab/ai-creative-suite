@@ -65,11 +65,12 @@ export async function transcodeProxy(
     try {
       unlinkSync(outputPath);
     } catch {}
+    // stderr 为空（进程根本没起来）时取 error.message，不留空前缀
+    const detail =
+      captured.stderr !== "" ? captured.stderr : (captured.error?.message ?? "");
     return {
       ok: false,
-      error: `代理转码失败：${String(
-        captured.stderr ?? captured.error?.message ?? "",
-      ).slice(-300)}`,
+      error: `代理转码失败：${detail.slice(-300)}`,
     };
   }
   const verified = await runProbe(outputPath);

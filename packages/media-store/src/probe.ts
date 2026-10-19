@@ -113,6 +113,16 @@ export function runCapture(
   });
 }
 
+// F1：只有 ENOENT 才是"未装 FFmpeg"；其他 spawn 错误（如历史上
+// maxBuffer 溢出的 ENOBUFS）误报"请安装 FFmpeg"会误导用户重装。
+export function isEnoentError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    (error as NodeJS.ErrnoException).code === "ENOENT"
+  );
+}
+
 export async function runProbe(filePath: string): Promise<ProbeOutcome> {
   const captured = await runCapture("ffprobe", [
     "-v",
@@ -124,9 +134,15 @@ export async function runProbe(filePath: string): Promise<ProbeOutcome> {
     filePath,
   ]);
   if (captured.error) {
+    if (isEnoentError(captured.error)) {
+      return {
+        ok: false,
+        error: `未找到 ffprobe（请安装 FFmpeg 并加入 PATH）：${captured.error.message}`,
+      };
+    }
     return {
       ok: false,
-      error: `未找到 ffprobe（请安装 FFmpeg 并加入 PATH）：${captured.error.message}`,
+      error: `文件无法探测：进程启动失败（${captured.error.message}）`,
     };
   }
   if (captured.status !== 0) {
