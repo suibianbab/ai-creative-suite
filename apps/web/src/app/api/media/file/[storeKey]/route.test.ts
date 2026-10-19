@@ -3,6 +3,7 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import {
+  existsSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -94,6 +95,80 @@ test("original 命中 → 200 正确 Content-Type 与字节一致；Range → 20
     assert.deepEqual(
       Buffer.from(await fallback.arrayBuffer()),
       Buffer.from("proxy-bytes"),
+    );
+  } finally {
+    if (previousStore === undefined) delete process.env.ACS_MEDIA_STORE;
+    else process.env.ACS_MEDIA_STORE = previousStore;
+  }
+});
+
+// —— P2.5-T3 P5：?variant=proxy 代理优先（预览 src 用，≤1280 浏览器安全 codec）——
+
+async function getWithQuery(storeKey: string, query: string): Promise<Response> {
+  return GET(
+    new Request(`http://localhost:3210/api/media/file/${storeKey}${query}`),
+    { params: Promise.resolve({ storeKey }) },
+  );
+}
+
+test("P5：variant=proxy → proxy 优先命中；proxy 文件被删 → 回退 original 200（不是 404）；缺省行为不变", async () => {
+  const previousStore = process.env.ACS_MEDIA_STORE;
+  const store = mkdtempSync(path.join(tmpdir(), "acs-get-proxy-variant-"));
+  process.env.ACS_MEDIA_STORE = store;
+  try {
+    const file = path.join(WORK, "src.mp4");
+    if (!existsSync(file)) {
+      const spawned = spawnSync(
+        "ffmpeg",
+        [
+          "-v",
+          "error",
+          "-y",
+          "-f",
+          "lavfi",
+          "-i",
+          "testsrc=duration=2:size=640x360:rate=24",
+          "-pix_fmt",
+          "yuv420p",
+          file,
+        ],
+        { encoding: "utf8" },
+      );
+      assert.equal(spawned.status, 0, spawned.stderr);
+    }
+    const result = await ingestMediaFile({
+      bytes: readFileSync(file),
+      fileName: "src.mp4",
+      root: store,
+    });
+    assert.ok(result.ok);
+    const storeKey = result.asset.original.storeKey;
+    mkdirSync(path.join(store, "proxy"), { recursive: true });
+    const proxyFile = path.join(store, "proxy", `${storeKey.slice(0, 16)}.proxy.mp4`);
+    writeFileSync(proxyFile, Buffer.from("proxy-bytes"));
+
+    const byVariant = await getWithQuery(storeKey, "?variant=proxy");
+    assert.equal(byVariant.status, 200);
+    assert.equal(byVariant.headers.get("content-type"), "video/mp4");
+    assert.deepEqual(
+      Buffer.from(await byVariant.arrayBuffer()),
+      Buffer.from("proxy-bytes"),
+    );
+
+    // 缺省（无 variant）→ original 优先不变（X：既有行为逐字节保持）
+    const byDefault = await getWithQuery(storeKey, "");
+    assert.deepEqual(
+      Buffer.from(await byDefault.arrayBuffer()),
+      readFileSync(path.join(store, "original", storeKey)),
+    );
+
+    // proxy 被删 → variant 回退 original 200（Review Focus #1）
+    rmSync(proxyFile);
+    const fallback = await getWithQuery(storeKey, "?variant=proxy");
+    assert.equal(fallback.status, 200);
+    assert.deepEqual(
+      Buffer.from(await fallback.arrayBuffer()),
+      readFileSync(path.join(store, "original", storeKey)),
     );
   } finally {
     if (previousStore === undefined) delete process.env.ACS_MEDIA_STORE;

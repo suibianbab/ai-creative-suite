@@ -1,5 +1,7 @@
 // P2.5-T2 媒体文件流式 GET（spec §1.2）：storeKey 形状门（防穿越）→
 // original 命中 → proxy 回退 → 404。Range 单段 206（预览 seek 最小需要）。
+// P2.5-T3 P5：?variant=proxy → proxy 优先（预览 src），original 回退；
+// 缺省 original 优先（既有行为不变）。
 import { createReadStream, statSync } from "node:fs";
 import { Readable } from "node:stream";
 import { originalPath, proxyPath, resolveStoreRoot } from "@acs/media-store";
@@ -88,10 +90,12 @@ export async function GET(
   if (contentType === undefined) {
     return Response.json({ error: "storeKey 形状非法。" }, { status: 400 });
   }
-  for (const candidate of [
-    [original, contentType] as const,
-    [proxy, "video/mp4"] as const,
-  ]) {
+  const preferProxy =
+    new URL(request.url).searchParams.get("variant") === "proxy";
+  const candidates = preferProxy
+    ? [[proxy, "video/mp4"] as const, [original, contentType] as const]
+    : [[original, contentType] as const, [proxy, "video/mp4"] as const];
+  for (const candidate of candidates) {
     try {
       const stat = statSync(candidate[0]);
       return streamFile(
