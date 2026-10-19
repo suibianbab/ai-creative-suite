@@ -90,14 +90,26 @@ export function rollbackWorkingVersion(
   }));
 }
 
+// P2.5-T3（spec §2.1 R1）：mediaClip patch——工作台媒体镜头的人工修订通道。
+// durationMs 由 op 计算（outMs−inMs），调用方不得自带（C4 单一事实源）。
+export type MediaClipPatch = {
+  mediaAssetId: string;
+  inMs: number;
+  outMs: number;
+  fit: "cover" | "contain";
+  focalX: number;
+  audio: "mute" | "keep";
+};
+
 // 人工修订（分镜编辑器）：以当前 working 版本为 base 追加新 ContentVersion +
 // submitted(human)。锁定镜头允许（ADR 0003 §1.3 人工路径），并追加 audit 事件
 // 留痕。patch.spec 由调用方先用 video-scene 的 validateSceneSpec + 组件注册表
-// 校验过（本包不依赖 video-scene，spec 在文档内是 unknown）。
+// 校验过（本包不依赖 video-scene，spec 在文档内是 unknown）；patch.mediaClip
+// 的 C1-C6 契约由收尾 validateVideoProject 后盾拦（R2）。
 export function reviseWorkingVersion(
   p: VideoProject,
   shotId: string,
-  patch: { narrationText?: string; spec?: unknown },
+  patch: { narrationText?: string; spec?: unknown; mediaClip?: MediaClipPatch },
   newVersionId: string,
   at = new Date().toISOString(),
 ): VideoProject {
@@ -111,20 +123,27 @@ export function reviseWorkingVersion(
       `镜头 ${shotId} 的工作版本 ${shot.workingVersionId} 不存在`,
     );
   }
+  if (patch.spec !== undefined && patch.mediaClip !== undefined) {
+    throw new Error("spec 与 mediaClip 互斥：一次修订只能指定一种场景源");
+  }
   const version: ContentVersion = {
     ...base,
     versionId: newVersionId,
     createdAt: at,
     durationMs:
-      patch.spec === undefined
-        ? base.durationMs
-        : (patch.spec as { durationMs: number }).durationMs,
+      patch.mediaClip !== undefined
+        ? patch.mediaClip.outMs - patch.mediaClip.inMs
+        : patch.spec === undefined
+          ? base.durationMs
+          : (patch.spec as { durationMs: number }).durationMs,
     description: `${base.description.slice(0, 160)}（人工修订）`,
     narrationText: patch.narrationText ?? base.narrationText,
     sceneSource:
-      patch.spec === undefined
-        ? base.sceneSource
-        : { type: "spec", spec: patch.spec },
+      patch.mediaClip !== undefined
+        ? { type: "media-clip", ...patch.mediaClip }
+        : patch.spec === undefined
+          ? base.sceneSource
+          : { type: "spec", spec: patch.spec },
     provenance: {
       ...base.provenance,
       engineId: "human-edit",
