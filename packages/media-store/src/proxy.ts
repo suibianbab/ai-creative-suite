@@ -3,7 +3,8 @@
 // 摘要——proxy 是可再生成字段，note 是再生成的配方指纹。
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { readFileSync, unlinkSync } from "node:fs";
+import { mkdirSync, readFileSync, unlinkSync } from "node:fs";
+import path from "node:path";
 import { runProbe, type ProbeResult } from "./probe.js";
 
 export const PROXY_MAX_EDGE = 1280;
@@ -56,6 +57,8 @@ export function transcodeProxy(
   if (probe.hasAudio) args.push("-c:a", "aac", "-b:a", "128k");
   else args.push("-an");
   args.push(outputPath);
+  // ffmpeg 不建父目录（ingest 场景 root/proxy/ 首次转码时不存在）
+  mkdirSync(path.dirname(outputPath), { recursive: true });
   const spawned = spawnSync("ffmpeg", args, { encoding: "utf8" });
   if (spawned.error || spawned.status !== 0) {
     try {

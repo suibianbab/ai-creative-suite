@@ -15,3 +15,10 @@ export {
   type ProbeResult,
 } from "./probe.js";
 export { needsProxy, PROXY_MAX_EDGE, transcodeProxy } from "./proxy.js";
+export {
+  ingestMediaFile,
+  runDecode,
+  type IngestOrigin,
+  type IngestReasonCode,
+  type IngestResult,
+} from "./ingest.js";
