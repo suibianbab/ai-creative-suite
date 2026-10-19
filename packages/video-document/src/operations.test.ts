@@ -271,7 +271,10 @@ test("mediaClip patch：落 media-clip sceneSource，durationMs=outMs−inMs，h
   assert.deepEqual(version.sceneSource, { type: "media-clip", ...CLIP });
   assert.equal(version.narrationText, "旁白");
   assert.equal(version.provenance.engineId, "human-edit");
-  assert.equal(version.provenance.parentVersionId, p.shots[0]!.workingVersionId);
+  assert.equal(
+    version.provenance.parentVersionId,
+    p.shots[0]!.workingVersionId,
+  );
   assert.equal(next.shots[0]!.workingVersionId, UUID3);
   assert.equal(next.mediaAssets?.length, 1); // op 不动账本
 });
@@ -310,7 +313,13 @@ test("spec 与 mediaClip 同时给出 → 大声抛（互斥）", () => {
 
 test("narration-only patch 落在 media 版本上 → sceneSource 与 durationMs 原样保留（不得丢媒体源）", () => {
   let p: VideoProject = { ...baseProject(), mediaAssets: [mediaAsset()] };
-  p = reviseWorkingVersion(p, p.shots[0]!.shotId, { mediaClip: CLIP }, UUID3, T3AT);
+  p = reviseWorkingVersion(
+    p,
+    p.shots[0]!.shotId,
+    { mediaClip: CLIP },
+    UUID3,
+    T3AT,
+  );
   const next = reviseWorkingVersion(
     p,
     p.shots[0]!.shotId,
@@ -328,7 +337,13 @@ test("mediaClip：资产不在账本 → validate 拦（R2 后盾，C1）", () =
   const p = baseProject(); // 无 mediaAssets
   assert.throws(
     () =>
-      reviseWorkingVersion(p, p.shots[0]!.shotId, { mediaClip: CLIP }, UUID3, T3AT),
+      reviseWorkingVersion(
+        p,
+        p.shots[0]!.shotId,
+        { mediaClip: CLIP },
+        UUID3,
+        T3AT,
+      ),
     /mediaAssets 账本/,
   );
 });

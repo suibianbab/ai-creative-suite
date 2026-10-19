@@ -1,7 +1,11 @@
 // P2.5-T3 P2/P3：cover 裁切 objectFit/objectPosition 双画幅数学 + 帧驱动 seek。
 import assert from "node:assert/strict";
 import test from "node:test";
-import { mediaClipCss, mediaSeekTargetSec, shouldSeekVideo } from "./media-preview";
+import {
+  mediaClipCss,
+  mediaSeekTargetSec,
+  shouldSeekVideo,
+} from "./media-preview";
 
 test("P2：contain → 50% 50%，focalX 不参与", () => {
   assert.deepEqual(mediaClipCss(1920, 1080, 360, 640, "contain", 0.9), {

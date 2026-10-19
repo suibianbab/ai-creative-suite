@@ -104,7 +104,10 @@ test("original 命中 → 200 正确 Content-Type 与字节一致；Range → 20
 
 // —— P2.5-T3 P5：?variant=proxy 代理优先（预览 src 用，≤1280 浏览器安全 codec）——
 
-async function getWithQuery(storeKey: string, query: string): Promise<Response> {
+async function getWithQuery(
+  storeKey: string,
+  query: string,
+): Promise<Response> {
   return GET(
     new Request(`http://localhost:3210/api/media/file/${storeKey}${query}`),
     { params: Promise.resolve({ storeKey }) },
@@ -144,7 +147,11 @@ test("P5：variant=proxy → proxy 优先命中；proxy 文件被删 → 回退 
     assert.ok(result.ok);
     const storeKey = result.asset.original.storeKey;
     mkdirSync(path.join(store, "proxy"), { recursive: true });
-    const proxyFile = path.join(store, "proxy", `${storeKey.slice(0, 16)}.proxy.mp4`);
+    const proxyFile = path.join(
+      store,
+      "proxy",
+      `${storeKey.slice(0, 16)}.proxy.mp4`,
+    );
     writeFileSync(proxyFile, Buffer.from("proxy-bytes"));
 
     const byVariant = await getWithQuery(storeKey, "?variant=proxy");

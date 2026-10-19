@@ -74,7 +74,11 @@ export function buildMediaRevisePatch(
 } {
   const asset = assets.find((a) => a.assetId === draft.assetId);
   if (!asset) {
-    return { patch: null, error: `素材不存在或已移除：${draft.assetId}`, warnings: [] };
+    return {
+      patch: null,
+      error: `素材不存在或已移除：${draft.assetId}`,
+      warnings: [],
+    };
   }
   if (!INTEGER_TEXT.test(draft.inMsText)) {
     return { patch: null, error: "入点须为 ≥0 的整数毫秒", warnings: [] };

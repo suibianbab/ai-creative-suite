@@ -68,7 +68,10 @@ test("M2：media 工作版本 → 草稿回填（focal 取整为百分数）", (
 });
 
 test("M2：非 media 版本 + 有账本 → 默认草稿（outMs=min(2000, 时长)）；无账本 → 指路错误", () => {
-  const specWorking = { sceneSource: { type: "spec" as const, spec: {} }, durationMs: 2000 };
+  const specWorking = {
+    sceneSource: { type: "spec" as const, spec: {} },
+    durationMs: 2000,
+  };
   const { draft: d } = draftMediaFromVersion(specWorking, [asset()]);
   assert.deepEqual(d, {
     assetId: ASSET_ID,
@@ -80,7 +83,10 @@ test("M2：非 media 版本 + 有账本 → 默认草稿（outMs=min(2000, 时�
   });
   const short = asset();
   short.original.durationMs = 1200;
-  assert.equal(draftMediaFromVersion(specWorking, [short]).draft?.outMsText, "1200");
+  assert.equal(
+    draftMediaFromVersion(specWorking, [short]).draft?.outMsText,
+    "1200",
+  );
   const empty = draftMediaFromVersion(undefined, []);
   assert.equal(empty.draft, null);
   assert.match(empty.error!, /尚无媒体素材/);
@@ -108,7 +114,11 @@ test("M3：正路径——focal 33 → focalX 0.33，patch 无 durationMs（op �
 });
 
 test("M3：素材不在账本 → 拒，不静默换首条（Review Focus #2）", () => {
-  const { patch, error } = buildMediaRevisePatch(draft({ assetId: "gone" }), [asset()], "");
+  const { patch, error } = buildMediaRevisePatch(
+    draft({ assetId: "gone" }),
+    [asset()],
+    "",
+  );
   assert.equal(patch, null);
   assert.match(error!, /素材不存在或已移除：gone/);
 });
@@ -130,13 +140,19 @@ test("M3：入出点文本非法（全角/小数/负号/空/科学计数）→ r
 
 test("M3：focal 全角拒、前导零合法=50、越界 101 拒（Review Focus #3）", () => {
   assert.match(
-    buildMediaRevisePatch(draft({ focalPercentText: "５０" }), [asset()], "").error!,
+    buildMediaRevisePatch(draft({ focalPercentText: "５０" }), [asset()], "")
+      .error!,
     /0\.\.100 整数/,
   );
-  const legal = buildMediaRevisePatch(draft({ focalPercentText: "0050" }), [asset()], "");
+  const legal = buildMediaRevisePatch(
+    draft({ focalPercentText: "0050" }),
+    [asset()],
+    "",
+  );
   assert.equal(legal.patch!.mediaClip.focalX, 0.5);
   assert.match(
-    buildMediaRevisePatch(draft({ focalPercentText: "101" }), [asset()], "").error!,
+    buildMediaRevisePatch(draft({ focalPercentText: "101" }), [asset()], "")
+      .error!,
     /0\.\.100 整数/,
   );
 });
@@ -174,11 +190,13 @@ test("M5：旁白语速超片段 → 软预警；短旁白无预警", () => {
 
 test("M3：fit/audio 非法枚举兜底拒", () => {
   assert.match(
-    buildMediaRevisePatch(draft({ fit: "fill" as never }), [asset()], "").error!,
+    buildMediaRevisePatch(draft({ fit: "fill" as never }), [asset()], "")
+      .error!,
     /cover 或 contain/,
   );
   assert.match(
-    buildMediaRevisePatch(draft({ audio: "loud" as never }), [asset()], "").error!,
+    buildMediaRevisePatch(draft({ audio: "loud" as never }), [asset()], "")
+      .error!,
     /mute 或 keep/,
   );
 });

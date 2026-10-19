@@ -109,7 +109,12 @@ export function applyStickTemplate(
   spec: SceneSpec,
   templateId: string,
 ): { spec: SceneSpec; error: null } | { spec: null; error: string } {
-  return applySceneTemplate(STICK_TEMPLATES, spec, templateId, "未知火柴人模板");
+  return applySceneTemplate(
+    STICK_TEMPLATES,
+    spec,
+    templateId,
+    "未知火柴人模板",
+  );
 }
 
 export type StickEditDraft = {

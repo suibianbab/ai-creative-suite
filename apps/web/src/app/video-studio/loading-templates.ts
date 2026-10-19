@@ -92,7 +92,12 @@ export function applyLoadingTemplate(
   spec: SceneSpec,
   templateId: string,
 ): { spec: SceneSpec; error: null } | { spec: null; error: string } {
-  return applySceneTemplate(LOADING_TEMPLATES, spec, templateId, "未知加载模板");
+  return applySceneTemplate(
+    LOADING_TEMPLATES,
+    spec,
+    templateId,
+    "未知加载模板",
+  );
 }
 
 export type LoadingEditDraft = {

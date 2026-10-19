@@ -42,7 +42,13 @@ test("U1：重复 assetId → 大声抛（防御；T2 randomUUID 正常不撞）
 test("U2：有 proxy → ?variant=proxy；无 proxy → 直连 original", () => {
   assert.equal(mediaSrcUrl(asset()), "/api/media/file/aaaaaaaaaaaaaaaa.mp4");
   const withProxy = asset({
-    proxy: { sha256: "b".repeat(64), bytes: 50, width: 1280, height: 720, note: "ffmpeg" },
+    proxy: {
+      sha256: "b".repeat(64),
+      bytes: 50,
+      width: 1280,
+      height: 720,
+      note: "ffmpeg",
+    },
   });
   assert.equal(
     mediaSrcUrl(withProxy),

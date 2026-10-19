@@ -3,8 +3,8 @@
 import {
   activeSubtitleCue,
   buildSubtitleCues,
-  mapGlobalFrame,
   type MediaAsset,
+  mapGlobalFrame,
   type QuantizedTimeline,
   type ShotTransition,
   transitionOverlayAt,
@@ -348,7 +348,11 @@ export function TimelinePreview({
               localFrame={mapping.localFrame}
             />
           ) : (
-            <div className="media-missing" role="img" aria-label={active.reason}>
+            <div
+              className="media-missing"
+              role="img"
+              aria-label={active.reason}
+            >
               {active.reason}
             </div>
           )

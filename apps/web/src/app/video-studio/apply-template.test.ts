@@ -16,7 +16,12 @@ const BASE: SceneSpec = {
 };
 
 test("未知模板 → `${label} ${templateId}`（文案由调用方给）", () => {
-  const result = applySceneTemplate(CHART_TEMPLATES, BASE, "nope", "未知测试模板");
+  const result = applySceneTemplate(
+    CHART_TEMPLATES,
+    BASE,
+    "nope",
+    "未知测试模板",
+  );
   assert.equal(result.error, "未知测试模板 nope");
   assert.equal(result.spec, null);
 });
