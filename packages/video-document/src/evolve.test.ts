@@ -6,7 +6,7 @@ import {
   assertAppendOnlyEvolution,
   VideoProjectMutationError,
 } from "./evolve.js";
-import type { VideoProject } from "./types.js";
+import type { MediaAsset, VideoProject } from "./types.js";
 
 const ID = "0b0b13a2-6c63-4d3d-9a52-a70f6a3b4001";
 
@@ -491,4 +491,102 @@ test("双方都无 brief.applications → 不受约束（单镜头项目路径�
   const next = appendedProject();
   next.brief.sentence = "改一句需求";
   assert.doesNotThrow(() => assertAppendOnlyEvolution(baseProject(), next));
+});
+
+// —— mediaAssets 素材账本只追加（2026-10-19 P2.5-T1 终评 I1）——
+// 与 renderRecords 同纪律（types.ts 注释即此承诺）：assetId 只增不减，
+// 既有条目的 origin/createdAt/original 逐字段不可变（original 是 ffprobe
+// 实测落账的内容寻址根基，原地偷换 sha256/storeKey 必须被闸门拦截）；
+// proxy 声明为「可再生成」，允许增改（豁免项）。
+function mediaAssetEntry(assetId: string, sha256: string): MediaAsset {
+  return {
+    assetId,
+    createdAt: "2026-10-19T00:00:00.000Z",
+    origin: { kind: "local-upload", fileName: "site-dji.mp4" },
+    original: {
+      sha256,
+      bytes: 123456,
+      durationMs: 5400,
+      width: 1920,
+      height: 1080,
+      fps: 29.97,
+      codec: "h264",
+      hasAudio: true,
+      storeKey: `${sha256.slice(0, 16)}.mp4`,
+    },
+  };
+}
+
+const ASSET_A = "0b0b13a2-6c63-4d3d-9a52-a70f6a3b2010";
+const ASSET_B = "0b0b13a2-6c63-4d3d-9a52-a70f6a3b2011";
+const SHA_A = "a".repeat(64);
+const SHA_B = "b".repeat(64);
+
+function projectWithMediaAssets(): VideoProject {
+  const project = appendedProject();
+  project.mediaAssets = [mediaAssetEntry(ASSET_A, SHA_A)];
+  return project;
+}
+
+test("mediaAssets 既有条目的 original 被改写 → 拒绝（内容寻址不得原地偷换）", () => {
+  const next = structuredClone(projectWithMediaAssets());
+  next.mediaAssets![0]!.original.bytes = 999; // 形状仍合法，validate 拦不住
+  assert.throws(
+    () => assertAppendOnlyEvolution(projectWithMediaAssets(), next),
+    /mediaAssets.*original|original/,
+    "original 落账后不可变",
+  );
+});
+
+test("mediaAssets 未被引用的条目被删除 → 拒绝（账本只增不减）", () => {
+  const next = structuredClone(projectWithMediaAssets());
+  next.mediaAssets = []; // 即便无镜头引用也不许删
+  assert.throws(
+    () => assertAppendOnlyEvolution(projectWithMediaAssets(), next),
+    /mediaAssets/,
+    "素材账本只允许追加",
+  );
+});
+
+test("mediaAssets assetId 被改写或重排 → 拒绝", () => {
+  const next = structuredClone(projectWithMediaAssets());
+  next.mediaAssets![0]!.assetId = ASSET_B;
+  assert.throws(
+    () => assertAppendOnlyEvolution(projectWithMediaAssets(), next),
+    /mediaAssets/,
+    "旧素材条目必须原样保留",
+  );
+});
+
+test("mediaAssets 既有条目增改 proxy（可再生成字段豁免）→ 通过", () => {
+  const withProxy = structuredClone(projectWithMediaAssets());
+  withProxy.mediaAssets![0]!.proxy = {
+    sha256: SHA_B,
+    bytes: 45678,
+    width: 1280,
+    height: 720,
+    note: "h264 crf23 1280x720",
+  };
+  assert.doesNotThrow(() =>
+    assertAppendOnlyEvolution(projectWithMediaAssets(), withProxy),
+  );
+
+  // 已有 proxy 的再生成（改写豁免字段）同样合法
+  const regenerated = structuredClone(withProxy);
+  regenerated.mediaAssets![0]!.proxy = {
+    sha256: "c".repeat(64),
+    bytes: 40000,
+    width: 960,
+    height: 540,
+    note: "h264 crf26 960x540 重生成",
+  };
+  assert.doesNotThrow(() => assertAppendOnlyEvolution(withProxy, regenerated));
+});
+
+test("mediaAssets 追加新素材条目、旧条目原样 → 通过", () => {
+  const next = structuredClone(projectWithMediaAssets());
+  next.mediaAssets!.push(mediaAssetEntry(ASSET_B, SHA_B));
+  assert.doesNotThrow(() =>
+    assertAppendOnlyEvolution(projectWithMediaAssets(), next),
+  );
 });

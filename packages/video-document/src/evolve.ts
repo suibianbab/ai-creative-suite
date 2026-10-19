@@ -114,4 +114,38 @@ export function assertAppendOnlyEvolution(
       (slot) => `brief.applications[${slot}]`,
     );
   }
+  // mediaAssets（P2.5-T1 素材账本）：与 renderRecords 同一只追加纪律——
+  // assetId 只增不减，既有条目的 origin/createdAt/original 逐字段不可变
+  // （original 是 ffprobe 实测落账的内容寻址根基，原地偷换 sha256/storeKey
+  // 即偷换素材本体，validate 查形状拦不住，必须在此闸门拦截）。proxy 是
+  // 类型声明的「可再生成」字段，允许增改删——故不能整条 requirePrefix。
+  if (previous.mediaAssets !== undefined) {
+    const nextMediaAssets = next.mediaAssets ?? [];
+    if (nextMediaAssets.length < previous.mediaAssets.length) {
+      throw new VideoProjectMutationError(
+        `mediaAssets 序列变短：只允许追加，不允许删除（旧 ${previous.mediaAssets.length} 项，新 ${nextMediaAssets.length} 项）`,
+      );
+    }
+    for (const [index, previousAsset] of previous.mediaAssets.entries()) {
+      const nextAsset = nextMediaAssets[index];
+      if (
+        nextAsset === undefined ||
+        nextAsset.assetId !== previousAsset.assetId
+      ) {
+        throw new VideoProjectMutationError(
+          `mediaAssets[${index}]（${previousAsset.assetId}）被改写或重排：旧素材条目必须原样保留`,
+        );
+      }
+      for (const field of ["origin", "createdAt", "original"] as const) {
+        if (
+          canonicalJson(nextAsset[field]) !==
+          canonicalJson(previousAsset[field])
+        ) {
+          throw new VideoProjectMutationError(
+            `mediaAssets[${index}]（${previousAsset.assetId}）的 ${field} 不可变：original 实测元数据落账后不得改写（proxy 为可再生成字段不受此限）`,
+          );
+        }
+      }
+    }
+  }
 }
