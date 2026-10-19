@@ -42,7 +42,9 @@ const server = http.createServer((req, res) => {
   res.setHeader("Access-Control-Allow-Private-Network", "true");
   let pathname;
   try {
-    pathname = decodeURIComponent(new URL(req.url, "http://127.0.0.1").pathname);
+    pathname = decodeURIComponent(
+      new URL(req.url, "http://127.0.0.1").pathname,
+    );
   } catch {
     res.writeHead(400).end("400 Bad Request"); // 畸形百分号序列，不落 fs
     return;
@@ -53,7 +55,11 @@ const server = http.createServer((req, res) => {
   const storeKey = member.startsWith("original/")
     ? member.slice("original/".length)
     : null;
-  if (!storeKey || !STORE_KEY_PATTERN.test(storeKey) || !allowed.has(storeKey)) {
+  if (
+    !storeKey ||
+    !STORE_KEY_PATTERN.test(storeKey) ||
+    !allowed.has(storeKey)
+  ) {
     res.writeHead(404).end("404 Not Found");
     return;
   }
