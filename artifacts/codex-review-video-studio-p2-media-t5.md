@@ -2,7 +2,7 @@
 
 - 日期：2026-10-20
 - 工作树：`D:\codex\animate\.claude\worktrees\video-studio-p0`（分支 `worktree-video-studio-p2`；**主检出 `D:\codex\animate` 由用户管理，勿动**）
-- 范围：`f7dfc6a..a0cb4cb`（13 提交，24 文件，+4370/−19：spec+plan 两篇、media-store `stock/` 纯函数与下载编排、ingest origin 参数化、web 两条 dev-only 路由、面板状态机与单事务应用、镜头卡接线）+ 本文档提交 `<DOCS_SHA>`。`f7dfc6a` 为 T4 收口点（上次复核范围的后续基线）
+- 范围：`f7dfc6a..a0cb4cb`（13 提交，24 文件，+4370/−19：spec+plan 两篇、media-store `stock/` 纯函数与下载编排、ingest origin 参数化、web 两条 dev-only 路由、面板状态机与单事务应用、镜头卡接线）+ 本文档提交 `1ee2973`（提交链 SHA 回填为紧随其后一条 docs 提交）。`f7dfc6a` 为 T4 收口点（上次复核范围的后续基线）
 - 纪律：工作树内只读复核；**不要 push / merge / 改 HEAD**（集成由用户决定）；本刀零计费（`artifacts/tts-usage.jsonl` 台账 34 行不变）；媒体与证据不入库
 - 回写约定：结论写 **`artifacts/codex-review-video-studio-p2-media-t5-result.md`**（勿覆盖本交接单）；格式沿 t4 版（Review Focus 逐项 / Rulings 判定 / Declined 逐条 / Issues C-I-M / Ready to merge + reasoning）
 - **状态**：实施与冒烟完成；整支终评**尚未执行**（由控制方在本交接单之后派发）。§5 保持「待终评回写」。
@@ -24,7 +24,7 @@
 | `f6e39bb` | T6 `applyStockAsset` / `importStockForShot`：最新文档基线 + 账本与镜头修订一次保存 |
 | `d915431` | T7 镜头卡内搜索/选用/下载并应用面板接线 |
 | `a0cb4cb` | T7 评审修复：导入网络失败（浏览器英文 `Failed to fetch`）转中文可重试文案 |
-| `<DOCS_SHA>` | T8 收口：CURRENT_STATE 条目 + 本交接单（证据 `artifacts/video-studio-stock-source/evidence.md` 不入库） |
+| `1ee2973` | T8 收口：CURRENT_STATE 条目 + 本交接单（证据 `artifacts/video-studio-stock-source/evidence.md` 不入库） |
 
 ## 二、核心判据（可挑战的不变量）
 
