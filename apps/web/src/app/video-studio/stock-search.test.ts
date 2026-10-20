@@ -247,9 +247,14 @@ test("S8：canDownload 优先返回 disabledReason 原文，其次要求有效�
     { ok: false, reason: "无可用分辨率档位" },
   );
   assert.deepEqual(canDownload(candidate()), { ok: true });
+});
+
+test("S8b：有档位但无 defaultDerivativeUrl → 不可下载（不得回退 derivatives[0]）", () => {
   assert.deepEqual(
     canDownload(candidate({ defaultDerivativeUrl: undefined })),
-    { ok: true },
-    "无默认档位但仍有候选档位时可下载",
+    {
+      ok: false,
+      reason: "无可用分辨率档位",
+    },
   );
 });

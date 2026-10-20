@@ -4,6 +4,7 @@ import {
   buildWikimediaSearchUrl,
   normalizeWikimediaPages,
 } from "@acs/media-store";
+import { isStockSourceEnabled } from "../../../../video-studio/stock-capability";
 
 const USER_AGENT = "ACS-VideoStudio/0.1 (local development)";
 const FETCH_TIMEOUT_MS = 15_000;
@@ -18,7 +19,7 @@ function searchFailure(reason: string) {
 }
 
 export async function GET(request: Request) {
-  if (process.env.NODE_ENV !== "development") {
+  if (!isStockSourceEnabled()) {
     return Response.json(
       { error: "在线搜索仅在本地开发环境开放。" },
       { status: 503 },

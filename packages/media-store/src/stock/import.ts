@@ -58,7 +58,7 @@ export type StockImportResult =
       ok: false;
       error: string;
       reasonCode: StockImportReasonCode;
-      cleanupDone: true;
+      cleanupDone: boolean;
     };
 
 type StockLicense = NonNullable<StockCandidate["license"]>;
@@ -210,7 +210,9 @@ async function downloadAttempt(input: {
       return { ok: false, kind: "retryable", reason: errorMessage(error) };
     }
 
-    if (!response.ok) {
+    // W6：只接受 200。206/204 等 2xx 不是「完整下载」，与其余非 200 一样按
+    // 致命错误收口；408/429/5xx 仍走重试路径。
+    if (response.status !== 200) {
       void response.body?.cancel().catch(() => {});
       if (isRetryableStatus(response.status)) {
         return {
@@ -267,6 +269,22 @@ async function downloadAttempt(input: {
         return { ok: false, kind: "too-large" };
       }
       writeSync(fd, chunk);
+    }
+
+    // W6：Content-Length 可核验时要求字节数完全一致；短体/长体都按上游异常
+    // 可重试收口（传输截断常见于连接中断）。有 content-encoding 时该长度是
+    // 压缩后字节，不能与解码后的 received 直接比较。
+    const encoding = response.headers.get("content-encoding");
+    if (
+      Number.isFinite(declaredBytes) &&
+      (encoding === null || encoding === "identity") &&
+      received !== declaredBytes
+    ) {
+      return {
+        ok: false,
+        kind: "retryable",
+        reason: "响应字节数与 Content-Length 不符",
+      };
     }
 
     return { ok: true };
@@ -414,11 +432,25 @@ export async function importStockCandidate(input: {
   const maxBytes = input.maxBytes ?? DEFAULT_MAX_BYTES;
   const totalTimeoutMs = input.totalTimeoutMs ?? DEFAULT_TOTAL_TIMEOUT_MS;
   const idleTimeoutMs = input.idleTimeoutMs ?? DEFAULT_IDLE_TIMEOUT_MS;
+  let workDir: string | undefined;
+
+  // 单一清理点：所有返回路径都经 finish。rmSync 失败只把失败结果的
+  // cleanupDone 降为 false，不掩盖已确定的导入结果；成功结果不带该标志。
+  // 无日志设施，降级标志就是清理失败的信号。
+  const finish = (result: StockImportResult): StockImportResult => {
+    if (workDir === undefined) return result;
+    try {
+      rmSync(workDir, { recursive: true, force: true });
+    } catch {
+      if (!result.ok) return { ...result, cleanupDone: false };
+    }
+    return result;
+  };
   const fail = (
     reasonCode: StockImportReasonCode,
     error: string,
-  ): StockImportResult => ({ ok: false, error, reasonCode, cleanupDone: true });
-  let workDir: string | undefined;
+  ): StockImportResult =>
+    finish({ ok: false, error, reasonCode, cleanupDone: true });
 
   try {
     // W5：白名单先于任何 fetch。
@@ -528,18 +560,10 @@ export async function importStockCandidate(input: {
       );
     }
 
-    return { ok: true, asset: ingested.asset };
+    return finish({ ok: true, asset: ingested.asset });
   } catch (error) {
     // fs 抛错（mkdtemp/readFile 等）也须落在 P6 契约内，而不是冒泡到路由的
-    // 未保护 await——统一收成 store-error，cleanupDone 恒 true。
+    // 未保护 await——统一收成 store-error；fail 经 finish 清理并如实反映结果。
     return fail("store-error", `素材导入失败：${errorMessage(error)}`);
-  } finally {
-    if (workDir !== undefined) {
-      try {
-        rmSync(workDir, { recursive: true, force: true });
-      } catch {
-        // 清理失败不得掩盖已经确定的导入结果。
-      }
-    }
   }
 }

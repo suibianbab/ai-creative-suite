@@ -543,6 +543,62 @@ test("三次 500：upstream，消息含「下载失败」", async () => {
   assert.equal(downloadCalls(seq.calls), 3);
 });
 
+test("206 Partial Content：拒绝为不完整下载，ingest 不调用且临时目录已清理", async () => {
+  const seq = fetchSequence([
+    () => metadataResponse(),
+    () => bytesResponse([PAYLOAD], 206),
+  ]);
+  const ingest = makeIngest();
+  const parent = tempParent();
+  const result = await importStockCandidate({
+    pageTitle: PAGE_TITLE,
+    derivativeUrl: URL_720,
+    root: storeRoot(),
+    fetchImpl: seq.fn,
+    ingest: ingest.fn,
+    tempDir: parent,
+  });
+
+  if (result.ok) assert.fail("206 不得视为完整下载");
+  assert.equal(result.reasonCode, "upstream");
+  assert.ok(
+    result.error.startsWith("下载失败（HTTP 206）"),
+    `错误应以「下载失败（HTTP 206）」开头：${result.error}`,
+  );
+  assert.equal(result.cleanupDone, true);
+  assert.equal(ingest.calls.length, 0);
+  assert.deepEqual(readdirSync(parent), []);
+});
+
+test("Content-Length 100 但正文仅 10 字节：重试 1 次后 upstream，不入账且清理", async () => {
+  const seq = fetchSequence([
+    () => metadataResponse(),
+    () =>
+      bytesResponse([new TextEncoder().encode("0123456789")], 200, {
+        "content-length": "100",
+      }),
+  ]);
+  const ingest = makeIngest();
+  const parent = tempParent();
+  const result = await importStockCandidate({
+    pageTitle: PAGE_TITLE,
+    derivativeUrl: URL_720,
+    root: storeRoot(),
+    fetchImpl: seq.fn,
+    ingest: ingest.fn,
+    tempDir: parent,
+    retries: 1,
+  });
+
+  if (result.ok) assert.fail("短体不得视为完整下载");
+  assert.equal(result.reasonCode, "upstream");
+  assert.match(result.error, /响应字节数与 Content-Length 不符/);
+  assert.equal(result.cleanupDone, true);
+  assert.equal(ingest.calls.length, 0);
+  assert.equal(downloadCalls(seq.calls), 1);
+  assert.deepEqual(readdirSync(parent), []);
+});
+
 test("对账不符：mismatch；本次新写删除、预存 original/proxy 保留", async () => {
   const mismatchWidth = 1290; // 档位 1280 + 10px，超过 ±2px 容差
   const runCase = async (preSeeded: boolean) => {

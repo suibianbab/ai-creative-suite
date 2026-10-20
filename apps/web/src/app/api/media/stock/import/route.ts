@@ -5,6 +5,7 @@ import {
   resolveStoreRoot,
   type StockImportReasonCode,
 } from "@acs/media-store";
+import { isStockSourceEnabled } from "../../../../video-studio/stock-capability";
 import { isSameOriginRequest } from "../../../same-origin";
 
 const MAX_PAGE_TITLE_LENGTH = 255;
@@ -22,7 +23,7 @@ const STATUS_BY_REASON: Record<StockImportReasonCode, number> = {
 };
 
 export async function POST(request: Request) {
-  if (process.env.NODE_ENV !== "development") {
+  if (!isStockSourceEnabled()) {
     return Response.json(
       { error: "在线搜索仅在本地开发环境开放。" },
       { status: 503 },

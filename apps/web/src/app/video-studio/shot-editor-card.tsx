@@ -68,6 +68,7 @@ import {
   STICK_TEMPLATES,
   type StickEditDraft,
 } from "./stick-templates";
+import { isStockSourceEnabled } from "./stock-capability";
 import { StockSearchPanel } from "./stock-search-panel";
 
 // 分镜编辑器镜头卡：只读信息 + 展开式编辑（旁白/画面修订、单镜头重做、
@@ -931,11 +932,15 @@ export function ShotEditorCard({
                 </select>
               </label>
               {/* P2.6-T7：在线素材搜索面板——仅媒体臂、素材下拉正下方；
-                  状态按卡独立，下载成功直接落成该镜头的新工作版本。 */}
-              <StockSearchPanel
-                disabled={!canEdit}
-                onImportStock={onImportStock}
-              />
+                  状态按卡独立，下载成功直接落成该镜头的新工作版本。
+                  P2.5-T5 复核：与两条 stock 路由共用开关，正式环境不渲染
+                  点了只会 503 的死入口（条件 JSX，不能早退——卡片有 hooks）。 */}
+              {isStockSourceEnabled() ? (
+                <StockSearchPanel
+                  disabled={!canEdit}
+                  onImportStock={onImportStock}
+                />
+              ) : null}
               <label className="shot-edit-field">
                 入点（ms）
                 <input

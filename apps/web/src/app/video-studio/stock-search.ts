@@ -144,8 +144,12 @@ export function canDownload(
   if (c.disabledReason) {
     return { ok: false, reason: c.disabledReason };
   }
-  const url = c.defaultDerivativeUrl ?? c.derivatives[0]?.url;
-  if (!url) {
+  // 与 effectiveDerivativeUrl 的默认分支同源：默认档位必须真实存在于档位
+  // 列表，不能回退到 derivatives[0]——否则「可下载」与实际可下载 URL 不一致。
+  if (
+    !c.defaultDerivativeUrl ||
+    !derivativeUrls(c).includes(c.defaultDerivativeUrl)
+  ) {
     return { ok: false, reason: "无可用分辨率档位" };
   }
   return { ok: true };
