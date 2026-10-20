@@ -66,6 +66,20 @@ test("确定性：同输入两次调用逐字节一致", () => {
   );
 });
 
+test("重新开始与 Home 强制重渲染第 1 步（已在第 1 步也重启动画）", () => {
+  const html = player();
+  assert.match(
+    html,
+    /const reset = \(\) => \{\s*index = 0;\s*render\(\);\s*\};/,
+  );
+  assert.match(html, /restart\.addEventListener\("click", reset\);/);
+  assert.match(
+    html,
+    /event\.key === "Home"\)\s*\{\s*event\.preventDefault\(\);\s*reset\(\);/,
+  );
+  assert.ok(!html.includes("go(0)"), "重新开始不应经过 go() 的等值早退");
+});
+
 test("边界：0 步与体积超限均抛出可定位的中文错误", () => {
   assert.equal(MAX_HTML_BYTES, 8 * 1024 * 1024);
   assert.throws(() => player({ steps: [] }), /步骤数为 0/);
