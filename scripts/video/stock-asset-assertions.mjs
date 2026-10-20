@@ -28,9 +28,11 @@ export function stockAssetViolations(asset) {
     push("时长", String(asset.original.durationMs));
   if (asset.original.hasAudio !== false)
     push("hasAudio", String(asset.original.hasAudio));
-  if (!/^[0-9a-f]{64}$/.test(asset.original.sha256))
-    push("sha256", String(asset.original.sha256));
-  if (asset.original.storeKey !== `${asset.original.sha256.slice(0, 16)}.webm`)
+  const sha256 = asset.original.sha256;
+  if (typeof sha256 !== "string" || !/^[0-9a-f]{64}$/.test(sha256))
+    push("sha256", String(sha256));
+  // sha256 已坏时不推导 storeKey，保持与逐项短路时代一致的诊断（先报 sha256）。
+  else if (asset.original.storeKey !== `${sha256.slice(0, 16)}.webm`)
     push("storeKey", asset.original.storeKey);
   if (asset.proxy !== undefined) push("proxy", "不应生成 proxy");
 

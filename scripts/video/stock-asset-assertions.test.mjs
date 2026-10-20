@@ -80,6 +80,14 @@ test("wrong sha256 yields a sha256 violation", () => {
   assert.deepEqual(steps(asset), ["sha256"]);
 });
 
+test("missing sha256 yields only a sha256 violation and does not throw", () => {
+  const asset = validAsset();
+  delete asset.original.sha256;
+  assert.deepEqual(stockAssetViolations(asset), [
+    { step: "sha256", detail: "undefined" },
+  ]);
+});
+
 test("wrong storeKey yields a storeKey violation", () => {
   const asset = validAsset();
   asset.original.storeKey = "deadbeefdeadbeef.webm";
