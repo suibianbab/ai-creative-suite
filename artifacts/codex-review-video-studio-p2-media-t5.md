@@ -123,4 +123,4 @@ curl -sS -X POST "http://localhost:3101/api/media/stock/import" \
 - 标签与默认草稿：`media-assets.ts`、`media-clip-templates.ts`（`mediaDraftForAsset`）
 - 证据：`artifacts/video-studio-stock-source/evidence.md`（不入库）
 - 状态：`AI_Creative_Suite_Dev_Pack_v3/CURRENT_STATE.md` 顶部条目
-- 计划进度与 Rulings：`.superpowers/sdd/2026-10-20-video-studio-stock-source/progress.md`
+- 计划进度与 Rulings：SDD 工作区 `.superpowers/sdd/2026-10-20-video-studio-stock-source/`（收尾后删除；Rulings 摘要见 §5）
