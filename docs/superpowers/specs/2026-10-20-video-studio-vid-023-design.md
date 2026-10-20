@@ -39,15 +39,15 @@ P2.5 五刀（契约 → 导入仓 → 预览编辑 → 出片链路 → Wikimed
 
 ## 4. 验收链与断言
 
-1. **检索**：面板搜 `clouds` 返回候选，固定 `pageTitle` 在列；480p 为默认档位。
-2. **下载并应用**：`POST /api/media/stock/import` 200；卡内出现 `素材已下载并应用（镜头 1）`。
+1. **检索**：面板搜 `clouds` 返回候选，固定 `pageTitle` 在列；档位下拉**初始值**即 480p（`DERIVATIVE_URL`）。
+2. **下载并应用**：观察到 `POST /api/media/stock/import` 返回 200；卡内出现 `素材已下载并应用（镜头 1）`。
 3. **项目导出**（`.editor-export` 下载 JSON）：
-   - `mediaAssets[0].origin`：`kind:"stock-source"`、`sourceId:"wikimedia"`、`sourcePageUrl` 为固定值、`license.name:"CC BY 2.0"`、`author:"Thomas Bresson"`、`retrievedAt` 为 ISO 8601。
-   - `original`：854×480、28600ms、`hasAudio:false`、`sha256` 64 位小写 hex、`storeKey` = sha256 前 16 位 + `.webm`、`proxy` 缺省。
+   - `mediaAssets[0].origin`：`kind:"stock-source"`、`sourceId:"wikimedia"`、`sourcePageUrl` 为固定值、`license.name:"CC BY 2.0"`、`license.author:"Thomas Bresson"`、`retrievedAt` 为 ISO 8601。
+   - `original`：854×480、28600ms、`hasAudio:false`、`sha256` 匹配 `/^[0-9a-f]{64}$/`、`storeKey` = sha256 前 16 位 + `.webm`、`proxy` 缺省。
    - 镜头 1 工作版本 `sceneSource`：`type:"media-clip"`、`mediaAssetId` 与账本一致、`inMs:0`、`outMs:2000`、`fit:"cover"`、`focalX:0.5`、`audio:"mute"`、`durationMs:2000`。
-   - 镜头 2、3：仍为 `spec`，组件 id 与规划器结果一致。
-4. **保存 / 重开**：`.editor-save` → `已保存`；`.project-action` 返回列表 → 打开同一项目 → 镜头 1 素材下拉回填同一 `mediaAssetId`，镜头字段不丢。
-5. **预览**：重开后把整片预览拨到帧 0（暂停），`<video class="media-stage">` 的 `src` 含 `storeKey`，`readyState===4`、`videoWidth===854`、`error===null`。
+   - 镜头 2、3：仍为 `spec`，且 `componentId` 与导入前基线导出逐个一致。
+4. **保存 / 重开**：`.editor-save` → `已保存`；`.project-action` 返回列表 → 打开同一项目 → 镜头 1 素材下拉回填同一 `mediaAssetId`，卡内入点/出点/fit/focal/audio 五项与导出值一致。
+5. **预览**：重开后把整片预览拨到帧 12（500ms，仍在镜头 1 的 0..47 帧域内并暂停），`<video class="media-stage">` 的 `src` 含 `storeKey`，`readyState≥2`（已取到当前帧数据）、`videoWidth===854`、`error===null`。
 6. **出片**：`node scripts/video/render-scene.mjs --project <exported> --out <dir>`（不传 `--narration`）双画幅各 exit 0；**双跑逐字节 SHA-256 一致**；镜头 1 帧（如第 24 帧，1000ms）YAVG ≥ 100（素材可见、非黑）。
 7. **零计费**：`artifacts/tts-usage.jsonl` 行数前后不变（本机为 34；文件不存在时按 0 计）。
 8. **控制台**：浏览器 `console` 无 error。
@@ -58,7 +58,7 @@ P2.5 五刀（契约 → 导入仓 → 预览编辑 → 出片链路 → Wikimed
 - dev server 绑定 localhost，`NODE_USE_ENV_PROXY=1` + `HTTPS_PROXY=http://127.0.0.1:7890` 才能访问 Wikimedia；`BASE_URL` 默认 `http://127.0.0.1:3211`（经 `scripts/dev/proxy-3211.mjs` 代理到 3210，或直接起在 3211）。
 - `ACS_MEDIA_STORE` 指向仓外隔离目录（如 `D:/tmp/acs-stock-e2e-*/store`），不碰真实仓。
 - `playwright-core` 自带 Chromium（本机已安装，沿既有 e2e 的 `chromium.launch({ headless: true })`）；`ffmpeg`/`ffprobe` 在 PATH。
-- 统一用 `--hostname localhost` 启动（`0.0.0.0` 下同源判定已由 T5 的 Host 头比较修复，但 e2e 不依赖该分支）。
+- 统一用 `--hostname 127.0.0.1` 启动：`scripts/dev/proxy-3211.mjs` 的上游写死 `127.0.0.1:3210`；本机 `localhost` 可能先解析到 IPv6 `::1`，用 `localhost` 绑定时代理会连不上。
 
 ## 6. 非目标
 

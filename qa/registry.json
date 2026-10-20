@@ -1332,6 +1332,21 @@
         "Renders both aspects deterministic: double run byte-identical via SHA-256, loading frames non-empty (signalstats YAVG >= 100 at frames 80 and 140), sketch baseline unchanged (VID-021 rerun inside reproduces archived hashes, registry v7 append harmless)",
         "No TTS billing: ledger line count unchanged and browser console logs zero errors"
       ]
+    },
+    {
+      "id": "VID-023",
+      "tier": "integration",
+      "title": "Video Studio stock source full-chain sample (Wikimedia search, download, media clip, render)",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/e2e-stock.mjs"],
+      "requiresPorts": [3211],
+      "checks": [
+        "Stock search finds the pinned Wikimedia candidate and imports the 480p WebM through the real editor panel",
+        "Exported project books origin license/author/sourcePageUrl/retrievedAt and a content-addressed storeKey with no proxy",
+        "Shot 1 becomes a media-clip (0-2000ms, cover, focal 0.5, mute) while shots 2-3 remain spec; asset survives save and reopen",
+        "Browser preview plays the stored media (readyState >= 2, 854px wide) and renders both aspects deterministically (double run byte-identical, media frame YAVG >= 100)",
+        "Attribution ruling: no in-frame credit; metadata only. No TTS billing and zero console errors"
+      ]
     }
   ],
   "manual": [

@@ -48,6 +48,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..")
 const BASE_URL = process.env.BASE_URL ?? "http://127.0.0.1:3211";
 const OUT_DIR = path.join(ROOT, "artifacts/video-studio-vid-023");
 const EXPORTED = path.join(OUT_DIR, "e2e.video-project.json");
+const BASELINE = path.join(OUT_DIR, "baseline.video-project.json");
 const SENTENCE = "做一个9秒的STEM解说视频，主题是云，分3个镜头";
 const PAGE_TITLE = "File:Clouds-seloncourt.ogv";
 const DERIVATIVE_URL = "https://upload.wikimedia.org/wikipedia/commons/transcoded/f/fb/Clouds-seloncourt.ogv/Clouds-seloncourt.ogv.480p.vp9.webm";
@@ -75,6 +76,12 @@ await page.click(".plan-apply");
 await waitForMessage(page, "首个 3 个镜头", "规划应用");
 await page.click(".editor-save");
 await waitForMessage(page, "已保存", "保存基线");
+// 基线导出：记录镜头 2、3 的 planner componentId，供导入后比对。
+const [baselineDownload] = await Promise.all([
+  page.waitForEvent("download"),
+  page.click(".editor-export"),
+]);
+await baselineDownload.saveAs(BASELINE);
 ```
 
 （规划应用文案实测为 `已应用分镜（首个 3 个镜头 / 9 秒）…`；只断言其中的 `首个 3 个镜头`。）
@@ -91,9 +98,19 @@ await card1.locator(".stock-search-input").fill("clouds");
 await card1.locator(".stock-search-button").first().click();
 const candidate = card1.locator(".stock-candidate", { hasText: "Clouds-seloncourt" });
 await candidate.waitFor({ timeout: 60_000 }); // 真实网络
+// 默认档位必须是 480p，再显式选中（幂等）。
+const defaultDerivative = await candidate.locator(".stock-derivative-select").inputValue();
+if (defaultDerivative !== DERIVATIVE_URL) fail("默认档位", defaultDerivative);
 await candidate.locator(".stock-derivative-select").selectOption(DERIVATIVE_URL);
+// 下载前挂响应观察：导入必须真的 200，不能被泛化错误文案掩盖。
+const importResponse = page.waitForResponse(
+  (response) => response.request().method() === "POST" && response.url().includes("/api/media/stock/import"),
+  { timeout: 120_000 },
+);
 await candidate.locator(".stock-download").click();
-// 首次下载约 7s（6.6MB），给足预算（含上游重试）。
+const importResult = await importResponse;
+if (importResult.status() !== 200) fail("导入状态", String(importResult.status()));
+// 首次下载约 7s（固定 480p 文件 ≈0.83MB），给足预算（含上游重试）。
 await waitForMessage(page, "素材已下载并应用（镜头 1）", "下载并应用", 120_000);
 await candidate.locator(".stock-badge-imported").waitFor({ timeout: 10_000 });
 await page.click(".editor-save");
@@ -113,29 +130,44 @@ const [download] = await Promise.all([
 ]);
 await download.saveAs(EXPORTED);
 const exported = JSON.parse(readFileSync(EXPORTED, "utf8"));
+if (exported.shots.length !== 3) fail("镜头数", String(exported.shots.length));
+
+// 导入前基线（Step 2 保存后导出）用于证明镜头 2、3 未被素材导入改动。
+const baseline = JSON.parse(readFileSync(BASELINE, "utf8"));
+const workingOf = (project, index) => {
+  const shot = project.shots[index];
+  const version = shot?.contentVersions.find((v) => v.versionId === shot.workingVersionId);
+  if (!version) fail(`镜头${index + 1}`, "找不到工作版本");
+  return version;
+};
 
 const asset = exported.mediaAssets?.[0];
 if (!asset) fail("账本", "mediaAssets 为空");
 if (asset.origin.kind !== "stock-source" || asset.origin.sourceId !== "wikimedia") fail("origin", JSON.stringify(asset.origin));
 if (asset.origin.sourcePageUrl !== SOURCE_PAGE) fail("sourcePageUrl", asset.origin.sourcePageUrl);
 if (asset.origin.license.name !== "CC BY 2.0") fail("license", asset.origin.license.name);
-if (asset.origin.author !== "Thomas Bresson") fail("author", asset.origin.author);
+if (asset.origin.license.author !== "Thomas Bresson") fail("author", asset.origin.license.author);
 if (Number.isNaN(Date.parse(asset.origin.retrievedAt))) fail("retrievedAt", asset.origin.retrievedAt);
+if (!/^[0-9a-f]{64}$/.test(asset.original.sha256)) fail("sha256", asset.original.sha256);
 if (asset.original.width !== 854 || asset.original.height !== 480) fail("尺寸", `${asset.original.width}x${asset.original.height}`);
 if (asset.original.durationMs !== 28600) fail("时长", String(asset.original.durationMs));
 if (asset.original.hasAudio !== false) fail("hasAudio", String(asset.original.hasAudio));
 if (asset.original.storeKey !== `${asset.original.sha256.slice(0, 16)}.webm`) fail("storeKey", asset.original.storeKey);
 if (asset.original.proxy !== undefined) fail("proxy", "不应生成 proxy");
 
-const s1 = exported.shots[0].contentVersions.find((v) => v.versionId === exported.shots[0].workingVersionId);
+const s1 = workingOf(exported, 0);
 if (s1.sceneSource.type !== "media-clip") fail("镜头1类型", s1.sceneSource.type);
 const clip = s1.sceneSource; // media-clip 字段平铺在 sceneSource 上
 if (clip.mediaAssetId !== asset.assetId) fail("mediaAssetId", clip.mediaAssetId);
 if (clip.inMs !== 0 || clip.outMs !== 2000) fail("入出点", `${clip.inMs}-${clip.outMs}`);
 if (clip.fit !== "cover" || clip.focalX !== 0.5 || clip.audio !== "mute") fail("默认值", JSON.stringify(clip));
 if (s1.durationMs !== 2000) fail("镜头1时长", String(s1.durationMs));
-if (exported.shots[1].contentVersions.find((v) => v.versionId === exported.shots[1].workingVersionId).sceneSource.type !== "spec") fail("镜头2", "应为 spec");
-if (exported.shots[2].contentVersions.find((v) => v.versionId === exported.shots[2].workingVersionId).sceneSource.type !== "spec") fail("镜头3", "应为 spec");
+for (const index of [1, 2]) {
+  const source = workingOf(exported, index).sceneSource;
+  const before = workingOf(baseline, index).sceneSource;
+  if (source.type !== "spec") fail(`镜头${index + 1}`, "应为 spec");
+  if (before.type !== "spec" || source.spec.componentId !== before.spec.componentId) fail(`镜头${index + 1}组件`, `${source.spec?.componentId} ≠ ${before.spec?.componentId}`);
+}
 ```
 
 （`focalX` 契约是 0..1，编辑器草稿里的 `50%` 落库为 `0.5`；`media-clip` 字段平铺在 `sceneSource` 上。）
@@ -151,6 +183,17 @@ await row.locator(".project-open").click();
 await page.locator(".shot-list > li").nth(0).locator(".shot-edit-toggle").click();
 const select = page.locator(".shot-list > li").nth(0).locator(".media-asset-select");
 if ((await select.inputValue()) !== asset.assetId) fail("重开素材", await select.inputValue());
+// 重开后草稿五项也要回填：媒体入/出点、fit、focal、audio。
+const reopened = {
+  inMs: await page.locator(".media-in-input").inputValue(),
+  outMs: await page.locator(".media-out-input").inputValue(),
+  fit: await page.locator(".media-fit-select").inputValue(),
+  focalPercent: await page.locator(".media-focal-input").inputValue(),
+  audio: await page.locator(".media-audio-select").inputValue(),
+};
+if (reopened.inMs !== "0" || reopened.outMs !== "2000" || reopened.fit !== "cover" || reopened.focalPercent !== "50" || reopened.audio !== "mute") {
+  fail("重开字段", JSON.stringify(reopened));
+}
 // 整片预览默认自动播放；先按 React 受控 range 的原型 setter 把帧拨到 12
 // （500ms，仍在镜头 1 的 0..47 帧域内，同时暂停）——既避免镜头 1（仅 2000ms）
 // 被播过去后 .media-stage 卸载，也强制 MediaStage 做一次 seek 取帧。
@@ -173,10 +216,17 @@ if (!state.src.includes(asset.original.storeKey)) fail("预览 src", state.src);
 // 产物固定为 <out>/landscape.mp4 与 <out>/portrait.mp4（render-scene 双画幅）。
 const RENDER_DIR = path.join(OUT_DIR, "render");
 const RERUN_DIR = path.join(OUT_DIR, "rerun");
+// 清掉上一次的产物，避免出片静默少写一档时仍拿旧文件通过确定性断言。
+rmSync(RENDER_DIR, { recursive: true, force: true });
+rmSync(RERUN_DIR, { recursive: true, force: true });
 const renderHashes = {};
 renderProject(EXPORTED, RENDER_DIR, "出片 run1");
 renderProject(EXPORTED, RERUN_DIR, "出片 run2");
 for (const aspect of ["landscape", "portrait"]) {
+  for (const dir of [RENDER_DIR, RERUN_DIR]) {
+    const file = path.join(dir, `${aspect}.mp4`);
+    if (!existsSync(file)) fail("出片产物", file);
+  }
   const hash = sha256(path.join(RENDER_DIR, `${aspect}.mp4`));
   if (hash !== sha256(path.join(RERUN_DIR, `${aspect}.mp4`))) fail("确定性", `${aspect} 双跑哈希不同`);
   // 镜头 1 帧域 0..47（2000ms @24fps）：帧 24 = 1000ms，素材应可见。
@@ -206,8 +256,9 @@ STORE="D:/tmp/acs-stock-e2e/store"
 rm -rf "$STORE"   # 需要全新仓时先清；不清也可（内容寻址幂等）
 
 # 终端 A（worktree 根）——系统代理只给 dev server，不进全局环境
+# 必须绑 127.0.0.1：3211 代理上游写死 127.0.0.1:3210，本机 localhost 可能先解析到 ::1。
 NODE_USE_ENV_PROXY=1 HTTPS_PROXY=http://127.0.0.1:7890 ACS_MEDIA_STORE="$STORE" \
-  pnpm --filter @acs/web exec next dev --hostname localhost --port 3210
+  pnpm --filter @acs/web exec next dev --hostname 127.0.0.1 --port 3210
 # 终端 B
 node scripts/dev/proxy-3211.mjs
 # 终端 C —— 同一个 ACS_MEDIA_STORE（render-scene 用它在仓里找素材）
