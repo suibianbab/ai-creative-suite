@@ -174,14 +174,14 @@ async function readWithTimeouts(
   }
 }
 
-// P3 单次尝试：每次重开/截断临时文件，失败重试不累加字节。总超时覆盖取流
-// 全程，空闲超时按相邻两段字节的间隔计。
+// P3 单次尝试：每次重开/截断临时文件，失败重试不累加字节。空闲超时按相邻
+// 两段字节的间隔计；总预算由 downloadToFile 统一下发（跨重试与退避共用）。
 async function downloadAttempt(input: {
   url: string;
   tempFile: string;
   fetchImpl: typeof fetch;
   maxBytes: number;
-  totalTimeoutMs: number;
+  budgetMs: number;
   idleTimeoutMs: number;
 }): Promise<DownloadAttemptOutcome> {
   const fd = openSync(input.tempFile, "w");
@@ -193,7 +193,7 @@ async function downloadAttempt(input: {
       totalFired = true;
       controller.abort();
       reject(TOTAL_TIMEOUT);
-    }, input.totalTimeoutMs);
+    }, input.budgetMs);
   });
   void totalDeadline.catch(() => {});
 
@@ -285,9 +285,26 @@ async function downloadToFile(input: {
   idleTimeoutMs: number;
   retries: number;
 }): Promise<DownloadOutcome> {
+  // 总预算只在这里落一次：跨全部尝试与退避（规格「下载期间最长 300s」）。
+  const deadlineAt = Date.now() + input.totalTimeoutMs;
+  const remainingMs = () => deadlineAt - Date.now();
+  const timeoutFailure = (): DownloadOutcome => ({
+    ok: false,
+    reasonCode: "timeout",
+    error: `下载超时（${Math.max(1, Math.round(input.totalTimeoutMs / 1000))}s）：已清理临时文件，未发布素材。`,
+  });
   let lastReason = "网络错误";
   for (let attempt = 1; attempt <= input.retries; attempt++) {
-    const outcome = await downloadAttempt(input);
+    const budgetMs = remainingMs();
+    if (budgetMs <= 0) return timeoutFailure();
+    const outcome = await downloadAttempt({
+      url: input.url,
+      tempFile: input.tempFile,
+      fetchImpl: input.fetchImpl,
+      maxBytes: input.maxBytes,
+      budgetMs,
+      idleTimeoutMs: input.idleTimeoutMs,
+    });
     if (outcome.ok) return { ok: true };
     if (outcome.kind === "too-large") {
       return {
@@ -296,19 +313,16 @@ async function downloadToFile(input: {
         error: "素材过大（>500MB）：已中止下载并清理临时文件。",
       };
     }
-    if (outcome.kind === "timeout") {
-      const seconds = Math.max(1, Math.round(input.totalTimeoutMs / 1000));
-      return {
-        ok: false,
-        reasonCode: "timeout",
-        error: `下载超时（${seconds}s）：已清理临时文件，未发布素材。`,
-      };
-    }
+    if (outcome.kind === "timeout") return timeoutFailure();
     if (outcome.kind === "fatal") {
       return { ok: false, reasonCode: "upstream", error: outcome.error };
     }
     lastReason = outcome.reason;
-    if (attempt < input.retries) await sleep(retryDelayMs(attempt));
+    if (attempt < input.retries) {
+      // 退避同样吃总预算：不够就等到期后按 timeout 收口，不额外多睡 1s/2s。
+      const delay = Math.min(retryDelayMs(attempt), Math.max(0, remainingMs()));
+      if (delay > 0) await sleep(delay);
+    }
   }
   return {
     ok: false,

@@ -464,6 +464,38 @@ test("总超时：timeout，消息秒数按总超时向上取整到至少 1", as
   assert.equal(result.cleanupDone, true);
 });
 
+test("总超时跨重试：退避与第二次尝试共用注入预算，终态为 timeout", async () => {
+  // 第一次 503 后固定退避 1s；第二次尝试只剩 ~150ms 预算，却被要求等 500ms
+  // 才出首段字节——预算若按次重置，这里会成功（旧行为），共用预算则超时。
+  const totalTimeoutMs = 1_150;
+  const seq = fetchSequence([
+    () => metadataResponse(),
+    () => new Response(null, { status: 503 }),
+    () => slowResponse([PAYLOAD], 500),
+  ]);
+  const startedAt = Date.now();
+  const result = await importStockCandidate({
+    pageTitle: PAGE_TITLE,
+    derivativeUrl: URL_720,
+    root: storeRoot(),
+    fetchImpl: seq.fn,
+    ingest: makeIngest().fn,
+    totalTimeoutMs,
+  });
+  const elapsed = Date.now() - startedAt;
+
+  if (result.ok) assert.fail("跨重试总预算耗尽应超时");
+  assert.equal(result.reasonCode, "timeout");
+  assert.match(result.error, /下载超时（1s）：已清理临时文件，未发布素材。/);
+  assert.equal(result.cleanupDone, true);
+  // 第二次下载确实已启动（退避在其之前发生），但其自身预算被总预算截短。
+  assert.equal(downloadCalls(seq.calls), 2);
+  assert.ok(
+    elapsed < totalTimeoutMs + 300,
+    `总耗时 ${elapsed}ms 应受注入预算 ${totalTimeoutMs}ms（含退避）约束`,
+  );
+});
+
 test("第一次 503、第二次 200：重试成功，下载 fetch 恰为 2 次且字节不累加", async () => {
   const seq = fetchSequence([
     () => metadataResponse(),
