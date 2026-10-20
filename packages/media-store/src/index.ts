@@ -15,6 +15,11 @@ export {
   runProbe,
 } from "./probe.js";
 export { needsProxy, PROXY_MAX_EDGE, transcodeProxy } from "./proxy.js";
+export {
+  importStockCandidate,
+  type StockImportReasonCode,
+  type StockImportResult,
+} from "./stock/import.js";
 export * from "./stock/types.js";
 export * from "./stock/wikimedia.js";
 export {
