@@ -44,6 +44,7 @@ import {
 } from "./scene-preview";
 import { ShotEditorCard } from "./shot-editor-card";
 import { shotWorkingMediaClip, shotWorkingSpec } from "./shot-specs";
+import { importStockForShot } from "./stock-apply";
 import {
   type TransitionDraftRow,
   transitionsAfterEdit,
@@ -102,6 +103,69 @@ export default function VideoStudioPage() {
     setTransitionError(null);
   }, [editor?.document.shots.length, editor?.document.transitions]);
   const importInputRef = useRef<HTMLInputElement>(null);
+  // P2.6-T7 U5：最新文档 ref——下载期间允许继续编辑其他镜头，导入完成时
+  // 必须以 ref 当前值（而非发起下载时的快照）为基线。
+  const documentRef = useRef<VideoProject | null>(null);
+  useEffect(() => {
+    documentRef.current = editor?.document ?? null;
+  }, [editor?.document]);
+
+  // U5 下载并应用：先 POST 取资产并解析 {asset}/{error}，再读最新文档 ref，
+  // 最后经 stock-apply 在「账本 + 镜头修订」上一次保存。失败函数式复位 busy
+  // 并 rethrow，由面板行内展示。
+  const handleStockImport = async (
+    shotId: string,
+    pageTitle: string,
+    derivativeUrl: string,
+  ): Promise<string> => {
+    setEditor((previous) =>
+      previous ? { ...previous, busy: true, message: null } : previous,
+    );
+    try {
+      const response = await fetch("/api/media/stock/import", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ pageTitle, derivativeUrl }),
+      });
+      const payload = (await response.json().catch(() => ({}))) as {
+        asset?: MediaAsset;
+        error?: string;
+      };
+      const asset = payload.asset;
+      if (!response.ok || !asset) {
+        throw new Error(
+          payload.error ?? `素材下载失败（HTTP ${response.status}）`,
+        );
+      }
+      // 网络等待之后再取最新文档：覆盖下载期间对其他镜头的编辑。
+      const latest = documentRef.current;
+      if (!latest) {
+        throw new Error("项目文档已关闭，无法应用素材");
+      }
+      const { document: saved, message } = await importStockForShot(
+        latest,
+        shotId,
+        pageTitle,
+        derivativeUrl,
+        {
+          requestImport: async () => asset,
+          save: saveVideoProject,
+          newVersionId: () => crypto.randomUUID(),
+        },
+      );
+      setEditor((previous) =>
+        previous
+          ? { ...previous, document: saved, message, busy: false }
+          : previous,
+      );
+      return message;
+    } catch (error) {
+      setEditor((previous) =>
+        previous ? { ...previous, busy: false } : previous,
+      );
+      throw error instanceof Error ? error : new Error(String(error));
+    }
+  };
 
   const refreshProjects = useCallback(async () => {
     setProjects(await listVideoProjects());
@@ -494,6 +558,9 @@ export default function VideoStudioPage() {
                     }
                     mediaAssets={mediaAssets}
                     redoError={redoErrors[shot.shotId] ?? null}
+                    onImportStock={(pageTitle, derivativeUrl) =>
+                      handleStockImport(shot.shotId, pageTitle, derivativeUrl)
+                    }
                     onRevise={(patch) => {
                       try {
                         const next = reviseWorkingVersion(

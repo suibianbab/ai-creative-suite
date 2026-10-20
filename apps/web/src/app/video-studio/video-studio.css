@@ -922,3 +922,192 @@
 .shot-redo-input {
   flex: 1;
 }
+
+/* —— P2.6-T7 镜头卡内在线素材搜索面板（Wikimedia Commons） —— */
+
+.stock-search-panel {
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px dashed #dce5df;
+  border-radius: 8px;
+  background: #fbfdfc;
+  font-size: 12px;
+}
+
+.stock-search-heading {
+  font-size: 12px;
+  font-weight: 700;
+  color: #173f3b;
+}
+
+.stock-search-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.stock-search-input {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  padding: 4px 8px;
+  border: 1px solid #bfd6c8;
+  border-radius: 6px;
+  font-family: inherit;
+}
+
+.stock-search-button,
+.stock-download,
+.stock-reject,
+.stock-unreject {
+  font-size: 12px;
+  padding: 3px 10px;
+  border: 1px solid #bfd6c8;
+  border-radius: 6px;
+  background: #fff;
+  color: #173f3b;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.stock-search-button:hover:not(:disabled),
+.stock-download:hover:not(:disabled),
+.stock-reject:hover:not(:disabled),
+.stock-unreject:hover:not(:disabled) {
+  background: #ecf5ee;
+}
+
+.stock-search-button:disabled,
+.stock-download:disabled,
+.stock-reject:disabled,
+.stock-unreject:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.stock-search-error {
+  margin: 0;
+  color: #a3230f;
+  font-size: 12px;
+}
+
+.stock-candidates {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.stock-candidate {
+  display: flex;
+  gap: 10px;
+  padding: 8px;
+  border: 1px solid #e7efe9;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.stock-candidate-thumb {
+  width: 112px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 6px;
+  background: #eef2ef;
+  flex: none;
+}
+
+.stock-candidate-body {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+  justify-items: start;
+}
+
+.stock-candidate-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1b2c29;
+  overflow-wrap: anywhere;
+}
+
+.stock-candidate-meta {
+  font-size: 12px;
+  color: #5d7469;
+}
+
+.stock-source-link {
+  font-size: 12px;
+  color: #173f3b;
+}
+
+.stock-badge {
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.stock-badge-disabled {
+  background: #faf3ef;
+  color: #9c4a2f;
+}
+
+.stock-badge-imported {
+  background: #ecf5ee;
+  color: #497a61;
+}
+
+.stock-candidate-hint {
+  font-size: 12px;
+  color: #9c4a2f;
+}
+
+.stock-derivative-select,
+.stock-reject-select {
+  font-size: 12px;
+  padding: 3px 6px;
+  border: 1px solid #bfd6c8;
+  border-radius: 6px;
+  background: #fff;
+  color: #1b2c29;
+  font-family: inherit;
+  max-width: 100%;
+}
+
+.stock-candidate-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.stock-rejected {
+  border-top: 1px dashed #e7efe9;
+  padding-top: 6px;
+}
+
+.stock-rejected summary {
+  cursor: pointer;
+  font-size: 12px;
+  color: #5d7469;
+}
+
+.stock-rejected-list {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.stock-rejected-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  color: #5d7469;
+}

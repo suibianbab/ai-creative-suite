@@ -68,6 +68,7 @@ import {
   STICK_TEMPLATES,
   type StickEditDraft,
 } from "./stick-templates";
+import { StockSearchPanel } from "./stock-search-panel";
 
 // 分镜编辑器镜头卡：只读信息 + 展开式编辑（旁白/画面修订、单镜头重做、
 // 版本回滚、锁定）。草稿是本地状态，点「应用修订」才经回调落文档；
@@ -159,6 +160,8 @@ export type ShotEditorCardProps = {
   onRollback: (versionId: string) => void;
   onToggleLock: (locked: boolean) => void;
   redoError: string | null;
+  // P2.6-T7：媒体臂在线素材面板的「下载并应用」回调（返回成功消息）。
+  onImportStock: (pageTitle: string, derivativeUrl: string) => Promise<string>;
 };
 
 export function ShotEditorCard({
@@ -172,6 +175,7 @@ export function ShotEditorCard({
   onRollback,
   onToggleLock,
   redoError,
+  onImportStock,
 }: ShotEditorCardProps) {
   const [expanded, setExpanded] = useState(false);
   const working = shot.contentVersions.find(
@@ -926,6 +930,12 @@ export function ShotEditorCard({
                   )}
                 </select>
               </label>
+              {/* P2.6-T7：在线素材搜索面板——仅媒体臂、素材下拉正下方；
+                  状态按卡独立，下载成功直接落成该镜头的新工作版本。 */}
+              <StockSearchPanel
+                disabled={!canEdit}
+                onImportStock={onImportStock}
+              />
               <label className="shot-edit-field">
                 入点（ms）
                 <input
