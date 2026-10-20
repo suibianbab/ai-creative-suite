@@ -2,7 +2,7 @@
 
 - 日期：2026-10-20
 - 工作树：`D:\codex\animate\.claude\worktrees\video-studio-p0`（分支 `worktree-video-studio-p2`；**主检出 `D:\codex\animate` 由用户管理，勿动**）
-- 范围：`f7dfc6a..ffc56e1`（16 提交，24 文件，+4370/−19：spec+plan 两篇、media-store `stock/` 纯函数与下载编排、ingest origin 参数化、web 两条 dev-only 路由、面板状态机与单事务应用、镜头卡接线、终评修复）+ 收口文档提交。`f7dfc6a` 为 T4 收口点（上次复核范围的后续基线）
+- 范围：`f7dfc6a..278f32c`（18 提交，29 文件，+4669/−21：spec+plan 两篇、media-store `stock/` 纯函数与下载编排、ingest origin 参数化、web 两条 dev-only 路由、面板状态机与单事务应用、镜头卡接线、终评修复与收口文档）。`f7dfc6a` 为 T4 收口点（上次复核范围的后续基线）
 - 纪律：工作树内只读复核；**不要 push / merge / 改 HEAD**（集成由用户决定）；本刀零计费（`artifacts/tts-usage.jsonl` 台账 34 行不变）；媒体与证据不入库
 - 回写约定：结论写 **`artifacts/codex-review-video-studio-p2-media-t5-result.md`**（勿覆盖本交接单）；格式沿 t4 版（Review Focus 逐项 / Rulings 判定 / Declined 逐条 / Issues C-I-M / Ready to merge + reasoning）
 - **状态**：实施、冒烟与整支终评均已完成（**0 Critical / 1 Important / 6 Minor，With fixes**）；Important 与四条 Minor 已修复（`ffc56e1`），复审「findings 全部落实、无新 Critical/Important」。§5 为终评回写。
@@ -124,3 +124,92 @@ curl -sS -X POST "http://localhost:3101/api/media/stock/import" \
 - 证据：`artifacts/video-studio-stock-source/evidence.md`（不入库）
 - 状态：`AI_Creative_Suite_Dev_Pack_v3/CURRENT_STATE.md` 顶部条目
 - 计划进度与 Rulings：SDD 工作区 `.superpowers/sdd/2026-10-20-video-studio-stock-source/`（收尾后删除；Rulings 摘要见 §5）
+
+## 八、改了什么（逐文件清单，Codex 按此按图索骥）
+
+### 8.1 用户可见行为（六条）
+
+1. **入口在镜头卡内**：镜头卡「媒体」编辑臂的素材下拉下方出现「在线搜索（Wikimedia Commons）」面板，仅 `development` 环境可用；面板挂在单张卡上，切卡/关项目即失。
+2. **检索**：关键词 1..80 字符，固定返回 10 条候选；候选卡显示缩略图、标题、作者、许可、时长、尺寸、来源页链接。许可不明或无受支持档位 → 禁下载 + 中文徽标；「不采用」可选原因并折叠进会话级拒绝区，可撤销。
+3. **档位**：只展示 mp4/webm/mov 且长边 ≤1920 的档位，下拉显示尺寸与估算大小；默认档位由服务端算好随候选下发，客户端不重复实现。
+4. **下载并应用**：服务端重取元数据（不信任客户端字段）→ URL 白名单 + 候选档位精确成员校验 → 流式下载（500MB 上限、300s 总预算、3 次尝试）→ 探测/全片解码/必要时代理 → 元数据对账 → 账本追加 + 当前镜头媒体修订**一次保存**。成功后卡内提示「素材已下载并应用（镜头 N）」；失败行内中文错误 + 重试按钮，项目文档零改动。
+5. **标签**：素材下拉对 stock 资产显示「来源页 / W×H / 时长·s / Wikimedia Commons / 作者 / 许可」，不再硬编码「本地上传」；本地上传标签逐字节不变。
+6. **同源门修复**：`pnpm dev`（Next 绑 `0.0.0.0`）下浏览器用 `localhost` 打开时，导入不再 403；本地上传路由同享修复。
+
+### 8.2 契约与接口变化
+
+- `IngestInput` 新增可选 `origin?: IngestOrigin`；`IngestOrigin` 联合原有 `local-upload` 与既有 `stock-source`。不传时行为逐字节不变（X1）。
+- `@acs/media-store` 公共面新增（`packages/media-store/src/index.ts`）：`importStockCandidate`、`StockImportReasonCode`、`StockImportResult`、`stock/types.ts` 全部类型、`stock/wikimedia.ts` 全部纯函数。
+- 新 web 路由（均 dev-only）：
+  - `GET /api/media/stock/search?q=` → `{ candidates }`
+  - `POST /api/media/stock/import`（JSON `{pageTitle, derivativeUrl}`）→ `{ asset } | { error }`
+- 新 web 纯逻辑：`stock-search.ts`（面板状态机）、`stock-apply.ts`（单事务应用）、`same-origin.ts`（同源门）。
+- **无**项目文档 schema 迁移；无新依赖；无 package.json 变更。
+
+### 8.3 逐文件清单（29 文件）
+
+**media-store（8）**
+
+| 文件 | 类型 | 作用 |
+|---|---|---|
+| `packages/media-store/src/stock/types.ts` | 新增 | `StockCandidate/StockDerivative/StockCandidateDisabledReason` 等公共类型 |
+| `packages/media-store/src/stock/wikimedia.ts` | 新增 | W1-W6：搜索/元数据 URL 构造、响应归一化、许可与 HTML 清洗、档位筛选与默认档位、URL 白名单与成员校验 |
+| `packages/media-store/src/stock/wikimedia.test.ts` | 新增 | 纯函数零网络测试（含白名单/默认档/许可不明/1920 上限） |
+| `packages/media-store/src/stock/import.ts` | 新增 | P1-P8：重取与许可门、成员校验、流式下载（上限/超时/重试）、ingest、对账、清理；终评补 fs 异常 → `store-error` |
+| `packages/media-store/src/stock/import.test.ts` | 新增 | 注入 fetch/ingest 的编排测试（含跨重试共享预算、store-error） |
+| `packages/media-store/src/ingest.ts` | 修改 | `origin` 可选参数化，默认 `local-upload` |
+| `packages/media-store/src/ingest.test.ts` | 修改 | 钉 stock origin 原样落账、默认路径不变 |
+| `packages/media-store/src/index.ts` | 修改 | 导出 stock 模块公共面 |
+
+**web 路由与同源（5）**
+
+| 文件 | 类型 | 作用 |
+|---|---|---|
+| `apps/web/src/app/api/media/stock/search/route.ts` | 新增 | dev 门、关键词校验、15s 上游超时、502 映射 |
+| `apps/web/src/app/api/media/stock/import/route.ts` | 新增 | dev 门、同源、body 校验、reasonCode→HTTP（413/422/502/504/500） |
+| `apps/web/src/app/api/same-origin.ts` | 新增 | `isSameOriginRequest`：`Origin` 比 `Host`，兼容 `x-forwarded-proto`；无 Origin 沿用放行 |
+| `apps/web/src/app/api/same-origin.test.ts` | 新增 | 8 条：`localhost` vs `0.0.0.0` 回归、回环、外站、端口、协议、畸形、无 Origin、反代 |
+| `apps/web/src/app/api/media/ingest/route.ts` | 修改 | 内联同源判定换成共享 helper（行为修复，非新功能） |
+
+**web 工作台（12）**
+
+| 文件 | 类型 | 作用 |
+|---|---|---|
+| `apps/web/src/app/video-studio/stock-search.ts` | 新增 | 面板相位/动作/拒绝/已入库/档位选择的纯状态机 |
+| `apps/web/src/app/video-studio/stock-search.test.ts` | 新增 | 状态机与默认草稿/禁用判定测试 |
+| `apps/web/src/app/video-studio/stock-search-panel.tsx` | 新增 | 卡内搜索面板（薄组件）：搜索、候选卡、档位、下载/重试/下载中态、拒绝区 |
+| `apps/web/src/app/video-studio/stock-apply.ts` | 新增 | `applyStockAsset` + `importStockForShot`：账本+镜头修订一次保存；缺镜头只入账 |
+| `apps/web/src/app/video-studio/stock-apply.test.ts` | 新增 | 单事务/期间编辑保留/缺镜头/保存抛错 |
+| `apps/web/src/app/video-studio/page.tsx` | 修改 | `documentRef` 最新文档、`handleStockImport`（先 await POST 再读 ref）、全中文错误映射 |
+| `apps/web/src/app/video-studio/shot-editor-card.tsx` | 修改 | 媒体臂挂载搜索面板 + `onImportStock` 属性 |
+| `apps/web/src/app/video-studio/media-assets.ts` | 修改 | `assetLabel` stock 分支（来源/作者/许可）；本地分支不变 |
+| `apps/web/src/app/video-studio/media-assets.test.ts` | 修改 | stock 标签与空作者测试 |
+| `apps/web/src/app/video-studio/media-clip-templates.ts` | 修改 | `mediaDraftForAsset`：入 0、出 `min(2000,duration)`、cover、focal 50、mute |
+| `apps/web/src/app/video-studio/media-clip-templates.test.ts` | 修改 | 默认草稿与短素材出点 |
+| `apps/web/src/app/video-studio/video-studio.css` | 修改 | 面板/候选/缩略图/禁用徽标/错误样式 |
+
+**文档与交接（4）**
+
+| 文件 | 类型 | 作用 |
+|---|---|---|
+| `docs/superpowers/specs/2026-10-20-video-studio-stock-source-design.md` | 新增 | 设计权威：W/P/U/L/X 表、§3 逐字文案、§4 测试清单、§5 非目标 |
+| `docs/superpowers/plans/2026-10-20-video-studio-stock-source.md` | 新增 | 8 任务 TDD 计划 + Global Constraints + Review Focus |
+| `artifacts/codex-review-video-studio-p2-media-t5.md` | 新增 | 本文档（复核交接 + 终评回写 + 改动清单） |
+| `AI_Creative_Suite_Dev_Pack_v3/CURRENT_STATE.md` | 修改 | 顶部 T5 条目（交付/回归/冒烟/终评） |
+
+### 8.4 明确未改动
+
+- 旧项目读取/出片、本地上传/列出、文档校验（T1 的 stock origin 校验照旧）、`mediaAssets` schema 均未变。
+- 未 push / 未 merge；主检出 `D:\codex\animate` 未触碰。
+- 媒体文件与真实网络证据不入库（证据在 `artifacts/video-studio-stock-source/evidence.md`，未跟踪）。
+- 零计费：`artifacts/tts-usage.jsonl` 34 行不变。
+
+### 8.5 建议审核顺序
+
+1. `same-origin.ts` + 两条路由（信任边界的门）；
+2. `stock/import.ts`（白名单 → 成员校验 → 下载纪律 → 对账 → 清理）；
+3. `stock/wikimedia.ts`（归一化与默认档位）；
+4. `stock-apply.ts` + `page.tsx`（单事务与最新 ref 顺序）；
+5. `stock-search-panel.tsx`（UI 只走状态机）；
+6. `media-assets.ts` / `media-clip-templates.ts`（标签与默认草稿）；
+7. 测试文件与 §3 文案逐字对照。
