@@ -19,15 +19,20 @@ export function mediaSrcUrl(asset: MediaAsset): string {
 }
 
 export function assetLabel(asset: MediaAsset, all: MediaAsset[]): string {
-  const fileName =
-    asset.origin.kind === "local-upload"
-      ? asset.origin.fileName
-      : asset.origin.sourcePageUrl;
   const duplicate =
     all.filter(
       (existing) => existing.original.storeKey === asset.original.storeKey,
     ).length > 1;
-  return `「${fileName}」 ${asset.original.width}×${asset.original.height} · ${(
+  const duplicateNote = duplicate ? "（同内容已在册）" : "";
+  const meta = `${asset.original.width}×${asset.original.height} · ${(
     asset.original.durationMs / 1000
-  ).toFixed(1)}s · 本地上传${duplicate ? "（同内容已在册）" : ""}`;
+  ).toFixed(1)}s`;
+  // P2.5-T5：stock 资产无 displayTitle，名称位取来源页；作者缺失则省略该段。
+  if (asset.origin.kind === "stock-source") {
+    const author = asset.origin.license.author
+      ? ` · ${asset.origin.license.author}`
+      : "";
+    return `「${asset.origin.sourcePageUrl}」 ${meta} · Wikimedia Commons${author} · ${asset.origin.license.name}${duplicateNote}`;
+  }
+  return `「${asset.origin.fileName}」 ${meta} · 本地上传${duplicateNote}`;
 }

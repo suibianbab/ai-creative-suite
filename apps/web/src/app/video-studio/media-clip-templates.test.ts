@@ -7,6 +7,7 @@ import {
   draftMediaFromVersion,
   MEDIA_TEMPLATE_ID,
   type MediaEditDraft,
+  mediaDraftForAsset,
   mediaTemplateSelectValue,
 } from "./media-clip-templates";
 
@@ -238,4 +239,21 @@ test("M6：已选模板或 spec 源 → 下拉保持所选/所空原值", () => 
     mediaTemplateSelectValue(MEDIA_TEMPLATE_ID, false),
     MEDIA_TEMPLATE_ID,
   );
+});
+
+test("M7：mediaDraftForAsset 默认草稿全值（入点 0 / 出点 min(2000, 时长) / cover / focal 50 / mute）", () => {
+  assert.deepEqual(mediaDraftForAsset(asset()), {
+    assetId: ASSET_ID,
+    inMsText: "0",
+    outMsText: "2000",
+    fit: "cover",
+    focalPercentText: "50",
+    audio: "mute",
+  });
+});
+
+test("M7：mediaDraftForAsset 短素材 outMsText 取素材时长", () => {
+  const short = asset();
+  short.original.durationMs = 1200;
+  assert.equal(mediaDraftForAsset(short).outMsText, "1200");
 });

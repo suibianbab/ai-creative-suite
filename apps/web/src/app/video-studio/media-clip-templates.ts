@@ -29,6 +29,18 @@ export type MediaEditDraft = {
   audio: "mute" | "keep";
 };
 
+// P2.5-T5：素材直接落成媒体镜头时的默认草稿（stock 导入共用最小默认值）。
+export function mediaDraftForAsset(asset: MediaAsset): MediaEditDraft {
+  return {
+    assetId: asset.assetId,
+    inMsText: "0",
+    outMsText: String(Math.min(2000, asset.original.durationMs)),
+    fit: "cover",
+    focalPercentText: "50",
+    audio: "mute",
+  };
+}
+
 export function draftMediaFromVersion(
   working: { sceneSource: SceneSource; durationMs: number } | undefined,
   assets: MediaAsset[],
@@ -51,17 +63,7 @@ export function draftMediaFromVersion(
   if (!first) {
     return { draft: null, error: "项目尚无媒体素材，请先在素材面板上传" };
   }
-  return {
-    draft: {
-      assetId: first.assetId,
-      inMsText: "0",
-      outMsText: String(Math.min(2000, first.original.durationMs)),
-      fit: "cover",
-      focalPercentText: "50",
-      audio: "mute",
-    },
-    error: null,
-  };
+  return { draft: mediaDraftForAsset(first), error: null };
 }
 
 export function buildMediaRevisePatch(

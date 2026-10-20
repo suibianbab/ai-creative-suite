@@ -63,6 +63,53 @@ test("U3：标签含文件名/画幅/时长一位小数/本地上传", () => {
   );
 });
 
+test("U3：stock 来源标签含 Wikimedia Commons/作者/许可，不含「本地上传」，同内容提示仍追加", () => {
+  const stock = asset({
+    origin: {
+      kind: "stock-source",
+      sourceId: "wikimedia",
+      sourcePageUrl: "https://commons.wikimedia.org/wiki/File:Clouds.webm",
+      license: { name: "CC BY-SA 4.0", author: "Demo Author" },
+      retrievedAt: "2026-10-19T00:00:00.000Z",
+    },
+  });
+  const label = assetLabel(stock, [stock]);
+  assert.equal(
+    label,
+    "「https://commons.wikimedia.org/wiki/File:Clouds.webm」 1920×1080 · 5.2s · Wikimedia Commons · Demo Author · CC BY-SA 4.0",
+  );
+  assert.ok(label.includes("Wikimedia Commons"));
+  assert.ok(label.includes("Demo Author"));
+  assert.ok(label.includes("CC BY-SA 4.0"));
+  assert.ok(!label.includes("本地上传"));
+  assert.equal(
+    assetLabel(stock, [
+      stock,
+      { ...stock, assetId: "1f0b13a2-6c63-4d3d-9a52-a70f6a3b2002" },
+    ]).endsWith("（同内容已在册）"),
+    true,
+  );
+});
+
+test("U3：stock 无作者时省略作者段，不出现空段", () => {
+  const stock = asset({
+    origin: {
+      kind: "stock-source",
+      sourceId: "wikimedia",
+      sourcePageUrl: "https://commons.wikimedia.org/wiki/File:Clouds.webm",
+      license: { name: "CC0" },
+      retrievedAt: "2026-10-19T00:00:00.000Z",
+    },
+  });
+  const label = assetLabel(stock, [stock]);
+  assert.equal(
+    label,
+    "「https://commons.wikimedia.org/wiki/File:Clouds.webm」 1920×1080 · 5.2s · Wikimedia Commons · CC0",
+  );
+  assert.ok(!label.includes("·  ·"));
+  assert.ok(!label.includes("undefined"));
+});
+
 test("U3：同 storeKey 多条 → 追注（同内容已在册）（R3：各自成条不去重）", () => {
   const a = asset();
   const b = asset({
