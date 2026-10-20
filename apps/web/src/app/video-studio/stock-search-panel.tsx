@@ -4,7 +4,7 @@
 // 搜索/拒绝/选档/导入流程全走 stock-search.ts 纯状态机，下载成功经页面回调
 // 在最新文档上单事务落盘。候选类型只从状态机派生；@acs/media-store 是
 // Node-only，本文件不得 value-import。
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   canDownload,
   effectiveDerivativeUrl,
@@ -34,7 +34,8 @@ const REJECT_REASONS: StockRejectReason[] = [
 ];
 
 // §3：检索失败的唯一兜底文案（路由已给 error 时以路由为准）。
-const SEARCH_FALLBACK = "在线素材检索失败（可重试或改用本地上传）";
+const SEARCH_FALLBACK =
+  "在线素材检索失败：网络或服务异常（可重试或改用本地上传）";
 
 const DEFAULT_REJECT_REASON: StockRejectReason = "题材不符";
 
@@ -60,10 +61,17 @@ export function StockSearchPanel({
   >({});
   const searching = state.phase === "searching";
   const importing = state.phase === "importing";
+  // U6：失败后卡内提供「重试」——记住最后一次导入尝试，成功即清空，
+  // 避免把无关的检索失败也变成可重试的导入。
+  const lastAttempt = useRef<{
+    candidate: StockCandidate;
+    derivativeUrl: string;
+  } | null>(null);
 
   const runSearch = async () => {
     const query = state.query.trim();
     if (query === "" || searching || importing || disabled) return;
+    lastAttempt.current = null;
     setState((previous) => startSearch(previous, query));
     let failure: string | null = null;
     try {
@@ -95,8 +103,10 @@ export function StockSearchPanel({
     const derivativeUrl = effectiveDerivativeUrl(state, candidate);
     if (derivativeUrl === null) return;
     setState((previous) => importStarted(previous, candidate.pageTitle));
+    lastAttempt.current = { candidate, derivativeUrl };
     try {
       await onImportStock(candidate.pageTitle, derivativeUrl);
+      lastAttempt.current = null;
       setState((previous) => importSucceeded(previous, candidate.pageTitle));
     } catch (error) {
       setState((previous) =>
@@ -158,6 +168,22 @@ export function StockSearchPanel({
       {state.error ? (
         <p className="stock-search-error" role="alert">
           {state.error}
+          {lastAttempt.current ? (
+            <>
+              {" "}
+              <button
+                type="button"
+                className="stock-search-button"
+                disabled={disabled || importing}
+                onClick={() => {
+                  const attempt = lastAttempt.current;
+                  if (attempt) void handleImport(attempt.candidate);
+                }}
+              >
+                重试
+              </button>
+            </>
+          ) : null}
         </p>
       ) : null}
       {visibleCandidates.length > 0 ? (
@@ -252,7 +278,11 @@ export function StockSearchPanel({
                       }
                       onClick={() => void handleImport(candidate)}
                     >
-                      下载并应用
+                      {importing &&
+                      lastAttempt.current?.candidate.pageTitle ===
+                        candidate.pageTitle
+                        ? "下载中…"
+                        : "下载并应用"}
                     </button>
                     <select
                       className="stock-reject-select"

@@ -132,7 +132,7 @@ export default function VideoStudioPage() {
       } catch {
         // 断网/连接失败：浏览器原文是英文（TypeError: Failed to fetch），
         // 按 spec §3 全中文口径转成与检索同款可重试文案。
-        throw new Error("素材下载失败（可重试或改用本地上传）");
+        throw new Error("下载失败：网络中断（可重试或改用本地上传）");
       }
       const parsed = (await response.json().catch(() => null)) as {
         asset?: MediaAsset;
@@ -145,14 +145,14 @@ export default function VideoStudioPage() {
         throw new Error(
           parsed?.error ??
             (response.ok
-              ? "素材下载失败（可重试或改用本地上传）"
-              : `素材下载失败（HTTP ${response.status}）`),
+              ? "下载失败：响应无法解析（可重试或改用本地上传）"
+              : `下载失败（HTTP ${response.status}）：响应无法解析（可重试或改用本地上传）`),
         );
       }
       // 网络等待之后再取最新文档：覆盖下载期间对其他镜头的编辑。
       const latest = documentRef.current;
       if (!latest) {
-        throw new Error("项目文档已关闭，无法应用素材");
+        throw new Error("素材已入库；项目已关闭，请重新打开后在素材面板中选择");
       }
       const { document: saved, message } = await importStockForShot(
         latest,

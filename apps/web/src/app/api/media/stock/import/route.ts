@@ -5,6 +5,7 @@ import {
   resolveStoreRoot,
   type StockImportReasonCode,
 } from "@acs/media-store";
+import { isSameOriginRequest } from "../../../same-origin";
 
 const MAX_PAGE_TITLE_LENGTH = 255;
 const MAX_DERIVATIVE_URL_LENGTH = 2000;
@@ -27,8 +28,7 @@ export async function POST(request: Request) {
       { status: 503 },
     );
   }
-  const origin = request.headers.get("origin");
-  if (origin && origin !== new URL(request.url).origin) {
+  if (!isSameOriginRequest(request)) {
     return Response.json({ error: "跨站请求已拒绝。" }, { status: 403 });
   }
 

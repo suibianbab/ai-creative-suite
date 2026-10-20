@@ -5,6 +5,7 @@ import {
   ingestMediaFile,
   resolveStoreRoot,
 } from "@acs/media-store";
+import { isSameOriginRequest } from "../../same-origin";
 
 const MAX_UPLOAD_BYTES = 500_000_000;
 
@@ -24,8 +25,7 @@ export async function POST(request: Request) {
       { status: 503 },
     );
   }
-  const origin = request.headers.get("origin");
-  if (origin && origin !== new URL(request.url).origin) {
+  if (!isSameOriginRequest(request)) {
     return Response.json({ error: "跨站请求已拒绝。" }, { status: 403 });
   }
   if (Number(request.headers.get("content-length") ?? 0) > MAX_UPLOAD_BYTES) {

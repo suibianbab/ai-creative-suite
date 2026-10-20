@@ -529,9 +529,17 @@ export async function importStockCandidate(input: {
     }
 
     return { ok: true, asset: ingested.asset };
+  } catch (error) {
+    // fs 抛错（mkdtemp/readFile 等）也须落在 P6 契约内，而不是冒泡到路由的
+    // 未保护 await——统一收成 store-error，cleanupDone 恒 true。
+    return fail("store-error", `素材导入失败：${errorMessage(error)}`);
   } finally {
     if (workDir !== undefined) {
-      rmSync(workDir, { recursive: true, force: true });
+      try {
+        rmSync(workDir, { recursive: true, force: true });
+      } catch {
+        // 清理失败不得掩盖已经确定的导入结果。
+      }
     }
   }
 }

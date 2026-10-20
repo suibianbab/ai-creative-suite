@@ -609,6 +609,28 @@ test("对账不符：mismatch；本次新写删除、预存 original/proxy 保�
   );
 });
 
+test("fs 异常：tempDir 不可用收 store-error 且 cleanupDone 仍为 true", async () => {
+  const parent = tempParent();
+  // 传入一个普通文件路径：mkdtempSync 在文件下建目录会抛 ENOTDIR/EEXIST。
+  const notADirectory = path.join(parent, "not-a-directory");
+  writeFileSync(notADirectory, "x");
+  const seq = fetchSequence([() => metadataResponse()]);
+  const result = await importStockCandidate({
+    pageTitle: PAGE_TITLE,
+    derivativeUrl: URL_720,
+    root: storeRoot(),
+    fetchImpl: seq.fn,
+    ingest: makeIngest().fn,
+    tempDir: notADirectory,
+  });
+  if (result.ok) assert.fail("应失败");
+  assert.equal(result.reasonCode, "store-error");
+  assert.equal(result.cleanupDone, true);
+  assert.match(result.error, /^素材导入失败：/);
+  // 元数据校验通过后才建临时目录：下载 fetch 不应发生。
+  assert.equal(seq.calls.length, 1);
+});
+
 test("ingest 失败映射：unsupported-format→unsupported、decode-failed→ingest、store-error→store-error", async () => {
   const cases: Array<[IngestReasonCode, string]> = [
     ["unsupported-format", "unsupported"],
