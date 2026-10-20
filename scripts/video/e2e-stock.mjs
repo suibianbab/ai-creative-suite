@@ -28,6 +28,7 @@ const ROOT = path.resolve(
 const BASE_URL = process.env.BASE_URL ?? "http://127.0.0.1:3211";
 const OUT_DIR = path.join(ROOT, "artifacts/video-studio-vid-023");
 const EXPORTED = path.join(OUT_DIR, "e2e.video-project.json");
+const BASELINE = path.join(OUT_DIR, "baseline.video-project.json");
 const SENTENCE = "做一个9秒的STEM解说视频，主题是云，分3个镜头";
 const PAGE_TITLE = "File:Clouds-seloncourt.ogv";
 const DERIVATIVE_URL =
@@ -115,8 +116,29 @@ async function setPreviewFrame(page, frame) {
   }, frame);
 }
 
+// 导出当前文档到指定路径（.editor-export 触发浏览器下载）。
+async function exportProject(page, target) {
+  const [download] = await Promise.all([
+    page.waitForEvent("download", { timeout: 15_000 }),
+    page.click(".editor-export"),
+  ]);
+  await download.saveAs(target);
+  if (!existsSync(target)) fail("导出", "下载文件未落盘");
+  return JSON.parse(readFileSync(target, "utf8"));
+}
+
+// 工作版本查找：缺失时按镜头号失败（不做裸 find 后的 undefined 解引用）。
+function workingVersionOf(shot, label) {
+  const working = shot?.contentVersions.find(
+    (version) => version.versionId === shot.workingVersionId,
+  );
+  if (!working) fail(label, "工作版本不存在");
+  return working;
+}
+
 mkdirSync(OUT_DIR, { recursive: true });
 rmSync(EXPORTED, { force: true });
+rmSync(BASELINE, { force: true });
 const usageBefore = usageLines();
 
 const browser = await chromium.launch({ headless: true });
@@ -154,6 +176,17 @@ await page
   .catch(() => fail("镜头时间线", ".shot-list > li 未出现"));
 await page.click(".editor-save");
 await waitForMessage(page, "已保存", "保存基线");
+// 基线导出：固定镜头 2/3 的组件 id，供换媒体后的一致性断言。
+const baseline = await exportProject(page, BASELINE);
+const baselineComponents = [1, 2].map((index) => {
+  const working = workingVersionOf(
+    baseline.shots[index],
+    `基线镜头${index + 1}`,
+  );
+  if (working.sceneSource?.type !== "spec")
+    fail(`基线镜头${index + 1}`, "应为 spec");
+  return working.sceneSource.spec.componentId;
+});
 
 // —— 镜头 1：换媒体模板（只播种 mediaDraft 并切到媒体臂，露出在线素材面板；
 //     不点 .shot-apply——下载并应用自己会落成新的工作版本）→搜固定片→下载并应用 ——
@@ -170,12 +203,27 @@ await candidate
   .catch(() =>
     fail("素材检索", `未找到 ${PAGE_TITLE}（Wikimedia 不可达或候选漂移）`),
   );
-await candidate
-  .locator(".stock-derivative-select")
-  .selectOption(DERIVATIVE_URL);
+const derivativeSelect = candidate.locator(".stock-derivative-select");
+// 480p 是候选的默认档位：先断言默认值，避免只验证「能选到」。
+const defaultDerivative = await derivativeSelect.inputValue();
+if (defaultDerivative !== DERIVATIVE_URL)
+  fail("默认档位", `${defaultDerivative} ≠ ${DERIVATIVE_URL}`);
+await derivativeSelect.selectOption(DERIVATIVE_URL);
+// 导入状态观察必须在点击之前挂上，避免响应先于监听。
+const importResponsePromise = page
+  .waitForResponse(
+    (response) =>
+      response.request().method() === "POST" &&
+      response.url().includes("/api/media/stock/import"),
+    { timeout: 120_000 },
+  )
+  .catch(() => fail("导入状态", "未观察到 /api/media/stock/import 响应"));
 await candidate.locator(".stock-download").click();
-// 首次下载约 7s（6.6MB），给足预算（含上游重试）。
+// 固定 480p 档位实测 869,851 字节（≈0.83MB）；给足预算（含上游重试）。
 await waitForMessage(page, "素材已下载并应用（镜头 1）", "下载并应用", 120_000);
+const importResponse = await importResponsePromise;
+if (importResponse.status() !== 200)
+  fail("导入状态", String(importResponse.status()));
 await candidate
   .locator(".stock-badge-imported")
   .waitFor({ timeout: 10_000 })
@@ -184,13 +232,9 @@ await page.click(".editor-save");
 await waitForMessage(page, "已保存", "保存媒体镜头");
 
 // —— 导出 + 文档结构断言 ——
-const [download] = await Promise.all([
-  page.waitForEvent("download", { timeout: 15_000 }),
-  page.click(".editor-export"),
-]);
-await download.saveAs(EXPORTED);
-if (!existsSync(EXPORTED)) fail("导出", "下载文件未落盘");
-const exported = JSON.parse(readFileSync(EXPORTED, "utf8"));
+const exported = await exportProject(page, EXPORTED);
+if (exported.shots.length !== 3)
+  fail("镜头数", `exported.shots.length=${exported.shots.length} ≠ 3`);
 
 const asset = exported.mediaAssets?.[0];
 if (!asset) fail("账本", "mediaAssets 为空");
@@ -214,13 +258,14 @@ if (asset.original.durationMs !== 28600)
   fail("时长", String(asset.original.durationMs));
 if (asset.original.hasAudio !== false)
   fail("hasAudio", String(asset.original.hasAudio));
+if (!/^[0-9a-f]{64}$/.test(asset.original.sha256))
+  fail("sha256", String(asset.original.sha256));
 if (asset.original.storeKey !== `${asset.original.sha256.slice(0, 16)}.webm`)
   fail("storeKey", asset.original.storeKey);
 if (asset.original.proxy !== undefined) fail("proxy", "不应生成 proxy");
 
-const s1 = exported.shots[0].contentVersions.find(
-  (version) => version.versionId === exported.shots[0].workingVersionId,
-);
+const s1 = workingVersionOf(exported.shots[0], "镜头1");
+if (!s1.sceneSource) fail("镜头1", "sceneSource 缺失");
 if (s1.sceneSource.type !== "media-clip")
   fail("镜头1类型", s1.sceneSource.type);
 const clip = s1.sceneSource; // media-clip 字段平铺在 sceneSource 上
@@ -231,14 +276,22 @@ if (clip.inMs !== 0 || clip.outMs !== 2000)
 if (clip.fit !== "cover" || clip.focalX !== 0.5 || clip.audio !== "mute")
   fail("默认值", JSON.stringify(clip));
 if (s1.durationMs !== 2000) fail("镜头1时长", String(s1.durationMs));
-const s2 = exported.shots[1].contentVersions.find(
-  (version) => version.versionId === exported.shots[1].workingVersionId,
-);
+const s2 = workingVersionOf(exported.shots[1], "镜头2");
+if (!s2.sceneSource) fail("镜头2", "sceneSource 缺失");
 if (s2.sceneSource.type !== "spec") fail("镜头2", "应为 spec");
-const s3 = exported.shots[2].contentVersions.find(
-  (version) => version.versionId === exported.shots[2].workingVersionId,
-);
+if (s2.sceneSource.spec.componentId !== baselineComponents[0])
+  fail(
+    "镜头2",
+    `组件 ${s2.sceneSource.spec.componentId} ≠ 基线 ${baselineComponents[0]}`,
+  );
+const s3 = workingVersionOf(exported.shots[2], "镜头3");
+if (!s3.sceneSource) fail("镜头3", "sceneSource 缺失");
 if (s3.sceneSource.type !== "spec") fail("镜头3", "应为 spec");
+if (s3.sceneSource.spec.componentId !== baselineComponents[1])
+  fail(
+    "镜头3",
+    `组件 ${s3.sceneSource.spec.componentId} ≠ 基线 ${baselineComponents[1]}`,
+  );
 console.log(
   `[e2e-stock] 落库: 项目 ${exported.id} v${exported.savedVersion}，asset ${asset.assetId}，storeKey=${asset.original.storeKey}`,
 );
@@ -268,6 +321,23 @@ await select
   .catch(() => fail("重开素材", ".media-asset-select 未出现"));
 if ((await select.inputValue()) !== asset.assetId)
   fail("重开素材", await select.inputValue());
+// 媒体草稿字段也必须逐项回填（入出点/fit/focal/原声）。
+const mediaDraftExpectations = [
+  [".media-in-input", "0"],
+  [".media-out-input", "2000"],
+  [".media-fit-select", "cover"],
+  [".media-focal-input", "50"],
+  [".media-audio-select", "mute"],
+];
+for (const [selector, expected] of mediaDraftExpectations) {
+  const field = reopened.locator(selector);
+  await field
+    .waitFor({ timeout: 10_000 })
+    .catch(() => fail("重开草稿", `${selector} 未出现`));
+  const actual = await field.inputValue();
+  if (actual !== expected)
+    fail("重开草稿", `${selector}=${JSON.stringify(actual)} ≠ ${expected}`);
+}
 // 整片预览默认自动播放；先按 React 受控 range 的原型 setter 把帧拨到 12
 // （500ms，仍在镜头 1 的 0..47 帧域内，同时暂停）——既避免镜头 1（仅 2000ms）
 // 被播过去后 .media-stage 卸载，也强制 MediaStage 做一次 seek 取帧。
@@ -306,14 +376,20 @@ console.log(
 const RENDER_DIR = path.join(OUT_DIR, "render");
 const RERUN_DIR = path.join(OUT_DIR, "rerun");
 const renderHashes = {};
+// 复跑清理：旧产物若残留，缺文件会被误当成本次出片。
+rmSync(RENDER_DIR, { recursive: true, force: true });
+rmSync(RERUN_DIR, { recursive: true, force: true });
 renderProject(EXPORTED, RENDER_DIR, "出片 run1");
 renderProject(EXPORTED, RERUN_DIR, "出片 run2");
 for (const aspect of ["landscape", "portrait"]) {
-  const hash = sha256(path.join(RENDER_DIR, `${aspect}.mp4`));
-  if (hash !== sha256(path.join(RERUN_DIR, `${aspect}.mp4`)))
-    fail("确定性", `${aspect} 双跑哈希不同`);
+  const renderFile = path.join(RENDER_DIR, `${aspect}.mp4`);
+  const rerunFile = path.join(RERUN_DIR, `${aspect}.mp4`);
+  if (!existsSync(renderFile)) fail("出片产物", renderFile);
+  if (!existsSync(rerunFile)) fail("出片产物", rerunFile);
+  const hash = sha256(renderFile);
+  if (hash !== sha256(rerunFile)) fail("确定性", `${aspect} 双跑哈希不同`);
   // 镜头 1 帧域 0..47（2000ms @24fps）：帧 24 = 1000ms，素材应可见。
-  const yavg = frameYavg(path.join(RENDER_DIR, `${aspect}.mp4`), 24);
+  const yavg = frameYavg(renderFile, 24);
   if (yavg < 100) fail("素材帧", `${aspect} 第 24 帧 YAVG=${yavg} < 100`);
   renderHashes[aspect] = hash;
   console.log(`[e2e-stock] ${aspect}: 双跑一致 ${hash}，帧 24 YAVG=${yavg}`);
