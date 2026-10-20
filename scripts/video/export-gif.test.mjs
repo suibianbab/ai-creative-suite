@@ -221,3 +221,44 @@ test("appendDelivery 拒绝未知 renderId（防手改项目后脏引用）", ()
     /renderIds|render record/i,
   );
 });
+
+// —— P3-A 交互 HTML 交付（Task 1）：可选元数据只按传入落键 ——
+function landscapeArgs(p) {
+  const [a, b] = p.shots.map((s) => s.contentVersions[0].versionId);
+  const r = [
+    record("landscape", "r/landscape.mp4", a, 48),
+    record("landscape", "r/landscape.mp4", b, 72),
+  ];
+  p.renderRecords = r;
+  return {
+    versionIds: [a, b],
+    renderIds: r.map((x) => x.renderId),
+    frameMap: [24, 36],
+  };
+}
+
+test("appendDelivery 传入交互 HTML 三项时记录含三键", () => {
+  const p = project();
+  const digest = "a".repeat(64);
+  const { delivery } = appendDelivery(p, {
+    ...landscapeArgs(p),
+    kind: "interactive-html",
+    outputRef: "index.html",
+    digest,
+  });
+  assert.equal(delivery.kind, "interactive-html");
+  assert.equal(delivery.outputRef, "index.html");
+  assert.equal(delivery.digest, digest);
+});
+
+test("appendDelivery 未传可选键时保持原五键记录形状", () => {
+  const p = project();
+  const { delivery } = appendDelivery(p, landscapeArgs(p));
+  assert.deepEqual(Object.keys(delivery), [
+    "deliveryId",
+    "at",
+    "versionIds",
+    "renderIds",
+    "frameMap",
+  ]);
+});

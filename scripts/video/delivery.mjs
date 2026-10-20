@@ -15,13 +15,20 @@ const { validateVideoProject } = await import(
 // 共享再导出：两个导出 CLI 的回读校验走同一份动态导入，避免各自推导 ROOT。
 export { validateVideoProject };
 
-export function appendDelivery(project, { versionIds, renderIds, frameMap }) {
+export function appendDelivery(
+  project,
+  { versionIds, renderIds, frameMap, kind, outputRef, digest },
+) {
+  // 可选三键只在传入时落键：旧导出（GIF/SVG）的记录字节形状保持不变。
   const delivery = {
     deliveryId: randomUUID(),
     at: new Date().toISOString(),
     versionIds,
     renderIds,
     frameMap,
+    ...(kind === undefined ? {} : { kind }),
+    ...(outputRef === undefined ? {} : { outputRef }),
+    ...(digest === undefined ? {} : { digest }),
   };
   const next = {
     ...project,

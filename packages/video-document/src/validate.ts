@@ -673,6 +673,27 @@ export function validateVideoProject(value: unknown): VideoProject {
     ) {
       fail(`${field}.frameMap must be an array of positive integers`);
     }
+    // —— P3-A 交互 HTML 交付：可选字段，仅在存在时校验（旧记录形状不变）——
+    if (delivery.kind !== undefined && delivery.kind !== "interactive-html") {
+      fail(`${field}.kind 须为 interactive-html`);
+    }
+    if (delivery.outputRef !== undefined) {
+      if (
+        typeof delivery.outputRef !== "string" ||
+        delivery.outputRef.trim().length === 0 ||
+        delivery.outputRef.includes("..") ||
+        delivery.outputRef.includes("/") ||
+        delivery.outputRef.includes("\\")
+      ) {
+        fail(`${field}.outputRef 须为非空字符串且不含 .. 与路径分隔符`);
+      }
+    }
+    if (
+      delivery.digest !== undefined &&
+      (typeof delivery.digest !== "string" || !SHA256_HEX.test(delivery.digest))
+    ) {
+      fail(`${field}.digest 须为 64 位小写十六进制`);
+    }
   }
   // —— P1 转场（Feature ④ spec R1）：可变编排元数据，查形状/枚举/范围/重复；
   // 缺省字段与现状行为完全一致（不加键）——

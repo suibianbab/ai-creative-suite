@@ -681,3 +681,62 @@ test("transitions 同 boundary 重复 → 拒绝", () => {
   ];
   assert.throws(() => validateVideoProject(project), /重复/);
 });
+
+// —— P3-A 交互 HTML 交付（Task 1）：DeliveryRecord 可选元数据 ——
+function baseWithDelivery(): VideoProject {
+  const project = baseWithRenderRecord();
+  project.deliveries.push({
+    deliveryId: "0b0b13a2-6c63-4d3d-9a52-a70f6a3b2003",
+    at: "2026-10-21T00:00:00.000Z",
+    versionIds: [UUID],
+    renderIds: [RENDER_ID],
+    frameMap: [288],
+  });
+  return project;
+}
+
+test("旧交付记录（无 kind/outputRef/digest）原样通过（迁移回归）", () => {
+  assert.equal(validateVideoProject(baseWithDelivery()).deliveries.length, 1);
+});
+
+test("交互 HTML 交付元数据合法 → 通过（P3-A）", () => {
+  const project = baseWithDelivery();
+  project.deliveries[0]!.kind = "interactive-html";
+  project.deliveries[0]!.outputRef = "index.html";
+  project.deliveries[0]!.digest = "a".repeat(64);
+  assert.equal(validateVideoProject(project).deliveries.length, 1);
+});
+
+test("交互 HTML 交付元数据非法 → 拒绝并指向 deliveries[0]（P3-A）", () => {
+  const badKind = baseWithDelivery();
+  badKind.deliveries[0]!.kind = "game" as never;
+  assert.throws(() => validateVideoProject(badKind), /deliveries\[0\]\.kind/);
+
+  const emptyRef = baseWithDelivery();
+  emptyRef.deliveries[0]!.outputRef = "";
+  assert.throws(
+    () => validateVideoProject(emptyRef),
+    /deliveries\[0\]\.outputRef/,
+  );
+
+  const traversalRef = baseWithDelivery();
+  traversalRef.deliveries[0]!.outputRef = "../index.html";
+  assert.throws(
+    () => validateVideoProject(traversalRef),
+    /deliveries\[0\]\.outputRef/,
+  );
+
+  const separatorRef = baseWithDelivery();
+  separatorRef.deliveries[0]!.outputRef = "dir\\index.html";
+  assert.throws(
+    () => validateVideoProject(separatorRef),
+    /deliveries\[0\]\.outputRef/,
+  );
+
+  const badDigest = baseWithDelivery();
+  badDigest.deliveries[0]!.digest = "xyz";
+  assert.throws(
+    () => validateVideoProject(badDigest),
+    /deliveries\[0\]\.digest/,
+  );
+});
