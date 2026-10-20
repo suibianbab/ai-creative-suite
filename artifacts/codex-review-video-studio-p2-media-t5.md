@@ -5,7 +5,7 @@
 - 范围：`f7dfc6a..c0e5d75`（20 提交，33 文件，+5009/−21：spec+plan 两篇、media-store `stock/` 纯函数与下载编排、ingest origin 参数化、web 两条 dev-only 路由、能力开关、面板状态机与单事务应用、镜头卡接线、内部终评与 Codex 复核两轮修复、收口文档）。`f7dfc6a` 为 T4 收口点（上次复核范围的后续基线）
 - 纪律：工作树内只读复核；**不要 push / merge / 改 HEAD**（集成由用户决定）；本刀零计费（`artifacts/tts-usage.jsonl` 台账 34 行不变）；媒体与证据不入库
 - 回写约定：结论写 **`artifacts/codex-review-video-studio-p2-media-t5-result.md`**（勿覆盖本交接单）；格式沿 t4 版（Review Focus 逐项 / Rulings 判定 / Declined 逐条 / Issues C-I-M / Ready to merge + reasoning）
-- **状态**：实施、冒烟、内部整支终评（**0 Critical / 1 Important / 6 Minor**，已修 `ffc56e1`，复审 clean）与 **Codex 独立复核（0 Critical / 2 Important / 2 Minor）**均已完成；Codex 的四条已修复（`c0e5d75`），范围复审「findings 全部落实、无新 Critical/Important」。§5 为两轮回写。
+- **状态**：实施、冒烟、内部整支终评（**0 Critical / 1 Important / 6 Minor**，已修 `ffc56e1`，复审 clean）与 **Codex 独立复核（0 Critical / 2 Important / 2 Minor → 修复 `c0e5d75` → 二次复核 0 Critical / 0 Important / 2 Minor，判可合并）**均已完成。§5 为两轮回写。
 
 ## 一、提交链（13 + 1 提交，spec → plan → 八任务 → 评审修复 → 收口）
 
@@ -95,7 +95,7 @@ curl -sS -X POST "http://localhost:3101/api/media/stock/import" \
 - **Important（1，已修）**：dev 绑 `0.0.0.0` 时同源门 403（详见 §4.6）。修复后 `Origin` 由浏览器设定、`Host` 为目标，跨站请求仍无法通过；无 Origin 的非浏览器调用沿既有放行口径（dev-only 路由）。
 - **Minor 已修**：导入外围 fs 异常收口 `store-error`（P6 契约闭合）；客户端传输兜底文案四条逐字入 spec §3；U6 重试按钮与「下载中…」态。
 - **Rulings 判定**：接受「元数据重取失败→upstream 复用检索文案」「retries=总尝试次数 3」「超时秒数=共享预算」「默认档位按档位高度」「清理只删本刀新写文件」「T6 排序由 T7 承担」（复审核对 `await POST → 读 ref → 唯一 save` 顺序正确）。**挑战并已处理**：`0.0.0.0` 同源门由「交终评」升为 Important 并当日修复；计划估数（media-store +27 / web +16）与实际（+29 / +17）不符已在本文档勘误。
-- **Ready to merge：内部终评为是；Codex 复核曾判「否」，其 4 条已修（`c0e5d75`）并由本地范围复审确认，现待 Codex 二次复核。**（本刀不 push/merge，集成由用户决定。）
+- **Ready to merge：内部终评为是；Codex 二次复核（`f7dfc6a..99a6fc3`）判「是」（0 Critical / 0 Important / 2 不阻塞 Minor）。**（本刀不 push/merge，集成由用户决定。）
 - **缓办 Minor（内部终评新增）**：关闭项目路径提示语写「在素材面板中选择」但该资产未入账（文案精度）；`errorMessage` 会把临时绝对路径带进卡内文案；下载后失败重试会二次下载并留孤儿资产（P8 已接受孤儿语义）；重试按钮嵌在 `role="alert"` 段内（a11y nit）。
 
 ### Codex 独立复核与修复（2026-10-20，`c0e5d75`）
@@ -106,7 +106,14 @@ curl -sS -X POST "http://localhost:3101/api/media/stock/import" \
 - **Minor 1（已修）**：`cleanupDone` 固定 true → 单一 `finish()` 清理点，`rmSync` 失败时失败结果降为 `cleanupDone:false`；成功路径不变。
 - **Minor 2（已修）**：`canDownload` 的隐式 `derivatives[0]` 回退移除，与 `effectiveDerivativeUrl` 同口径；补缺失默认档位测试。
 - **复审**：范围复审（opus，`4062f06..c0e5d75`）确认四条全部落实、无新 Critical/Important；独立复跑 media-store 63 / web 203 / 双 typecheck / biome 351 / 台账 34。
-- **新增缓办**：`content-encoding` 的 `identity` 判定大小写敏感（RFC 允许 `Identity`）；204 fatal 无专项测试（与 206 共用路径）；选中非默认档位时 `canDownload` 仍为 false 的防御性不对称（仅服务端归一化退化时可达）。
+- **新增缓办（第一轮口径）**：`content-encoding` 的 `identity` 判定大小写敏感（RFC 允许 `Identity`）；204 fatal 无专项测试（与 206 共用路径）；选中非默认档位时 `canDownload` 仍为 false 的防御性不对称（仅服务端归一化退化时可达；`c0e5d75` 后与 `effectiveDerivativeUrl` 同口径）。
+
+### Codex 二次复核（2026-10-20，`f7dfc6a..99a6fc3`；增量 `4062f06..99a6fc3`）
+
+- **结论**：0 Critical / 0 Important / 2 Minor，**Ready to merge：是**（`artifacts/codex-review-video-studio-p2-media-t5-result.md` 文末「二次复核」）。
+- 原四项逐一裁定：Important 1（正式环境入口）/ Important 2（HTTP 206）/ Minor 2（`canDownload` 回退）已修；Minor 1 状态不再虚报，剩余文案问题归 Minor。
+- **剩余 2 Minor（不阻塞）**：① `downloadToFile` 预生成的超时文案（spec §3 逐字「已清理临时文件」）在 `finish()` 清理失败时与 `cleanupDone:false` 矛盾——需与 spec 同改，留待后续；② `content-encoding` 的 `identity` 大小写敏感（RFC 允许 `Identity`）。
+- Codex 独立复跑：media-store 63 / web 203 / web TypeScript / biome 351；并独立执行 `pnpm --filter @acs/web build` 生产构建成功。
 
 ## 六、延后 Minor 台账（未修，不阻塞；按任务汇总）
 
