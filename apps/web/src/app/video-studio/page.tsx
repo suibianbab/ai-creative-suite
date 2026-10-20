@@ -122,19 +122,31 @@ export default function VideoStudioPage() {
       previous ? { ...previous, busy: true, message: null } : previous,
     );
     try {
-      const response = await fetch("/api/media/stock/import", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ pageTitle, derivativeUrl }),
-      });
-      const payload = (await response.json().catch(() => ({}))) as {
+      let response: Response;
+      try {
+        response = await fetch("/api/media/stock/import", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ pageTitle, derivativeUrl }),
+        });
+      } catch {
+        // 断网/连接失败：浏览器原文是英文（TypeError: Failed to fetch），
+        // 按 spec §3 全中文口径转成与检索同款可重试文案。
+        throw new Error("素材下载失败（可重试或改用本地上传）");
+      }
+      const parsed = (await response.json().catch(() => null)) as {
         asset?: MediaAsset;
         error?: string;
-      };
-      const asset = payload.asset;
+      } | null;
+      const asset = parsed?.asset;
       if (!response.ok || !asset) {
+        // 路由的 {error} 是逐字中文，优先原样透出；响应体不可解析或成功却
+        // 缺 asset 时退回中文兜底，绝不把英文异常带到卡内。
         throw new Error(
-          payload.error ?? `素材下载失败（HTTP ${response.status}）`,
+          parsed?.error ??
+            (response.ok
+              ? "素材下载失败（可重试或改用本地上传）"
+              : `素材下载失败（HTTP ${response.status}）`),
         );
       }
       // 网络等待之后再取最新文档：覆盖下载期间对其他镜头的编辑。
