@@ -355,3 +355,27 @@ test("幂等复用：同内容二次导入 → 同 storeKey 文件 mtime 不变�
   assert.notEqual(second.asset.assetId, first.asset.assetId);
   assert.equal(statSync(stored).mtimeMs, mtimeBefore, "复用路径不得重写仓文件");
 });
+
+test("stock origin：传入 stock-source 时资产 origin 原样落账（不被 local-upload 覆盖）", async () => {
+  const bytes = makeTestVideo("stock-origin.mp4");
+  const origin = {
+    kind: "stock-source" as const,
+    sourceId: "wikimedia" as const,
+    sourcePageUrl: "https://commons.wikimedia.org/wiki/File:Demo.mp4",
+    license: {
+      name: "CC BY-SA 4.0",
+      author: "Demo Author",
+      usageNote: "须署名",
+    },
+    retrievedAt: FIXED_NOW,
+  };
+  const result = await ingestMediaFile({
+    bytes,
+    fileName: "Demo.mp4",
+    root: storeRoot("stock-origin"),
+    now: () => FIXED_NOW,
+    origin,
+  });
+  assert.ok(result.ok, result.ok ? "" : result.error);
+  assert.deepEqual(result.asset.origin, origin);
+});

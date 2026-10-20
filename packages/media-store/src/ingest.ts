@@ -37,7 +37,15 @@ const SUPPORTED_EXTENSIONS = new Set(["mp4", "webm", "mov"]);
 const MIN_DURATION_MS = 200;
 const MAX_DURATION_MS = 600000;
 
-export type IngestOrigin = { kind: "local-upload"; fileName: string };
+export type IngestOrigin =
+  | { kind: "local-upload"; fileName: string }
+  | {
+      kind: "stock-source";
+      sourceId: "wikimedia";
+      sourcePageUrl: string;
+      license: { name: string; author?: string; usageNote?: string };
+      retrievedAt: string;
+    };
 
 export type IngestReasonCode =
   | "unsupported-format"
@@ -108,6 +116,7 @@ export async function ingestMediaFile(input: {
     probe: Parameters<typeof defaultTranscode>[2],
   ) => TranscodeOutcome | Promise<TranscodeOutcome>;
   tempDir?: string;
+  origin?: IngestOrigin;
 }): Promise<IngestResult> {
   const probeFn = input.runProbe ?? defaultProbe;
   const decodeFn = input.runDecode ?? runDecode;
@@ -175,7 +184,10 @@ export async function ingestMediaFile(input: {
       return {
         assetId: randomUUID(),
         createdAt: input.now?.() ?? new Date().toISOString(),
-        origin: { kind: "local-upload", fileName: input.fileName },
+        origin: input.origin ?? {
+          kind: "local-upload",
+          fileName: input.fileName,
+        },
         original: {
           sha256,
           bytes: input.bytes.byteLength,
