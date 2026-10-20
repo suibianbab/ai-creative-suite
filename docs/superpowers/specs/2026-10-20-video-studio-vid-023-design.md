@@ -1,7 +1,7 @@
 # P2.5-T6 样例 e2e VID-023 设计（Wikimedia 素材源全链路）
 
 - 日期：2026-10-20
-- 状态：待实施
+- 状态：已实施（Task 1 e2e 双跑通过、Task 2 登记与收口完成）
 - 前序：`docs/superpowers/specs/2026-10-20-video-studio-stock-source-design.md`（T5 素材源，L5 把片内署名留到本刀）
 - 计划：`docs/superpowers/plans/2026-10-20-video-studio-vid-023.md`
 
@@ -55,7 +55,7 @@ P2.5 五刀（契约 → 导入仓 → 预览编辑 → 出片链路 → Wikimed
 
 ## 5. 环境前提（本机事实，非产品行为）
 
-- dev server 绑定 localhost，`NODE_USE_ENV_PROXY=1` + `HTTPS_PROXY=http://127.0.0.1:7890` 才能访问 Wikimedia；`BASE_URL` 默认 `http://127.0.0.1:3211`（经 `scripts/dev/proxy-3211.mjs` 代理到 3210，或直接起在 3211）。
+- dev server 绑定 `127.0.0.1`（见本节末条），`NODE_USE_ENV_PROXY=1` + `HTTPS_PROXY=http://127.0.0.1:7890` 才能访问 Wikimedia；`BASE_URL` 默认 `http://127.0.0.1:3211`（经 `scripts/dev/proxy-3211.mjs` 代理到 3210，或直接起在 3211）。
 - `ACS_MEDIA_STORE` 指向仓外隔离目录（如 `D:/tmp/acs-stock-e2e-*/store`），不碰真实仓。
 - `playwright-core` 自带 Chromium（本机已安装，沿既有 e2e 的 `chromium.launch({ headless: true })`）；`ffmpeg`/`ffprobe` 在 PATH。
 - 统一用 `--hostname 127.0.0.1` 启动：`scripts/dev/proxy-3211.mjs` 的上游写死 `127.0.0.1:3210`；本机 `localhost` 可能先解析到 IPv6 `::1`，用 `localhost` 绑定时代理会连不上。
