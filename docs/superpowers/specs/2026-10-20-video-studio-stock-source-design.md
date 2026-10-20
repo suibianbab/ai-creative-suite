@@ -106,7 +106,9 @@ apps/web
 - **media-store `stock/import.test.ts`（预计 +12）**：成功下载→ingest 收到 stock origin 与正确 fileName / 非成员 URL 不触 fetch / 非白名单 host 拒 / 重取无许可 422 且不下载 / Content-Length 超限拒并清理 / 无 Content-Length 流式累计超限中止 / 空闲超时中止清理 / 5xx 后重试成功（次数断言）/ 三次失败中文错误 / 重取失败 422 / 探测对账不符 → 不返回 asset 且删除新写 original/proxy、预存保留 / ingest 错误码映射。
 - **media-store `ingest.test.ts`（预计 +2）**：`origin` 传入 stock 时资产 origin 原样落账 / 不传时仍 local-upload。
 - **web `stock-search.test.ts`（预计 +8）**：状态机各相位 / 拒绝与撤销 / 档位选择 / 已入库标记 / 默认草稿（入出点/fit/focal/mute）/ 许可不明禁用判定 / 错误态保留候选。
-- **web `media-assets.test.ts`（预计 +2）**：stock 标签含来源/作者/许可且不含「本地上传」/ 同内容提示仍生效。
+- **web `stock-apply.test.ts`（预计 +4）**：单事务成功（账本+新工作版本+默认字段+只保存一次）/ 最新文档里其他镜头的编辑保留 / 镜头不存在只入库 / 保存抛错不返回文档。
+- **web `media-clip-templates.test.ts`（预计 +2）**：`mediaDraftForAsset` 默认字段；短素材 `outMs` 取时长。
+- **web `media-assets.test.ts`（预计 +2）**：stock 标签含来源/作者/许可且不含「本地上传」/ 无作者时无空段。
 - **回归**：video-document 111 / video-scene 136 / media-store 31+新增 / web 168+新增 / scripts 83 全绿；`pnpm -r typecheck` 零错；biome clean；台账 34 行不变。
 
 ## 5. 非目标（本刀不做）
