@@ -2,10 +2,10 @@
 
 - 日期：2026-10-20
 - 工作树：`D:\codex\animate\.claude\worktrees\video-studio-p0`（分支 `worktree-video-studio-p2`；**主检出 `D:\codex\animate` 由用户管理，勿动**）
-- 范围：`f7dfc6a..a0cb4cb`（13 提交，24 文件，+4370/−19：spec+plan 两篇、media-store `stock/` 纯函数与下载编排、ingest origin 参数化、web 两条 dev-only 路由、面板状态机与单事务应用、镜头卡接线）+ 本文档提交 `1ee2973`（提交链 SHA 回填为紧随其后一条 docs 提交）。`f7dfc6a` 为 T4 收口点（上次复核范围的后续基线）
+- 范围：`f7dfc6a..ffc56e1`（16 提交，24 文件，+4370/−19：spec+plan 两篇、media-store `stock/` 纯函数与下载编排、ingest origin 参数化、web 两条 dev-only 路由、面板状态机与单事务应用、镜头卡接线、终评修复）+ 收口文档提交。`f7dfc6a` 为 T4 收口点（上次复核范围的后续基线）
 - 纪律：工作树内只读复核；**不要 push / merge / 改 HEAD**（集成由用户决定）；本刀零计费（`artifacts/tts-usage.jsonl` 台账 34 行不变）；媒体与证据不入库
 - 回写约定：结论写 **`artifacts/codex-review-video-studio-p2-media-t5-result.md`**（勿覆盖本交接单）；格式沿 t4 版（Review Focus 逐项 / Rulings 判定 / Declined 逐条 / Issues C-I-M / Ready to merge + reasoning）
-- **状态**：实施与冒烟完成；整支终评**尚未执行**（由控制方在本交接单之后派发）。§5 保持「待终评回写」。
+- **状态**：实施、冒烟与整支终评均已完成（**0 Critical / 1 Important / 6 Minor，With fixes**）；Important 与四条 Minor 已修复（`ffc56e1`），复审「findings 全部落实、无新 Critical/Important」。§5 为终评回写。
 
 ## 一、提交链（13 + 1 提交，spec → plan → 八任务 → 评审修复 → 收口）
 
@@ -25,6 +25,8 @@
 | `d915431` | T7 镜头卡内搜索/选用/下载并应用面板接线 |
 | `a0cb4cb` | T7 评审修复：导入网络失败（浏览器英文 `Failed to fetch`）转中文可重试文案 |
 | `1ee2973` | T8 收口：CURRENT_STATE 条目 + 本交接单（证据 `artifacts/video-studio-stock-source/evidence.md` 不入库） |
+| `2699734` | 收口文档勘误与提交链 SHA 回填 |
+| `ffc56e1` | **终评修复**：同源门改比 Host 头（两条路由 + 8 测试）、导入 fs 异常收 `store-error`、客户端兜底文案逐字入 §3、U6 重试按钮与下载中态 |
 
 ## 二、核心判据（可挑战的不变量）
 
@@ -47,12 +49,12 @@ cd D:/codex/animate/.claude/worktrees/video-studio-p0
 # 单测 / 回归（2026-10-20 收口实测）
 pnpm --filter @acs/video-document run build && node --test "packages/video-document/dist/**/*.test.js"   # 111 pass
 pnpm --filter @acs/video-scene test                                                                      # 136 pass
-pnpm --filter @acs/media-store test                                                                      # 60 pass
-pnpm --filter @acs/web test                                                                              # 185 pass
+pnpm --filter @acs/media-store test                                                                      # 61 pass（60 + 1 终评 store-error）
+pnpm --filter @acs/web test                                                                              # 193 pass（185 + 8 同源 helper）
 node --test scripts/video/*.test.mjs                                                                     # 83 pass
 pnpm --filter @acs/web run typecheck                                                                     # 零错
 pnpm --filter @acs/remotion-engine run typecheck                                                         # 零错
-npx biome check .                                                                                        # clean（345 文件）
+npx biome check .                                                                                        # clean（347 文件）
 wc -l artifacts/tts-usage.jsonl                                                                          # 34（零计费）
 ```
 
@@ -78,7 +80,7 @@ curl -sS -X POST "http://localhost:3101/api/media/stock/import" \
 3. **Review Focus 3：保存失败**：`saveVideoProject` 抛错时页面不得 `setEditor`，文档字节不变；仓内未引用内容寻址文件是接受的孤儿。请核对 `stock-apply.ts` 不 catch save、`handleStockImport` 的 catch 只复位 busy 并 rethrow。
 4. **Review Focus 4：伪装来源**：`http://`、非 `upload.wikimedia.org`、带端口/凭据、`upload.wikimedia.org.evil.com`、不在候选 `derivatives` 中的 URL，都必须在 fetch 前拒绝；`redirect:"error"` 防 30x 逃逸。
 5. **Review Focus 5：Artist/Credit 是 HTML**：清洗后展示与入账，不得把 `<a …>` 原样塞进 UI 或许可字段（W6 的实体解码 + 去标签 + 折叠空白）。
-6. **同源判定与 dev 绑定的冲突（本次冒烟新观察，重要）**：仓内 dev 脚本是 `next dev --hostname 0.0.0.0`；Next 16.4 下 `new URL(request.url).origin` 为 `http://0.0.0.0:<port>`，浏览器从 `localhost:<port>` 打开时 POST 的 `Origin` 是 `http://localhost:<port>` → **403 `跨站请求已拒绝。`**；以 `--hostname localhost` 启动则通过。该写法沿用 T2 `api/media/ingest/route.ts`。请裁定是否在 T5 内修（绑定/改用 Host 头/接受回环别名），或作为既有问题延后。
+6. **同源判定与 dev 绑定的冲突（已修 `ffc56e1`）**：终评将其定为 **Important**——`next dev --hostname 0.0.0.0` 下 Next 16.4 的 `request.url` origin 为 `http://0.0.0.0:<port>`，浏览器从 `localhost` 打开时合法 POST 恒 403，功能唯一写路径不可用。修复 = 共享 `apps/web/src/app/api/same-origin.ts` 改比 **Host 头**（无 Origin 仍放行、`x-forwarded-proto` 兼容反代），stock import 与 ingest 两条路由同改，8 条 helper 测试含 `localhost` vs `0.0.0.0` 回归钉。
 7. **清理分寸**：对账失败只删本刀新写 original/proxy；预存文件不动。请核对 `originalExisted/proxyExisted` 快照时点（ingest 之前）与删除条件。
 8. **错误文案逐字**：对照 spec §3 的 403/400/413/422/502/504 文案；特别核对 `候选许可信息缺失`、`该分辨率档位不属于此候选`、`下载超时（<n>s）`、`素材过大（>500MB）`。
 9. **零网络测试真实性**：确认 stock 两个测试文件没有真实网络/ffmpeg 依赖；确认注入的 fetch 同时覆盖元数据与下载两处。
@@ -86,17 +88,25 @@ curl -sS -X POST "http://localhost:3101/api/media/stock/import" \
 
 ## 五、终评结论
 
-**待终评回写。**（控制方派发只读复核后，在本节补齐 Verdict / Review Focus 逐项 / Critical-Important-Minor / Ready to merge。勿覆盖本交接单，结论写 `artifacts/codex-review-video-studio-p2-media-t5-result.md`。）
+- **Verdict：0 Critical / 1 Important / 6 Minor — With fixes → 已修 → 复审 clean。** 终评范围 `f7dfc6a..2699734`（opus 只读），修复 `ffc56e1`，范围复审（opus）确认「findings 全部落实、无新 Critical/Important」。
+- **Review Focus 5 条全过**：ogv-only 候选禁用不崩 / 下载期间编辑以最新 ref 为基线 / 保存失败不 `setEditor` 且文档字节不变 / 伪装来源在 fetch 前拒 / Artist-Credit HTML 清洗后入账。
+- **Important（1，已修）**：dev 绑 `0.0.0.0` 时同源门 403（详见 §4.6）。修复后 `Origin` 由浏览器设定、`Host` 为目标，跨站请求仍无法通过；无 Origin 的非浏览器调用沿既有放行口径（dev-only 路由）。
+- **Minor 已修**：导入外围 fs 异常收口 `store-error`（P6 契约闭合）；客户端传输兜底文案四条逐字入 spec §3；U6 重试按钮与「下载中…」态。
+- **Rulings 判定**：接受「元数据重取失败→upstream 复用检索文案」「retries=总尝试次数 3」「超时秒数=共享预算」「默认档位按档位高度」「清理只删本刀新写文件」「T6 排序由 T7 承担」（复审核对 `await POST → 读 ref → 唯一 save` 顺序正确）。**挑战并已处理**：`0.0.0.0` 同源门由「交终评」升为 Important 并当日修复；计划估数（media-store +27 / web +16）与实际（+29 / +17）不符已在本文档勘误。
+- **Ready to merge：是**（以用户集成为准；本刀不 push/merge）。
+- **缓办 Minor（新增）**：关闭项目路径提示语写「在素材面板中选择」但该资产未入账（文案精度）；`errorMessage` 会把临时绝对路径带进卡内文案；下载后失败重试会二次下载并留孤儿资产（P8 已接受孤儿语义）；重试按钮嵌在 `role="alert"` 段内（a11y nit）。
 
 ## 六、延后 Minor 台账（未修，不阻塞；按任务汇总）
 
 - **T1**：调用方传入 `local-upload` 时 `origin.fileName` 未校验 1..200（仅 `input.fileName` 校验）；新测试只覆盖无代理路径；`origin` 按引用保存。
 - **T2**：未要求的静默截断（关键词 80 / 许可名 100 / 作者与 usageNote 200）；videoinfo 缺 `descriptionurl` 或时长非有限值时整页丢弃；URL 去重与扩展名大小写无专项测试；无 `NNNp` 档位一律标「原片」。
-- **T3**：`writeSync` 短写未处理；`openSync/mkdtempSync/readFileSync` 异常可能裸抛到路由；元数据重取失败与 `disabledReason→unsupported` 无专项测试；`response.ok` 会接受 206；`too-large` 文案硬编码 500MB；新增跨重试测试的时序余量对负载敏感。
-- **T4**：import 路由的 `await importStockCandidate` 未包 try/catch（fs 级异常会逃出 `{error}` 契约，ingest 路由同病）；search 错误透出英文内部原因；JSON 读取期超时被报为「响应不可解析」；`trim()` 后的关键词未用于转发；请求体无大小上限。
+- **T3**：`writeSync` 短写未处理；元数据重取失败与 `disabledReason→unsupported` 无专项测试；`response.ok` 会接受 206；`too-large` 文案硬编码 500MB；新增跨重试测试的时序余量对负载敏感。（外围 fs 异常裸抛已于 `ffc56e1` 收口为 `store-error`。）
+- **T4**：search 错误透出英文内部原因；JSON 读取期超时被报为「响应不可解析」；`trim()` 后的关键词未用于转发；请求体无大小上限。（未包 try/catch 已由 `ffc56e1` 在编排层兜住。）
 - **T5**：`canDownload` 与 `effectiveDerivativeUrl` 对「无默认档位」判定不一致；自造文案「无可用分辨率档位」不在 spec §3；`startSearch` / `searchSucceeded` 会清/剪会话级拒绝与已入库标记（可能重导同内容）；`draftMediaFromVersion` 复用无专项测试。
 - **T6**：镜头不存在路径仍消耗 `newVersionId`；测试未模拟下载期间编辑（时序保证落在 T7）；`applied:true` 未断言；`durationMs<200` 的素材草稿会被 validator 拒但资产已入库；缺失镜头路径无不可变断言。
-- **T7**：无「重试」文字按钮与下载中按钮态；客户端搜索兜底文案缺 `：<原因>`；保存往返窗口内其他镜头编辑仍可能丢（brief 规定形状）；两卡并发导入靠版本冲突中文拒绝；`pageTitle` 作 path key 可能撞；空结果无提示。
+- **T7**：保存往返窗口内其他镜头编辑仍可能丢（U5 只承诺下载期间）；两卡并发导入靠版本冲突中文拒绝；`pageTitle` 作 path key 可能撞；空结果无提示。（重试按钮与下载中态已于 `ffc56e1` 补齐。）
+- **终评新增缓办**：search/import 路由的状态映射与 dev 门无单测（冒烟已证 403/422，其余同构 ingest 先例）；关闭项目提示语「在素材面板中选择」与实际未入账状态不符；`errorMessage` 可能把临时绝对路径带进卡内文案；下载后失败重试二次下载留孤儿；重试按钮嵌在 `role="alert"` 段内（a11y）。
+- **计数勘误**：计划估 media-store +27 / web +16；实际 +29 / +17（含评审修复测试），终态 61 / 193。
 - **跨刀旧账**：T3 F2/F4、P1/P2 期 Minor 仍在册；本刀无新增阻塞项。
 
 ## 七、关键文件索引
@@ -106,6 +116,7 @@ curl -sS -X POST "http://localhost:3101/api/media/stock/import" \
 - 下载编排：`packages/media-store/src/stock/import.ts` + `import.test.ts`（P1-P8）
 - 契约与入口：`packages/media-store/src/stock/types.ts`、`packages/media-store/src/ingest.ts`（`origin` 参数化）
 - 路由：`apps/web/src/app/api/media/stock/search/route.ts`、`apps/web/src/app/api/media/stock/import/route.ts`
+- 同源门：`apps/web/src/app/api/same-origin.ts` + `.test.ts`（`Origin` 比 `Host`，8 条）
 - 面板纯逻辑：`apps/web/src/app/video-studio/stock-search.ts` + `.test.ts`
 - 单事务：`apps/web/src/app/video-studio/stock-apply.ts` + `.test.ts`
 - 组件与接线：`stock-search-panel.tsx`、`shot-editor-card.tsx`、`page.tsx`（`handleStockImport` / `documentRef`）
