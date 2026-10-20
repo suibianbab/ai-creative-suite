@@ -206,6 +206,27 @@ test("S7：importStarted 置 importing；importSucceeded 去重写入 imported �
   assert.equal(failed.error, "素材导入失败：ffprobe 失败");
 });
 
+test("S9：导入失败后重试成功清除旧 error（importStarted/importSucceeded），回 results 且只记一次已入库", () => {
+  const a = candidate();
+  const base = searchSucceeded(initialStockSearchState(), [a]);
+  const failed = importFailed(base, "素材导入失败：ffprobe 失败");
+
+  const retrying = importStarted(failed, a.pageTitle);
+  assert.equal(retrying.phase, "importing");
+  assert.equal(retrying.error, null, "重试开始即清除旧错误");
+
+  const done = importSucceeded(retrying, a.pageTitle);
+  assert.equal(done.phase, "results");
+  assert.equal(done.error, null);
+  assert.deepEqual(done.imported, [a.pageTitle], "pageTitle 恰出现一次");
+
+  assert.equal(
+    importSucceeded(failed, a.pageTitle).error,
+    null,
+    "即使未经 importStarted，成功也清除旧错误",
+  );
+});
+
 test("S8：canDownload 优先返回 disabledReason 原文，其次要求有效档位", () => {
   assert.deepEqual(canDownload(candidate({ disabledReason: "许可不明" })), {
     ok: false,

@@ -110,7 +110,7 @@ export function importStarted(
   s: StockSearchState,
   _pageTitle: string,
 ): StockSearchState {
-  return { ...s, phase: "importing" };
+  return { ...s, phase: "importing", error: null };
 }
 
 export function importSucceeded(
@@ -123,6 +123,7 @@ export function importSucceeded(
     imported: s.imported.includes(pageTitle)
       ? s.imported
       : [...s.imported, pageTitle],
+    error: null,
   };
 }
 
