@@ -8,7 +8,8 @@
 //     镜头 1 media-clip 默认值、镜头 2/3 仍为 spec）
 //   →返回列表→按标题重开→素材下拉回填同一 assetId→整片预览可解码（readyState≥2, 854 宽）
 //     →拨到帧 12（500ms）并断言滑杆/暂停/currentTime 均就位
-//   →CLI render-scene 双画幅出片→双跑逐字节 SHA-256 一致→镜头 1 第 24 帧 YAVG≥100
+//   →CLI render-scene 双画幅出片→双跑逐字节 SHA-256 一致→镜头 1 第 24 帧非黑
+//     （YAVG≥100；仅证明非黑帧，不构成素材身份校验）
 //   →计费台账行数不变 + 浏览器控制台零 error。
 // 前置: @acs/web dev server 已在 BASE_URL（默认 http://127.0.0.1:3211，
 //       经 scripts/dev/proxy-3211.mjs 代理到 3210；也可直起在 3211）；
@@ -24,6 +25,7 @@ import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright-core";
+import { stockAssetViolations } from "./stock-asset-assertions.mjs";
 
 const ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -37,8 +39,6 @@ const SENTENCE = "做一个9秒的STEM解说视频，主题是云，分3个镜�
 const PAGE_TITLE = "File:Clouds-seloncourt.ogv";
 const DERIVATIVE_URL =
   "https://upload.wikimedia.org/wikipedia/commons/transcoded/f/fb/Clouds-seloncourt.ogv/Clouds-seloncourt.ogv.480p.vp9.webm";
-const SOURCE_PAGE =
-  "https://commons.wikimedia.org/wiki/File:Clouds-seloncourt.ogv";
 const USAGE_LEDGER = path.join(ROOT, "artifacts/tts-usage.jsonl");
 
 // fail() 在退出前尽力关闭浏览器；模块级变量避免 TDZ（启动前失败时 browser 为 null）。
@@ -321,31 +321,8 @@ try {
 
   asset = exported.mediaAssets?.[0];
   if (!asset) await fail("账本", "mediaAssets 为空");
-  if (
-    asset.origin.kind !== "stock-source" ||
-    asset.origin.sourceId !== "wikimedia"
-  )
-    await fail("origin", JSON.stringify(asset.origin));
-  if (asset.origin.sourcePageUrl !== SOURCE_PAGE)
-    await fail("sourcePageUrl", asset.origin.sourcePageUrl);
-  if (asset.origin.license.name !== "CC BY 2.0")
-    await fail("license", asset.origin.license.name);
-  // 契约（types.ts）：作者属于 license.author，不在 origin 顶层。
-  if (asset.origin.license.author !== "Thomas Bresson")
-    await fail("author", asset.origin.license.author);
-  if (Number.isNaN(Date.parse(asset.origin.retrievedAt)))
-    await fail("retrievedAt", asset.origin.retrievedAt);
-  if (asset.original.width !== 854 || asset.original.height !== 480)
-    await fail("尺寸", `${asset.original.width}x${asset.original.height}`);
-  if (asset.original.durationMs !== 28600)
-    await fail("时长", String(asset.original.durationMs));
-  if (asset.original.hasAudio !== false)
-    await fail("hasAudio", String(asset.original.hasAudio));
-  if (!/^[0-9a-f]{64}$/.test(asset.original.sha256))
-    await fail("sha256", String(asset.original.sha256));
-  if (asset.original.storeKey !== `${asset.original.sha256.slice(0, 16)}.webm`)
-    await fail("storeKey", asset.original.storeKey);
-  if (asset.original.proxy !== undefined) await fail("proxy", "不应生成 proxy");
+  const violations = stockAssetViolations(asset);
+  if (violations.length) await fail(violations[0].step, violations[0].detail);
 
   const s1 = await workingVersionOf(exported.shots[0], "镜头1");
   if (!s1.sceneSource) await fail("镜头1", "sceneSource 缺失");
@@ -532,12 +509,14 @@ try {
     const hash = sha256(renderFile);
     if (hash !== sha256(rerunFile))
       await fail("确定性", `${aspect} 双跑哈希不同`);
-    // 镜头 1 帧域 0..47（2000ms @24fps）：帧 24 = 1000ms，素材应可见。
+    // 镜头 1 帧域 0..47（2000ms @24fps）：帧 24 = 1000ms，断言非黑帧。
     const yavg = await frameYavg(renderFile, 24);
     if (yavg < 100)
-      await fail("素材帧", `${aspect} 第 24 帧 YAVG=${yavg} < 100`);
+      await fail("非黑帧", `${aspect} 第 24 帧 YAVG=${yavg} < 100`);
     renderHashes[aspect] = hash;
-    console.log(`[e2e-stock] ${aspect}: 双跑一致 ${hash}，帧 24 YAVG=${yavg}`);
+    console.log(
+      `[e2e-stock] ${aspect}: 双跑一致 ${hash}，帧 24 非黑 YAVG=${yavg}`,
+    );
   }
 } catch (err) {
   await fail("出片", err);

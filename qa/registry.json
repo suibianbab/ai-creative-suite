@@ -1344,7 +1344,7 @@
         "Stock search finds the pinned Wikimedia candidate and imports the 480p WebM through the real editor panel",
         "Exported project books origin license/author/sourcePageUrl/retrievedAt and a content-addressed storeKey with no proxy",
         "Shot 1 becomes a media-clip (0-2000ms, cover, focal 0.5, mute) while shots 2-3 remain spec; asset survives save and reopen",
-        "Browser preview plays the stored media (readyState >= 2, 854px wide) and renders both aspects deterministically (double run byte-identical, media frame YAVG >= 100)",
+        "Browser preview plays the stored media (readyState >= 2, 854px wide) and renders both aspects deterministically (double run byte-identical, media frame non-black (signalstats YAVG >= 100))",
         "Attribution ruling L6: e2e asserts ledger metadata (license/author/sourcePageUrl) and no product/render change adds in-frame credit; no TTS billing and zero console errors"
       ]
     }

@@ -48,7 +48,7 @@ P2.5 五刀（契约 → 导入仓 → 预览编辑 → 出片链路 → Wikimed
    - 镜头 2、3：仍为 `spec`，且 `componentId` 与导入前基线导出逐个一致。
 4. **保存 / 重开**：`.editor-save` → `已保存`；`.project-action` 返回列表 → 打开同一项目 → 镜头 1 素材下拉回填同一 `mediaAssetId`，卡内入点/出点/fit/focal/audio 五项与导出值一致。
 5. **预览**：重开后把整片预览拨到帧 12（500ms，仍在镜头 1 的 0..47 帧域内并暂停），`<video class="media-stage">` 的 `src` 含 `storeKey`，`readyState≥2`（已取到当前帧数据）、`videoWidth===854`、`error===null`。
-6. **出片**：`node scripts/video/render-scene.mjs --project <exported> --out <dir>`（不传 `--narration`）双画幅各 exit 0；**双跑逐字节 SHA-256 一致**；镜头 1 帧（如第 24 帧，1000ms）YAVG ≥ 100（素材可见、非黑）。
+6. **出片**：`node scripts/video/render-scene.mjs --project <exported> --out <dir>`（不传 `--narration`）双画幅各 exit 0；**双跑逐字节 SHA-256 一致**；镜头 1 帧（如第 24 帧，1000ms）YAVG ≥ 100（非黑帧；不构成素材身份校验）。
 7. **零计费**：`artifacts/tts-usage.jsonl` 行数前后不变（本机为 34；文件不存在时按 0 计）。
 8. **控制台**：浏览器 `console` 无 error。
 9. **纪律**：导出 JSON、渲染产物、截图、临时媒体仓全部 untracked/仓外，不入库。

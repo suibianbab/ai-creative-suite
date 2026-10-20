@@ -1,9 +1,9 @@
 import { spawn, spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { access, mkdir, readFile, writeFile } from "node:fs/promises";
-import { createConnection } from "node:net";
 import { dirname, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import { checkPort } from "./port-probes.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const registryPath = resolve(root, "qa/registry.json");
@@ -110,55 +110,6 @@ function git(...args) {
     windowsHide: true,
   });
   return result.status === 0 ? result.stdout.trim() : null;
-}
-
-async function checkPostgres() {
-  return await new Promise((resolvePort) => {
-    const socket = createConnection({ host: "127.0.0.1", port: 5432 });
-    socket.setTimeout(3000);
-    socket.once("connect", () => {
-      const sslRequest = Buffer.alloc(8);
-      sslRequest.writeInt32BE(8, 0);
-      sslRequest.writeInt32BE(80877103, 4);
-      socket.write(sslRequest);
-    });
-    socket.once("data", (data) => {
-      socket.destroy();
-      resolvePort(data[0] === 0x4e || data[0] === 0x53);
-    });
-    for (const event of ["error", "timeout", "end"]) {
-      socket.once(event, () => {
-        socket.destroy();
-        resolvePort(false);
-      });
-    }
-  });
-}
-
-async function checkPort(port) {
-  if (port === 5432) return await checkPostgres();
-  if ([9000, 8180, 4112, 3000, 3100, 4104, 11435].includes(port)) {
-    const url =
-      port === 9000
-        ? "http://127.0.0.1:9000/health"
-        : port === 4112
-          ? "http://127.0.0.1:4112/health"
-          : port === 4104
-            ? "http://127.0.0.1:4104/health"
-            : port === 3100
-              ? "http://127.0.0.1:3100/image-studio/photocraft"
-              : port === 3000
-                ? "http://localhost:3000/image-studio/photocraft"
-                : port === 11435
-                  ? "http://127.0.0.1:11435/health"
-                  : "http://127.0.0.1:8180/realms/acs-dev/.well-known/openid-configuration";
-    try {
-      return (await fetch(url, { signal: AbortSignal.timeout(3000) })).ok;
-    } catch {
-      return false;
-    }
-  }
-  return false;
 }
 
 async function prerequisites(item) {
