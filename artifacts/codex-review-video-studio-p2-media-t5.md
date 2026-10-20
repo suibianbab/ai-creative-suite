@@ -1,0 +1,115 @@
+# Codex 复核交接 —— `worktree-video-studio-p2`（P2.5-T5：Wikimedia Commons 在线素材源）
+
+- 日期：2026-10-20
+- 工作树：`D:\codex\animate\.claude\worktrees\video-studio-p0`（分支 `worktree-video-studio-p2`；**主检出 `D:\codex\animate` 由用户管理，勿动**）
+- 范围：`f7dfc6a..a0cb4cb`（13 提交，24 文件，+4370/−19：spec+plan 两篇、media-store `stock/` 纯函数与下载编排、ingest origin 参数化、web 两条 dev-only 路由、面板状态机与单事务应用、镜头卡接线）+ 本文档提交 `<DOCS_SHA>`。`f7dfc6a` 为 T4 收口点（上次复核范围的后续基线）
+- 纪律：工作树内只读复核；**不要 push / merge / 改 HEAD**（集成由用户决定）；本刀零计费（`artifacts/tts-usage.jsonl` 台账 34 行不变）；媒体与证据不入库
+- 回写约定：结论写 **`artifacts/codex-review-video-studio-p2-media-t5-result.md`**（勿覆盖本交接单）；格式沿 t4 版（Review Focus 逐项 / Rulings 判定 / Declined 逐条 / Issues C-I-M / Ready to merge + reasoning）
+- **状态**：实施与冒烟完成；整支终评**尚未执行**（由控制方在本交接单之后派发）。§5 保持「待终评回写」。
+
+## 一、提交链（13 + 1 提交，spec → plan → 八任务 → 评审修复 → 收口）
+
+| 提交 | 内容 |
+|---|---|
+| `3d835d8` | spec：W/P/U/L/X 五表、信任边界、单事务、错误文案、测试清单 |
+| `0a88f01` | spec 评审回填：单事务落盘 / 并发编辑 / 许可服务端门 / 默认档位服务端下发 |
+| `2442a66` | plan：8 任务全 TDD + Global Constraints + Review Focus 5 条 |
+| `f746ba0` | T1 `ingestMediaFile` 增可选 `origin`（默认 local-upload 逐字节不变，X1） |
+| `ca3a7a5` | T2 候选归一化、许可/作者清洗、档位筛选与默认值、URL 白名单与成员校验纯函数 |
+| `bcfec8b` | T3 下载编排 P1-P6：元数据重取、许可门、成员校验、流式下载/重试/超时/上限、ingest、对账与清理 |
+| `ce41e0f` | T3 评审修复：下载总超时改为**跨重试共享预算**（不再每次尝试各 300s） |
+| `bcbe370` | T4 `GET search` / `POST import` 两条 dev-only 路由：dev 门、同源、状态码映射 |
+| `3e019f6` | T5 面板纯状态机、stock 资产标签、`mediaDraftForAsset` 默认媒体草稿 |
+| `0a8b060` | T5 评审修复：导入重试开始/成功时清除旧错误 |
+| `f6e39bb` | T6 `applyStockAsset` / `importStockForShot`：最新文档基线 + 账本与镜头修订一次保存 |
+| `d915431` | T7 镜头卡内搜索/选用/下载并应用面板接线 |
+| `a0cb4cb` | T7 评审修复：导入网络失败（浏览器英文 `Failed to fetch`）转中文可重试文案 |
+| `<DOCS_SHA>` | T8 收口：CURRENT_STATE 条目 + 本交接单（证据 `artifacts/video-studio-stock-source/evidence.md` 不入库） |
+
+## 二、核心判据（可挑战的不变量）
+
+1. **服务端是信任边界（W3/L2）**：客户端只提交 `pageTitle + derivativeUrl`。import 路由按 pageTitle **重新 GET videoinfo**，入账字段（来源页、许可名、作者、usageNote、`retrievedAt`）全部取自本次重取；候选展示字段不直接入账。客户端 `derivativeUrl` 先过 W5 白名单（`https` + host 精确 `upload.wikimedia.org` + `/wikipedia/commons/` 前缀 + 无端口/凭据），再与**重取结果**的 `derivatives[].src` 精确相等（成员校验），两者任何一步失败都在 fetch 前返回 422。
+2. **许可不明不可入账（W4/P1）**：`extmetadata` 无 `LicenseShortName` → 候选 `license:null`，UI 禁用下载并显示「许可不明」；服务端独立返回 `unlicensed` 422（`候选许可信息缺失：<pageTitle>（无法入账，请更换素材）`），不只靠客户端禁用。
+3. **下载分寸（P3/W5）**：`redirect:"error"`；300s 总预算跨全部尝试与退避共享；30s 空闲超时（相邻字节间隔）；`Content-Length` 预检 + 累计字节双闸 500MB；408/429/5xx 重试，共 3 次尝试（退避 1s、2s）；每次重试重开/截断临时文件；临时目录 `finally` 删除。UA 固定 `ACS-VideoStudio/0.1 (local development)`。
+4. **对账与清理边界（P5）**：探测时长容差 ±1000ms、宽高 ±2px；不符 422 并删除**本刀新写**的 original/proxy；入库前记录两路径是否已存在，**预存文件一律不动**（沿 T2 W2 分寸）。
+5. **单事务应用（U5/T6）**：页面先 `await` import 路由，**之后**才读 `documentRef.current`（下载最长 300s 期间对其他镜头的编辑不丢）；在最新文档上 `appendMediaAsset` + 默认媒体草稿（入 0、出 `min(2000,duration)`、cover、focal 50%、mute）+ `buildMediaRevisePatch` → `reviseWorkingVersion` → **只调用一次 `saveVideoProject`** → `setEditor(saved)`。save 抛错时 `setEditor` 不被调用，文档字节不变；仓内未被账本引用的内容寻址文件是接受的孤儿。镜头已被删除则只保存账本并提示「素材已入库；原镜头已不存在，请在镜头卡中选择」，不重建镜头。
+6. **面板会话级（U3/U7）**：候选、拒绝原因、已入库标记挂在单张镜头卡内，不进项目文档；拒绝原因枚举固定 `题材不符 | 文字画面 | 质量低 | 许可不明 | 其他`。
+7. **HTML 清洗（W6/L1）**：Artist/Credit 去标签、折叠空白、解码常见实体后再展示与入账；空串视为缺失，不产生空作者段。
+8. **兼容不变（X1-X4）**：不传 `origin` 时 ingest 行为逐字节不变；本地上传、旧项目读取/出片、文档校验口径均不变；stock 仅新资产写入。
+9. **零网络单测**：`stock/wikimedia.test.ts`（485 行）与 `stock/import.test.ts`（603 行）全部注入 fetch/ingest 夹具，不触真实 Wikimedia/ffmpeg；web 侧只测纯逻辑模块。
+10. **错误文案逐字 spec §3**：搜索 400/502/503、导入 400/403/413/422/502/504/500 全中文；上游英文原因只嵌在 `<原因>` 占位。
+
+## 三、可复跑验证命令（期望输出）
+
+```bash
+cd D:/codex/animate/.claude/worktrees/video-studio-p0
+
+# 单测 / 回归（2026-10-20 收口实测）
+pnpm --filter @acs/video-document run build && node --test "packages/video-document/dist/**/*.test.js"   # 111 pass
+pnpm --filter @acs/video-scene test                                                                      # 136 pass
+pnpm --filter @acs/media-store test                                                                      # 60 pass
+pnpm --filter @acs/web test                                                                              # 185 pass
+node --test scripts/video/*.test.mjs                                                                     # 83 pass
+pnpm --filter @acs/web run typecheck                                                                     # 零错
+pnpm --filter @acs/remotion-engine run typecheck                                                         # 零错
+npx biome check .                                                                                        # clean（345 文件）
+wc -l artifacts/tts-usage.jsonl                                                                          # 34（零计费）
+```
+
+真实网络冒烟（一次性、零计费、证据不入库）：见 `artifacts/video-studio-stock-source/evidence.md`。要点：
+
+```bash
+# 本机需经代理；Node fetch 需显式启用 env proxy（Node 22.22）
+NODE_USE_ENV_PROXY=1 ACS_MEDIA_STORE="<absolute-temp-dir>" \
+  pnpm --filter @acs/web exec next dev --hostname localhost --port 3101
+
+curl -sS "http://localhost:3101/api/media/stock/search?q=clouds"                    # 200，10 候选
+curl -sS -X POST "http://localhost:3101/api/media/stock/import" \
+  -H "Origin: http://localhost:3101" -H "Content-Type: application/json" \
+  --data '{"pageTitle":"File:Clouds-seloncourt.ogv","derivativeUrl":"<480p webm>"}' # 200
+```
+
+实测：`storeKey=cd65ef1336fc1bbc.webm`、`sha256=cd65ef1336fc1bbc5569949d2a758c60585398151bb2976c0d29e0b65676c5e8`（落盘文件 SHA-256 逐位一致）、854×480、28600ms、`hasAudio=false`、无 proxy；反证 403 跨站 / 422 外站 URL / 422 http 方案 / 422 非成员档位，仓零变化。UI（系统 Edge + 仓内 `playwright-core`，未安装浏览器）完成「搜索→480p→下载并应用→保存 v2→重开→素材仍在→`<video>` readyState=4 可播」。
+
+## 四、给 Codex 的检查清单（按风险排序）
+
+1. **Review Focus 1：只有 ogv 档位的候选**：应展示但 `disabledReason="无受支持的分辨率档位（仅 mp4/webm/mov）"`、下载按钮禁用，不得崩溃或发起下载。请核对 W4 档位筛选（仅 mp4/webm/mov、长边 ≤1920）与 `canDownload`。
+2. **Review Focus 2：下载期间用户改了别的镜头**：完成时必须以最新文档 ref 为基线；镜头被删则素材入库、不重建。请核对 `page.tsx` 中 `await fetch` → 读 `documentRef.current` → `importStockForShot` 的**顺序**（T6 只保证纯函数，时序由 T7 接线承担）。
+3. **Review Focus 3：保存失败**：`saveVideoProject` 抛错时页面不得 `setEditor`，文档字节不变；仓内未引用内容寻址文件是接受的孤儿。请核对 `stock-apply.ts` 不 catch save、`handleStockImport` 的 catch 只复位 busy 并 rethrow。
+4. **Review Focus 4：伪装来源**：`http://`、非 `upload.wikimedia.org`、带端口/凭据、`upload.wikimedia.org.evil.com`、不在候选 `derivatives` 中的 URL，都必须在 fetch 前拒绝；`redirect:"error"` 防 30x 逃逸。
+5. **Review Focus 5：Artist/Credit 是 HTML**：清洗后展示与入账，不得把 `<a …>` 原样塞进 UI 或许可字段（W6 的实体解码 + 去标签 + 折叠空白）。
+6. **同源判定与 dev 绑定的冲突（本次冒烟新观察，重要）**：仓内 dev 脚本是 `next dev --hostname 0.0.0.0`；Next 16.4 下 `new URL(request.url).origin` 为 `http://0.0.0.0:<port>`，浏览器从 `localhost:<port>` 打开时 POST 的 `Origin` 是 `http://localhost:<port>` → **403 `跨站请求已拒绝。`**；以 `--hostname localhost` 启动则通过。该写法沿用 T2 `api/media/ingest/route.ts`。请裁定是否在 T5 内修（绑定/改用 Host 头/接受回环别名），或作为既有问题延后。
+7. **清理分寸**：对账失败只删本刀新写 original/proxy；预存文件不动。请核对 `originalExisted/proxyExisted` 快照时点（ingest 之前）与删除条件。
+8. **错误文案逐字**：对照 spec §3 的 403/400/413/422/502/504 文案；特别核对 `候选许可信息缺失`、`该分辨率档位不属于此候选`、`下载超时（<n>s）`、`素材过大（>500MB）`。
+9. **零网络测试真实性**：确认 stock 两个测试文件没有真实网络/ffmpeg 依赖；确认注入的 fetch 同时覆盖元数据与下载两处。
+10. **重试/超时预算**：`ce41e0f` 后总预算跨尝试与退避共享；请核对剩余预算不足时不再额外睡眠、且仍以 timeout 收口。
+
+## 五、终评结论
+
+**待终评回写。**（控制方派发只读复核后，在本节补齐 Verdict / Review Focus 逐项 / Critical-Important-Minor / Ready to merge。勿覆盖本交接单，结论写 `artifacts/codex-review-video-studio-p2-media-t5-result.md`。）
+
+## 六、延后 Minor 台账（未修，不阻塞；按任务汇总）
+
+- **T1**：调用方传入 `local-upload` 时 `origin.fileName` 未校验 1..200（仅 `input.fileName` 校验）；新测试只覆盖无代理路径；`origin` 按引用保存。
+- **T2**：未要求的静默截断（关键词 80 / 许可名 100 / 作者与 usageNote 200）；videoinfo 缺 `descriptionurl` 或时长非有限值时整页丢弃；URL 去重与扩展名大小写无专项测试；无 `NNNp` 档位一律标「原片」。
+- **T3**：`writeSync` 短写未处理；`openSync/mkdtempSync/readFileSync` 异常可能裸抛到路由；元数据重取失败与 `disabledReason→unsupported` 无专项测试；`response.ok` 会接受 206；`too-large` 文案硬编码 500MB；新增跨重试测试的时序余量对负载敏感。
+- **T4**：import 路由的 `await importStockCandidate` 未包 try/catch（fs 级异常会逃出 `{error}` 契约，ingest 路由同病）；search 错误透出英文内部原因；JSON 读取期超时被报为「响应不可解析」；`trim()` 后的关键词未用于转发；请求体无大小上限。
+- **T5**：`canDownload` 与 `effectiveDerivativeUrl` 对「无默认档位」判定不一致；自造文案「无可用分辨率档位」不在 spec §3；`startSearch` / `searchSucceeded` 会清/剪会话级拒绝与已入库标记（可能重导同内容）；`draftMediaFromVersion` 复用无专项测试。
+- **T6**：镜头不存在路径仍消耗 `newVersionId`；测试未模拟下载期间编辑（时序保证落在 T7）；`applied:true` 未断言；`durationMs<200` 的素材草稿会被 validator 拒但资产已入库；缺失镜头路径无不可变断言。
+- **T7**：无「重试」文字按钮与下载中按钮态；客户端搜索兜底文案缺 `：<原因>`；保存往返窗口内其他镜头编辑仍可能丢（brief 规定形状）；两卡并发导入靠版本冲突中文拒绝；`pageTitle` 作 path key 可能撞；空结果无提示。
+- **跨刀旧账**：T3 F2/F4、P1/P2 期 Minor 仍在册；本刀无新增阻塞项。
+
+## 七、关键文件索引
+
+- spec/plan：`docs/superpowers/{specs,plans}/2026-10-20-video-studio-stock-source*.md`（spec 实际文件名后缀 `-design.md`）
+- 纯函数：`packages/media-store/src/stock/wikimedia.ts` + `wikimedia.test.ts`（W1-W6）
+- 下载编排：`packages/media-store/src/stock/import.ts` + `import.test.ts`（P1-P8）
+- 契约与入口：`packages/media-store/src/stock/types.ts`、`packages/media-store/src/ingest.ts`（`origin` 参数化）
+- 路由：`apps/web/src/app/api/media/stock/search/route.ts`、`apps/web/src/app/api/media/stock/import/route.ts`
+- 面板纯逻辑：`apps/web/src/app/video-studio/stock-search.ts` + `.test.ts`
+- 单事务：`apps/web/src/app/video-studio/stock-apply.ts` + `.test.ts`
+- 组件与接线：`stock-search-panel.tsx`、`shot-editor-card.tsx`、`page.tsx`（`handleStockImport` / `documentRef`）
+- 标签与默认草稿：`media-assets.ts`、`media-clip-templates.ts`（`mediaDraftForAsset`）
+- 证据：`artifacts/video-studio-stock-source/evidence.md`（不入库）
+- 状态：`AI_Creative_Suite_Dev_Pack_v3/CURRENT_STATE.md` 顶部条目
+- 计划进度与 Rulings：`.superpowers/sdd/2026-10-20-video-studio-stock-source/progress.md`
