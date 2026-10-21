@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { defaultRegistry, validateSceneSpec } from "@acs/video-scene";
+import { componentLabel } from "./component-labels.js";
 import {
   isStoryboardSentence,
   LINE_TEMPLATE_LABELS,
@@ -160,6 +161,10 @@ test("分镜：narrationText 如实——开场读标题、要点读标题+要�
       "旁白不超 ContentVersion 上限",
     );
   }
+});
+
+test("componentLabel：未知组件 id 原样返回（不编造名称）", () => {
+  assert.equal(componentLabel("weird-id"), "weird-id");
 });
 
 test("分镜每镜头产出可读说明（意图，而非组件名）", () => {

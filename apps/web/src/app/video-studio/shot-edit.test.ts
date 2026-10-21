@@ -185,6 +185,9 @@ test("镜头说明：草稿带出、附着时去空白、空与超长被拒", ()
   const tooLong = attachDescription({}, "字".repeat(201));
   assert.ok("error" in tooLong);
   assert.equal(tooLong.error, "镜头说明不能超过 200 字符");
+  const atLimit = attachDescription({}, "字".repeat(200));
+  assert.ok("patch" in atLimit);
+  assert.equal(atLimit.patch.description.length, 200);
 });
 
 test("speechOverflowMs：语速估计超时长为正，否则 0", () => {

@@ -141,6 +141,14 @@ test("reviseWorkingVersion：显式说明逐字落库，空/超长拒绝", () =>
     T,
   );
   assert.equal(workingOf(next, shotId).description, "新说明");
+  const atLimit = reviseWorkingVersion(
+    p,
+    shotId,
+    { description: "字".repeat(200) },
+    UUID2,
+    T,
+  );
+  assert.equal(workingOf(atLimit, shotId).description.length, 200);
   assert.throws(
     () => reviseWorkingVersion(p, shotId, { description: "  " }, UUID2, T),
     /镜头说明须为 1\.\.200 字符/,

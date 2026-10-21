@@ -1123,8 +1123,6 @@ export function ShotEditorCard({
                     setMediaError(built.error ?? "媒体字段无效");
                     return;
                   }
-                  setMediaError(null);
-                  setMediaWarnings(built.warnings);
                   const attached = attachDescription(
                     built.patch,
                     draft.description,
@@ -1133,6 +1131,8 @@ export function ShotEditorCard({
                     setEditError(attached.error);
                     return;
                   }
+                  setMediaError(null);
+                  setMediaWarnings(built.warnings);
                   setEditError(null);
                   onRevise(attached.patch);
                   return;
