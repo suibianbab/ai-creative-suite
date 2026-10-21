@@ -537,15 +537,23 @@ Expected: 全部断言通过，打印 `framesDigest` 与两次 mp4 摘要。
 
 - [ ] **Step 6: 登记 QA 与文档**
 
-`qa/registry.json` 在 VID-024 之后新增 VID-025：
+`qa/registry.json` 在 VID-024 之后新增 VID-025（字段与既有 automated 条目一致——`cwd`/`argv`/`checks` 为校验器必填，`command` 不是该文件的字段）：
 
 ```json
 {
   "id": "VID-025",
-  "title": "3D 镜头（three 预烘焙）出片与确定性",
   "tier": "integration",
-  "command": "node scripts/video/e2e-three.mjs",
-  "requiresPorts": []
+  "title": "Video Studio P3-B three 镜头预烘焙出片与确定性",
+  "cwd": ".",
+  "argv": ["node", "scripts/video/e2e-three.mjs"],
+  "requiresPorts": [],
+  "checks": [
+    "出片 exit 0，landscape.mp4 非空；manifest 的 3D 证据 glRenderer 含 SwiftShader、frameHashes 条数 = 该镜头 span 帧数（fixture 24）",
+    "独立烘焙两次 framesDigest 相同；完整出片两次 landscape.mp4 SHA-256 相同",
+    "3D 镜头首帧 ffmpeg signalstats YAVG > 16（非黑）",
+    "RenderRecord 含 three 七字段，validateVideoProject 重校验通过、mediaAssets 长度不变",
+    "artifacts/tts-usage.jsonl 行数仍为 34；运行后系统临时目录无 acs-three-* 残留"
+  ]
 }
 ```
 
