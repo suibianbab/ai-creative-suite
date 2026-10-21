@@ -593,7 +593,7 @@ export default function VideoStudioPage() {
               ) : (
                 <p className="editor-hint">
                   整片时间线暂不可预览（镜头时长无法成片，或存在不可预览的场景源）；
-                  仍可在下方逐个镜头修订时长与画面。
+                  仍可在下方逐个镜头查看，可编辑的镜头保留修订入口。
                 </p>
               )}
               <ol className="shot-list">

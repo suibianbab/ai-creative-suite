@@ -13,7 +13,9 @@ export type DurationImpact = {
   // 当前文档本身无法量化（如存量零帧镜头）时为 null，调用方按"无法量化"展示；
   // 改后仍可能量化成功，这正是把存量零帧镜头改回可出片时长的修复入口。
   beforeFrames: number | null;
-  afterFrames: number | null; // 无法量化（如零帧镜头）时 null，原因在 frameError
+  // 改后无法量化时为 null；时长确实改过时原因在 frameError，未改时（changed
+  // 为 false，含当前文档本就无法量化）两侧都为 null 而 frameError 也为 null。
+  afterFrames: number | null;
   frameError: string | null;
   transitionIssue: string | null;
 };
