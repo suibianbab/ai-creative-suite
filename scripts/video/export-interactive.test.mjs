@@ -25,6 +25,10 @@ const FIXTURE = new URL(
   "./fixtures/interactive-sample.video-project.json",
   import.meta.url,
 );
+const THREE_FIXTURE = new URL(
+  "./fixtures/three-sample.video-project.json",
+  import.meta.url,
+);
 const CLI = fileURLToPath(new URL("./export-interactive.mjs", import.meta.url));
 
 function fixture() {
@@ -66,6 +70,19 @@ function mediaClipProject() {
       },
     },
   ];
+  return validateVideoProject(project);
+}
+
+// 文字镜头在前、3D 镜头在后（order 与数组序一致）：交互交付遍历到第 2 镜头才拒绝，
+// 用来钉住「指名镜头号」而不是笼统拒绝整项目。
+function threeShotProject() {
+  const project = structuredClone(
+    JSON.parse(readFileSync(THREE_FIXTURE, "utf8")),
+  );
+  const [three, text] = project.shots;
+  text.order = 0;
+  three.order = 1;
+  project.shots = [text, three];
   return validateVideoProject(project);
 }
 
@@ -154,6 +171,24 @@ test("非 spec 镜头整次拒绝：指名镜头 2 与 media-clip", () => {
     (error) => {
       assert.match(error.message, /镜头 2/);
       assert.match(error.message, /media-clip/);
+      return true;
+    },
+  );
+});
+
+test("three 镜头整次拒绝：指名镜头号并说明 3D 不支持交互交付", () => {
+  assert.throws(
+    () =>
+      buildInteractiveExport({
+        project: threeShotProject(),
+        fps: 12,
+        aspect: "landscape",
+      }),
+    (error) => {
+      assert.match(error.message, /镜头 2/);
+      assert.match(error.message, /three/);
+      // 与既有通用话术（「P3-A 交互交付不支持」）的区分点：3D 专属拒绝。
+      assert.match(error.message, /不支持交互交付/);
       return true;
     },
   );

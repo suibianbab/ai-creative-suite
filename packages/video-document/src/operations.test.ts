@@ -7,7 +7,7 @@ import {
   ShotLockedError,
   setLocked,
 } from "./operations.js";
-import type { MediaAsset, VideoProject } from "./types.js";
+import type { MediaAsset, ThreeSceneSpec, VideoProject } from "./types.js";
 
 const UUID = "0b0b13a2-6c63-4d3d-9a52-a70f6a3b1001";
 const UUID2 = "0b0b13a2-6c63-4d3d-9a52-a70f6a3b1002";
@@ -376,4 +376,74 @@ test("mediaClip：出点−入点不足 200ms → validate 拦（C1 下限门）
       ),
     /出入点越界/,
   );
+});
+
+// —— P3-B：threeScene patch 通道（Ruling 11）——
+
+const THREE_SPEC: ThreeSceneSpec = {
+  specVersion: 1,
+  componentId: "orbit3d",
+  componentVersion: 1,
+  durationMs: 5000,
+  seed: 7,
+  background: "#101820",
+  params: {
+    shape: "box",
+    color: "#4f9dff",
+    accent: "#e8b04b",
+    spinPerFrame: 0.02,
+    tilt: 0.35,
+    zoom: 1,
+  },
+};
+
+test("reviseWorkingVersion：threeScene 落 three 场景源并同步 durationMs", () => {
+  const p = editableProject();
+  const next = reviseWorkingVersion(
+    p,
+    p.shots[0]!.shotId,
+    { threeScene: THREE_SPEC, narrationText: "3D 旁白" },
+    UUID3,
+    T3AT,
+  );
+  const version = next.shots[0]!.contentVersions.at(-1)!;
+  assert.equal(version.durationMs, 5000);
+  assert.deepEqual(version.sceneSource, { type: "three", spec: THREE_SPEC });
+  assert.equal(version.narrationText, "3D 旁白");
+  assert.equal(version.provenance.engineId, "human-edit");
+  assert.equal(
+    version.provenance.parentVersionId,
+    p.shots[0]!.workingVersionId,
+  );
+});
+
+test("reviseWorkingVersion：threeScene 与 spec / mediaClip 互斥（三种组合都抛）", () => {
+  const p = { ...baseProject(), mediaAssets: [mediaAsset()] };
+  const combos = [
+    { threeScene: THREE_SPEC, spec: { durationMs: 1000 } },
+    { threeScene: THREE_SPEC, mediaClip: CLIP },
+    { spec: { durationMs: 1000 }, mediaClip: CLIP },
+  ];
+  for (const patch of combos) {
+    assert.throws(
+      () => reviseWorkingVersion(p, p.shots[0]!.shotId, patch, UUID3, T3AT),
+      /互斥/,
+    );
+  }
+});
+
+test("reviseWorkingVersion：threeScene 修订后 workingVersionId 前移到新版本", () => {
+  const p = editableProject();
+  const next = reviseWorkingVersion(
+    p,
+    p.shots[0]!.shotId,
+    { threeScene: THREE_SPEC },
+    UUID3,
+    T3AT,
+  );
+  assert.equal(next.shots[0]!.workingVersionId, UUID3);
+  assert.equal(next.shots[0]!.contentVersions.at(-1)!.versionId, UUID3);
+  // 入参不动
+  assert.equal(p.shots[0]!.workingVersionId, UUID);
+  assert.equal(p.shots[0]!.contentVersions.length, 1);
 });

@@ -12,6 +12,8 @@ export type { VideoProject } from "./types.js";
 export class VideoProjectValidationError extends Error {}
 
 export const VIDEO_PROJECT_MAX_BYTES = 2 * 1024 * 1024;
+// P3-B 3D 镜头 spec 的体积上限：params 会被烘焙期注册表消费，超限说明走错了通道。
+const MAX_THREE_SPEC_BYTES = 256 * 1024;
 
 const UUID =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -234,8 +236,56 @@ function validateSceneSource(
     }
     return;
   }
+  // —— P3-B 3D 镜头：平台只做形状校验、不 eval；params 深度校验交给烘焙期注册表。——
+  if (value.type === "three") {
+    const spec = value.spec;
+    if (!isRecord(spec)) {
+      fail(
+        `${field}.sceneSource.spec must be an object (validated in depth by three registry)`,
+      );
+    }
+    // 用文件顶部已有的 encoder（TextEncoder）：本包同时被浏览器工作台与 Node CLI 引用。
+    if (encoder.encode(JSON.stringify(spec)).length > MAX_THREE_SPEC_BYTES) {
+      fail(`${field}.sceneSource.spec 超过 256 KiB 上限`);
+    }
+    if (spec.specVersion !== 1)
+      fail(`${field}.sceneSource.spec.specVersion 必须为 1`);
+    if (
+      typeof spec.componentId !== "string" ||
+      !/^[a-z][a-zA-Z0-9]{0,63}$/.test(spec.componentId)
+    ) {
+      fail(
+        `${field}.sceneSource.spec.componentId 须匹配 ^[a-z][a-zA-Z0-9]{0,63}$`,
+      );
+    }
+    if (
+      !Number.isInteger(spec.componentVersion) ||
+      (spec.componentVersion as number) < 1
+    ) {
+      fail(`${field}.sceneSource.spec.componentVersion 须为正整数`);
+    }
+    if (!Number.isInteger(spec.durationMs) || (spec.durationMs as number) < 1) {
+      fail(`${field}.sceneSource.spec.durationMs 须为正整数`);
+    }
+    if (
+      !Number.isInteger(spec.seed) ||
+      (spec.seed as number) < 0 ||
+      (spec.seed as number) > 4294967295
+    ) {
+      fail(`${field}.sceneSource.spec.seed 须为 0..4294967295 的整数`);
+    }
+    if (
+      typeof spec.background !== "string" ||
+      !/^#[0-9a-fA-F]{6}$/.test(spec.background)
+    ) {
+      fail(`${field}.sceneSource.spec.background 须为 #RRGGBB`);
+    }
+    if (!isRecord(spec.params))
+      fail(`${field}.sceneSource.spec.params 须为对象`);
+    return;
+  }
   fail(
-    `${field}.sceneSource.type must be "spec" | "editor-binding" | "media-clip"`,
+    `${field}.sceneSource.type must be "spec" | "editor-binding" | "media-clip" | "three"`,
   );
 }
 
@@ -278,6 +328,16 @@ function validateContentVersion(
       (value.sceneSource.outMs as number) - (value.sceneSource.inMs as number)
     ) {
       fail(`${field}.durationMs 须等于 outMs−inMs（媒体镜头时长=片段长度）`);
+    }
+  }
+  // P3-B：three 镜头的 spec.durationMs 是渲染时长，必须与版本时长一致，
+  // 否则烘焙帧数与交付 frameMap 会对不上。
+  if (isRecord(value.sceneSource) && value.sceneSource.type === "three") {
+    const spec = value.sceneSource.spec;
+    if (isRecord(spec) && spec.durationMs !== value.durationMs) {
+      fail(
+        `${field}.sceneSource.spec.durationMs(${spec.durationMs}) 与 ContentVersion.durationMs(${value.durationMs}) 不一致`,
+      );
     }
   }
   if (!isRecord(value.provenance))
@@ -522,6 +582,8 @@ export function validateVideoProject(value: unknown): VideoProject {
   // 项目层全局唯一（P2-C）：shotId、内容 versionId、order 跨镜头也不得重复——
   // 否则 RenderRecord.versionId / 导出顺序会产生歧义。镜头内查重见 validateShot。
   const knownVersionIds = new Set<string>();
+  // P3-B（Codex 复核 E）：3D 渲染证据要与版本对账，先按 versionId 索引版本。
+  const versionsById = new Map<string, ContentVersion>();
   const knownShotIds = new Set<string>();
   const knownOrders = new Set<number>();
   // 全管线顺序契约（P3-A 修复 I-1）：MP4/TTS/转场边界按数组序消费，交互页按
@@ -556,6 +618,7 @@ export function validateVideoProject(value: unknown): VideoProject {
         );
       }
       knownVersionIds.add(version.versionId);
+      versionsById.set(version.versionId, version);
     }
   }
   if (
@@ -640,6 +703,76 @@ export function validateVideoProject(value: unknown): VideoProject {
         if (typeof digest !== "string" || !SHA256_HEX.test(digest)) {
           fail(`${field}.assetDigests[${assetId}] 须为 64 位小写十六进制`);
         }
+      }
+    }
+    // —— P3-B Task 1：three 镜头出片的确定性证据（可选，非 3D 渲染不写）——
+    if (record.three !== undefined) {
+      const three = record.three;
+      if (!isRecord(three)) fail(`${field}.three must be an object`);
+      if (
+        typeof three.componentId !== "string" ||
+        three.componentId.length === 0 ||
+        three.componentId.length > 64
+      ) {
+        fail(
+          `${field}.three.componentId must be a non-empty string of at most 64 characters`,
+        );
+      }
+      if (
+        !Number.isInteger(three.componentVersion) ||
+        (three.componentVersion as number) < 1
+      ) {
+        fail(`${field}.three.componentVersion must be a positive integer`);
+      }
+      for (const key of ["threeVersion", "chromiumVersion"] as const) {
+        if (
+          typeof three[key] !== "string" ||
+          (three[key] as string).length === 0 ||
+          (three[key] as string).length > 64
+        ) {
+          fail(
+            `${field}.three.${key} must be a non-empty string of at most 64 characters`,
+          );
+        }
+      }
+      if (
+        typeof three.glRenderer !== "string" ||
+        three.glRenderer.length === 0 ||
+        three.glRenderer.length > 256
+      ) {
+        fail(
+          `${field}.three.glRenderer must be a non-empty string of at most 256 characters`,
+        );
+      }
+      for (const key of ["framesDigest", "clipSha256"] as const) {
+        if (typeof three[key] !== "string" || !SHA256_HEX.test(three[key])) {
+          fail(`${field}.three.${key} 须为 64 位小写十六进制`);
+        }
+      }
+      // —— Codex 复核 E：证据必须与所引用版本对账（形状合法 ≠ 语义正确）——
+      // record.versionId 的存在性上文已查，故这里必有值。
+      const version = versionsById.get(record.versionId as string)!;
+      const sceneSource = version.sceneSource;
+      if (sceneSource.type !== "three") {
+        fail(
+          `${field}.three 只能挂在 three 版本的渲染记录上（versionId 指向 ${sceneSource.type} 版本）`,
+        );
+      }
+      if (three.componentId !== sceneSource.spec.componentId) {
+        fail(
+          `${field}.three.componentId(${three.componentId}) 与版本 spec.componentId(${sceneSource.spec.componentId}) 不一致`,
+        );
+      }
+      if (three.componentVersion !== sceneSource.spec.componentVersion) {
+        fail(
+          `${field}.three.componentVersion(${three.componentVersion}) 与版本 spec.componentVersion(${sceneSource.spec.componentVersion}) 不一致`,
+        );
+      }
+    } else {
+      // 反向对账：three 版本的出片记录不能没有 3D 证据。
+      const version = versionsById.get(record.versionId as string)!;
+      if (version.sceneSource.type === "three") {
+        fail(`${field} 指向 three 版本，缺少 three 渲染证据`);
       }
     }
   }

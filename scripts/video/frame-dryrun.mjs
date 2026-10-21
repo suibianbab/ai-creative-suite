@@ -96,6 +96,8 @@ export function dryRunJobs(jobs, { budgetMs = DEFAULT_BUDGET_MS } = {}) {
 // 一致），干跑作业只给 spec span（媒体渲染在 render-scene 走 OffthreadVideo，
 // 无需 spec 干跑）；全媒体项目 → 空 jobs 合法。未知类型大声抛错（未来通道
 // 接入时显式改）。
+// P3-B Task 4：three 镜头与媒体同待遇——3D 画面由烘焙门禁（bake-three）覆盖，
+// 干跑不产 SVG 作业；帧图量化仍为其占位（span 与出片一致）。
 export async function buildProjectDryRunJobs(project) {
   const { quantizeTimeline } = await import(
     pathToFileURL(path.join(ROOT, "packages/video-document/dist/index.js")).href
@@ -131,9 +133,12 @@ export async function buildProjectDryRunJobs(project) {
           height: 720,
         },
       });
-    } else if (sceneSource.type !== "media-clip") {
+    } else if (
+      sceneSource.type !== "media-clip" &&
+      sceneSource.type !== "three"
+    ) {
       throw new Error(
-        `镜头 ${span.shotIndex + 1} 的 sceneSource 既非 spec 也非 media-clip`,
+        `镜头 ${span.shotIndex + 1} 的 sceneSource 既非 spec、media-clip 也非 three`,
       );
     }
   }
@@ -175,7 +180,7 @@ if (isMain) {
     );
     if (jobs.length === 0)
       console.log(
-        "[frame-dryrun] 干跑 0 作业（镜头全部为媒体，出片走 render-scene）",
+        "[frame-dryrun] 干跑 0 作业（镜头全部为媒体或 3D，出片走 render-scene）",
       );
     const result = await dryRunJobs(jobs, { budgetMs });
     if (!result.ok) {

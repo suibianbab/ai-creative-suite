@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import type { MediaAsset } from "./types.js";
+import type {
+  MediaAsset,
+  ThreeRenderEvidence,
+  ThreeSceneSpec,
+} from "./types.js";
 import { type VideoProject, validateVideoProject } from "./validate.js";
 
 const UUID = "0b0b13a2-6c63-4d3d-9a52-a70f6a3b1001";
@@ -464,7 +468,8 @@ test("旧项目（无 mediaAssets 键）原样通过（迁移回归）", () => {
   assert.equal(out.mediaAssets, undefined);
 });
 
-test("未知 sceneSource.type 错误消息包含三类型", () => {
+// 兼容见证：三值子串断言仍成立；当前错误信息已扩为四值（含 three）。
+test("未知 sceneSource.type 错误消息包含四类型", () => {
   const p = baseProject();
   p.shots[0]!.contentVersions[0]!.sceneSource = {
     type: "future-thing",
@@ -834,4 +839,350 @@ test("有 outputRef+digest 但无 kind → 通过（固定既有放行行为）"
   project.deliveries[0]!.outputRef = "index.html";
   project.deliveries[0]!.digest = "a".repeat(64);
   assert.equal(validateVideoProject(project).deliveries.length, 1);
+});
+
+// —— P3-B Task 1：three 场景源与 3D 渲染证据（文档契约层）——
+const THREE_VERSION_ID = "0b0b13a2-6c63-4d3d-9a52-a70f6a3b5001";
+const THREE_SHOT_ID = "0b0b13a2-6c63-4d3d-9a52-a70f6a3b5002";
+
+function threeSpec(overrides: Record<string, unknown> = {}): ThreeSceneSpec {
+  return {
+    specVersion: 1,
+    componentId: "orbit3d",
+    componentVersion: 1,
+    durationMs: 5000,
+    seed: 42,
+    background: "#101820",
+    params: { title: "云制作" },
+    ...overrides,
+  };
+}
+
+function withThreeShot(
+  p: VideoProject,
+  specOverrides: Record<string, unknown> = {},
+): VideoProject {
+  p.shots.push({
+    shotId: THREE_SHOT_ID,
+    order: 1,
+    locked: false,
+    workingVersionId: THREE_VERSION_ID,
+    contentVersions: [
+      {
+        versionId: THREE_VERSION_ID,
+        createdAt: "2026-10-21T00:00:00.000Z",
+        durationMs: 5000,
+        description: "3D 镜头",
+        narrationText: "",
+        sceneSource: {
+          type: "three",
+          spec: threeSpec(specOverrides),
+        },
+        provenance: { engineId: "three-registry", engineVersion: "1" },
+      },
+    ],
+    events: [],
+  });
+  return p;
+}
+
+test("three 镜头：合法 spec 通过", () => {
+  const out = validateVideoProject(withThreeShot(baseProject()));
+  const source = out.shots[1]!.contentVersions[0]!.sceneSource;
+  assert.equal(source.type, "three");
+  if (source.type !== "three") throw new Error("期望 three 分支");
+  assert.equal(source.spec.componentId, "orbit3d");
+  assert.equal(
+    source.spec.durationMs,
+    out.shots[1]!.contentVersions[0]!.durationMs,
+  );
+});
+
+test("three 镜头：spec 非对象被拒", () => {
+  const project = withThreeShot(baseProject());
+  project.shots[1]!.contentVersions[0]!.sceneSource = {
+    type: "three",
+    spec: "not-an-object",
+  } as never;
+  assert.throws(
+    () => validateVideoProject(project),
+    /sceneSource\.spec must be an object/,
+  );
+});
+
+test("three 镜头：specVersion 非 1 被拒", () => {
+  assert.throws(
+    () =>
+      validateVideoProject(withThreeShot(baseProject(), { specVersion: 2 })),
+    /specVersion/,
+  );
+});
+
+test("three 镜头：componentId 形状非法被拒", () => {
+  for (const componentId of ["Orbit3D", "orbit-3d"]) {
+    assert.throws(
+      () => validateVideoProject(withThreeShot(baseProject(), { componentId })),
+      /componentId/,
+    );
+  }
+});
+
+test("three 镜头：componentVersion 非正整数被拒", () => {
+  for (const componentVersion of [0, 1.5]) {
+    assert.throws(
+      () =>
+        validateVideoProject(
+          withThreeShot(baseProject(), { componentVersion }),
+        ),
+      /componentVersion/,
+    );
+  }
+});
+
+test("three 镜头：durationMs 与版本时长不等被拒", () => {
+  assert.throws(
+    () =>
+      validateVideoProject(withThreeShot(baseProject(), { durationMs: 4000 })),
+    /spec\.durationMs\(4000\).*ContentVersion\.durationMs\(5000\)/,
+  );
+});
+
+test("three 镜头：seed 越界被拒", () => {
+  for (const seed of [-1, 4294967296]) {
+    assert.throws(
+      () => validateVideoProject(withThreeShot(baseProject(), { seed })),
+      /seed/,
+    );
+  }
+});
+
+test("three 镜头：background 非 #RRGGBB 被拒", () => {
+  for (const background of ["#12345", "red"]) {
+    assert.throws(
+      () => validateVideoProject(withThreeShot(baseProject(), { background })),
+      /background/,
+    );
+  }
+});
+
+test("three 镜头：params 非对象被拒", () => {
+  for (const params of [[], null]) {
+    assert.throws(
+      () => validateVideoProject(withThreeShot(baseProject(), { params })),
+      /params/,
+    );
+  }
+});
+
+test("three 镜头：spec 序列化字节超 256 KiB 被拒", () => {
+  assert.throws(
+    () =>
+      validateVideoProject(
+        withThreeShot(baseProject(), {
+          params: { large: "x".repeat(256 * 1024) },
+        }),
+      ),
+    /256 KiB/,
+  );
+});
+
+test("sceneSource.type 未知时错误信息列出 three", () => {
+  const p = baseProject();
+  p.shots[0]!.contentVersions[0]!.sceneSource = {
+    type: "future-thing",
+  } as never;
+  assert.throws(
+    () => validateVideoProject(p),
+    /must be "spec" \| "editor-binding" \| "media-clip" \| "three"/,
+  );
+});
+
+const THREE_DIGEST = "f".repeat(64);
+
+function threeEvidence(
+  overrides: Record<string, unknown> = {},
+): ThreeRenderEvidence {
+  return {
+    componentId: "orbit3d",
+    componentVersion: 1,
+    threeVersion: "0.169.0",
+    chromiumVersion: "131.0.6778.86",
+    glRenderer: "ANGLE (Google, Vulkan 1.3.0)",
+    framesDigest: THREE_DIGEST,
+    clipSha256: "e".repeat(64),
+    ...overrides,
+  };
+}
+
+// 3D 证据必须挂在 three 版本的记录上：形状合法的三种记录共用同一份三版本项目。
+function baseWithThreeRenderRecord(): VideoProject {
+  const project = withThreeShot(baseProject());
+  project.renderRecords.push({
+    renderId: "0b0b13a2-6c63-4d3d-9a52-a70f6a3b5003",
+    versionId: THREE_VERSION_ID,
+    contentDigest: "a".repeat(64),
+    engineId: "remotion",
+    engineVersion: "4",
+    rendererVersion: "4.0.534",
+    fps: 24,
+    width: 1280,
+    height: 720,
+    codec: "h264",
+    frames: 120,
+    fontDigests: { "NotoSansSC-Regular.woff": "b".repeat(64) },
+    outputAssetRef: "render/landscape.mp4",
+  });
+  return project;
+}
+
+test("RenderRecord.three 合法通过", () => {
+  const project = baseWithThreeRenderRecord();
+  project.renderRecords[0]!.three = threeEvidence();
+  const out = validateVideoProject(project);
+  assert.equal(out.renderRecords[0]!.three?.componentId, "orbit3d");
+  assert.equal(out.renderRecords[0]!.three?.framesDigest, THREE_DIGEST);
+});
+
+test("RenderRecord.three 的 framesDigest 非 64 位小写 hex 被拒", () => {
+  const project = baseWithThreeRenderRecord();
+  project.renderRecords[0]!.three = threeEvidence({
+    framesDigest: "F".repeat(64),
+  });
+  assert.throws(() => validateVideoProject(project), /three\.framesDigest/);
+});
+
+// —— Codex 复核 E：3D 渲染证据须与版本对账（不只是形状） ——
+test("three 证据挂在 spec 版本上被拒（versionId 不是 three 版本）", () => {
+  const project = baseWithRenderRecord();
+  project.renderRecords[0]!.three = threeEvidence();
+  assert.throws(
+    () => validateVideoProject(project),
+    /renderRecords\[0\]\.three.*three 版本|renderRecords\[0\].*只能挂在 three 版本/,
+  );
+});
+
+test("three 证据的 componentId 与版本 spec 不一致被拒", () => {
+  const project = baseWithThreeRenderRecord();
+  project.renderRecords[0]!.three = threeEvidence({ componentId: "other3d" });
+  assert.throws(
+    () => validateVideoProject(project),
+    /renderRecords\[0\]\.three\.componentId.*orbit3d/,
+  );
+});
+
+test("three 证据的 componentVersion 与版本 spec 不一致被拒", () => {
+  const project = baseWithThreeRenderRecord();
+  project.renderRecords[0]!.three = threeEvidence({ componentVersion: 2 });
+  assert.throws(
+    () => validateVideoProject(project),
+    /renderRecords\[0\]\.three\.componentVersion.*1/,
+  );
+});
+
+test("three 版本的渲染记录缺少 three 证据被拒", () => {
+  const project = baseWithThreeRenderRecord();
+  assert.throws(
+    () => validateVideoProject(project),
+    /renderRecords\[0\].*three.*证据|renderRecords\[0\].*缺少.*three/,
+  );
+});
+
+// 表驱动负路径：每一行只破坏一个字段，删掉任一字段检查都会让对应行变红。
+function withoutThreeKey(
+  key: "framesDigest" | "clipSha256",
+): Record<string, unknown> {
+  const evidence: Record<string, unknown> = { ...threeEvidence() };
+  delete evidence[key];
+  return evidence;
+}
+
+const INVALID_THREE_CASES: Array<{
+  name: string;
+  three: unknown;
+  pattern: RegExp;
+}> = [
+  {
+    name: "three 为字符串",
+    three: "evidence",
+    pattern: /three must be an object/,
+  },
+  { name: "three 为数组", three: [], pattern: /three must be an object/ },
+  {
+    name: "componentId 空串",
+    three: threeEvidence({ componentId: "" }),
+    pattern: /three\.componentId/,
+  },
+  {
+    name: "componentId 65 字符",
+    three: threeEvidence({ componentId: "a".repeat(65) }),
+    pattern: /three\.componentId/,
+  },
+  {
+    name: "componentVersion 为 0",
+    three: threeEvidence({ componentVersion: 0 }),
+    pattern: /three\.componentVersion/,
+  },
+  {
+    name: "componentVersion 为 1.5",
+    three: threeEvidence({ componentVersion: 1.5 }),
+    pattern: /three\.componentVersion/,
+  },
+  {
+    name: "threeVersion 空串",
+    three: threeEvidence({ threeVersion: "" }),
+    pattern: /three\.threeVersion/,
+  },
+  {
+    name: "threeVersion 65 字符",
+    three: threeEvidence({ threeVersion: "0".repeat(65) }),
+    pattern: /three\.threeVersion/,
+  },
+  {
+    name: "chromiumVersion 空串",
+    three: threeEvidence({ chromiumVersion: "" }),
+    pattern: /three\.chromiumVersion/,
+  },
+  {
+    name: "chromiumVersion 65 字符",
+    three: threeEvidence({ chromiumVersion: "1".repeat(65) }),
+    pattern: /three\.chromiumVersion/,
+  },
+  {
+    name: "glRenderer 空串",
+    three: threeEvidence({ glRenderer: "" }),
+    pattern: /three\.glRenderer/,
+  },
+  {
+    name: "glRenderer 257 字符",
+    three: threeEvidence({ glRenderer: "g".repeat(257) }),
+    pattern: /three\.glRenderer/,
+  },
+  {
+    name: "clipSha256 大写 hex",
+    three: threeEvidence({ clipSha256: "E".repeat(64) }),
+    pattern: /three\.clipSha256/,
+  },
+  {
+    name: "clipSha256 63 位",
+    three: threeEvidence({ clipSha256: "e".repeat(63) }),
+    pattern: /three\.clipSha256/,
+  },
+  {
+    name: "clipSha256 缺失",
+    three: withoutThreeKey("clipSha256"),
+    pattern: /three\.clipSha256/,
+  },
+  {
+    name: "framesDigest 缺失",
+    three: withoutThreeKey("framesDigest"),
+    pattern: /three\.framesDigest/,
+  },
+];
+
+test("RenderRecord.three 字段逐项非法被拒（表驱动）", () => {
+  for (const { name, three, pattern } of INVALID_THREE_CASES) {
+    const project = baseWithThreeRenderRecord();
+    Object.assign(project.renderRecords[0]!, { three });
+    assert.throws(() => validateVideoProject(project), pattern, name);
+  }
 });

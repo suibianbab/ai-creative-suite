@@ -45,6 +45,7 @@ import {
 import { ShotEditorCard } from "./shot-editor-card";
 import { shotWorkingMediaClip, shotWorkingSpec } from "./shot-specs";
 import { importStockForShot } from "./stock-apply";
+import { threeSceneFromVersion } from "./three-templates";
 import {
   type TransitionDraftRow,
   transitionsAfterEdit,
@@ -210,6 +211,15 @@ export default function VideoStudioPage() {
     const shotMediaClips = document.shots.map((shot) =>
       shotWorkingMediaClip(shot),
     );
+    // P3-B（Ruling 11/2）：3D 工作版本解析，与 shotSpecs/shotMediaClips 并列；
+    // 3D 镜头在预览里走 missing 占位（出片时烘焙，工作台不预览）。
+    const shotThree = document.shots.map((shot) =>
+      threeSceneFromVersion(
+        shot.contentVersions.find(
+          (version) => version.versionId === shot.workingVersionId,
+        ),
+      ),
+    );
     const mediaAssets = document.mediaAssets ?? [];
     const assetsById = new Map(
       mediaAssets.map((asset) => [asset.assetId, asset]),
@@ -233,6 +243,7 @@ export default function VideoStudioPage() {
         const spec = shotSpecs[index] as SceneSpec | null;
         const meta = workingMeta[index]!;
         const media = shotMediaClips[index];
+        const three = shotThree[index];
         if (spec) {
           return {
             spec,
@@ -260,6 +271,15 @@ export default function VideoStudioPage() {
                 startFrame: 0,
                 frames: 0,
               };
+        }
+        // P3-B（Ruling 11/3）：复用 missing 占位，不新增 kind、不改 scene-preview。
+        if (three) {
+          return {
+            kind: "missing",
+            reason: "3D 镜头：出片时烘焙，工作台不预览",
+            startFrame: 0,
+            frames: 0,
+          };
         }
         return null; // editor-binding 等未来成员：整片仍降级（X2）
       },
@@ -566,7 +586,8 @@ export default function VideoStudioPage() {
                     frames={pieceTimeline!.shots[index]!.frames}
                     editable={
                       shotSpecs[index] !== null ||
-                      shotMediaClips[index] !== null
+                      shotMediaClips[index] !== null ||
+                      shotThree[index] !== null
                     }
                     mediaAssets={mediaAssets}
                     redoError={redoErrors[shot.shotId] ?? null}

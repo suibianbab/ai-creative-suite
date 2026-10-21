@@ -617,3 +617,96 @@ test("applyDurationAlignments：荒谬时长过不了 validateVideoProject → t
   );
   assert.equal(src.shots[0].contentVersions.length, 1, "throw 后入参原样");
 });
+
+// 终评 Fix 1：three 镜头的 spec.durationMs 是渲染时长（烘焙帧数由它推导），
+// 溢出对齐必须与 spec 同口径拉伸；漏拉伸会在 apply 内的 validateVideoProject
+// 抛「spec.durationMs 与 ContentVersion.durationMs 不一致」——而那一刻 TTS
+// 已经合成并计费（tts-narration.mjs 先计费再 apply）。
+const THREE_VER_ID = "66666666-6666-4666-8666-666666666666";
+
+function threeProject(durationMs = 2000) {
+  return {
+    schemaVersion: 1,
+    id: "33333333-3333-4333-8333-333333333333",
+    title: "水循环",
+    brief: { sentence: "做一个水循环短片", aspectTargets: ["landscape"] },
+    shots: [
+      {
+        shotId: SHOT_ID,
+        order: 0,
+        locked: false,
+        workingVersionId: THREE_VER_ID,
+        contentVersions: [
+          {
+            versionId: THREE_VER_ID,
+            createdAt: "2026-10-18T00:00:00.000Z",
+            durationMs,
+            description: "3D 镜头：点名主题",
+            narrationText: "水循环。",
+            sceneSource: {
+              type: "three",
+              spec: {
+                specVersion: 1,
+                componentId: "orbit3d",
+                componentVersion: 1,
+                durationMs,
+                seed: 7,
+                background: "#101820",
+                params: {},
+              },
+            },
+            provenance: { engineId: "planner-rules", engineVersion: "1" },
+          },
+        ],
+        events: [],
+      },
+    ],
+    renderRecords: [],
+    deliveries: [],
+    savedVersion: 1,
+  };
+}
+
+test("plan/applyDurationAlignments：three 镜头溢出进计划且 spec.durationMs 同步拉伸", async () => {
+  const { applyDurationAlignments } = await import("./tts-sse.mjs");
+  const { validateVideoProject } = await import(
+    new URL("../../packages/video-document/dist/index.js", import.meta.url).href
+  );
+  const src = threeProject();
+
+  const { plan, skipped } = planDurationAlignments(
+    src,
+    new Map([[`${SHOT_ID}-${THREE_VER_ID}`, 2640]]),
+  );
+  assert.equal(skipped.length, 0, "three 不是媒体镜头，不应进 skipped");
+  assert.equal(plan.length, 1, "溢出必须进对齐计划");
+  assert.equal(plan[0].newDurationMs, 2690, "wav+50 尾样保护");
+
+  const NEW_ID = "77777777-7777-4777-8777-777777777777";
+  const { project: out } = applyDurationAlignments(src, plan, () => NEW_ID);
+  const aligned = out.shots[0].contentVersions.find(
+    (v) => v.versionId === NEW_ID,
+  );
+  assert.equal(aligned.durationMs, 2690);
+  assert.equal(
+    aligned.sceneSource.spec.durationMs,
+    2690,
+    "spec.durationMs 必须与版本时长同口径拉伸，否则校验炸在计费之后",
+  );
+  assert.equal(out.shots[0].workingVersionId, NEW_ID, "working 前移");
+  assert.equal(
+    src.shots[0].contentVersions[0].durationMs,
+    2000,
+    "入参未被 mutate",
+  );
+  assert.equal(
+    src.shots[0].contentVersions[0].sceneSource.spec.durationMs,
+    2000,
+    "入参 spec 未被 mutate",
+  );
+  assert.equal(
+    validateVideoProject(out).shots[0].contentVersions.length,
+    2,
+    "拉伸后的项目必须过 schema 校验",
+  );
+});

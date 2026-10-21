@@ -128,6 +128,18 @@ const MEDIA = {
   focalX: 0.5,
   audio: "mute",
 };
+const THREE = {
+  type: "three",
+  spec: {
+    specVersion: 1,
+    componentId: "orbit3d",
+    componentVersion: 1,
+    durationMs: 1000,
+    seed: 20261021,
+    background: "#101820",
+    params: {},
+  },
+};
 
 const dryProject = (shots) => ({
   schemaVersion: 1,
@@ -164,6 +176,32 @@ test("干跑装配：全媒体项目空 jobs 合法返回（不抛），未知 s
       buildProjectDryRunJobs(
         dryProject([workingShot("x1", "v1", 1000, { type: "未来类型" })]),
       ),
-    /既非 spec 也非 media-clip/,
+    /既非 spec、media-clip 也非 three/,
   );
+});
+
+// ── P3-B Task 4：three 镜头进干跑装配 ─────────────────────────────────
+// 3D 镜头由烘焙门禁覆盖（Task 3），干跑不产生 SVG 作业也不抛错；帧图量化
+// 仍覆盖全部镜头（帧保真——span 与出片一致）。
+
+test("干跑：three 镜头不产生作业且不抛错", async () => {
+  const { jobs, timeline } = await buildProjectDryRunJobs(
+    dryProject([workingShot("t1", "v1", 1000, THREE)]),
+  );
+  assert.deepEqual(jobs, []);
+  assert.equal(timeline.totalFrames, 24);
+});
+
+test("干跑：three 与 media-clip 混排时作业数只计 spec 镜头", async () => {
+  const { jobs, timeline } = await buildProjectDryRunJobs(
+    dryProject([
+      workingShot("s1", "v1", 1000, SPEC),
+      workingShot("t1", "v2", 500, THREE),
+      workingShot("m1", "v3", 2000, MEDIA),
+    ]),
+  );
+  assert.equal(timeline.totalFrames, 84, "24 + 12 + 48 帧全部占位");
+  assert.equal(jobs.length, 1, "three 与 media 都不出 spec 干跑作业");
+  assert.equal(jobs[0].frames, 24);
+  assert.match(jobs[0].label, /镜头 1/);
 });
