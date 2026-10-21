@@ -2222,6 +2222,25 @@
       ]
     },
     {
+      "id": "VID-026",
+      "title": "Video Studio zero-frame shot repair (per-shot duration fix through the real workbench, persistence after reopen, 3D arm)",
+      "fixture": "Script-generated fixtures validated with validateVideoProject before import: A/B use text-animation spec shots (A = 2 x 1ms zero-frame shots, B = [2000,1000]); C deep-copies scripts/video/fixtures/three-sample.video-project.json with the three shot at 1ms (version durationMs and spec.durationMs both 1). Live loop scripted in scripts/video/e2e-zero-frame-repair.mjs (rerun: BASE_URL=http://127.0.0.1:3211 node scripts/video/e2e-zero-frame-repair.mjs; needs the :3210 dev server behind the :3211 proxy, zero TTS billing)",
+      "steps": [
+        "Import fixture A: the timeline degrades (no .editor-shots h3, the 整片时间线暂不可预览 hint appears) while both shot cards stay editable",
+        "Revise shot 1 to 2s and assert 镜头 1 已修订 while the piece timeline stays degraded (the second shot is still zero-frame), then revise shot 2 to 2s and assert the timeline returns 96 frames @24fps with two 48-frame spans",
+        "Save (v2), export the JSON and assert both working versions are 2000ms, then reload and reopen the project from .project-table to assert 96 frames and 2s / 48-frame cards persist",
+        "Import fixture B and try to apply 0.001s on shot 1: assert a 无法应用： error appears, no 镜头 1 已修订 message, and the exported working version stays at 2000ms",
+        "Import fixture C, open the 3D shot editor without switching the template, assert the duration input is visible, apply 2s, and export: sceneSource.type stays three with orbit3d and both version durationMs and spec.durationMs are 2000"
+      ],
+      "passCriteria": [
+        "Zero-frame documents no longer lock each other: fixing one shot is accepted while another zero-frame shot remains, and the timeline recovers to 96 frames once both are fixed",
+        "Edits survive save/export/reload: savedVersion 2, both working versions 2000ms, reopened project still shows 96 frames and 2s cards",
+        "A zero-frame duration draft is blocked with 无法应用： and never enters the document (exported durationMs unchanged at 2000)",
+        "The 1ms three scene source keeps a visible duration entry and rewrites to a 2000ms three version with synchronized spec.durationMs (component orbit3d preserved)",
+        "Browser console logs zero errors and artifacts/tts-usage.jsonl line count is unchanged (zero TTS)"
+      ]
+    },
+    {
       "id": "3D-001",
       "title": "Exact product model advertisement",
       "fixture": "Rights-cleared customer-approved accurate 3D model and product reference photos",
