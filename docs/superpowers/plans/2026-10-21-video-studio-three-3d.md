@@ -400,15 +400,32 @@ git commit -m "feat(video): three 镜头接入出片主链路并写入 3D 证据
 - Create: `apps/web/src/app/video-studio/three-templates.ts`
 - Test: `apps/web/src/app/video-studio/three-templates.test.ts`
 - Modify: `apps/web/src/app/video-studio/shot-editor-card.tsx`
+- Modify: `apps/web/src/app/video-studio/page.tsx`
+- Modify: `packages/video-document/src/operations.ts`
+- Test: `packages/video-document/src/operations.test.ts`
 
 **Interfaces:**
 - Produces:
   - `THREE_TEMPLATE_ID = "three-3d"`、`THREE_TEMPLATE_LABEL = "3D 镜头（出片时烘焙）"`
-  - `buildThreeSceneVersion({ durationMs, seed, params? }) → SceneSource`（`sceneSource.type === "three"`，`spec.durationMs === durationMs`）
+  - `buildThreeSceneVersion({ durationMs, seed, params? }) → SceneSource`（`sceneSource.type === "three"`，`spec.durationMs === durationMs`；模板常量：`specVersion: 1`、`componentId: "orbit3d"`、`componentVersion: 1`、`background: "#101820"`、`params` 默认 `{ shape: "box", color: "#4f9dff", accent: "#e8b04b", spinPerFrame: 0.02, tilt: 0.35, zoom: 1 }`，传入 `params` 时整体替换默认值）
   - `threeSceneFromVersion(working) → ThreeSceneSpec | null`
   - `threeTemplateSelectValue(pendingTemplateId, isThree)`（照 `mediaTemplateSelectValue` 同构）
+- Consumes（Task 1）：`ThreeSceneSpec`、`SceneSource` 的 `three` 成员来自 `@acs/video-document`；web 直接消费其 `dist`，**先跑 `pnpm --filter @acs/video-document run build`**。
+- Extends（Ruling 11）：`reviseWorkingVersion` 的 patch 增加 `threeScene?: ThreeSceneSpec`，与 `spec`/`mediaClip` **三者互斥**；`durationMs = threeScene.durationMs`；`sceneSource = { type: "three", spec: threeScene }`。
 
-- [ ] **Step 1: 写失败测试**
+- [ ] **Step 1: 写失败测试（文档操作层）**
+
+在 `packages/video-document/src/operations.test.ts` 追加：
+
+```ts
+test("reviseWorkingVersion：threeScene 落 three 场景源并同步 durationMs", ...)
+test("reviseWorkingVersion：threeScene 与 spec / mediaClip 互斥（三种组合都抛）", ...)
+test("reviseWorkingVersion：threeScene 修订后 workingVersionId 前移到新版本", ...)
+```
+
+- [ ] **Step 2: 写失败测试（web 纯逻辑）**
+
+在 `apps/web/src/app/video-studio/three-templates.test.ts`：
 
 ```ts
 test("模板：buildThreeSceneVersion 的 durationMs 与入参一致", ...)
@@ -417,28 +434,44 @@ test("模板：threeSceneFromVersion 对 spec/media-clip 返回 null", ...)
 test("模板：threeTemplateSelectValue 在已是 three 且未选模板时停在 THREE_TEMPLATE_ID", ...)
 ```
 
-- [ ] **Step 2: 跑测试确认红**
+- [ ] **Step 3: 跑测试确认红**
 
+Run: `pnpm --filter @acs/video-document run build && pnpm --filter @acs/video-document run test`
+Expected: 3 条新用例失败（`threeScene` 未支持）。
 Run: `pnpm --filter @acs/web test`
 Expected: 4 条失败（模块不存在）。
 
-- [ ] **Step 3: 实现**
+- [ ] **Step 4: 实现文档操作层**
 
-`three-templates.ts` 纯逻辑（不 import React）。`shot-editor-card.tsx`：
+`operations.ts` 的 `reviseWorkingVersion`：互斥检查扩为「spec、mediaClip、threeScene 任意两者同时出现都抛」；`durationMs` 分支新增 `threeScene !== undefined ? threeScene.durationMs`；`sceneSource` 分支新增 `{ type: "three", spec: patch.threeScene }`。保持既有 spec/mediaClip 行为逐字节不变。
+
+- [ ] **Step 5: 实现 web**
+
+`three-templates.ts` 纯逻辑（不 import React；默认参数常量自带，见 Ruling 10，不跨目录 import `scripts/video/three/*`）。`shot-editor-card.tsx`：
 - 导入模板常量，模板下拉新增 `<optgroup label="3D">` 一项；
-- 选中时（与 `MEDIA_TEMPLATE_ID` 分支并列）调用 `applyThreeTemplate`，把工作版本替换为 `three` 场景源；
+- 选中只置 `pendingTemplateId = THREE_TEMPLATE_ID`（Ruling 11/4）；点「应用」时与其他族一致调用 `onRevise({ narrationText, threeScene })`，`threeScene = buildThreeSceneVersion({ durationMs: 当前工作版本 durationMs, seed, params }).spec`；
 - `editingThree` 标志（`working?.sceneSource.type === "three"`）：为真时隐藏 spec 编辑字段，改为只读信息块「3D 镜头 · 出片时烘焙；工作台不预览 3D 画面」+ 组件名与参数摘要；
 - 模板下拉的受控 value 走 `threeTemplateSelectValue`，保证 3D 镜头不再显示为「保持当前组件」。
 
-- [ ] **Step 4: 跑测试确认绿 + 类型检查**
+`page.tsx`：
+- `shotThree = document.shots.map((shot) => threeSceneFromVersion(工作版本))`（与 `shotSpecs`/`shotMediaClips` 并列）；
+- `editable` 三选一：`shotSpecs[index] !== null || shotMediaClips[index] !== null || shotThree[index] !== null`（Ruling 11/2）；
+- `perShot` 的 three 分支复用占位：`{ kind: "missing", reason: "3D 镜头：出片时烘焙，工作台不预览", startFrame: 0, frames: 0 }`（Ruling 11/3，不新增 kind、不改 `scene-preview.tsx`）。
 
+> apps/web/AGENTS.md 要求：改 Next 相关代码前先读 `apps/web/node_modules/next/dist/docs/` 的相关指南。本任务只改 React 组件与页面数据流，不新增路由/API；如触及 Next API 先读文档。
+
+- [ ] **Step 6: 跑测试确认绿 + 类型检查**
+
+Run: `pnpm --filter @acs/video-document run build && pnpm --filter @acs/video-document run test`
 Run: `pnpm --filter @acs/web test && pnpm --filter @acs/web typecheck`
 Expected: 全绿，typecheck exit 0。
 
-- [ ] **Step 5: 提交**
+- [ ] **Step 7: 提交**
 
 ```bash
-git add apps/web/src/app/video-studio/three-templates.ts apps/web/src/app/video-studio/three-templates.test.ts apps/web/src/app/video-studio/shot-editor-card.tsx
+git add packages/video-document/src/operations.ts packages/video-document/src/operations.test.ts
+git commit -m "feat(video-document): reviseWorkingVersion 支持 three 场景源"
+git add apps/web/src/app/video-studio/three-templates.ts apps/web/src/app/video-studio/three-templates.test.ts apps/web/src/app/video-studio/shot-editor-card.tsx apps/web/src/app/video-studio/page.tsx
 git commit -m "feat(web): 工作台新增 3D 镜头模板与只读提示"
 ```
 
