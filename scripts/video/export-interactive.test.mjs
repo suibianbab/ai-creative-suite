@@ -360,6 +360,9 @@ test("项目回写失败：恢复旧 index.html 且账本不变", {
         const output = `${error.stdout ?? ""}${error.stderr ?? ""}`;
         assert.match(output, /\[export-interactive\]/);
         assert.match(output, /写盘失败/);
+        // 钉住失败点确实是项目回写（rename → 项目文件），而不是更早的临时文件写入：
+        // 否则本用例会在恢复分支根本没执行时仍然变绿。
+        assert.match(output, /sample\.video-project\.json/);
         return true;
       },
     );
