@@ -545,7 +545,7 @@ export function validateVideoProject(value: unknown): VideoProject {
     knownOrders.add(parsedShot.order);
     if (previousOrder !== undefined && parsedShot.order <= previousOrder) {
       fail(
-        `shots must be sorted by order: shots[${index}].order(${parsedShot.order}) < shots[${index - 1}].order(${previousOrder}) is violated`,
+        `shots[${index}].order(${parsedShot.order}) must be > shots[${index - 1}].order(${previousOrder})`,
       );
     }
     previousOrder = parsedShot.order;

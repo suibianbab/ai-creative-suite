@@ -191,7 +191,7 @@ async function main() {
       digest: result.digest,
     }));
   } catch (error) {
-    fail(`写盘失败: ${error.message}`);
+    fail(`落账失败: ${error.message}`);
   }
 
   // 写入临时文件再 rename（同卷覆盖原子）：两步都成功才算交付成功；项目
@@ -214,10 +214,27 @@ async function main() {
     renameSync(htmlTmp, htmlPath);
     try {
       renameSync(projectTmp, projectPath);
-    } catch (error) {
-      if (previousHtml === undefined) rmSync(htmlPath, { force: true });
-      else writeFileSync(htmlPath, previousHtml);
-      throw error;
+    } catch (projectError) {
+      if (previousHtml === undefined) {
+        rmSync(htmlPath, { force: true });
+      } else {
+        // 恢复也走「临时文件 + rename」，避免原地截断写一半留下坏 HTML。
+        const restoreTmp = path.join(
+          outDir,
+          `.index.html.${randomUUID()}.restore.tmp`,
+        );
+        try {
+          writeFileSync(restoreTmp, previousHtml);
+          renameSync(restoreTmp, htmlPath);
+        } catch (restoreError) {
+          throw new Error(
+            `恢复旧 index.html 失败（项目写入失败: ${projectError.message}）: ${restoreError.message}`,
+          );
+        } finally {
+          rmSync(restoreTmp, { force: true });
+        }
+      }
+      throw projectError;
     }
   } catch (error) {
     writeError = error;

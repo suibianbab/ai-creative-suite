@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
+  chmodSync,
   copyFileSync,
   existsSync,
   mkdirSync,
@@ -232,10 +233,10 @@ test("CLI 未知参数：统一中文前缀且不泄漏 Node 错误码", () => {
 });
 
 // —— 修复 I-1：交付入口不接受与数组序不一致的叙事顺序 ——
-test("倒序夹具经 validateVideoProject 拒绝（/sorted by order/）", () => {
+test("倒序夹具经 validateVideoProject 拒绝（顺序不变量）", () => {
   const project = fixture();
   project.shots.reverse();
-  assert.throws(() => validateVideoProject(project), /sorted by order/);
+  assert.throws(() => validateVideoProject(project), /must be >/);
 });
 
 // —— 修复 I-2：先落账校验、后写盘；第 1001 条失败不得覆盖旧产物 ——
@@ -277,6 +278,9 @@ test("第 1001 条交付落账失败：旧 index.html 与项目文件逐字节�
         assert.notEqual(error.status, 0);
         const output = `${error.stdout ?? ""}${error.stderr ?? ""}`;
         assert.match(output, /\[export-interactive\]/);
+        // 落账失败（不是写盘失败）且原因准确：上限校验发生在任何写盘之前。
+        assert.match(output, /落账失败/);
+        assert.match(output, /deliveries must be an array of at most 1000/);
         return true;
       },
     );
@@ -321,6 +325,52 @@ test("正常导出覆盖旧 index.html 且台账 +1（先落账后写盘的成�
     assert.equal(next.deliveries[0].outputRef, "index.html");
     assert.match(next.deliveries[0].digest, /^[0-9a-f]{64}$/);
   } finally {
+    rmSync(workDir, { recursive: true, force: true });
+  }
+});
+
+test("项目回写失败：恢复旧 index.html 且账本不变", () => {
+  const workDir = mkdtempSync(path.join(tmpdir(), "export-interactive-"));
+  const projectPath = path.join(workDir, "sample.video-project.json");
+  try {
+    const outDir = path.join(workDir, "out");
+    copyFileSync(FIXTURE, projectPath);
+    mkdirSync(outDir, { recursive: true });
+    const htmlPath = path.join(outDir, "index.html");
+    const sentinel = Buffer.from("PREVIOUS-VALID-HTML-SENTINEL");
+    writeFileSync(htmlPath, sentinel);
+    const projectBytesBefore = readFileSync(projectPath);
+    // Windows：rename 覆盖只读文件 EPERM。HTML rename 已成功、项目 rename
+    // 失败 → 交付器必须走恢复分支，而不是留下新 HTML + 旧账本。
+    chmodSync(projectPath, 0o444);
+
+    assert.throws(
+      () =>
+        execFileSync(
+          process.execPath,
+          [CLI, "--project", projectPath, "--out", outDir],
+          { encoding: "utf8" },
+        ),
+      (error) => {
+        assert.notEqual(error.status, 0);
+        const output = `${error.stdout ?? ""}${error.stderr ?? ""}`;
+        assert.match(output, /\[export-interactive\]/);
+        assert.match(output, /写盘失败/);
+        return true;
+      },
+    );
+
+    assert.ok(readFileSync(htmlPath).equals(sentinel), "旧 index.html 未恢复");
+    assert.ok(
+      readFileSync(projectPath).equals(projectBytesBefore),
+      "项目文件被改写",
+    );
+  } finally {
+    try {
+      chmodSync(projectPath, 0o666);
+    } catch {
+      // 文件可能已被清理；清理失败不掩盖断言结果。
+    }
     rmSync(workDir, { recursive: true, force: true });
   }
 });

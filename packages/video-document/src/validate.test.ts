@@ -673,10 +673,9 @@ test("shots 数组倒序（order 1,0）→ 拒绝并指出下标与两个 order"
     () => validateVideoProject(project),
     (error: unknown) => {
       assert.ok(error instanceof Error);
-      assert.match(error.message, /shots must be sorted by order/);
       assert.match(
         error.message,
-        /shots\[1\]\.order\(0\) < shots\[0\]\.order\(1\)/,
+        /shots\[1\]\.order\(0\) must be > shots\[0\]\.order\(1\)/,
       );
       return true;
     },
@@ -687,7 +686,7 @@ test("交换两镜头 order（数组序 1,0）→ 拒绝", () => {
   const project = withSecondShot(baseProject());
   project.shots[0]!.order = 1;
   project.shots[1]!.order = 0;
-  assert.throws(() => validateVideoProject(project), /sorted by order/);
+  assert.throws(() => validateVideoProject(project), /must be >/);
 });
 
 test("跳号升序（order 0,2,5）→ 通过", () => {
@@ -828,4 +827,11 @@ test("kind=interactive-html 缺 outputRef → 拒绝", () => {
     () => validateVideoProject(project),
     /deliveries\[0\]\.outputRef/,
   );
+});
+
+test("有 outputRef+digest 但无 kind → 通过（固定既有放行行为）", () => {
+  const project = baseWithDelivery();
+  project.deliveries[0]!.outputRef = "index.html";
+  project.deliveries[0]!.digest = "a".repeat(64);
+  assert.equal(validateVideoProject(project).deliveries.length, 1);
 });
