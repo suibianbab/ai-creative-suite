@@ -329,7 +329,11 @@ test("正常导出覆盖旧 index.html 且台账 +1（先落账后写盘的成�
   }
 });
 
-test("项目回写失败：恢复旧 index.html 且账本不变", () => {
+// 仅 Windows 能稳定制造「rename 失败」：POSIX 上 rename 覆盖只读文件照常成功
+// （权限看目录不看文件），本用例会假红。恢复分支的跨平台验证留待 fs 注入。
+test("项目回写失败：恢复旧 index.html 且账本不变", {
+  skip: process.platform !== "win32" && "POSIX 无法用只读文件让 rename 失败",
+}, () => {
   const workDir = mkdtempSync(path.join(tmpdir(), "export-interactive-"));
   const projectPath = path.join(workDir, "sample.video-project.json");
   try {
