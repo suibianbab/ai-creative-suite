@@ -7,15 +7,19 @@ import {
   resolveTransitionWindows,
   type VideoProject,
   ZeroFrameShotError,
+  zeroFrameShotIndexes,
 } from "@acs/video-document";
 
 export type DurationImpact = {
   changed: boolean;
   // 本次编辑的镜头序号（越界时即入参值）。
   shotIndex: number;
-  // 改后量化失败且原因是零帧时，报错的镜头序号；否则 null。闸门用它区分
-  // "本次镜头仍为零帧"（拦）与"本次镜头修好了、别人还零帧"（放行）。
+  // 改后量化失败且原因是零帧时，首个报错镜头的序号；否则 null。
+  // 仅供诊断提示，局部修复闸门使用全部零帧镜头的集合比较。
   zeroFrameShotIndex: number | null;
+  // 存量零帧项目本次编辑使零帧集合严格缩小，且没有新造零帧时才允许
+  // 局部修复落库；整片仍不可量化时由应用闸门读取。
+  partialRepairAllowed: boolean;
   // 当前文档本身无法量化（如存量零帧镜头）时为 null，调用方按"无法量化"展示；
   // 改后仍可能量化成功，这正是把存量零帧镜头改回可出片时长的修复入口。
   beforeFrames: number | null;
@@ -54,6 +58,7 @@ export function describeDurationImpact(
       changed: false,
       shotIndex,
       zeroFrameShotIndex: null,
+      partialRepairAllowed: false,
       beforeFrames: null,
       afterFrames: null,
       frameError: `镜头序号 ${shotIndex} 越界（共 ${current.length} 个镜头）`,
@@ -80,6 +85,7 @@ export function describeDurationImpact(
       changed: false,
       shotIndex,
       zeroFrameShotIndex: null,
+      partialRepairAllowed: false,
       beforeFrames,
       afterFrames: beforeFrames,
       frameError: null,
@@ -90,6 +96,7 @@ export function describeDurationImpact(
   let afterFrames: number | null = null;
   let frameError: string | null = null;
   let zeroFrameShotIndex: number | null = null;
+  let partialRepairAllowed = false;
   let spans: Array<{ startFrame: number; frames: number }> | null = null;
   try {
     const quantized = quantizeTimeline(next, fps);
@@ -104,6 +111,19 @@ export function describeDurationImpact(
     frameError = errorMessage(error);
     if (error instanceof ZeroFrameShotError) {
       zeroFrameShotIndex = error.shotIndex;
+      if (beforeFrames === null) {
+        // 同一份累计边界帧数学检查全部零帧：首个报错镜头可能遮住本次
+        // 新造的零帧。只允许零帧集合严格缩小且没有新增成员的修复。
+        try {
+          const beforeZeros = new Set(zeroFrameShotIndexes(current, fps));
+          const afterZeros = zeroFrameShotIndexes(next, fps);
+          partialRepairAllowed =
+            afterZeros.length < beforeZeros.size &&
+            afterZeros.every((index) => beforeZeros.has(index));
+        } catch {
+          partialRepairAllowed = false;
+        }
+      }
     }
   }
 
@@ -138,6 +158,7 @@ export function describeDurationImpact(
     changed,
     shotIndex,
     zeroFrameShotIndex,
+    partialRepairAllowed,
     beforeFrames,
     afterFrames,
     frameError,
@@ -154,18 +175,7 @@ export function durationApplyError(
   if (impact === null || !impact.changed) return null;
   // transitionIssue 仍只警告不拦：导出期已是 fail-loud，编辑期不重复拦。
   if (impact.frameError === null) return null;
-  // 当前文档本来就无法量化（存量零帧）：这次改动只修好了本镜头，其余零帧
-  // 镜头仍会在提示里点名；放行它，否则多个零帧镜头互相锁死。只有本次镜头
-  // 改后自己仍为零帧才拦。
-  // 已知边界：quantizeTimeline 只报第一个零帧镜头，所以序号更小的存量零帧
-  // 会遮住本次镜头——[1,1000] 把镜头 2 再改小也会被放行。此时文档本就不可
-  // 量化、页面已降级为"不可预览"（不会白屏），提示仍点名实际报错镜头；
-  // 要求逐镜头零帧检查时再收紧。
-  if (
-    impact.beforeFrames === null &&
-    impact.zeroFrameShotIndex !== impact.shotIndex
-  ) {
-    return null;
-  }
+  // 存量坏项目允许逐镜头修复，但不能把新的零帧借前面的报错掩盖掉。
+  if (impact.partialRepairAllowed) return null;
   return `无法应用：${impact.frameError}`;
 }

@@ -4,6 +4,7 @@ import {
   mapGlobalFrame,
   quantizeTimeline,
   ZeroFrameShotError,
+  zeroFrameShotIndexes,
 } from "./quantize.js";
 
 test("30×1100ms 在 24fps 总长恰为 792 帧（33.0s），30fps 恰为 990 帧", () => {
@@ -29,6 +30,18 @@ test("每个切点距理想位置 ≤ 半帧", () => {
 });
 test("三个 1ms 镜头在 24fps 下抛 ZeroFrameShotError", () => {
   assert.throws(() => quantizeTimeline([1, 1, 1], 24), ZeroFrameShotError);
+});
+
+test("零帧诊断列出全部镜头，不只报告第一个", () => {
+  assert.deepEqual(zeroFrameShotIndexes([1, 1], 24), [0, 1]);
+  assert.deepEqual(zeroFrameShotIndexes([1, 1000], 24), [0]);
+  assert.deepEqual(zeroFrameShotIndexes([2000, 2000], 24), []);
+});
+
+test("零帧诊断与累计边界量化一致，能发现相邻镜头被位移压成零帧", () => {
+  assert.deepEqual(zeroFrameShotIndexes([1000, 40], 24), []);
+  assert.deepEqual(zeroFrameShotIndexes([980, 40], 24), [1]);
+  assert.throws(() => zeroFrameShotIndexes([0, 1000], 24), /正整数/);
 });
 test("1100ms×30 在 24fps 下任意镜头不为 0 帧", () => {
   const q = quantizeTimeline(

@@ -18,10 +18,7 @@ export type QuantizedTimeline = {
 // ADR 0003 §3.5：按累计边界取整，禁止逐镜头取整（会累积跨 fps 漂移）。
 // B_0 = 0，B_i = round_half_up((Σ durations 1..i) × fps / 1000)，镜头 i 的帧数 = B_i − B_{i−1}。
 // 零帧镜头是编排错误：拒绝并给出可操作提示，不静默丢帧也不补帧。
-export function quantizeTimeline(
-  durationsMs: number[],
-  fps: number,
-): QuantizedTimeline {
+function frameBoundaries(durationsMs: number[], fps: number): number[] {
   if (!Array.isArray(durationsMs) || durationsMs.length === 0)
     throw new Error("durationsMs 不能为空");
   if (!Number.isFinite(fps) || fps <= 0) throw new Error("fps 必须为正数");
@@ -33,6 +30,29 @@ export function quantizeTimeline(
     cumulative += d;
     boundary.push(roundHalfUp((cumulative * fps) / 1000));
   });
+  return boundary;
+}
+
+// 与正式量化共用累计边界，列出全部零帧镜头。编辑器修复存量坏项目时
+// 需要比较改动前后的全集；quantizeTimeline 的首个异常不足以证明本次
+// 编辑没有引入新的零帧。
+export function zeroFrameShotIndexes(
+  durationsMs: number[],
+  fps: number,
+): number[] {
+  const boundary = frameBoundaries(durationsMs, fps);
+  const indexes: number[] = [];
+  for (let i = 0; i < durationsMs.length; i++) {
+    if (boundary[i + 1]! - boundary[i]! <= 0) indexes.push(i);
+  }
+  return indexes;
+}
+
+export function quantizeTimeline(
+  durationsMs: number[],
+  fps: number,
+): QuantizedTimeline {
+  const boundary = frameBoundaries(durationsMs, fps);
   const shots = durationsMs.map((_, i) => {
     const frames = boundary[i + 1]! - boundary[i]!;
     if (frames <= 0) throw new ZeroFrameShotError(i);

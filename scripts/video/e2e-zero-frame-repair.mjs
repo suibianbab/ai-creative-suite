@@ -6,6 +6,7 @@
 //      文档时长仍为 2000（零帧时长不得进文档）。
 //   C. 1ms 3D 镜头（three 场景源）进编辑态仍有时长入口，改回 2s 后场景源仍是 three，
 //      版本时长与 spec.durationMs 同步为 2000。
+//   D. 已有零帧镜头不能掩盖本次新造的零帧：第二镜头改成 1ms 必须被拦截。
 // 前置: @acs/web dev server 已在 BASE_URL（建议经 scripts/dev/proxy-3211.mjs）；
 //       packages/{video-document,video-scene} 已 build。
 // exit 0 = 三个场景全部成立；任何一步失败 exit 1 并打印步骤名。
@@ -142,6 +143,7 @@ for (const name of [
   "a-after-fix.video-project.json",
   "b-blocked.video-project.json",
   "c-three-after-fix.video-project.json",
+  "d-existing-zero-blocked.video-project.json",
 ]) {
   rmSync(path.join(OUT_DIR, name), { force: true });
 }
@@ -435,6 +437,43 @@ console.log(
   `[e2e-zero-frame-repair] C4/C5 3D 镜头修复：type=three，组件=${cWorking.sceneSource.spec.componentId}，版本/spec 时长同步 2000ms`,
 );
 
+// ============================== 步骤 D ==============================
+const fixtureD = makeProject({
+  title: "存量零帧掩盖回归 D",
+  sentence: "回归：已有零帧不能掩盖本次新造的零帧",
+  shots: [
+    makeShot({ order: 0, durationMs: 1, title: "已有零帧", seed: 301 }),
+    makeShot({ order: 1, durationMs: 1000, title: "正常镜头", seed: 302 }),
+  ],
+});
+const fixtureDFile = writeFixture(fixtureD, "zero-frame-d");
+await gotoWorkbench("D1 回到工作台");
+await importFixture(fixtureDFile, "D2 导入夹具 D");
+const dShot2 = cardAt(1);
+await dShot2.locator(".shot-edit-toggle").click();
+await dShot2.locator(".shot-duration-input").fill("0.001");
+await dShot2.locator(".shot-apply").click();
+await expectVisibleScoped(
+  dShot2.locator(".shot-edit-error"),
+  "D3 存量零帧不能掩盖新零帧",
+  ".shot-edit-error",
+);
+const dError = await dShot2.locator(".shot-edit-error").textContent();
+if (!dError?.startsWith("无法应用："))
+  fail(
+    "D3 存量零帧不能掩盖新零帧",
+    `错误文案不以「无法应用：」开头: ${dError}`,
+  );
+const exportedD = await exportJson(
+  "D4 导出",
+  path.join(OUT_DIR, "d-existing-zero-blocked.video-project.json"),
+);
+if (workingVersion(exportedD, 1)?.durationMs !== 1000)
+  fail("D4 导出", "镜头 2 的零帧草稿被错误落库");
+console.log(
+  "[e2e-zero-frame-repair] D3/D4 存量零帧未掩盖新零帧：应用被拒，镜头 2 仍为 1000ms",
+);
+
 // ============================== 收尾断言 ==============================
 await page.screenshot({
   path: path.join(OUT_DIR, "zero-frame-repair.png"),
@@ -448,7 +487,7 @@ if (usageAfter !== usageBefore)
 
 await browser.close();
 console.log(
-  "[e2e-zero-frame-repair] OK: A 零帧逐个修复+持久化、B 零帧反例被拦、C 1ms 3D 时长修复，全部成立",
+  "[e2e-zero-frame-repair] OK: A 零帧逐个修复+持久化、B/D 零帧反例被拦、C 1ms 3D 时长修复，全部成立",
 );
 console.log(
   `[e2e-zero-frame-repair] 控制台 error 0 条；tts-usage.jsonl ${usageBefore} → ${usageAfter} 行（零 TTS）`,
@@ -461,3 +500,4 @@ console.log("  B PASS 合法项目改 0.001s → 「无法应用：…」→ 文
 console.log(
   "  C PASS 1ms three 镜头时长输入可见 → 改 2s → 仍为 three，spec 同步 2000ms",
 );
+console.log("  D PASS 存量零帧存在时新造零帧被拦 → 镜头 2 仍为 1000ms");

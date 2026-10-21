@@ -269,6 +269,19 @@ test("存量零帧且本镜头改后仍零帧：拦截", () => {
   assert.notEqual(durationApplyError(impact), null);
 });
 
+test("存量零帧不能遮住本次新造的零帧", () => {
+  const impact = describeDurationImpact(projectWith([1, 1000]), 1, 1);
+  assert.equal(impact.beforeFrames, null);
+  assert.equal(impact.zeroFrameShotIndex, 0); // 量化器只抛第一个
+  assert.match(durationApplyError(impact) ?? "", /无法应用/);
+});
+
+test("存量零帧未减少时不能把无进展的时长修订落库", () => {
+  const impact = describeDurationImpact(projectWith([1, 1000]), 1, 900);
+  assert.equal(impact.beforeFrames, null);
+  assert.match(durationApplyError(impact) ?? "", /无法应用/);
+});
+
 test("应用闸门：无影响对象或时长未改时放行", () => {
   assert.equal(durationApplyError(null), null);
   // 越界哨兵与时长未变都走 changed=false，不拦应用。
