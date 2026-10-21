@@ -156,6 +156,7 @@ git commit -m "feat(video-document): 新增 three 场景源与 3D 渲染证据�
 - Create: `scripts/video/three/components/orbit3d.mjs`
 - Create: `scripts/video/three/spec.mjs`
 - Test: `scripts/video/three-registry.test.mjs`
+- Modify: `package.json`、`pnpm-lock.yaml`（根 devDependencies 加 `"three": "0.186.1"`，精确版本）
 
 **Interfaces:**
 - Produces:
@@ -201,6 +202,8 @@ Expected: `ERR_MODULE_NOT_FOUND`（模块尚不存在）。
 
 - [ ] **Step 3: 实现**
 
+先装依赖（根目录）：`pnpm add -D -E three@0.186.1`，装完确认 `node -e "console.log(require('three/package.json').version)"` 输出 `0.186.1`。
+
 - `registry.mjs`：`Map` 键 `${componentId}@${version}`，重复注册抛 `Error`（中文），`get` 查不到抛 `UnknownThreeComponentError`；单例末尾 `register(orbit3d)`。
 - `components/orbit3d.mjs`：常量 + 参数规范化 + 场景构建 + `pose`。所有 three 对象都由传入的 `THREE` 构造，文件顶层零 import。
 - `spec.mjs`：结构校验（与 validate.ts 同口径，错误信息带字段路径）+ 字节上限 256 KiB + `registry.get` + `component.validateParams`。
@@ -213,7 +216,7 @@ Expected: 9 pass。
 - [ ] **Step 5: 提交**
 
 ```bash
-git add scripts/video/three scripts/video/three-registry.test.mjs
+git add package.json pnpm-lock.yaml scripts/video/three scripts/video/three-registry.test.mjs
 git commit -m "feat(video): 新增 3D 场景注册表与 orbit3d 组件"
 ```
 
@@ -228,7 +231,6 @@ git commit -m "feat(video): 新增 3D 场景注册表与 orbit3d 组件"
 - Modify: `scripts/video/render-scene.mjs`（改为 import 抽出的 `sha256File`）
 - Create: `scripts/video/bake-three.mjs`
 - Test: `scripts/video/three-bake.test.mjs`
-- Modify: `package.json`（根 devDependencies 加 `"three": "0.186.1"`）
 
 **Interfaces:**
 - Produces:
@@ -306,7 +308,7 @@ Expected: 单测全绿；真实烘焙 exit 0，打印每画幅的 `framesDigest`
 - [ ] **Step 5: 提交**
 
 ```bash
-git add package.json pnpm-lock.yaml scripts/video/three scripts/video/bake-three.mjs scripts/video/three-bake.test.mjs scripts/video/sha256-file.mjs scripts/video/render-scene.mjs scripts/video/fixtures/three-sample.video-project.json
+git add scripts/video/three scripts/video/bake-three.mjs scripts/video/three-bake.test.mjs scripts/video/sha256-file.mjs scripts/video/render-scene.mjs scripts/video/fixtures/three-sample.video-project.json
 git commit -m "feat(video): three.js 逐帧烘焙内核与确定性证据"
 ```
 
