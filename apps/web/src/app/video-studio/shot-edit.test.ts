@@ -5,6 +5,7 @@ import { planFromSentence, reseedSpecParams } from "./planner.js";
 import {
   attachDescription,
   buildRevisePatch,
+  draftDurationMs,
   draftFromWorking,
   type ShotEditDraft,
   speechOverflowMs,
@@ -59,6 +60,24 @@ test("draftFromWorking：非文字动画的标题草稿为空（不经标题输�
     spec,
   );
   assert.equal(d.title, "");
+});
+
+test("draftDurationMs：秒转毫秒并取整", () => {
+  assert.deepEqual(draftDurationMs(draft({ durationSeconds: 2 })), {
+    durationMs: 2000,
+  });
+});
+
+test("draftDurationMs：小于 1ms 拒绝", () => {
+  const result = draftDurationMs(draft({ durationSeconds: 0.0004 }));
+  assert.ok("error" in result);
+  assert.equal(result.error, "时长须在 0.001s–600s 之间");
+});
+
+test("draftDurationMs：超过 600s 拒绝", () => {
+  const result = draftDurationMs(draft({ durationSeconds: 600.0005 }));
+  assert.ok("error" in result);
+  assert.equal(result.error, "时长须在 0.001s–600s 之间");
 });
 
 test("buildRevisePatch：坏背景色拒绝", () => {

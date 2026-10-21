@@ -62,6 +62,17 @@ export function attachDescription<T extends object>(
   return { patch: { ...patch, description } };
 }
 
+// 草稿时长（秒）→ 文档毫秒：四个编辑臂共用同一校验口径。
+export function draftDurationMs(
+  draft: ShotEditDraft,
+): { durationMs: number } | { error: string } {
+  const durationMs = Math.round(draft.durationSeconds * 1000);
+  if (!Number.isFinite(durationMs) || durationMs < 1 || durationMs > 600000) {
+    return { error: "时长须在 0.001s–600s 之间" };
+  }
+  return { durationMs };
+}
+
 // 语速溢出（spec R5）：>0 表示旁白按语速估计超出当前时长草稿。
 export function speechOverflowMs(draft: ShotEditDraft): number {
   const durationMs = Math.round(draft.durationSeconds * 1000);
@@ -81,10 +92,11 @@ export function buildRevisePatch(
   if (!HEX.test(draft.background)) {
     return { patch: null, error: "背景色须为 #rrggbb 六位十六进制" };
   }
-  const durationMs = Math.round(draft.durationSeconds * 1000);
-  if (!Number.isFinite(durationMs) || durationMs < 1 || durationMs > 600000) {
-    return { patch: null, error: "时长须在 0.001s–600s 之间" };
+  const duration = draftDurationMs(draft);
+  if ("error" in duration) {
+    return { patch: null, error: duration.error };
   }
+  const durationMs = duration.durationMs;
   let seed = spec.seed;
   let params = spec.params;
   if (spec.componentId === "text-animation") {
