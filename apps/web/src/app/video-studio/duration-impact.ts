@@ -83,12 +83,14 @@ export function describeDurationImpact(
   }
 
   let transitionIssue: string | null = null;
-  // 只有与本次改动相邻的边界（shotIndex - 1 / shotIndex）会因这次改时长
-  // 而改变借帧余量；远处转场的窗口依赖的 span 没动。文档校验只查转场
-  // 形状/取值范围、不查逐帧容量（packages/video-document/src/validate.ts），
-  // 因此别处既有的非法转场不该算在本次编辑头上——只把相邻转场交给
-  // resolveTransitionWindows，它同时校验逐条与相邻合计借帧，错误信息即
-  // 出片期的真实拒绝原因。
+  // 只解析直接挂在本次改动镜头 span 上的两条相邻边界（shotIndex - 1 /
+  // shotIndex）：它们的借帧余量被这次改时长直接影响。更远的转场要么与
+  // 本镜头无关，要么只因累计边界量化的取整而整体偏移 ±1 帧，都不该算在
+  // 本次编辑头上（文档校验只查转场形状/取值范围、不查逐帧容量，见
+  // packages/video-document/src/validate.ts，别处既有非法转场也不能连坐）。
+  // 交给 resolveTransitionWindows 只覆盖相邻两条：逐条与相邻合计借帧都会
+  // 校验，错误信息即出片期对这些相邻窗口的真实拒绝原因；±1 帧取整导致
+  // 远处转场失效的情形不在行内提示，出片期仍 fail-loud。
   const adjacentTransitions = (project.transitions ?? []).filter(
     (transition) =>
       transition.boundary === shotIndex - 1 ||

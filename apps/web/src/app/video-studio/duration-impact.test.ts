@@ -95,6 +95,19 @@ test("相邻转场借帧失效：给出可操作提示", () => {
   const impact = describeDurationImpact(project, 0, 100);
   assert.match(impact.transitionIssue ?? "", /超出相邻 span/);
   assert.equal(impact.frameError, null);
+  // 转场问题只警告不拦应用：应用闸门必须忽略 transitionIssue。
+  assert.equal(durationApplyError(impact), null);
+});
+
+test("boundary 等于 shotIndex - 1 的相邻转场也要解析", () => {
+  // 编辑镜头 2（shotIndex=1）时，boundary 0 = shotIndex - 1 必须进解析；
+  // 只保留 boundary === shotIndex 的变异体会漏掉这条并返回 null。
+  const project = projectWith(
+    [1000, 1000],
+    [{ boundary: 0, kind: "fade", durationMs: 2000 }],
+  );
+  const impact = describeDurationImpact(project, 1, 2000);
+  assert.notEqual(impact.transitionIssue, null);
 });
 
 test("无转场：不报转场问题", () => {
