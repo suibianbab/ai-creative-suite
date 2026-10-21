@@ -3,7 +3,7 @@
 //   临时目录 D:/tmp/acs-interactive-e2e-<rand>/：复制夹具 → 导出两次（第二次前清空输出）
 //   → 双跑 SHA-256 相同 → 交付记录断言 → Chromium 打开 index.html 真实点击/键盘
 //   → 宿主页 frameLocator 内点击 → 零非文档请求 / 控制台零 error
-//   → 非 spec 镜头失败路径 exit 1 且指名镜头号 → 写证据 → 清理临时目录。
+//   → 非 spec 镜头失败路径 exit 1 且指名镜头号 → 留存证据 → 清理临时目录。
 // 退出码: 0 = 全部断言通过；1 = `[e2e-interactive] FAIL at <步骤>: <原因>`。
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -31,14 +31,16 @@ const FIXTURE = path.join(
 );
 const CLI = path.join(ROOT, "scripts/video/export-interactive.mjs");
 const USAGE_LEDGER = path.join(ROOT, "artifacts/tts-usage.jsonl");
-const EVIDENCE = path.join(
-  ROOT,
-  "artifacts/video-studio-interactive/evidence.md",
-);
+const EVIDENCE_DIR = path.join(ROOT, "artifacts/video-studio-interactive");
+const EVIDENCE = path.join(EVIDENCE_DIR, "evidence.md");
+const EVIDENCE_INDEX = path.join(EVIDENCE_DIR, "index.html");
+const EVIDENCE_HOST = path.join(EVIDENCE_DIR, "host.html");
+const EVIDENCE_PROJECT = path.join(EVIDENCE_DIR, "e2e.video-project.json");
 const EXPECTED_STEPS = 3;
 const EXPECTED_FRAME_MAP = [24, 37, 24];
 
-// fail() 在退出前尽力关闭浏览器并清理临时目录；模块级变量避免 TDZ。
+// fail()/顶层 catch 在退出前尽力关闭浏览器并清理临时目录；模块级变量的目的是让两条
+// 路径都能访问到同一份引用（进程内其他异常也不会漏掉清理）。
 let browser = null;
 let tempDir = null;
 
@@ -52,19 +54,25 @@ function cleanupTemp() {
   if (!tempDir) return;
   try {
     rmSync(tempDir, { recursive: true, force: true });
+    tempDir = null;
   } catch {
     // 清理失败不能掩盖原始失败原因。
   }
 }
 
-async function fail(step, error) {
-  console.error(`[e2e-interactive] FAIL at ${step}: ${describeError(error)}`);
+async function cleanupAll() {
   try {
     await browser?.close();
   } catch {
     // 关闭失败不掩盖原始失败原因。
   }
+  browser = null;
   cleanupTemp();
+}
+
+async function fail(step, error) {
+  console.error(`[e2e-interactive] FAIL at ${step}: ${describeError(error)}`);
+  await cleanupAll();
   process.exit(1);
 }
 
@@ -90,6 +98,18 @@ function usageLines() {
     if (error?.code === "ENOENT") return 0;
     throw error;
   }
+}
+
+// spec §5.2：产物必须自包含（零外部引用、零网络 API、中文 lang）。
+// SVG 的 `xmlns=` 是命名空间声明，不在禁列；按外部引用/网络调用的键名收窄。
+function assertSelfContained(html) {
+  for (const token of ["src=", "href=", "<link", "fetch(", "XMLHttpRequest"])
+    assert.ok(
+      !html.includes(token),
+      `index.html 不应含外部引用/网络调用: ${token}`,
+    );
+  assert.ok(html.includes('lang="zh-CN"'), 'index.html 缺少 lang="zh-CN"');
+  assert.ok(html.includes('data-total="3"'), "data-total 不是 3");
 }
 
 // 清空 --out 后跑一次 CLI：out 目录必须由本次运行重新生成。
@@ -197,9 +217,9 @@ async function main() {
     };
   });
 
-  const delivery1 = await at("交付记录 run1", () => {
+  const delivery1 = await at("自包含与交付记录 run1", () => {
     const html = readFileSync(run1.htmlPath, "utf8");
-    assert.ok(html.includes('data-total="3"'), "data-total 不是 3");
+    assertSelfContained(html);
     const project = validateVideoProject(
       JSON.parse(readFileSync(projectPath, "utf8")),
     );
@@ -413,6 +433,8 @@ async function main() {
     const message = `${result.stdout ?? ""}${result.stderr ?? ""}`.trim();
     assert.equal(result.status, 1, `CLI 应 exit 1，实际 ${result.status}`);
     assert.match(message, /镜头 2/, "失败文案未指名镜头 2");
+    assert.match(message, /不是 spec/, "失败文案未说明「不是 spec」");
+    assert.match(message, /media-clip/, "失败文案未点明 media-clip");
     assert.ok(
       !existsSync(path.join(failureOut, "index.html")),
       "失败路径不应产出 index.html",
@@ -425,11 +447,14 @@ async function main() {
     return message;
   });
 
-  // —— 证据（untracked，不入库） ——
+  // —— 证据留存（spec §7，全部 untracked、不入库；先复制再删临时目录） ——
   const usageAfter = await at("计费台账（读取后）", () => usageLines());
-  await at("证据", () => {
+  await at("证据留存", () => {
     assert.equal(usageAfter, usageBefore, "TTS 台账行数发生变化");
-    mkdirSync(path.dirname(EVIDENCE), { recursive: true });
+    mkdirSync(EVIDENCE_DIR, { recursive: true });
+    copyFileSync(run2.htmlPath, EVIDENCE_INDEX);
+    copyFileSync(hostPath, EVIDENCE_HOST);
+    copyFileSync(projectPath, EVIDENCE_PROJECT);
     writeFileSync(
       EVIDENCE,
       [
@@ -438,6 +463,8 @@ async function main() {
         "- 日期：2026-10-21",
         "- 命令：`node scripts/video/e2e-interactive.mjs`（Playwright Chromium，headless）",
         `- 夹具：\`scripts/video/fixtures/interactive-sample.video-project.json\`（复制到临时目录 \`${tempDir}\`，tracked 夹具未改动）`,
+        "- 留存文件（均 untracked，不入库）：`index.html`（导出产物）、`host.html`（iframe 宿主页）、`e2e.video-project.json`（两次导出后的项目 JSON，含 2 条交付记录）",
+        '- 自包含：无 `src=`/`href=`/`<link`/`fetch(`/`XMLHttpRequest`；含 `lang="zh-CN"` 与 `data-total="3"`',
         `- 步骤数：${EXPECTED_STEPS}（\`data-total="3"\`）`,
         `- frameMap：${JSON.stringify(EXPECTED_FRAME_MAP)}（共 ${EXPECTED_FRAME_MAP.reduce((sum, frames) => sum + frames, 0)} 帧）`,
         `- index.html 字节数：${run1.bytes}（双跑一致）`,
@@ -461,4 +488,10 @@ async function main() {
   );
 }
 
-await main();
+// 顶层兜底：main() 内未被 at() 包裹的意外异常（夹具读取/JSON.parse 等）也统一报错、
+// 关闭浏览器并删除临时目录，避免以裸堆栈结束。
+await main().catch(async (error) => {
+  console.error(`[e2e-interactive] FAIL at 启动: ${describeError(error)}`);
+  await cleanupAll();
+  process.exit(1);
+});
