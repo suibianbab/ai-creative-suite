@@ -7,7 +7,6 @@
 import { spawn, spawnSync } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
 import {
-  createReadStream,
   existsSync,
   mkdirSync,
   readFileSync,
@@ -33,6 +32,7 @@ import {
   parseTailYavg,
   verifyMediaAssets,
 } from "./render-scene.media.mjs";
+import { sha256File } from "./sha256-file.mjs";
 import { buildNarrationEntries, readSubtitleCues } from "./tts-sse.mjs";
 
 const ROOT = path.resolve(
@@ -69,17 +69,6 @@ function fail(message) {
 
 function sha256(data) {
   return createHash("sha256").update(data).digest("hex");
-}
-
-// P2.5-T4 G3：大文件流式 sha256（original 可达数百 MB，不整读内存）。
-async function sha256File(file) {
-  return await new Promise((resolve, reject) => {
-    const hash = createHash("sha256");
-    createReadStream(file)
-      .on("data", (chunk) => hash.update(chunk))
-      .on("error", reject)
-      .on("end", () => resolve(hash.digest("hex")));
-  });
 }
 
 // P2.5-T4：文件服务端口等待共体（旁白/媒体两用；10s 超时 + 提前退出竞速 +
