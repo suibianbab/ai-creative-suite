@@ -9,13 +9,17 @@ import { createHash, randomUUID } from "node:crypto";
 import {
   existsSync,
   mkdirSync,
+  mkdtempSync,
   readFileSync,
+  rmSync,
   statSync,
   writeFileSync,
 } from "node:fs";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
+import { bakeThreeShots, buildBakeJobs } from "./bake-three.mjs";
 import { browserLabel } from "./env-info.mjs";
 import {
   buildProjectDryRunJobs,
@@ -26,13 +30,14 @@ import {
   buildHasAudioTrack,
   buildManifestMedia,
   buildShotAssetDigests,
-  buildTimelineShotMedia,
   collectMediaShots,
   isBlackTail,
   parseTailYavg,
   verifyMediaAssets,
 } from "./render-scene.media.mjs";
+import { buildTimelineProps, DIMENSIONS } from "./render-scene.props.mjs";
 import { sha256File } from "./sha256-file.mjs";
+import { validateThreeSpec } from "./three/spec.mjs";
 import { buildNarrationEntries, readSubtitleCues } from "./tts-sse.mjs";
 
 const ROOT = path.resolve(
@@ -43,7 +48,6 @@ const CHROME = "C:/Program Files/Google/Chrome/Application/chrome.exe";
 const FONT_REL =
   "packages/remotion-engine/src/assets/fonts/NotoSansSC-Regular.woff";
 const FPS = 24;
-const DIMENSIONS = { landscape: [1280, 720], portrait: [720, 1280] };
 
 // scripts/ 不进 workspace 包图，按预检裁决用相对路径引 dist。
 const { canonicalJson, quantizeTimeline, validateVideoProject } = await import(
@@ -139,6 +143,21 @@ function probe(video) {
   return JSON.parse(result.stdout);
 }
 
+// P3-B（R7）：RenderRecord.three 证据——七个字段与 video-document 的校验逐项
+// 对齐；componentId/componentVersion 取规范化 spec，其余来自烘焙层。
+function buildThreeRecordEvidence(spec, baked, shotIndex, aspect) {
+  if (!baked) fail(`镜头 ${shotIndex + 1} 缺少 ${aspect} 画幅的 3D 烘焙结果`);
+  return {
+    componentId: spec.componentId,
+    componentVersion: spec.componentVersion,
+    threeVersion: baked.threeVersion,
+    chromiumVersion: baked.chromiumVersion,
+    glRenderer: baked.glRenderer,
+    framesDigest: baked.framesDigest,
+    clipSha256: baked.clipSha256,
+  };
+}
+
 const { values } = parseArgs({
   options: {
     project: { type: "string" },
@@ -168,8 +187,9 @@ try {
   fail(`项目校验失败: ${error.message}`);
 }
 
-// 2. 全镜头 working version 的 spec | media-clip（多镜头整片；单镜头是 N=1 特例）
+// 2. 全镜头 working version 的 spec | media-clip | three（多镜头整片；单镜头是 N=1 特例）
 // P2.5-T4：媒体镜头不验 spec（无 params），资产核验在下方 G3 块统一做。
+// P3-B Task 4：three 镜头验注册表深度，烘焙在干跑之后、Remotion 之前。
 const shotEntries = project.shots.map((shot, index) => {
   const version = shot.contentVersions.find(
     (candidate) => candidate.versionId === shot.workingVersionId,
@@ -191,8 +211,23 @@ const shotEntries = project.shots.map((shot, index) => {
   if (version.sceneSource.type === "media-clip") {
     return { shot, version, media: version.sceneSource };
   }
+  // P3-B Task 4：three 镜头做注册表深度校验（结构规则已在 validateVideoProject
+  // 唯一实现）；durationMs 等式与 spec 镜头同口径再核一次。
+  if (version.sceneSource.type === "three") {
+    let spec;
+    try {
+      spec = validateThreeSpec(version.sceneSource.spec);
+    } catch (error) {
+      fail(`镜头 ${index + 1} 3D 场景校验失败: ${error.message}`);
+    }
+    if (spec.durationMs !== version.durationMs)
+      fail(
+        `镜头 ${index + 1} 3D spec.durationMs(${spec.durationMs}) 与 ContentVersion.durationMs(${version.durationMs}) 不一致`,
+      );
+    return { shot, version, three: spec };
+  }
   fail(
-    `镜头 ${index + 1} 的 sceneSource 既非 spec 也非 media-clip（出片仅支持这两种）`,
+    `镜头 ${index + 1} 的 sceneSource 既非 spec、media-clip 也非 three（出片仅支持这三种）`,
   );
 });
 if (shotEntries.length === 0) fail("项目没有镜头，无法出片");
@@ -344,8 +379,55 @@ if (!values["skip-dryrun"]) {
   console.log("[render-scene] 干跑全部通过");
 }
 
-// 4. 逐 aspect 渲染整片 + ffprobe 校验
+// 3.6 P3-B Task 4：three 镜头烘焙（干跑之后、Remotion 之前，一次烘完所有画幅）。
+// 产物落在独立临时目录（<root>/original/<storeKey>.mp4），由第二台 media-server
+// 以 http 托管给 OffthreadVideo（与媒体仓服务同款白名单 + exit 钩子兜杀）。
+// 清理必须挂 process.on("exit")：fail() 走 process.exit(1)，成功路径也是顶层
+// 脚本自然退出——没有一处 finally 能覆盖全部退出路径。
 const aspects = project.brief.aspectTargets;
+const threeJobs = buildBakeJobs({ project, aspects });
+let threeTempDir = null;
+let threeServer = null;
+let threeUrlBase = null;
+let threeResult = new Map(); // `${aspect}:${shotIndex}` → 烘焙结果
+if (threeJobs.length > 0) {
+  threeTempDir = mkdtempSync(path.join(tmpdir(), "acs-three-"));
+  process.on("exit", () => threeServer?.kill());
+  process.on("exit", () => {
+    if (threeTempDir) rmSync(threeTempDir, { recursive: true, force: true });
+  });
+  const threeShotCount = new Set(threeJobs.map((job) => job.shotIndex)).size;
+  console.log(
+    `[render-scene] 3D 镜头 ${threeShotCount}/${timeline.shots.length} × ${aspects.length} 画幅烘焙中…`,
+  );
+  let baked;
+  try {
+    baked = await bakeThreeShots({ jobs: threeJobs, outDir: threeTempDir });
+  } catch (error) {
+    fail(`3D 镜头烘焙失败: ${error.message}`);
+  }
+  threeResult = new Map(
+    baked.map((item) => [`${item.aspect}:${item.shotIndex}`, item]),
+  );
+  threeServer = spawn(
+    process.execPath,
+    [
+      path.join(ROOT, "scripts/video/media-server.mjs"),
+      "--root",
+      threeTempDir,
+      "--files",
+      [...new Set(baked.map((item) => item.storeKey))].join(","),
+    ],
+    { stdio: ["ignore", "pipe", "pipe"] },
+  );
+  const threePort = await awaitServerPort(threeServer, "three-media-server");
+  threeUrlBase = `http://127.0.0.1:${threePort}`;
+  console.log(
+    `[render-scene] 3D 片段 ${baked.length} 个已烘焙并托管（端口 ${threePort}）`,
+  );
+}
+
+// 4. 逐 aspect 渲染整片 + ffprobe 校验
 const manifest = {
   generatedAt: new Date().toISOString(),
   projectId: project.id,
@@ -354,69 +436,50 @@ const manifest = {
   fontDigests,
   aspects: {},
 };
-// Timeline props：量化帧图 + 逐镜头 spec（TimelineScene 要求 spans 连续无缝）。
+// Timeline props 组装已抽成纯函数（render-scene.props.mjs，Ruling 3）：量化帧图 +
+// 逐镜头 spec | media | three（TimelineScene 要求 spans 连续无缝）。
 // 旁白（若有）：audioSrc 用装配块注入的 http://127.0.0.1:<port>/ URL（见上方探针裁决）。
 // 字幕（spec R3）：words.json 字级时间戳 → 镜头本地 cue（asset-backed 旁白轨的
-// 派生投影，缺 words → 均匀近似告警不阻断；cue 越界钳到 span）。
+// 派生投影，缺 words → 均匀近似告警不阻断；cue 越界钳到 span）。读取副作用留在
+// 调用方，props 只收预算好的 { cues }。
 const narrationByShot = new Map(
   narrationEntries.map((entry) => [entry.shotIndex, entry]),
 );
+const subtitlesByShot = new Map();
 const subtitleSummary = [];
-const timelineProps = {
-  shots: timeline.shots.map((span) => {
-    const subtitlesBlock = {};
-    if (values.narration && narrationByShot.has(span.shotIndex)) {
-      const entry = narrationByShot.get(span.shotIndex);
-      const spanMs = Math.round((span.frames / FPS) * 1000);
-      const subtitle = readSubtitleCues(
-        path.resolve(values.narration),
-        path.basename(entry.audioSrc).replace(/\.wav$/, ""),
-        shotEntries[span.shotIndex].version.narrationText ?? "",
-        spanMs,
+if (values.narration) {
+  for (const span of timeline.shots) {
+    if (!narrationByShot.has(span.shotIndex)) continue;
+    const entry = narrationByShot.get(span.shotIndex);
+    const spanMs = Math.round((span.frames / FPS) * 1000);
+    const subtitle = readSubtitleCues(
+      path.resolve(values.narration),
+      path.basename(entry.audioSrc).replace(/\.wav$/, ""),
+      shotEntries[span.shotIndex].version.narrationText ?? "",
+      spanMs,
+    );
+    if (subtitle.fallback) {
+      console.warn(
+        `[render-scene] 镜头 ${span.shotIndex + 1} 无有效字级时间戳，字幕按均匀近似（出片对齐以 words.json 为准）`,
       );
-      if (subtitle.fallback) {
-        console.warn(
-          `[render-scene] 镜头 ${span.shotIndex + 1} 无有效字级时间戳，字幕按均匀近似（出片对齐以 words.json 为准）`,
-        );
-      }
-      if (subtitle.cues.length > 0) {
-        subtitlesBlock.subtitles = { cues: subtitle.cues };
-        subtitleSummary.push({
-          shotIndex: span.shotIndex,
-          cues: subtitle.cues.length,
-          textSha256: sha256(subtitle.cues.map((cue) => cue.text).join("\n")),
-        });
-      }
     }
-    const entry = shotEntries[span.shotIndex];
-    return {
-      ...(mediaByShot.has(span.shotIndex)
-        ? buildTimelineShotMedia(
-            mediaByShot.get(span.shotIndex),
-            `${mediaUrlBase}/original/${mediaByShot.get(span.shotIndex).asset.storeKey}`,
-            FPS,
-          )
-        : { spec: entry.spec }),
-      startFrame: span.startFrame,
-      frames: span.frames,
-      ...(narrationByShot.has(span.shotIndex)
-        ? {
-            narration: {
-              audioSrc: narrationByShot.get(span.shotIndex).propsSrc,
-            },
-          }
-        : {}),
-      ...subtitlesBlock,
-    };
-  }),
-};
+    if (subtitle.cues.length > 0) {
+      subtitlesByShot.set(span.shotIndex, { cues: subtitle.cues });
+      subtitleSummary.push({
+        shotIndex: span.shotIndex,
+        cues: subtitle.cues.length,
+        textSha256: sha256(subtitle.cues.map((cue) => cue.text).join("\n")),
+      });
+    }
+  }
+}
 
 // P1 转场（Feature ④ spec R3）：project 级编排元数据透传（回读已过
 // validateVideoProject）。缺省/空不加键：props 文件与无转场现状逐字节一致
 // （A1 金标准）。manifest 摘要与画幅无关，记顶层：逐边界 kind/durationMs/换算帧窗。
-if (Array.isArray(project.transitions) && project.transitions.length > 0) {
-  timelineProps.transitions = project.transitions;
-  manifest.transitions = project.transitions.map((transition) => {
+const transitions = project.transitions;
+if (Array.isArray(transitions) && transitions.length > 0) {
+  manifest.transitions = transitions.map((transition) => {
     const left = timeline.shots[transition.boundary];
     const total = Math.round((transition.durationMs * FPS) / 1000);
     const halfOut = Math.ceil(total / 2);
@@ -434,6 +497,30 @@ for (const aspect of aspects) {
   const compositionId = `Timeline-${aspect === "landscape" ? "Landscape" : "Portrait"}`;
   const videoPath = path.join(outDir, `${aspect}.mp4`);
   const propsPath = path.join(outDir, `props-${aspect}.json`);
+  // 本画幅的 three 烘焙结果：拼接 span 帧数供 outMs 换算（画幅不同 → src/端口
+  // 相同但素材尺寸与出点不同，故 props 按画幅生成）。
+  const threeByShot = new Map();
+  for (const [key, baked] of threeResult) {
+    const separator = key.indexOf(":");
+    if (key.slice(0, separator) !== aspect) continue;
+    const shotIndex = Number(key.slice(separator + 1));
+    threeByShot.set(shotIndex, {
+      ...baked,
+      frames: timeline.shots[shotIndex].frames,
+    });
+  }
+  const timelineProps = buildTimelineProps({
+    timeline,
+    shotEntries,
+    mediaByShot,
+    threeByShot,
+    mediaUrlBase,
+    threeUrlBase,
+    narrationByShot,
+    subtitlesByShot,
+    transitions,
+    fps: FPS,
+  });
   writeFileSync(propsPath, JSON.stringify(timelineProps));
 
   const command = [
@@ -455,8 +542,12 @@ for (const aspect of aspects) {
   ];
   // 旁白资产来自本进程的 127.0.0.1 文件服务（跨源）：关掉渲染浏览器的同源策略
   // （Remotion 官方 CORS 出口）。只影响这次渲染的临时 Chrome，不影响别的。
-  // P2.5-T4（G8）：有旁白或有媒体即加——媒体虽走服务端下载，放宽无代价。
-  if (narrationEntries.length > 0 || mediaShots.length > 0)
+  // P2.5-T4（G8）：有旁白/媒体/3D 片段即加——媒体虽走服务端下载，放宽无代价。
+  if (
+    narrationEntries.length > 0 ||
+    mediaShots.length > 0 ||
+    threeJobs.length > 0
+  )
     command.push("--disable-web-security");
   // 与 render_form01.py 同款回退：系统 Chrome 存在就用它（Remotion 自带 headless shell 需额外下载）
   if (existsSync(CHROME)) {
@@ -565,7 +656,9 @@ for (const aspect of aspects) {
       versionId: shotEntries[span.shotIndex].version.versionId,
       componentId: shotEntries[span.shotIndex].media
         ? "media-clip"
-        : shotEntries[span.shotIndex].spec.componentId,
+        : shotEntries[span.shotIndex].three
+          ? shotEntries[span.shotIndex].three.componentId
+          : shotEntries[span.shotIndex].spec.componentId,
       startFrame: span.startFrame,
       frames: span.frames,
       contentDigest: contentDigests[span.shotIndex],
@@ -587,6 +680,26 @@ for (const aspect of aspects) {
     // P2.5-T4（G6）：媒体镜头逐条证据（素材指纹/入出点/源内起始帧/原声通道）
     ...(mediaShots.length > 0
       ? { media: buildManifestMedia(mediaShots, timeline, FPS) }
+      : {}),
+    // P3-B Task 4：3D 镜头逐条证据（逐帧哈希 + 片段摘要 + 渲染器/版本）；无
+    // three 镜头的项目不得多键（manifest 与旧输出一致）。
+    ...(threeByShot.size > 0
+      ? {
+          three: {
+            shots: [...threeByShot.entries()]
+              .sort(([left], [right]) => left - right)
+              .map(([shotIndex, baked]) => ({
+                shotIndex,
+                componentId: shotEntries[shotIndex].three.componentId,
+                componentVersion: shotEntries[shotIndex].three.componentVersion,
+                threeVersion: baked.threeVersion,
+                chromiumVersion: baked.chromiumVersion,
+                glRenderer: baked.glRenderer,
+                frameHashes: baked.frameHashes,
+                framesDigest: baked.framesDigest,
+              })),
+          },
+        }
       : {}),
     // P1 字幕证据（spec R5）：逐镜头 cue 数与文本 SHA-256（烧进画面的派生投影摘要）
     ...(subtitleSummary.length > 0 ? { subtitleCues: subtitleSummary } : {}),
@@ -612,6 +725,17 @@ for (const aspect of aspects) {
             ),
           }
         : {}),
+      // P3-B（R7）：3D 镜头专属证据——组件版本/渲染器/逐帧摘要/片段摘要。
+      ...(entry.three
+        ? {
+            three: buildThreeRecordEvidence(
+              entry.three,
+              threeByShot.get(span.shotIndex),
+              span.shotIndex,
+              aspect,
+            ),
+          }
+        : {}),
       engineId: "remotion",
       engineVersion: String(defaultRegistry.version),
       rendererVersion: remotionVersion,
@@ -630,6 +754,7 @@ for (const aspect of aspects) {
 // 5. 回写项目（追加后重校验 + savedVersion 递增）
 if (narrationServer) narrationServer.kill();
 if (mediaServer) mediaServer.kill();
+if (threeServer) threeServer.kill();
 project.savedVersion += 1;
 validateVideoProject(project);
 writeFileSync(projectPath, `${JSON.stringify(project, null, 2)}\n`);
