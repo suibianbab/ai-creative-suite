@@ -198,6 +198,64 @@ test("存量零帧项目且时长未改：不抛错，前后帧数均为 null", 
   assert.equal(impact.frameError, null);
 });
 
+test("多个零帧镜头：改好本镜头、别人仍零帧时放行", () => {
+  // [1,1] 改镜头 1 → 2000ms：改后镜头 2 仍零帧，但本次编辑的镜头已修好。
+  // 闸门必须放行，否则两个零帧镜头永远互相锁死。
+  const impact = describeDurationImpact(projectWith([1, 1]), 0, 2000);
+  assert.equal(impact.changed, true);
+  assert.equal(impact.shotIndex, 0);
+  assert.equal(impact.beforeFrames, null);
+  assert.equal(impact.afterFrames, null);
+  assert.equal(impact.zeroFrameShotIndex, 1);
+  assert.match(impact.frameError ?? "", /第 2 个镜头/);
+  assert.equal(durationApplyError(impact), null);
+});
+
+test("多个零帧镜头：编辑镜头 2 时对称放行", () => {
+  const impact = describeDurationImpact(projectWith([1, 1]), 1, 2000);
+  assert.equal(impact.changed, true);
+  assert.equal(impact.shotIndex, 1);
+  assert.equal(impact.beforeFrames, null);
+  assert.equal(impact.afterFrames, null);
+  assert.equal(impact.zeroFrameShotIndex, 0);
+  assert.match(impact.frameError ?? "", /第 1 个镜头/);
+  assert.equal(durationApplyError(impact), null);
+});
+
+test("依次修复多个零帧镜头：第二次修复后整片恢复可量化", () => {
+  const first = describeDurationImpact(projectWith([1, 1]), 0, 2000);
+  assert.equal(first.zeroFrameShotIndex, 1);
+  // 应用第一次修订后的文档是 [2000,1]。
+  const second = describeDurationImpact(projectWith([2000, 1]), 1, 2000);
+  assert.equal(second.changed, true);
+  assert.equal(second.beforeFrames, null);
+  assert.equal(second.afterFrames, 96); // 4000ms @24fps
+  assert.equal(second.frameError, null);
+  assert.equal(second.zeroFrameShotIndex, null);
+  assert.equal(durationApplyError(second), null);
+});
+
+test("合法文档改出新零帧仍必须拦截", () => {
+  // 存量零帧放行只针对"当前文档本来就无法量化"，合法文档改坏不能被放过。
+  const impact = describeDurationImpact(projectWith([2000, 1000]), 0, 1);
+  assert.equal(impact.changed, true);
+  assert.equal(impact.shotIndex, 0);
+  assert.equal(impact.beforeFrames, 72); // 3000ms @24fps
+  assert.equal(impact.afterFrames, null);
+  assert.equal(impact.zeroFrameShotIndex, 0);
+  assert.notEqual(durationApplyError(impact), null);
+});
+
+test("存量零帧且本镜头改后仍零帧：拦截", () => {
+  // 2ms @24fps 仍是零帧：本镜头没修好，闸门不能借"存量零帧"放行。
+  const impact = describeDurationImpact(projectWith([1, 1000]), 0, 2);
+  assert.equal(impact.changed, true);
+  assert.equal(impact.beforeFrames, null);
+  assert.equal(impact.afterFrames, null);
+  assert.equal(impact.zeroFrameShotIndex, 0);
+  assert.notEqual(durationApplyError(impact), null);
+});
+
 test("应用闸门：无影响对象或时长未改时放行", () => {
   assert.equal(durationApplyError(null), null);
   // 越界哨兵与时长未变都走 changed=false，不拦应用。

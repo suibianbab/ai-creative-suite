@@ -6,10 +6,16 @@ import {
   quantizeTimeline,
   resolveTransitionWindows,
   type VideoProject,
+  ZeroFrameShotError,
 } from "@acs/video-document";
 
 export type DurationImpact = {
   changed: boolean;
+  // 本次编辑的镜头序号（越界时即入参值）。
+  shotIndex: number;
+  // 改后量化失败且原因是零帧时，报错的镜头序号；否则 null。闸门用它区分
+  // "本次镜头仍为零帧"（拦）与"本次镜头修好了、别人还零帧"（放行）。
+  zeroFrameShotIndex: number | null;
   // 当前文档本身无法量化（如存量零帧镜头）时为 null，调用方按"无法量化"展示；
   // 改后仍可能量化成功，这正是把存量零帧镜头改回可出片时长的修复入口。
   beforeFrames: number | null;
@@ -46,6 +52,8 @@ export function describeDurationImpact(
   ) {
     return {
       changed: false,
+      shotIndex,
+      zeroFrameShotIndex: null,
       beforeFrames: null,
       afterFrames: null,
       frameError: `镜头序号 ${shotIndex} 越界（共 ${current.length} 个镜头）`,
@@ -70,6 +78,8 @@ export function describeDurationImpact(
     // 时长没变 → 帧数与转场窗口都不会变，直接返回，不解析转场。
     return {
       changed: false,
+      shotIndex,
+      zeroFrameShotIndex: null,
       beforeFrames,
       afterFrames: beforeFrames,
       frameError: null,
@@ -79,6 +89,7 @@ export function describeDurationImpact(
 
   let afterFrames: number | null = null;
   let frameError: string | null = null;
+  let zeroFrameShotIndex: number | null = null;
   let spans: Array<{ startFrame: number; frames: number }> | null = null;
   try {
     const quantized = quantizeTimeline(next, fps);
@@ -88,8 +99,12 @@ export function describeDurationImpact(
       frames,
     }));
   } catch (error) {
-    // 零帧镜头等编排错误：保留可操作文案，不改文档。
+    // 零帧镜头等编排错误：保留可操作文案，不改文档。记下报错镜头序号，
+    // 闸门据此判断本次编辑的镜头自己是否仍为零帧。
     frameError = errorMessage(error);
+    if (error instanceof ZeroFrameShotError) {
+      zeroFrameShotIndex = error.shotIndex;
+    }
   }
 
   let transitionIssue: string | null = null;
@@ -119,7 +134,15 @@ export function describeDurationImpact(
     }
   }
 
-  return { changed, beforeFrames, afterFrames, frameError, transitionIssue };
+  return {
+    changed,
+    shotIndex,
+    zeroFrameShotIndex,
+    beforeFrames,
+    afterFrames,
+    frameError,
+    transitionIssue,
+  };
 }
 
 // 应用闸门：零帧时长挡在 onRevise 之前——否则下一次渲染 quantizeTimeline 会抛
@@ -130,6 +153,15 @@ export function durationApplyError(
   // 不可编辑等场景没有 impact；时长未改（含越界哨兵）不拦。
   if (impact === null || !impact.changed) return null;
   // transitionIssue 仍只警告不拦：导出期已是 fail-loud，编辑期不重复拦。
-  if (impact.frameError !== null) return `无法应用：${impact.frameError}`;
-  return null;
+  if (impact.frameError === null) return null;
+  // 当前文档本来就无法量化（存量零帧）：这次改动只修好了本镜头，其余零帧
+  // 镜头仍会在提示里点名；放行它，否则多个零帧镜头互相锁死。只有本次镜头
+  // 改后自己仍为零帧才拦。
+  if (
+    impact.beforeFrames === null &&
+    impact.zeroFrameShotIndex !== impact.shotIndex
+  ) {
+    return null;
+  }
+  return `无法应用：${impact.frameError}`;
 }
