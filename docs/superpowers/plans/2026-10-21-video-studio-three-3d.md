@@ -509,9 +509,11 @@ Expected: 1 条失败（现有话术为通用「不是 spec」，不含「不支
 ```js
 if (version.sceneSource.type === "three")
   throw new Error(
-    `镜头 ${shotNumber} 是 3D 镜头（three），P3-A 交互交付不支持：帧图会超出页面体积上限`,
+    `镜头 ${shotNumber} 是 3D 镜头（three），P3-A 不支持交互交付：帧图会超出页面体积上限`,
   );
 ```
+
+话术与测试的判别点：测试断言 `/不支持交互交付/`，既有通用话术是「P3-A 交互交付不支持」（词序相反），因此 3D 专属消息必须写「不支持交互交付」——写成「交互交付不支持」会被通用话术命中，测试失去区分力（Ruling 12）。
 
 - [ ] **Step 4: 写 e2e（`scripts/video/e2e-three.mjs`）**
 
@@ -524,7 +526,7 @@ if (version.sceneSource.type === "three")
    - 出片 exit 0，`landscape.mp4` 存在且非空；
    - manifest 的 3D 证据：`glRenderer` 含 `SwiftShader`、`frameHashes` 条数 = 该镜头 span 帧数（fixture 1000ms @24fps = 24）；
    - 完整出片的 `landscape.mp4` 两次 SHA-256 相同；
-   - 非黑：用 **`spawnSync("pnpm", ["--filter","@acs/remotion-engine","exec","remotion","ffmpeg", ...])`** 跑 signalstats（与 `bake-three.mjs` 同一 ffmpeg 来源，不依赖 PATH），取 3D 镜头首帧，`YAVG > 16`；
+   - 非黑：用 **`spawnSync("pnpm", ["--filter","@acs/remotion-engine","exec","remotion","ffmpeg", ...])`**（与 `bake-three.mjs` 同一 ffmpeg 来源，不依赖 PATH）。Remotion 自带的 ffmpeg 是 `--disable-filters` 定制构建，**没有 signalstats/select/metadata**（实测 `-filters` 只剩 scale 等少量滤镜，Ruling 13），因此改为 `-frames:v 1 -vf scale=1:1:flags=area` 抽首帧 1×1 PNG，在 Node 侧解 PNG 并按 BT.601（`0.299r+0.587g+0.114b`）求亮度均值，断言 `> 16`（黑帧为 0，比 signalstats 的 YAVG=16 口径不弱）；
    - `RenderRecord` 有 `three` 字段且 `validateVideoProject` 重校验通过、`mediaAssets` 长度不变；
    - `artifacts/tts-usage.jsonl` 行数仍为 34；
    - 运行结束后 `os.tmpdir()` 下无 `acs-three-*` 残留（成功与失败路径都清理）。
