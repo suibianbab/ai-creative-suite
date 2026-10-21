@@ -1,9 +1,19 @@
 // P3-A 交互交付（Task 3）：导出管线的纯函数单测（不写盘，CLI 主路径另跑）。
 
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import {
+  copyFileSync,
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 import { validateVideoProject } from "./delivery.mjs";
 import { buildInteractiveExport } from "./export-interactive.mjs";
 
@@ -11,6 +21,7 @@ const FIXTURE = new URL(
   "./fixtures/interactive-sample.video-project.json",
   import.meta.url,
 );
+const CLI = fileURLToPath(new URL("./export-interactive.mjs", import.meta.url));
 
 function fixture() {
   return validateVideoProject(JSON.parse(readFileSync(FIXTURE, "utf8")));
@@ -69,7 +80,26 @@ test("夹具导出：3 步、正整数 frameMap、sha256(html) 摘要与 data-to
   assert.ok(html.includes('data-total="3"'));
 });
 
-test("确定性：同输入两次导出 html 逐字节一致", () => {
+test("步骤顺序按 shots[].order，与数组序无关（spec R2）", () => {
+  const original = buildInteractiveExport({
+    project: fixture(),
+    fps: 12,
+    aspect: "landscape",
+  });
+  // 深拷贝后把数组倒序，各 shot 的 order 保持不变：顺序必须仍由 order 决定。
+  const reordered = structuredClone(fixture());
+  reordered.shots.reverse();
+  const reversed = buildInteractiveExport({
+    project: reordered,
+    fps: 12,
+    aspect: "landscape",
+  });
+  assert.deepEqual(reversed.versionIds, original.versionIds);
+  assert.deepEqual(reversed.frameMap, original.frameMap);
+  assert.equal(reversed.html, original.html);
+});
+
+test("确定性：同输入两次导出 html 逐字节一致且不含项目 id/时间戳", () => {
   const first = buildInteractiveExport({
     project: fixture(),
     fps: 12,
@@ -82,6 +112,28 @@ test("确定性：同输入两次导出 html 逐字节一致", () => {
   });
   assert.equal(first.html, second.html);
   assert.equal(first.digest, second.digest);
+  // spec R6：页面不写项目 id，也不写任何 ISO 时间戳。
+  assert.ok(!first.html.includes(fixture().id));
+  assert.doesNotMatch(first.html, /\d{4}-\d{2}-\d{2}T/);
+});
+
+test("渲染期错误带镜头号，且不推荐本 CLI 没有的 --frame", () => {
+  const project = structuredClone(fixture());
+  const shot = project.shots[0];
+  const version = shot.contentVersions.find(
+    (candidate) => candidate.versionId === shot.workingVersionId,
+  );
+  version.durationMs = 1000;
+  version.sceneSource.spec.durationMs = 1000;
+  // 1000ms@24fps=24 帧；fps 1 → ceil(24/24)=1 个采样帧，触发「采样帧数 1 不足 2」。
+  assert.throws(
+    () => buildInteractiveExport({ project, fps: 1, aspect: "landscape" }),
+    (error) => {
+      assert.match(error.message, /镜头 1/);
+      assert.ok(!error.message.includes("--frame"));
+      return true;
+    },
+  );
 });
 
 test("非 spec 镜头整次拒绝：指名镜头 2 与 media-clip", () => {
@@ -119,4 +171,38 @@ test("参数门禁：fps 不整除与画幅枚举", () => {
       }),
     /landscape\/portrait/,
   );
+  // 原型链上的键（constructor/toString…）不算合法枚举。
+  assert.throws(
+    () =>
+      buildInteractiveExport({
+        project: fixture(),
+        fps: 12,
+        aspect: "constructor",
+      }),
+    /landscape\/portrait/,
+  );
+});
+
+test("CLI 成功输出：步数、帧数、字节数、交付短 id、savedVersion 与 index.html", () => {
+  const workDir = mkdtempSync(path.join(tmpdir(), "export-interactive-"));
+  try {
+    const projectPath = path.join(workDir, "sample.video-project.json");
+    const outDir = path.join(workDir, "out");
+    copyFileSync(FIXTURE, projectPath);
+
+    const stdout = execFileSync(
+      process.execPath,
+      [CLI, "--project", projectPath, "--out", outDir],
+      { encoding: "utf8" },
+    );
+
+    assert.match(stdout, /3 步/);
+    assert.match(stdout, /共 \d+ 帧/);
+    assert.match(stdout, /字节/);
+    assert.match(stdout, /DeliveryRecord [0-9a-f]{8}/);
+    assert.match(stdout, /savedVersion=2/);
+    assert.ok(existsSync(path.join(outDir, "index.html")));
+  } finally {
+    rmSync(workDir, { recursive: true, force: true });
+  }
 });

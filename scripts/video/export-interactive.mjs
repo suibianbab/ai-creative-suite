@@ -35,7 +35,7 @@ export function buildInteractiveExport({
   fps = 12,
   aspect = "landscape",
 }) {
-  if (!(aspect in DIMENSIONS))
+  if (!Object.hasOwn(DIMENSIONS, aspect))
     throw new Error(`--aspect 只认 landscape/portrait，收到 ${aspect}`);
   // 在渲染前拒绝非整除帧率：避免白跑一遍各镜头采样才报参数错。
   if (!FPS_CHOICES.includes(fps))
@@ -47,7 +47,9 @@ export function buildInteractiveExport({
   const frameMap = [];
   const steps = [];
 
-  for (const [index, shot] of project.shots.entries()) {
+  // spec R2：步骤顺序由 shots[].order 决定，数组序只保证 order 唯一（validate.ts）。
+  const ordered = [...project.shots].sort((a, b) => a.order - b.order);
+  for (const [index, shot] of ordered.entries()) {
     const shotNumber = index + 1;
     const version = shot.contentVersions.find(
       (candidate) => candidate.versionId === shot.workingVersionId,
@@ -70,33 +72,45 @@ export function buildInteractiveExport({
         `镜头 ${shotNumber} spec.durationMs(${spec.durationMs}) 与版本时长(${version.durationMs})不一致，先在工作台修订对齐`,
       );
 
-    const durationFrames = quantizeTimeline([version.durationMs], RENDER_FPS)
-      .shots[0].frames;
-    const frameCount = sampledFrameCount(durationFrames, fps);
-    const step = RENDER_FPS / fps;
-    // 与 export-shot-svg.mjs 同一帧口径：量化帧号 + 注册表渲染 + 节点预算。
-    const renderFrame = (frameIndex) => {
-      const node = defaultRegistry
-        .get(spec.componentId, spec.componentVersion)
-        .render(spec, {
-          frame: Math.round(frameIndex * step),
-          fps: RENDER_FPS,
-          durationFrames,
-          width,
-          height,
-          random: seededRandom(spec.seed),
-        });
-      assertNodeBudget(node);
-      return node;
-    };
-    const { svg } = buildAnimatedSvg({
-      renderFrame,
-      frameCount,
-      fps,
-      width,
-      height,
-      background: spec.background,
-    });
+    let frameCount;
+    let svg;
+    try {
+      const durationFrames = quantizeTimeline([version.durationMs], RENDER_FPS)
+        .shots[0].frames;
+      frameCount = sampledFrameCount(durationFrames, fps);
+      // 提前换成 CLI 自己的话术：buildAnimatedSvg 的原文推荐 --frame，本 CLI 没有该选项。
+      if (frameCount < 2)
+        throw new Error(
+          `采样帧数 ${frameCount} 不足 2，请降低 --fps 或延长镜头时长`,
+        );
+      const step = RENDER_FPS / fps;
+      // 与 export-shot-svg.mjs 同一帧口径：量化帧号 + 注册表渲染 + 节点预算。
+      const renderFrame = (frameIndex) => {
+        const node = defaultRegistry
+          .get(spec.componentId, spec.componentVersion)
+          .render(spec, {
+            frame: Math.round(frameIndex * step),
+            fps: RENDER_FPS,
+            durationFrames,
+            width,
+            height,
+            random: seededRandom(spec.seed),
+          });
+        assertNodeBudget(node);
+        return node;
+      };
+      ({ svg } = buildAnimatedSvg({
+        renderFrame,
+        frameCount,
+        fps,
+        width,
+        height,
+        background: spec.background,
+      }));
+    } catch (error) {
+      // 逐镜头上下文：渲染/采样失败必须指名镜头号，否则多镜头项目无从定位。
+      throw new Error(`镜头 ${shotNumber} 渲染失败: ${error.message}`);
+    }
 
     steps.push({ svg });
     versionIds.push(version.versionId);
@@ -131,7 +145,7 @@ async function main() {
   const fps = Number(values.fps);
   if (!Number.isInteger(fps)) fail(`--fps 必须是整数，收到 ${values.fps}`);
   const aspect = values.aspect;
-  if (!(aspect in DIMENSIONS))
+  if (!Object.hasOwn(DIMENSIONS, aspect))
     fail(`--aspect 只认 landscape/portrait，收到 ${aspect}`);
 
   const projectPath = path.resolve(values.project);
@@ -165,8 +179,9 @@ async function main() {
     digest: result.digest,
   });
   writeFileSync(projectPath, `${JSON.stringify(next, null, 2)}\n`);
+  const totalFrames = result.frameMap.reduce((sum, frames) => sum + frames, 0);
   console.log(
-    `[export-interactive] 完成: ${htmlPath}（${result.versionIds.length} 步, ${Buffer.byteLength(result.html, "utf8")} 字节）; DeliveryRecord ${delivery.deliveryId.slice(0, 8)} 已回写 ${path.basename(projectPath)} (savedVersion=${next.savedVersion})`,
+    `[export-interactive] 完成: ${htmlPath}（${result.versionIds.length} 步, 共 ${totalFrames} 帧, ${Buffer.byteLength(result.html, "utf8")} 字节）; DeliveryRecord ${delivery.deliveryId.slice(0, 8)} 已回写 ${path.basename(projectPath)} (savedVersion=${next.savedVersion})`,
   );
 }
 
