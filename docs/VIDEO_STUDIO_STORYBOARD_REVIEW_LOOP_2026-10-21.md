@@ -34,4 +34,4 @@
 
 - 帧数与借帧结论全部来自既有 `quantizeTimeline` / `resolveTransitionWindows`，**与渲染同源**，不另立帧数学、不在 UI 层重算时间线。
 - 本次验证：`scripts/video` **152**（145+7）、`@acs/video-document` **144**、`@acs/web` **219** 全绿；`biome check .` **381** 文件 clean（exit 0）。
-- **零 TTS 计费**：本计划未运行任何 TTS 命令，未传 `--narration`，台账无新增行。
+- **零 TTS 计费**：本计划未运行任何 TTS 命令，未传 `--narration`，历史基线台账 34 行不变（`artifacts/tts-usage.jsonl` 为 gitignored 未跟踪文件、未随本工作树检出，本树内无该文件可复核行数）。
