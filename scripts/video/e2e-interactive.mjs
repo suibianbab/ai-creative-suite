@@ -103,7 +103,15 @@ function usageLines() {
 // spec §5.2：产物必须自包含（零外部引用、零网络 API、中文 lang）。
 // SVG 的 `xmlns=` 是命名空间声明，不在禁列；按外部引用/网络调用的键名收窄。
 function assertSelfContained(html) {
-  for (const token of ["src=", "href=", "<link", "fetch(", "XMLHttpRequest"])
+  for (const token of [
+    "src=",
+    "href=",
+    "<link",
+    "fetch(",
+    "XMLHttpRequest",
+    "url(",
+    "srcset=",
+  ])
     assert.ok(
       !html.includes(token),
       `index.html 不应含外部引用/网络调用: ${token}`,
@@ -300,6 +308,14 @@ async function main() {
     await mainPage.locator('body[data-step="2"]').waitFor({ timeout: 5_000 });
     const stage2 = await mainPage.locator("#stage").innerHTML();
     assert.notEqual(stage2, stage1, "切步后舞台内容未变化");
+    // 动画真的在播：逐帧 SVG 用 CSS keyframes，Chromium 的 getAnimations 应非空。
+    const animationCount = await mainPage.evaluate(
+      () => document.getAnimations().length,
+    );
+    assert.ok(
+      animationCount > 0,
+      `第 2 步没有正在播放的动画（getAnimations=${animationCount}）`,
+    );
   });
 
   await at("ArrowRight → 第 3 步（下一步禁用）", async () => {
@@ -464,7 +480,7 @@ async function main() {
         "- 命令：`node scripts/video/e2e-interactive.mjs`（Playwright Chromium，headless）",
         `- 夹具：\`scripts/video/fixtures/interactive-sample.video-project.json\`（复制到临时目录 \`${tempDir}\`，tracked 夹具未改动）`,
         "- 留存文件（均 untracked，不入库）：`index.html`（导出产物）、`host.html`（iframe 宿主页）、`e2e.video-project.json`（两次导出后的项目 JSON，含 2 条交付记录）",
-        '- 自包含：无 `src=`/`href=`/`<link`/`fetch(`/`XMLHttpRequest`；含 `lang="zh-CN"` 与 `data-total="3"`',
+        '- 自包含：无 `src=`/`href=`/`<link`/`fetch(`/`XMLHttpRequest`/`url(`/`srcset=`；含 `lang="zh-CN"` 与 `data-total="3"`',
         `- 步骤数：${EXPECTED_STEPS}（\`data-total="3"\`）`,
         `- frameMap：${JSON.stringify(EXPECTED_FRAME_MAP)}（共 ${EXPECTED_FRAME_MAP.reduce((sum, frames) => sum + frames, 0)} 帧）`,
         `- index.html 字节数：${run1.bytes}（双跑一致）`,

@@ -77,11 +77,11 @@ export function buildInteractiveExport({
     try {
       const durationFrames = quantizeTimeline([version.durationMs], RENDER_FPS)
         .shots[0].frames;
-      frameCount = sampledFrameCount(durationFrames, fps);
+      frameCount = sampledFrameCount(durationFrames, fps, RENDER_FPS);
       // 提前换成 CLI 自己的话术：buildAnimatedSvg 的原文推荐 --frame，本 CLI 没有该选项。
       if (frameCount < 2)
         throw new Error(
-          `采样帧数 ${frameCount} 不足 2，请降低 --fps 或延长镜头时长`,
+          `采样帧数 ${frameCount} 不足 2，请提高 --fps 或延长镜头时长`,
         );
       const step = RENDER_FPS / fps;
       // 与 export-shot-svg.mjs 同一帧口径：量化帧号 + 注册表渲染 + 节点预算。
@@ -130,14 +130,20 @@ function fail(message) {
 }
 
 async function main() {
-  const { values } = parseArgs({
-    options: {
-      project: { type: "string" },
-      out: { type: "string" },
-      fps: { type: "string", default: "12" },
-      aspect: { type: "string", default: "landscape" },
-    },
-  });
+  // parseArgs 的未知参数异常会带 ERR_PARSE_ARGS_* 堆栈；统一收口成 CLI 中文前缀。
+  let values;
+  try {
+    ({ values } = parseArgs({
+      options: {
+        project: { type: "string" },
+        out: { type: "string" },
+        fps: { type: "string", default: "12" },
+        aspect: { type: "string", default: "landscape" },
+      },
+    }));
+  } catch (error) {
+    fail(`参数解析失败: ${error.message}`);
+  }
   if (!values.project)
     fail(
       "用法: node scripts/video/export-interactive.mjs --project <path.json> [--out <dir>] [--fps 12] [--aspect landscape|portrait]",
@@ -165,20 +171,26 @@ async function main() {
     fail(error.message);
   }
 
+  // 落盘段同样收口：目录创建/两次写入的 fs 异常都必须带 CLI 前缀。
   const outDir = path.resolve(values.out ?? path.dirname(projectPath));
-  mkdirSync(outDir, { recursive: true });
   const htmlPath = path.join(outDir, "index.html");
-  writeFileSync(htmlPath, result.html);
-
-  const { project: next, delivery } = appendDelivery(project, {
-    versionIds: result.versionIds,
-    renderIds: [],
-    frameMap: result.frameMap,
-    kind: "interactive-html",
-    outputRef: "index.html",
-    digest: result.digest,
-  });
-  writeFileSync(projectPath, `${JSON.stringify(next, null, 2)}\n`);
+  let next;
+  let delivery;
+  try {
+    mkdirSync(outDir, { recursive: true });
+    writeFileSync(htmlPath, result.html);
+    ({ project: next, delivery } = appendDelivery(project, {
+      versionIds: result.versionIds,
+      renderIds: [],
+      frameMap: result.frameMap,
+      kind: "interactive-html",
+      outputRef: "index.html",
+      digest: result.digest,
+    }));
+    writeFileSync(projectPath, `${JSON.stringify(next, null, 2)}\n`);
+  } catch (error) {
+    fail(`写盘失败: ${error.message}`);
+  }
   const totalFrames = result.frameMap.reduce((sum, frames) => sum + frames, 0);
   console.log(
     `[export-interactive] 完成: ${htmlPath}（${result.versionIds.length} 步, 共 ${totalFrames} 帧, ${Buffer.byteLength(result.html, "utf8")} 字节）; DeliveryRecord ${delivery.deliveryId.slice(0, 8)} 已回写 ${path.basename(projectPath)} (savedVersion=${next.savedVersion})`,

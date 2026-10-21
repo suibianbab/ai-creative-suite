@@ -58,6 +58,12 @@ test("自包含：无外部引用、无网络 API", () => {
     assert.ok(!html.includes(token), `输出不应包含 ${token}`);
 });
 
+test("CSS 收窄：舞台样式只作用于直接子 SVG", () => {
+  const html = player();
+  assert.ok(html.includes(".stage > svg{"), "应使用 .stage > svg");
+  assert.ok(!html.includes(".stage svg{"), "不应使用无界的 .stage svg");
+});
+
 test("确定性：同输入两次调用逐字节一致", () => {
   assert.equal(player(), player());
   assert.equal(

@@ -1,7 +1,7 @@
 // P3-A 交互交付（Task 3）：导出管线的纯函数单测（不写盘，CLI 主路径另跑）。
 
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
   copyFileSync,
@@ -131,6 +131,9 @@ test("渲染期错误带镜头号，且不推荐本 CLI 没有的 --frame", () =
     (error) => {
       assert.match(error.message, /镜头 1/);
       assert.ok(!error.message.includes("--frame"));
+      // 采样帧数 = ceil(durationFrames / (24 / fps))：提高 fps 才会增帧。
+      assert.match(error.message, /提高 --fps/);
+      assert.ok(!error.message.includes("降低 --fps"));
       return true;
     },
   );
@@ -183,6 +186,15 @@ test("参数门禁：fps 不整除与画幅枚举", () => {
   );
 });
 
+test("0 镜头项目整次拒绝：提示步骤数为 0", () => {
+  const project = structuredClone(fixture());
+  project.shots = [];
+  assert.throws(
+    () => buildInteractiveExport({ project, fps: 12, aspect: "landscape" }),
+    /步骤数为 0/,
+  );
+});
+
 test("CLI 成功输出：步数、帧数、字节数、交付短 id、savedVersion 与 index.html", () => {
   const workDir = mkdtempSync(path.join(tmpdir(), "export-interactive-"));
   try {
@@ -205,4 +217,14 @@ test("CLI 成功输出：步数、帧数、字节数、交付短 id、savedVersi
   } finally {
     rmSync(workDir, { recursive: true, force: true });
   }
+});
+
+test("CLI 未知参数：统一中文前缀且不泄漏 Node 错误码", () => {
+  const result = spawnSync(process.execPath, [CLI, "--bogus", "1"], {
+    encoding: "utf8",
+  });
+  assert.equal(result.status, 1);
+  const output = `${result.stdout ?? ""}${result.stderr ?? ""}`;
+  assert.match(output, /\[export-interactive\]/);
+  assert.ok(!output.includes("ERR_PARSE_ARGS_UNKNOWN_OPTION"));
 });

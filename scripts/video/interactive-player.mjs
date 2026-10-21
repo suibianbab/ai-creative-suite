@@ -77,7 +77,7 @@ function styleSheet(width) {
     "html,body{margin:0;padding:0}",
     "body{min-height:100vh;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:24px;background:#0b1020;color:#e6ebff;font-family:NotoSansSC, sans-serif}",
     `.stage{width:100%;max-width:${width}px;margin:0 auto}`,
-    ".stage svg{width:100%;height:auto;display:block}",
+    ".stage > svg{width:100%;height:auto;display:block}",
     ".controls{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:12px}",
     ".controls button{min-width:96px;padding:10px 18px;border:1px solid #3a4a7a;border-radius:8px;background:#16203c;color:inherit;font:inherit;cursor:pointer}",
     ".controls button:disabled{opacity:.4;cursor:default}",
