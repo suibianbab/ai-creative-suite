@@ -552,9 +552,9 @@ Expected: 全部断言通过，打印 `framesDigest` 与两次 mp4 摘要。
   "checks": [
     "出片 exit 0，landscape.mp4 非空；manifest 的 3D 证据 glRenderer 含 SwiftShader、frameHashes 条数 = 该镜头 span 帧数（fixture 24）",
     "独立烘焙两次 framesDigest 相同；完整出片两次 landscape.mp4 SHA-256 相同",
-    "3D 镜头首帧 ffmpeg signalstats YAVG > 16（非黑）",
+    "3D 镜头首帧亮度均值 > 16（非黑；同一 ffmpeg 以 scale=1:1:flags=area 抽帧 + Node 侧 BT.601 计算，Ruling 13）",
     "RenderRecord 含 three 七字段，validateVideoProject 重校验通过、mediaAssets 长度不变",
-    "artifacts/tts-usage.jsonl 行数仍为 34；运行后系统临时目录无 acs-three-* 残留"
+    "artifacts/tts-usage.jsonl 行数仍为 34；运行后系统临时目录无本次运行新增的 acs-three-* 残留"
   ]
 }
 ```
