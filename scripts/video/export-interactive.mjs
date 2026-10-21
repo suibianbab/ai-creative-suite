@@ -9,6 +9,7 @@ import {
   readFileSync,
   renameSync,
   rmSync,
+  statSync,
   writeFileSync,
 } from "node:fs";
 import path from "node:path";
@@ -135,6 +136,24 @@ function fail(message) {
   process.exit(1);
 }
 
+// 项目文件与产物文件是否同一路径/同一文件：先比规范化字符串（win32 折
+// 大小写），再兜底 stat 身份（dev+ino 相等）覆盖软链接 / junction / 硬链接
+// 别名。任一路径 stat 失败（如产物尚不存在）就返回 false，不把合法导出拒掉。
+// 已知限制：macOS 大小写不敏感卷上「INDEX.HTML 与 index.html 同名」仍不识别
+// （挂账，不做真实身份之外的卷语义探测）。
+function sameFile(a, b) {
+  const comparable = (value) =>
+    process.platform === "win32" ? value.toLowerCase() : value;
+  if (comparable(a) === comparable(b)) return true;
+  try {
+    const left = statSync(a, { bigint: true });
+    const right = statSync(b, { bigint: true });
+    return left.dev === right.dev && left.ino === right.ino && left.ino !== 0n;
+  } catch {
+    return false;
+  }
+}
+
 async function main() {
   // parseArgs 的未知参数异常会带 ERR_PARSE_ARGS_* 堆栈；统一收口成 CLI 中文前缀。
   let values;
@@ -175,10 +194,7 @@ async function main() {
   // HTML），所以必须在 appendDelivery 与任何写盘之前失败。
   const outDir = path.resolve(values.out ?? path.dirname(projectPath));
   const htmlPath = path.join(outDir, "index.html");
-  // 只比路径字符串；软/硬链接别名未覆盖（挂账，不做真实身份检查）。
-  const comparablePath = (value) =>
-    process.platform === "win32" ? value.toLowerCase() : value;
-  if (comparablePath(projectPath) === comparablePath(htmlPath)) {
+  if (sameFile(projectPath, htmlPath)) {
     fail(
       "--project 与输出冲突: 项目文件不能是 <out>/index.html，请改 --out 或重命名项目文件",
     );

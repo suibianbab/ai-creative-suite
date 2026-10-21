@@ -11,6 +11,7 @@ import {
   mkdtempSync,
   readFileSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -266,6 +267,83 @@ test("--project 与输出 index.html 路径冲突：拒绝且不落账、不覆�
     );
 
     // 项目文件原样保留：仍是 JSON、deliveries 未增加，未被页面内容覆盖。
+    const after = readFileSync(projectPath);
+    assert.ok(after.equals(bytesBefore), "项目文件被改写");
+    const parsed = JSON.parse(after.toString("utf8"));
+    assert.equal(parsed.deliveries.length, 0);
+  } finally {
+    rmSync(workDir, { recursive: true, force: true });
+  }
+});
+
+// —— 收口 4：别名路径（junction/软链接）指向同一 index.html 也必须拒绝 ——
+test("--project 与输出目录经别名指向同一 index.html：拒绝且不落账、不覆盖", () => {
+  const workDir = mkdtempSync(path.join(tmpdir(), "export-interactive-"));
+  const aliasDir = path.join(workDir, "alias");
+  try {
+    const realDir = path.join(workDir, "real");
+    mkdirSync(realDir, { recursive: true });
+    const projectPath = path.join(realDir, "index.html");
+    copyFileSync(FIXTURE, projectPath);
+    // win32 用 junction（无需管理员/开发者模式）；其它平台用目录软链接。
+    const linkType = process.platform === "win32" ? "junction" : "dir";
+    try {
+      symlinkSync(realDir, aliasDir, linkType);
+    } catch (error) {
+      // 建别名失败必须显式报错，不能 skip 掉这条唯一能抓别名冲突的用例。
+      throw new Error(`无法创建目录别名（${linkType}）: ${error.message}`);
+    }
+    const bytesBefore = readFileSync(projectPath);
+
+    assert.throws(
+      () =>
+        execFileSync(
+          process.execPath,
+          [CLI, "--project", projectPath, "--out", aliasDir],
+          { encoding: "utf8" },
+        ),
+      (error) => {
+        assert.notEqual(error.status, 0);
+        const output = `${error.stdout ?? ""}${error.stderr ?? ""}`;
+        assert.match(output, /\[export-interactive\]/);
+        assert.match(output, /冲突/);
+        return true;
+      },
+    );
+
+    const after = readFileSync(projectPath);
+    assert.ok(after.equals(bytesBefore), "项目文件被改写");
+    const parsed = JSON.parse(after.toString("utf8"));
+    assert.equal(parsed.deliveries.length, 0);
+  } finally {
+    // 先移除别名本身，避免递归清理沿着链接走到真实目录。
+    rmSync(aliasDir, { recursive: true, force: true });
+    rmSync(workDir, { recursive: true, force: true });
+  }
+});
+
+// —— 收口 4：默认 --out（项目所在目录）与项目文件名冲突也不能漏 ——
+test("默认 --out 与项目文件名冲突：拒绝且不落账、不覆盖", () => {
+  const workDir = mkdtempSync(path.join(tmpdir(), "export-interactive-"));
+  try {
+    const projectPath = path.join(workDir, "index.html");
+    copyFileSync(FIXTURE, projectPath);
+    const bytesBefore = readFileSync(projectPath);
+
+    assert.throws(
+      () =>
+        execFileSync(process.execPath, [CLI, "--project", projectPath], {
+          encoding: "utf8",
+        }),
+      (error) => {
+        assert.notEqual(error.status, 0);
+        const output = `${error.stdout ?? ""}${error.stderr ?? ""}`;
+        assert.match(output, /\[export-interactive\]/);
+        assert.match(output, /冲突/);
+        return true;
+      },
+    );
+
     const after = readFileSync(projectPath);
     assert.ok(after.equals(bytesBefore), "项目文件被改写");
     const parsed = JSON.parse(after.toString("utf8"));
