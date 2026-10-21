@@ -21,6 +21,7 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
 import { chromium } from "playwright-core";
+import { runRemotionFfmpeg } from "./remotion-ffmpeg.mjs";
 import { sha256File } from "./sha256-file.mjs";
 import { validateThreeSpec } from "./three/spec.mjs";
 
@@ -201,22 +202,7 @@ export function buildBakeJobs({ project, aspects }) {
 // 编码超时：ffmpeg 卡死（坏帧/磁盘挂起）不得无限挂住出片进程。
 export const ENCODE_TIMEOUT_MS = 120_000;
 
-// shell:true 时 Node 把参数数组用空格拼接、且不加引号——"a b" 会被拆成两个
-// token，含空格的帧目录/输出路径因此被截断。这里预先给每个元素加平台引号，
-// 保证 shell 始终把每个元素当成单个 token。
-export function quoteShellArg(arg) {
-  const text = String(arg);
-  if (process.platform === "win32") {
-    // cmd.exe：双引号包裹，内嵌 " 以 "" 转义。结尾的反斜杠须加倍——CRT 把
-    // `\"` 当作转义引号，`"C:\dir\"` 会吞掉收尾引号、把后续 token 并进来。
-    const escaped = text.replaceAll('"', '""').replace(/(\\+)$/, "$1$1");
-    return `"${escaped}"`;
-  }
-  // POSIX sh：单引号包裹，内嵌 ' 以 '\'' 转义（单引号内反斜杠无特殊含义）。
-  return `'${text.replaceAll("'", "'\\''")}'`;
-}
-
-// —— 默认编码器：pnpm 调 Remotion 自带的 ffmpeg（不依赖 PATH 里的 ffmpeg）——
+// —— 默认编码器：直接调用 Remotion 自带的 ffmpeg（不依赖 PATH 里的 ffmpeg）——
 // spawn 可注入（单测用假实现，不跑 ffmpeg 进程）。
 export function runEncoder(framesDir, fps, outFile, spawn = spawnSync) {
   const args = [
@@ -227,7 +213,8 @@ export function runEncoder(framesDir, fps, outFile, spawn = spawnSync) {
     "-framerate",
     String(fps),
     "-i",
-    path.join(framesDir, "%04d.png"),
+    // image2 的输入模式也解析 %；目录里的字面 % 必须写成 %% 。
+    path.join(framesDir.replaceAll("%", "%%"), "%04d.png"),
     "-c:v",
     "libx264",
     "-preset",
@@ -242,23 +229,14 @@ export function runEncoder(framesDir, fps, outFile, spawn = spawnSync) {
     "+faststart",
     outFile,
   ];
-  // 逐项预加引号：含空格路径在 shell 拼接后仍是单 token（见 quoteShellArg）。
-  const result = spawn(
-    quoteShellArg("pnpm"),
-    [
-      "--filter",
-      "@acs/remotion-engine",
-      "exec",
-      "remotion",
-      "ffmpeg",
-      ...args,
-    ].map(quoteShellArg),
+  const result = runRemotionFfmpeg(
+    args,
     {
       cwd: ROOT,
-      shell: true,
       encoding: "utf8",
       timeout: ENCODE_TIMEOUT_MS,
     },
+    spawn,
   );
   if (result.error || result.status !== 0) {
     const tail = `${result.stderr ?? ""}`
@@ -268,7 +246,7 @@ export function runEncoder(framesDir, fps, outFile, spawn = spawnSync) {
       .join("\n");
     const reason = result.error
       ? result.error.code === "ETIMEDOUT"
-        ? `超时（timeout=${ENCODE_TIMEOUT_MS}ms），进程已终止`
+        ? `超时（timeout=${ENCODE_TIMEOUT_MS}ms），ffmpeg 进程已终止`
         : `进程错误：${result.error.message}`
       : `status=${result.status ?? "signal"}`;
     throw new Error(

@@ -22,8 +22,8 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { inflateSync } from "node:zlib";
-import { quoteShellArg } from "./bake-three.mjs";
 import { validateVideoProject } from "./delivery.mjs";
+import { runRemotionFfmpeg } from "./remotion-ffmpeg.mjs";
 
 const ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -158,15 +158,8 @@ function parseBake(stdout) {
 // PATH 上的 ffmpeg）把首帧 area 缩放成 1×1 PNG，再在 Node 侧按 BT.601 求亮度均值。
 // 口径：黑帧 RGB 均值 0（signalstats 黑帧 YAVG=16），阈值 >16 只比原口径更严。
 function firstFrameLuma(videoPath) {
-  // shell:true 下逐项预加引号：videoPath 可能含空格（临时目录/输出目录）。
-  const result = spawnSync(
-    quoteShellArg("pnpm"),
+  const result = runRemotionFfmpeg(
     [
-      "--filter",
-      "@acs/remotion-engine",
-      "exec",
-      "remotion",
-      "ffmpeg",
       "-v",
       "error",
       "-i",
@@ -180,10 +173,9 @@ function firstFrameLuma(videoPath) {
       "-f",
       "image2pipe",
       "-",
-    ].map(quoteShellArg),
+    ],
     {
       cwd: ROOT,
-      shell: true,
       maxBuffer: 8 * 1024 * 1024,
       timeout: LUMA_TIMEOUT_MS,
     },

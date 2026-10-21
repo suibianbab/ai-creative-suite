@@ -2,6 +2,7 @@
 // 原则：全部用假 deps（不启浏览器、不跑 ffmpeg）；只让真实 HTTP 静态服务与
 // 真实文件落盘参与，验证可观察行为（逐帧文件、摘要、编码产物、清理）。
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
   existsSync,
@@ -21,7 +22,6 @@ import {
   bakeThreeShots,
   buildBakeJobs,
   ENCODE_TIMEOUT_MS,
-  quoteShellArg,
   runEncoder,
 } from "./bake-three.mjs";
 
@@ -450,13 +450,7 @@ test("bakeThreeShots：编码失败时保留 ffmpeg 末 20 行 stderr", async (t
   );
 });
 
-// —— runEncoder：shell 拼接下的引号与超时（Codex 复核 A/B） ——
-// 预期引号按平台在测试内独立推导，避免直接复用实现（否则同错同过）。
-function expectedQuote(arg) {
-  return process.platform === "win32"
-    ? `"${arg.replaceAll('"', '""')}"`
-    : `'${arg.replaceAll("'", "'\\''")}'`;
-}
+// —— runEncoder：直接启动 ffmpeg，路径参数与超时进程边界 ——
 
 function captureSpawn(result = { status: 0, stdout: "", stderr: "" }) {
   const calls = [];
@@ -466,26 +460,6 @@ function captureSpawn(result = { status: 0, stdout: "", stderr: "" }) {
   };
   return { calls, spawn };
 }
-
-test("quoteShellArg：平台对应引号并转义内嵌引号", () => {
-  if (process.platform === "win32") {
-    assert.equal(quoteShellArg("a b"), '"a b"');
-    assert.equal(quoteShellArg('x"y z'), '"x""y z"');
-  } else {
-    assert.equal(quoteShellArg("a b"), "'a b'");
-    assert.equal(quoteShellArg("a'b c"), "'a'\\''b c'");
-  }
-});
-
-test("quoteShellArg：Windows 结尾反斜杠加倍，避免吞掉收尾引号", () => {
-  if (process.platform !== "win32") return;
-  // CRT 解析 `"C:\dir\"` 时把 \" 当转义引号，收尾引号被吞、后续 token 并进来。
-  assert.equal(
-    quoteShellArg("C:\\dir with space\\"),
-    '"C:\\dir with space\\\\"',
-  );
-  assert.equal(quoteShellArg("C:\\plain"), '"C:\\plain"');
-});
 
 test("runEncoder：非超时的进程错误不谎报超时", () => {
   const { spawn } = captureSpawn({
@@ -508,40 +482,46 @@ test("runEncoder：非超时的进程错误不谎报超时", () => {
   );
 });
 
-test("runEncoder：含空格的帧目录与输出路径在 shell 下是带引号的单 token", () => {
+test("runEncoder：含空格路径保持原样，输入目录的百分号按 ffmpeg 模式转义", () => {
   const { calls, spawn } = captureSpawn();
-  const framesDir = path.join(tmpdir(), "frames with space");
-  const outFile = path.join(tmpdir(), "out dir", "clip with space.mp4");
+  const framesDir = path.join(tmpdir(), "frames %CODEX_REVIEW_VAR% with space");
+  const outFile = path.join(
+    tmpdir(),
+    "out %CODEX_REVIEW_VAR% dir",
+    "clip with space.mp4",
+  );
 
   runEncoder(framesDir, BAKE_FPS, outFile, spawn);
 
   assert.equal(calls.length, 1);
-  const { command, args } = calls[0];
-  const expectedFrames = expectedQuote(path.join(framesDir, "%04d.png"));
-  const expectedOut = expectedQuote(outFile);
+  const { command, args, options } = calls[0];
+  assert.match(command, /ffmpeg(?:\.exe)?$/i);
+  assert.ok(
+    args.includes(path.join(framesDir.replaceAll("%", "%%"), "%04d.png")),
+  );
+  assert.ok(args.includes(outFile));
+  assert.equal(options.shell, false);
+});
 
-  assert.equal(command, expectedQuote("pnpm"), "pnpm 命令名须预加引号");
-  assert.ok(args.includes(expectedFrames), "帧目录须为带引号的单 token");
-  assert.ok(args.includes(expectedOut), "输出路径须为带引号的单 token");
-  // 任何含空白的元素都必须整体带引号——漏一个就会被 shell 拆成多个 token。
-  const [open, close] = process.platform === "win32" ? ['"', '"'] : ["'", "'"];
-  for (const arg of args) {
-    if (/\s/.test(arg)) {
-      assert.ok(
-        arg.startsWith(open) && arg.endsWith(close),
-        `含空格的参数未整体加引号: ${arg}`,
-      );
-    }
-  }
-  // 头部元素同样逐项加引号，避免 "@acs/remotion-engine" 等被 shell 重解释。
-  for (const head of [
-    "--filter",
-    "@acs/remotion-engine",
-    "remotion",
-    "ffmpeg",
-  ]) {
-    assert.ok(args.includes(expectedQuote(head)), `头部参数未加引号: ${head}`);
-  }
+test("runEncoder：实际超时后 ffmpeg 进程已退出", () => {
+  let childPid;
+  const spawn = (_command, _args, options) => {
+    const result = spawnSync(
+      process.execPath,
+      ["-e", "console.log(process.pid); setInterval(() => {}, 1000)"],
+      { ...options, timeout: 500 },
+    );
+    childPid = Number(result.stdout.trim());
+    return result;
+  };
+  const framesDir = path.join(tmpdir(), "frames-timeout-real");
+  assert.throws(
+    () =>
+      runEncoder(framesDir, BAKE_FPS, path.join(framesDir, "clip.mp4"), spawn),
+    /超时/,
+  );
+  assert.ok(Number.isInteger(childPid) && childPid > 0);
+  assert.throws(() => process.kill(childPid, 0), /ESRCH/);
 });
 
 test("runEncoder：超时（status=null + error）时报中文错误，含超时值与 stderr 末行", () => {
