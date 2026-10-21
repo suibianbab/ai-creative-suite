@@ -5,9 +5,10 @@ import type {
   MediaClipPatch,
   Shot,
   ThreeSceneSpec,
+  VideoProject,
 } from "@acs/video-document";
 import type { SceneSpec } from "@acs/video-scene";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   applyChartTemplate,
   buildChartRevisePatch,
@@ -16,6 +17,7 @@ import {
   draftChartFromSpec,
   isChartComponentId,
 } from "./chart-templates";
+import { describeDurationImpact } from "./duration-impact";
 import {
   applyFlowTemplate,
   buildFlowRevisePatch,
@@ -162,6 +164,8 @@ export type ShotEditorCardProps = {
   shot: Shot;
   index: number;
   frames: number;
+  // 整片文档：改时长时量化全片帧数、检查相邻转场借帧（只读，不落库）。
+  project: VideoProject;
   // shotWorkingSpec 降级（非 spec/媒体场景源/非法 spec）时 false → 只读卡。
   editable: boolean;
   // P2.5-T3：媒体镜头编辑臂所需账本（素材下拉/默认入出点）。
@@ -185,6 +189,7 @@ export function ShotEditorCard({
   shot,
   index,
   frames,
+  project,
   editable,
   mediaAssets,
   onRevise,
@@ -287,6 +292,15 @@ export function ShotEditorCard({
   );
   const [mediaError, setMediaError] = useState<string | null>(null);
   const [mediaWarnings, setMediaWarnings] = useState<string[]>([]);
+
+  // 改时长的影响提示（纯预览）：草稿秒数非有限或 <0.1s 时不量化，
+  // 避免把非法输入当成编辑结果；其余一律走 duration-impact 的纯逻辑。
+  const durationImpact = useMemo(() => {
+    if (!canEdit) return null;
+    const ms = Math.round(draft.durationSeconds * 1000);
+    if (!Number.isFinite(ms) || ms < 1) return null;
+    return describeDurationImpact(project, index, ms);
+  }, [canEdit, project, index, draft.durationSeconds]);
 
   // working 版本变了（应用修订/重做/回滚后）→ 草稿重置到新工作版本。
   // 只盯 workingVersionId（终评整改）：锁定切换会换 shot 对象身份但不动
@@ -601,6 +615,24 @@ export function ShotEditorCard({
                   }
                 />
               </label>
+              {durationImpact?.changed ? (
+                <p
+                  className={
+                    durationImpact.frameError || durationImpact.transitionIssue
+                      ? "shot-impact shot-impact-warn"
+                      : "shot-impact"
+                  }
+                >
+                  整片帧数：{durationImpact.beforeFrames} →{" "}
+                  {durationImpact.afterFrames ?? "无法量化"} 帧 @24fps
+                  {durationImpact.frameError
+                    ? ` · ${durationImpact.frameError}`
+                    : ""}
+                  {durationImpact.transitionIssue
+                    ? ` · ${durationImpact.transitionIssue}`
+                    : ""}
+                </p>
+              ) : null}
               {editSpec.componentId === "text-animation" ? (
                 <>
                   <label className="shot-edit-field">

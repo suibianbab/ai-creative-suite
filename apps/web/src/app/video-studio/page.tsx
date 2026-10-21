@@ -585,6 +585,7 @@ export default function VideoStudioPage() {
                     shot={shot}
                     index={index}
                     frames={pieceTimeline!.shots[index]!.frames}
+                    project={document}
                     editable={
                       shotSpecs[index] !== null ||
                       shotMediaClips[index] !== null ||

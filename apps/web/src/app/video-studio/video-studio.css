@@ -768,6 +768,16 @@
   gap: 8px;
 }
 
+/* 改时长影响提示：常规为信息色，帧数/转场不可行时转警示色。 */
+.shot-impact {
+  color: #5d7469;
+  font-size: 0.85em;
+}
+
+.shot-impact-warn {
+  color: #a3423a;
+}
+
 .shot-edit-error,
 .shot-redo-error {
   margin: 0;
