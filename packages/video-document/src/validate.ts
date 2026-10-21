@@ -582,6 +582,8 @@ export function validateVideoProject(value: unknown): VideoProject {
   // 项目层全局唯一（P2-C）：shotId、内容 versionId、order 跨镜头也不得重复——
   // 否则 RenderRecord.versionId / 导出顺序会产生歧义。镜头内查重见 validateShot。
   const knownVersionIds = new Set<string>();
+  // P3-B（Codex 复核 E）：3D 渲染证据要与版本对账，先按 versionId 索引版本。
+  const versionsById = new Map<string, ContentVersion>();
   const knownShotIds = new Set<string>();
   const knownOrders = new Set<number>();
   // 全管线顺序契约（P3-A 修复 I-1）：MP4/TTS/转场边界按数组序消费，交互页按
@@ -616,6 +618,7 @@ export function validateVideoProject(value: unknown): VideoProject {
         );
       }
       knownVersionIds.add(version.versionId);
+      versionsById.set(version.versionId, version);
     }
   }
   if (
@@ -745,6 +748,31 @@ export function validateVideoProject(value: unknown): VideoProject {
         if (typeof three[key] !== "string" || !SHA256_HEX.test(three[key])) {
           fail(`${field}.three.${key} 须为 64 位小写十六进制`);
         }
+      }
+      // —— Codex 复核 E：证据必须与所引用版本对账（形状合法 ≠ 语义正确）——
+      // record.versionId 的存在性上文已查，故这里必有值。
+      const version = versionsById.get(record.versionId as string)!;
+      const sceneSource = version.sceneSource;
+      if (sceneSource.type !== "three") {
+        fail(
+          `${field}.three 只能挂在 three 版本的渲染记录上（versionId 指向 ${sceneSource.type} 版本）`,
+        );
+      }
+      if (three.componentId !== sceneSource.spec.componentId) {
+        fail(
+          `${field}.three.componentId(${three.componentId}) 与版本 spec.componentId(${sceneSource.spec.componentId}) 不一致`,
+        );
+      }
+      if (three.componentVersion !== sceneSource.spec.componentVersion) {
+        fail(
+          `${field}.three.componentVersion(${three.componentVersion}) 与版本 spec.componentVersion(${sceneSource.spec.componentVersion}) 不一致`,
+        );
+      }
+    } else {
+      // 反向对账：three 版本的出片记录不能没有 3D 证据。
+      const version = versionsById.get(record.versionId as string)!;
+      if (version.sceneSource.type === "three") {
+        fail(`${field} 指向 three 版本，缺少 three 渲染证据`);
       }
     }
   }
