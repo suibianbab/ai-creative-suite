@@ -207,10 +207,12 @@ export const ENCODE_TIMEOUT_MS = 120_000;
 export function quoteShellArg(arg) {
   const text = String(arg);
   if (process.platform === "win32") {
-    // cmd.exe：双引号包裹，内嵌 " 以 "" 转义。
-    return `"${text.replaceAll('"', '""')}"`;
+    // cmd.exe：双引号包裹，内嵌 " 以 "" 转义。结尾的反斜杠须加倍——CRT 把
+    // `\"` 当作转义引号，`"C:\dir\"` 会吞掉收尾引号、把后续 token 并进来。
+    const escaped = text.replaceAll('"', '""').replace(/(\\+)$/, "$1$1");
+    return `"${escaped}"`;
   }
-  // POSIX sh：单引号包裹，内嵌 ' 以 '\'' 转义。
+  // POSIX sh：单引号包裹，内嵌 ' 以 '\'' 转义（单引号内反斜杠无特殊含义）。
   return `'${text.replaceAll("'", "'\\''")}'`;
 }
 
@@ -265,7 +267,9 @@ export function runEncoder(framesDir, fps, outFile, spawn = spawnSync) {
       .slice(-20)
       .join("\n");
     const reason = result.error
-      ? `进程错误（timeout=${ENCODE_TIMEOUT_MS}ms）：${result.error.message}`
+      ? result.error.code === "ETIMEDOUT"
+        ? `超时（timeout=${ENCODE_TIMEOUT_MS}ms），进程已终止`
+        : `进程错误：${result.error.message}`
       : `status=${result.status ?? "signal"}`;
     throw new Error(
       `ffmpeg 编码失败（${reason}）：\n${tail || "（无 stderr 输出）"}`,

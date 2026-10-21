@@ -477,6 +477,37 @@ test("quoteShellArg：平台对应引号并转义内嵌引号", () => {
   }
 });
 
+test("quoteShellArg：Windows 结尾反斜杠加倍，避免吞掉收尾引号", () => {
+  if (process.platform !== "win32") return;
+  // CRT 解析 `"C:\dir\"` 时把 \" 当转义引号，收尾引号被吞、后续 token 并进来。
+  assert.equal(
+    quoteShellArg("C:\\dir with space\\"),
+    '"C:\\dir with space\\\\"',
+  );
+  assert.equal(quoteShellArg("C:\\plain"), '"C:\\plain"');
+});
+
+test("runEncoder：非超时的进程错误不谎报超时", () => {
+  const { spawn } = captureSpawn({
+    status: null,
+    stdout: "",
+    stderr: "",
+    error: Object.assign(new Error("spawn pnpm ENOENT"), { code: "ENOENT" }),
+  });
+  const framesDir = path.join(tmpdir(), "frames-enoent");
+
+  assert.throws(
+    () =>
+      runEncoder(framesDir, BAKE_FPS, path.join(framesDir, "clip.mp4"), spawn),
+    (error) => {
+      assert.match(error.message, /进程错误/);
+      assert.match(error.message, /ENOENT/);
+      assert.doesNotMatch(error.message, /超时（timeout=/);
+      return true;
+    },
+  );
+});
+
 test("runEncoder：含空格的帧目录与输出路径在 shell 下是带引号的单 token", () => {
   const { calls, spawn } = captureSpawn();
   const framesDir = path.join(tmpdir(), "frames with space");
