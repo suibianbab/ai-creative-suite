@@ -1,7 +1,7 @@
 import type { VideoProject } from "@acs/video-document";
 import type { SceneSpec } from "@acs/video-scene";
-import { componentLabel } from "./component-labels.js";
-import type { StoryboardResult } from "./planner.js";
+import { componentLabel } from "./component-labels";
+import type { StoryboardResult } from "./planner";
 
 // P2-B：确认应用不得静默更换项目身份。两种模式：
 //  - first-shot：编辑中的项目还没有镜头 → 在当前文档上落首个镜头（id 不变）；

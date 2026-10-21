@@ -4,7 +4,7 @@ import {
   type SceneSpec,
   validateSceneSpec,
 } from "@acs/video-scene";
-import { componentLabel } from "./component-labels.js";
+import { componentLabel } from "./component-labels";
 
 // P0 规则规划器（PhotoCraft M1 式「绝不猜」）：只认一个固定句式，解析失败就
 // 原样把语法告诉用户，绝不静默降级、绝不替用户补意图。
