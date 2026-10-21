@@ -211,8 +211,9 @@ test("reviseWorkingVersion：显式说明逐字落库，空/超长拒绝", () =>
 
 - [ ] **Step 2: 跑测试确认红**
 
-Run: `pnpm --filter @acs/web test && pnpm --filter @acs/video-document test`
+Run: `pnpm --filter @acs/video-document build && pnpm --filter @acs/web test && pnpm --filter @acs/video-document test`
 Expected: 上述测试失败（`description` 缺失 / `attachDescription` 未定义 / 未拒绝空说明）。
+（`@acs/video-document` 的测试跑 `dist/**`，源码改动必须先 build。）
 
 - [ ] **Step 3: 实现**
 
@@ -245,7 +246,7 @@ Expected: 上述测试失败（`description` 缺失 / `attachDescription` 未定
 
 - [ ] **Step 4: 跑测试确认绿**
 
-Run: `pnpm --filter @acs/video-document test && pnpm --filter @acs/web test`
+Run: `pnpm --filter @acs/video-document build && pnpm --filter @acs/video-document test && pnpm --filter @acs/web test`
 Expected: 全绿；既有 `（人工修订）` 后缀用例仍通过。
 
 - [ ] **Step 5: 类型与格式**
