@@ -1,6 +1,11 @@
 "use client";
 
-import type { MediaAsset, MediaClipPatch, Shot } from "@acs/video-document";
+import type {
+  MediaAsset,
+  MediaClipPatch,
+  Shot,
+  ThreeSceneSpec,
+} from "@acs/video-document";
 import type { SceneSpec } from "@acs/video-scene";
 import { useEffect, useState } from "react";
 import {
@@ -70,6 +75,14 @@ import {
 } from "./stick-templates";
 import { isStockSourceEnabled } from "./stock-capability";
 import { StockSearchPanel } from "./stock-search-panel";
+import {
+  buildThreeSceneVersion,
+  DEFAULT_THREE_COMPONENT_ID,
+  DEFAULT_THREE_PARAMS,
+  THREE_TEMPLATE_ID,
+  THREE_TEMPLATE_LABEL,
+  threeTemplateSelectValue,
+} from "./three-templates";
 
 // 分镜编辑器镜头卡：只读信息 + 展开式编辑（旁白/画面修订、单镜头重做、
 // 版本回滚、锁定）。草稿是本地状态，点「应用修订」才经回调落文档；
@@ -109,7 +122,7 @@ const EMPTY_MEDIA_DRAFT: MediaEditDraft = {
   audio: "mute",
 };
 
-// 媒体→spec 换装的合成基底：resolveAnyTemplate 会覆写 componentId/params，
+// 媒体/3D→spec 换装的合成基底：resolveAnyTemplate 会覆写 componentId/params，
 // 基底只贡献 seed/background/durationMs（时长 ≥200ms 保 spec 合法下限）。
 function mediaSubstrateSpec(durationMs: number): SceneSpec {
   return {
@@ -156,6 +169,7 @@ export type ShotEditorCardProps = {
     narrationText?: string;
     spec?: unknown;
     mediaClip?: MediaClipPatch;
+    threeScene?: ThreeSceneSpec;
   }) => void;
   onRedo: (directive: string) => void;
   onRollback: (versionId: string) => void;
@@ -185,10 +199,14 @@ export function ShotEditorCard({
   const spec = shotWorkingSpec(shot);
   const mediaSource =
     working?.sceneSource.type === "media-clip" ? working.sceneSource : null;
-  // spec 缺席但工作版本是媒体 → 用合成基底撑起通用草稿（旁白/时长）与模板链
+  const threeSource =
+    working?.sceneSource.type === "three" ? working.sceneSource : null;
+  // spec 缺席但工作版本是媒体/3D → 用合成基底撑起通用草稿（旁白/时长）与模板链
   const editSpec =
     spec ??
-    (working && mediaSource ? mediaSubstrateSpec(working.durationMs) : null);
+    (working && (mediaSource || threeSource)
+      ? mediaSubstrateSpec(working.durationMs)
+      : null);
   const canEdit = editable && working !== undefined && editSpec !== null;
 
   const [draft, setDraft] = useState<ShotEditDraft>(() =>
@@ -217,6 +235,11 @@ export function ShotEditorCard({
   const editingMedia =
     pendingTemplateId === MEDIA_TEMPLATE_ID ||
     (mediaSource !== null && pendingTemplateId === "");
+  // 3D 臂同构：选中 3D 模板即切到只读信息块（无 spec 字段可编）；
+  // 工作版本已是 three 且未换装时也停在该臂。
+  const editingThree =
+    pendingTemplateId === THREE_TEMPLATE_ID ||
+    (threeSource !== null && pendingTemplateId === "");
   const [chartDraft, setChartDraft] = useState<ChartEditDraft>(() =>
     spec && isChartComponentId(spec.componentId)
       ? draftChartFromSpec(spec)
@@ -276,7 +299,8 @@ export function ShotEditorCard({
         : null;
     const nextEditSpec =
       nextSpec ??
-      (nextWorking && nextMediaSource
+      (nextWorking &&
+      (nextMediaSource || nextWorking.sceneSource.type === "three")
         ? mediaSubstrateSpec(nextWorking.durationMs)
         : null);
     if (nextWorking && nextEditSpec) {
@@ -341,6 +365,17 @@ export function ShotEditorCard({
       : spec?.componentId === "basic-shapes"
         ? SHAPE_TEMPLATE_LABELS
         : null;
+  // 3D 只读臂：已有 three 工作版本看实际 spec；刚选中模板则预览模板默认值。
+  const threeParams =
+    threeSource?.spec.params ??
+    (pendingTemplateId === THREE_TEMPLATE_ID ? DEFAULT_THREE_PARAMS : null);
+  const threeSummary = threeParams
+    ? `组件：${threeSource?.spec.componentId ?? DEFAULT_THREE_COMPONENT_ID} · 参数：${Object.entries(
+        threeParams,
+      )
+        .map(([key, value]) => `${key}=${String(value)}`)
+        .join("，")}`
+    : null;
 
   return (
     <li className="shot-card">
@@ -411,16 +446,20 @@ export function ShotEditorCard({
               }
             />
           </label>
-          {/* M6/终评 F1：组件模板下拉在共享层（两臂恒可见恒可撤）——媒体镜头
-              换回 spec 组件的唯一入口；工作版本已是媒体且未选换装时，value
-              停在本族条目（mediaTemplateSelectValue）。 */}
+          {/* M6/终评 F1：组件模板下拉在共享层（各编辑臂恒可见恒可撤）——媒体/
+              3D 镜头换回 spec 组件的唯一入口；工作版本已是媒体/3D 且未选换装
+              时，value 停在本族条目（mediaTemplateSelectValue /
+              threeTemplateSelectValue）。 */}
           <label className="shot-edit-field">
-            组件模板（图表 / 地图 / 流程 / 火柴人 / 手绘 / 加载 / 媒体）
+            组件模板（图表 / 地图 / 流程 / 火柴人 / 手绘 / 加载 / 媒体 / 3D）
             <select
               className="chart-template-select"
-              value={mediaTemplateSelectValue(
-                pendingTemplateId,
-                mediaSource !== null,
+              value={threeTemplateSelectValue(
+                mediaTemplateSelectValue(
+                  pendingTemplateId,
+                  mediaSource !== null,
+                ),
+                threeSource !== null,
               )}
               onChange={(event) => {
                 const templateId = event.target.value;
@@ -432,6 +471,8 @@ export function ShotEditorCard({
                 setSketchError(null);
                 setLoadingError(null);
                 if (!templateId) return;
+                // 3D：只切换编辑臂，应用时按当前工作版本时长生成 three 场景源
+                if (templateId === THREE_TEMPLATE_ID) return;
                 // 第七族「媒体」：不走六族换装，选中即播种媒体草稿
                 if (templateId === MEDIA_TEMPLATE_ID) {
                   const seeded = draftMediaFromVersion(working, mediaAssets);
@@ -509,9 +550,14 @@ export function ShotEditorCard({
                   {MEDIA_TEMPLATE_LABEL}
                 </option>
               </optgroup>
+              <optgroup label="3D">
+                <option value={THREE_TEMPLATE_ID}>
+                  {THREE_TEMPLATE_LABEL}
+                </option>
+              </optgroup>
             </select>
           </label>
-          {!editingMedia ? (
+          {!editingMedia && !editingThree ? (
             <>
               <label className="shot-edit-field">
                 背景色
@@ -906,6 +952,13 @@ export function ShotEditorCard({
                 </span>
               ) : null}
             </>
+          ) : editingThree ? (
+            <>
+              <p className="shot-three-info">
+                3D 镜头 · 出片时烘焙；工作台不预览 3D 画面
+              </p>
+              <p className="shot-three-info">{threeSummary}</p>
+            </>
           ) : (
             <>
               <label className="shot-edit-field">
@@ -1058,6 +1111,21 @@ export function ShotEditorCard({
                   setMediaWarnings(built.warnings);
                   setEditError(null);
                   onRevise(built.patch);
+                  return;
+                }
+                // 3D 臂（Ruling 11/4）：只换场景源；旁白沿用共享草稿，时长取
+                // 当前工作版本（不读 spec 编辑字段——该臂本来就不渲染它们）。
+                if (editingThree) {
+                  const built = buildThreeSceneVersion({
+                    durationMs: working.durationMs,
+                    seed: spec?.seed ?? threeSource?.spec.seed ?? 1,
+                    params: threeSource?.spec.params,
+                  });
+                  setEditError(null);
+                  onRevise({
+                    narrationText: draft.narrationText,
+                    threeScene: built.spec,
+                  });
                   return;
                 }
                 // 换模板 = 以模板 spec 为基底；与同草稿的并发编辑（旁白/背景/
