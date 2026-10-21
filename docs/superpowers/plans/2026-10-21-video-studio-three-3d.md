@@ -504,7 +504,7 @@ Expected: 1 条失败（现有话术为通用「不是 spec」，不含「不支
 
 - [ ] **Step 3: 实现**
 
-`buildInteractiveExport` 的 sceneSource 分支：
+`buildInteractiveExport` 的 sceneSource 分支（**放在现有 `!== "spec"` 通用拒绝之前**，否则 three 会先命中通用话术）：
 
 ```js
 if (version.sceneSource.type === "three")
@@ -515,16 +515,20 @@ if (version.sceneSource.type === "three")
 
 - [ ] **Step 4: 写 e2e（`scripts/video/e2e-three.mjs`）**
 
-骨架照 `e2e-transitions.mjs`：`mkdtempSync` 临时项目 → 导出/出片 → 双跑对拍。断言（spec §6）：
+骨架照 `e2e-transitions.mjs` 的「fail(step)/sha256/usageLines」结构，但**不需要 dev server、浏览器或端口**（`requiresPorts: []`）：直接用 `scripts/video/fixtures/three-sample.video-project.json` 作为输入。
 
-1. 出片 exit 0，`landscape.mp4` 存在且非空；
-2. manifest 的 3D 证据：`glRenderer` 含 `SwiftShader`、`frameHashes` 条数 = 该镜头 span 帧数；
-3. 独立烘焙两次（两次都新进程）`framesDigest` 相同；
-4. 完整出片跑两次，`landscape.mp4` SHA-256 相同；
-5. `ffmpeg -vf signalstats` 抽帧 `YAVG > 16`（非黑）；
-6. `RenderRecord` 有 `three` 字段且项目重校验通过、`mediaAssets` 长度不变；
-7. `artifacts/tts-usage.jsonl` 行数仍为 34；
-8. 运行结束后系统临时目录无 `acs-three-*` 残留（成功与失败路径都清理）。
+1. `mkdtempSync(path.join(os.tmpdir(), "e2e-three-"))`，把 fixture 复制成 `<tmp>/project.json` 与 `<tmp>/project-rerun.json`；
+2. 烘焙 A/B：`node scripts/video/bake-three.mjs --project <tmp>/project.json --out <tmp>/bake-a`，再对同一 project 跑一次（两个独立进程、两次新浏览器）`--out <tmp>/bake-b`；从 stdout 解析 `framesDigest`/`clipSha256`，断言两次相同；
+3. 出片 A/B：分别用 `node scripts/video/render-scene.mjs --project <tmp>/project.json --out <tmp>/render-a` 与 `--project <tmp>/project-rerun.json --out <tmp>/render-b`（独立项目副本，避免第一次回写的 RenderRecord 影响第二次），断言两次 exit 0 且 `landscape.mp4` SHA-256 相同（Ruling 7 已实测字节一致，无需降级）；
+4. 断言（spec §6）：
+   - 出片 exit 0，`landscape.mp4` 存在且非空；
+   - manifest 的 3D 证据：`glRenderer` 含 `SwiftShader`、`frameHashes` 条数 = 该镜头 span 帧数（fixture 1000ms @24fps = 24）；
+   - 完整出片的 `landscape.mp4` 两次 SHA-256 相同；
+   - 非黑：用 **`spawnSync("pnpm", ["--filter","@acs/remotion-engine","exec","remotion","ffmpeg", ...])`** 跑 signalstats（与 `bake-three.mjs` 同一 ffmpeg 来源，不依赖 PATH），取 3D 镜头首帧，`YAVG > 16`；
+   - `RenderRecord` 有 `three` 字段且 `validateVideoProject` 重校验通过、`mediaAssets` 长度不变；
+   - `artifacts/tts-usage.jsonl` 行数仍为 34；
+   - 运行结束后 `os.tmpdir()` 下无 `acs-three-*` 残留（成功与失败路径都清理）。
+5. 默认 `finally` 删除 `<tmp>`；设 `E2E_KEEP=1` 时保留并打印路径。
 
 - [ ] **Step 5: 跑 e2e**
 
@@ -557,7 +561,7 @@ pnpm qa:validate
 npx biome check .
 node -e "console.log(require('fs').readFileSync('artifacts/tts-usage.jsonl','utf8').trim().split('\n').length)"
 ```
-Expected: 视频套件全绿（115 + 新增）、文档 135、web 全绿、QA 注册表校验通过、biome 0 错、TTS 台账 34。
+Expected: 视频套件 144/144（143 + 新增 1）、文档 139/139（136 + Task 5 新增 3）、web 207/207（203 + Task 5 新增 4）、QA 注册表校验通过、biome 0 错、TTS 台账 34。
 
 - [ ] **Step 8: 提交**
 
