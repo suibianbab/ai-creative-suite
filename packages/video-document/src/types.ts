@@ -18,7 +18,23 @@ export type SceneSource =
       fit: "cover" | "contain";
       focalX: number; // 0..1，cover 裁切注视点（contain 时忽略）
       audio: "mute" | "keep"; // keep = 原声与 TTS 旁白混音
+    }
+  | {
+      // —— P3-B 3D 镜头：程序化场景源。平台只解析字段、不 eval；
+      // 深度校验（组件存在性、params 形状）交给烘焙期 three 注册表。
+      type: "three";
+      spec: ThreeSceneSpec;
     };
+
+export type ThreeSceneSpec = {
+  specVersion: 1;
+  componentId: string; // ^[a-z][a-zA-Z0-9]{0,63}$
+  componentVersion: number; // 正整数
+  durationMs: number; // 正整数，须等于 ContentVersion.durationMs
+  seed: number; // 0..4294967295
+  background: string; // #RRGGBB
+  params: Record<string, unknown>; // 注册表按组件解释
+};
 
 export type ContentVersion = {
   versionId: string; // uuid
@@ -70,6 +86,19 @@ export type RenderRecord = {
   // —— P2.5 媒体混编（T1 契约，T4 写入）：渲染钉住实际素材摘要。
   // key=mediaAssetId（须存在于 mediaAssets 账本），value=sha256（64 位小写 hex）。
   assetDigests?: Record<string, string>;
+  // —— P3-B 3D 镜头（T1 契约，Task 4 写入）：three 镜头出片时的确定性证据。
+  // 可选：非 3D 渲染与旧存储文档无此字段。深度校验交给烘焙期注册表。
+  three?: ThreeRenderEvidence;
+};
+
+export type ThreeRenderEvidence = {
+  componentId: string; // 须与镜头 spec.componentId 对账（注册表深校验）
+  componentVersion: number; // 正整数
+  threeVersion: string; // 1..64 字符
+  chromiumVersion: string; // 1..64 字符
+  glRenderer: string; // 1..256 字符
+  framesDigest: string; // 逐帧像素摘要，64 位小写 hex
+  clipSha256: string; // 片段文件 sha256，64 位小写 hex
 };
 
 export type DeliveryRecord = {
