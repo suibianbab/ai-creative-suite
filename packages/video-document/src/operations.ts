@@ -1,4 +1,9 @@
-import type { ContentVersion, Shot, VideoProject } from "./types.js";
+import type {
+  ContentVersion,
+  Shot,
+  ThreeSceneSpec,
+  VideoProject,
+} from "./types.js";
 import { validateVideoProject } from "./validate.js";
 
 export class ShotLockedError extends Error {}
@@ -105,11 +110,17 @@ export type MediaClipPatch = {
 // submitted(human)。锁定镜头允许（ADR 0003 §1.3 人工路径），并追加 audit 事件
 // 留痕。patch.spec 由调用方先用 video-scene 的 validateSceneSpec + 组件注册表
 // 校验过（本包不依赖 video-scene，spec 在文档内是 unknown）；patch.mediaClip
-// 的 C1-C6 契约由收尾 validateVideoProject 后盾拦（R2）。
+// 的 C1-C6 契约由收尾 validateVideoProject 后盾拦（R2）。patch.threeScene
+// （P3-B Ruling 11）落 three 场景源，params 深度校验由烘焙期注册表负责。
 export function reviseWorkingVersion(
   p: VideoProject,
   shotId: string,
-  patch: { narrationText?: string; spec?: unknown; mediaClip?: MediaClipPatch },
+  patch: {
+    narrationText?: string;
+    spec?: unknown;
+    mediaClip?: MediaClipPatch;
+    threeScene?: ThreeSceneSpec;
+  },
   newVersionId: string,
   at = new Date().toISOString(),
 ): VideoProject {
@@ -123,8 +134,15 @@ export function reviseWorkingVersion(
       `镜头 ${shotId} 的工作版本 ${shot.workingVersionId} 不存在`,
     );
   }
-  if (patch.spec !== undefined && patch.mediaClip !== undefined) {
-    throw new Error("spec 与 mediaClip 互斥：一次修订只能指定一种场景源");
+  // spec / mediaClip / threeScene 三者互斥：一次修订只能指定一种场景源。
+  const sourceKinds =
+    (patch.spec !== undefined ? 1 : 0) +
+    (patch.mediaClip !== undefined ? 1 : 0) +
+    (patch.threeScene !== undefined ? 1 : 0);
+  if (sourceKinds > 1) {
+    throw new Error(
+      "spec、mediaClip 与 threeScene 互斥：一次修订只能指定一种场景源",
+    );
   }
   const version: ContentVersion = {
     ...base,
@@ -133,17 +151,21 @@ export function reviseWorkingVersion(
     durationMs:
       patch.mediaClip !== undefined
         ? patch.mediaClip.outMs - patch.mediaClip.inMs
-        : patch.spec === undefined
-          ? base.durationMs
-          : (patch.spec as { durationMs: number }).durationMs,
+        : patch.threeScene !== undefined
+          ? patch.threeScene.durationMs
+          : patch.spec === undefined
+            ? base.durationMs
+            : (patch.spec as { durationMs: number }).durationMs,
     description: `${base.description.slice(0, 160)}（人工修订）`,
     narrationText: patch.narrationText ?? base.narrationText,
     sceneSource:
       patch.mediaClip !== undefined
         ? { type: "media-clip", ...patch.mediaClip }
-        : patch.spec === undefined
-          ? base.sceneSource
-          : { type: "spec", spec: patch.spec },
+        : patch.threeScene !== undefined
+          ? { type: "three", spec: patch.threeScene }
+          : patch.spec === undefined
+            ? base.sceneSource
+            : { type: "spec", spec: patch.spec },
     provenance: {
       ...base.provenance,
       engineId: "human-edit",
