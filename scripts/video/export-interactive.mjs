@@ -62,6 +62,12 @@ export function buildInteractiveExport({
       (candidate) => candidate.versionId === shot.workingVersionId,
     );
     if (!version) throw new Error(`镜头 ${shotNumber} 缺少 working version`);
+    // P3-B（R7）：3D 镜头走逐帧预烘焙，帧图会超出交互页体积上限——整次拒绝并
+    // 指名镜头号；必须挡在下方通用「不是 spec」之前，否则会先命中笼统话术。
+    if (version.sceneSource.type === "three")
+      throw new Error(
+        `镜头 ${shotNumber} 是 3D 镜头（three），P3-A 不支持交互交付：帧图会超出页面体积上限`,
+      );
     if (version.sceneSource.type !== "spec")
       throw new Error(
         `镜头 ${shotNumber} 的场景源不是 spec（${version.sceneSource.type}），P3-A 交互交付不支持`,

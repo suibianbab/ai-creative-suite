@@ -1362,6 +1362,21 @@
         "Embedding: a host page opened over file:// embeds index.html in an iframe; clicking 下一步 through frameLocator advances the frame's data-step from 1 to 2 with zero console errors (file:// responses have no HTTP headers, so X-Frame-Options is not observable)",
         "Project JSON appends a kind:\"interactive-html\" delivery: versionIds = the 3 working versions, renderIds = [], frameMap = 3 positive integers, outputRef = \"index.html\", digest matches /^[0-9a-f]{64}$/ and equals the measured index.html SHA-256; savedVersion increments once per export (1 → 2 → 3) and validateVideoProject passes"
       ]
+    },
+    {
+      "id": "VID-025",
+      "tier": "integration",
+      "title": "Video Studio P3-B three 镜头预烘焙出片与确定性",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/e2e-three.mjs"],
+      "requiresPorts": [],
+      "checks": [
+        "出片 exit 0，landscape.mp4 非空；manifest 的 3D 证据 glRenderer 含 SwiftShader、frameHashes 条数 = 该镜头 span 帧数（fixture 24）",
+        "独立烘焙两次 framesDigest 相同；完整出片两次 landscape.mp4 SHA-256 相同",
+        "3D 镜头首帧 ffmpeg 亮度均值 > 16（非黑；Remotion 自带 ffmpeg 无 signalstats 过滤器，用同一二进制抽 1×1 帧在 Node 侧算 BT.601 亮度）",
+        "RenderRecord 含 three 七字段，validateVideoProject 重校验通过、mediaAssets 长度不变",
+        "artifacts/tts-usage.jsonl 行数仍为 34；运行后系统临时目录无 acs-three-* 残留"
+      ]
     }
   ],
   "manual": [
