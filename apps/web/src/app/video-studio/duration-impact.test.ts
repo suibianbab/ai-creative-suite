@@ -178,6 +178,26 @@ test("应用闸门：正常加长放行", () => {
   assert.equal(durationApplyError(impact), null);
 });
 
+test("存量零帧项目：改成合法时长可量化并放行应用", () => {
+  // 1ms @24fps 量化后是零帧（文档不变量允许正整数时长，但成片期拒绝零帧）。
+  // 当前文档无法量化 → beforeFrames 为 null；改后必须照常给出 afterFrames，
+  // 并且应用闸门放行——这是把存量零帧镜头改回可出片时长的唯一入口。
+  const impact = describeDurationImpact(projectWith([1, 1000]), 0, 2000);
+  assert.equal(impact.changed, true);
+  assert.equal(impact.beforeFrames, null);
+  assert.equal(impact.afterFrames, 72); // 3000ms @24fps
+  assert.equal(impact.frameError, null);
+  assert.equal(durationApplyError(impact), null);
+});
+
+test("存量零帧项目且时长未改：不抛错，前后帧数均为 null", () => {
+  const impact = describeDurationImpact(projectWith([1, 1000]), 0, 1);
+  assert.equal(impact.changed, false);
+  assert.equal(impact.beforeFrames, null);
+  assert.equal(impact.afterFrames, null);
+  assert.equal(impact.frameError, null);
+});
+
 test("应用闸门：无影响对象或时长未改时放行", () => {
   assert.equal(durationApplyError(null), null);
   // 越界哨兵与时长未变都走 changed=false，不拦应用。

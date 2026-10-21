@@ -567,33 +567,42 @@ export default function VideoStudioPage() {
             分镜），解析失败会把语法原样告诉你；分镜应用会在当前项目上追加镜头。
           </p>
 
-          {document.shots.length > 0 && pieceTimeline && pieceItems ? (
+          {document.shots.length > 0 ? (
             <section className="editor-shots">
-              <h3>
-                镜头时间线（{document.shots.length} 镜头 ·{" "}
-                {pieceTimeline.totalFrames} 帧 @24fps ≈{" "}
-                {(pieceTimeline.totalFrames / 24).toFixed(1)}s）
-              </h3>
-              <div className="timeline-bar">
-                {pieceTimeline.shots.map((span) => (
-                  <span
-                    key={span.shotIndex}
-                    className="timeline-span"
-                    style={{
-                      width: `${(span.frames / pieceTimeline!.totalFrames) * 100}%`,
-                    }}
-                  >
-                    {span.shotIndex + 1}号 {span.frames}帧
-                  </span>
-                ))}
-              </div>
+              {pieceTimeline ? (
+                <>
+                  <h3>
+                    镜头时间线（{document.shots.length} 镜头 ·{" "}
+                    {pieceTimeline.totalFrames} 帧 @24fps ≈{" "}
+                    {(pieceTimeline.totalFrames / 24).toFixed(1)}s）
+                  </h3>
+                  <div className="timeline-bar">
+                    {pieceTimeline.shots.map((span) => (
+                      <span
+                        key={span.shotIndex}
+                        className="timeline-span"
+                        style={{
+                          width: `${(span.frames / pieceTimeline!.totalFrames) * 100}%`,
+                        }}
+                      >
+                        {span.shotIndex + 1}号 {span.frames}帧
+                      </span>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <p className="editor-hint">
+                  整片时间线暂不可预览（镜头时长无法成片，或存在不可预览的场景源）；
+                  仍可在下方逐个镜头修订时长与画面。
+                </p>
+              )}
               <ol className="shot-list">
                 {document.shots.map((shot, index) => (
                   <ShotEditorCard
                     key={shot.shotId}
                     shot={shot}
                     index={index}
-                    frames={pieceTimeline!.shots[index]!.frames}
+                    frames={pieceTimeline?.shots[index]?.frames ?? null}
                     project={document}
                     editable={
                       shotSpecs[index] !== null ||
@@ -793,17 +802,15 @@ export default function VideoStudioPage() {
                   </p>
                 </div>
               ) : null}
-              <TimelinePreview
-                items={pieceItems}
-                timeline={pieceTimeline}
-                transitions={document.transitions}
-                assets={mediaAssets}
-              />
+              {pieceTimeline && pieceItems ? (
+                <TimelinePreview
+                  items={pieceItems}
+                  timeline={pieceTimeline}
+                  transitions={document.transitions}
+                  assets={mediaAssets}
+                />
+              ) : null}
             </section>
-          ) : document.shots.length > 0 ? (
-            <p className="editor-hint">
-              镜头含不可预览的场景源（非 spec/媒体）或时长缺失，整片预览不可用。
-            </p>
           ) : null}
           <button
             type="button"

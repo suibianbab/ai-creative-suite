@@ -163,7 +163,8 @@ function resolveAnyTemplate(
 export type ShotEditorCardProps = {
   shot: Shot;
   index: number;
-  frames: number;
+  // 整片时间线不可量化（存量零帧/不可预览场景源）时为 null，卡片照常可编辑。
+  frames: number | null;
   // 整片文档：改时长时量化全片帧数、检查相邻转场借帧（只读，不落库）。
   project: VideoProject;
   // shotWorkingSpec 降级（非 spec/媒体场景源/非法 spec）时 false → 只读卡。
@@ -408,7 +409,8 @@ export function ShotEditorCard({
         <span className="shot-narration">旁白：{working.narrationText}</span>
       ) : null}
       <span className="shot-duration">
-        {working ? `${working.durationMs / 1000}s` : ""} · {frames} 帧
+        {working ? `${working.durationMs / 1000}s` : ""} ·{" "}
+        {frames === null ? "帧数不可用" : `${frames} 帧`}
       </span>
       <label className="shot-lock-toggle">
         <input
@@ -623,7 +625,7 @@ export function ShotEditorCard({
                       : "shot-impact"
                   }
                 >
-                  整片帧数：{durationImpact.beforeFrames} →{" "}
+                  整片帧数：{durationImpact.beforeFrames ?? "无法量化"} →{" "}
                   {durationImpact.afterFrames ?? "无法量化"} 帧 @24fps
                   {durationImpact.frameError
                     ? ` · ${durationImpact.frameError}`

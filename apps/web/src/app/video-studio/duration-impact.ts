@@ -10,7 +10,9 @@ import {
 
 export type DurationImpact = {
   changed: boolean;
-  beforeFrames: number;
+  // 当前文档本身无法量化（如存量零帧镜头）时为 null，调用方按"无法量化"展示；
+  // 改后仍可能量化成功，这正是把存量零帧镜头改回可出片时长的修复入口。
+  beforeFrames: number | null;
   afterFrames: number | null; // 无法量化（如零帧镜头）时 null，原因在 frameError
   frameError: string | null;
   transitionIssue: string | null;
@@ -42,8 +44,7 @@ export function describeDurationImpact(
   ) {
     return {
       changed: false,
-      // 哨兵值：changed=false 时调用方不得读取 beforeFrames/afterFrames。
-      beforeFrames: 0,
+      beforeFrames: null,
       afterFrames: null,
       frameError: `镜头序号 ${shotIndex} 越界（共 ${current.length} 个镜头）`,
       transitionIssue: null,
@@ -53,8 +54,15 @@ export function describeDurationImpact(
   next[shotIndex] = Math.round(nextDurationMs);
   const changed = next[shotIndex] !== current[shotIndex];
 
-  // beforeFrames 直接量化：打开的文档已通过校验，当前时长必然可量化。
-  const beforeFrames = quantizeTimeline(current, fps).totalFrames;
+  // 当前文档不一定可量化：存量零帧镜头（如 1ms @24fps）会让 quantizeTimeline
+  // 抛 ZeroFrameShotError。这里只降级 beforeFrames 为 null，不抛——否则挂载
+  // 镜头卡时 useMemo 在渲染期崩溃，用户反而失去修订时长的入口。
+  let beforeFrames: number | null = null;
+  try {
+    beforeFrames = quantizeTimeline(current, fps).totalFrames;
+  } catch {
+    // 存量零帧等编排错误：beforeFrames 保持 null 表示"当前文档无法量化"。
+  }
 
   if (!changed) {
     // 时长没变 → 帧数与转场窗口都不会变，直接返回，不解析转场。
