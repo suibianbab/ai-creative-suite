@@ -165,7 +165,7 @@ git commit -m "feat(video-document): 新增 three 场景源与 3D 渲染证据�
     `componentId: string`、`version: number`、`validateParams(value) → normalizedParams`、
     `createRig({ THREE, params, width, height, background }) → { scene, camera }`、
     `pose(rig, frameIndex, { fps, durationFrames }) → void`
-  - `validateThreeSpec(value, registry) → ThreeSceneSpec`（返回规范化后的 spec；结构校验与 Task 1 同口径，另做注册表查询 + `validateParams`）
+  - `validateThreeSpec(value, registry) → ThreeSceneSpec`（**只做**注册表查询 + `component.validateParams` + 返回规范化 spec；结构规则唯一实现点是 Task 1 的 `validateVideoProject`，这里只保留 `componentId`/`componentVersion` 存在性检查以便给出可读错误）
 
 **`orbit3d` 参数表（默认值与范围，逐项校验并拒绝未知键）：**
 
@@ -234,7 +234,7 @@ git commit -m "feat(video): 新增 3D 场景注册表与 orbit3d 组件"
 - Produces:
   - `BAKE_FPS = 24`
   - `buildBakeJobs({ project, aspects })` → `[{ aspect, shotIndex, label, spec, width, height, frames }]`（纯函数，用 `quantizeTimeline` 算 span）
-  - `bakeThreeShots({ jobs, outDir, deps })` → `[{ shotIndex, aspect, storeKey, clipPath, framesDigest, clipSha256, threeVersion, chromiumVersion, glRenderer }]`
+  - `bakeThreeShots({ jobs, outDir, deps })` → `[{ shotIndex, aspect, storeKey, clipPath, framesDigest, frameHashes, clipSha256, threeVersion, chromiumVersion, glRenderer }]`
   - `createThreeServer({ root })` → `{ server, url }`（静态服务：`/`、`/harness.js`、`/scene/*.mjs`、`/vendor/three/*.js`，只读、127.0.0.1、无目录遍历）
   - `runEncoder(framesDir, fps, outFile)`（默认实现走 `pnpm --filter @acs/remotion-engine exec remotion ffmpeg`）
   - CLI：`node scripts/video/bake-three.mjs --project <path> [--out <dir>]`，按 `brief.aspectTargets` 逐画幅烘焙全部 `three` 镜头（无 `three` 镜头时打印「无 3D 镜头」并 exit 0）；`--out` 缺省为 `mkdtemp`，退出时清理
@@ -258,6 +258,7 @@ window.bakeFrame = (frameIndex) => string  // "data:image/png;base64,…"
 test("buildBakeJobs：帧数取累计量化的 span", ...)                  // 与 quantizeTimeline 对拍
 test("buildBakeJobs：无 three 镜头返回空数组", ...)
 test("bakeThreeShots：逐帧落盘、命名 %04d.png、framesDigest = sha256(逐帧 hex 用 \\n 串联)", ...)
+test("bakeThreeShots：frameHashes 逐帧顺序与文件一致（供 manifest 消费）", ...)
 test("bakeThreeShots：storeKey = clipSha256 前 16 位 + .mp4，落在 <out>/original/", ...)
 test("bakeThreeShots：渲染器不含 SwiftShader 时中文报错并含镜头号", ...)
 test("bakeThreeShots：页面 console error 时失败且带首条错误", ...)
@@ -314,20 +315,22 @@ git commit -m "feat(video): three.js 逐帧烘焙内核与确定性证据"
 ### Task 4: 出片装配（三镜头进主链路）
 
 **Files:**
+- Create: `scripts/video/render-scene.props.mjs`（把 `timelineProps` 组装从 `render-scene.mjs` 抽出为纯函数）
 - Modify: `scripts/video/render-scene.mjs`
 - Modify: `scripts/video/frame-dryrun.mjs`
-- Test: `scripts/video/render-scene.media.test.mjs`（装配回归）、`scripts/video/frame-dryrun.test.mjs`
+- Test: `scripts/video/render-scene.props.test.mjs`（新建；装配回归）、`scripts/video/frame-dryrun.test.mjs`
 
 **Interfaces:**
 - Consumes: Task 1 字段、Task 2 `validateThreeSpec`、Task 3 `buildBakeJobs`/`bakeThreeShots`/`BAKE_FPS`
 - Produces:
   - `render-scene.mjs` 的 `three` 分支；`shotEntries` 新增 `{ shot, version, three: spec }`
-  - `buildTimelineProps(aspect)`（按画幅组装；无 `three` 时输出与改动前逐字节一致）
-  - `render-manifest.json` 新增 `aspects[aspect].three.shots[]`，每条含 `{ shotIndex, componentId, componentVersion, threeVersion, chromiumVersion, glRenderer, frameHashes: string[], framesDigest }`（`frameHashes` 需 `buildBakeJobs` 透传；实现方式：`bakeThreeShots` 返回值增加 `frameHashes` 字段）
+  - `buildTimelineProps(input) → object`（`input`: `{ timeline, shotEntries, mediaByShot, threeByShot, mediaUrlBase, threeUrlBase, narrationByShot, subtitlesByShot, transitions }`；无 `three` 时输出与改动前逐字节一致）
+  - `buildTimelineShotThree(entry, src, fps) → { media: {...} }`（与 `buildTimelineShotMedia` 同形，`inMs: 0`、`fit: "contain"`、`focalX: 0.5`、`audio: "mute"`、`trimBefore: 0`、`outMs: Math.round(frames / fps * 1000)`）
+  - `render-manifest.json` 新增 `aspects[aspect].three.shots[]`，每条含 `{ shotIndex, componentId, componentVersion, threeVersion, chromiumVersion, glRenderer, frameHashes: string[], framesDigest }`
 
 - [ ] **Step 1: 写失败测试**
 
-`render-scene.media.test.mjs` 新增：
+`render-scene.props.test.mjs` 新增：
 
 ```ts
 test("按画幅组装的 props：无 three 项目与旧输出逐字节一致", ...)   // 固定夹具 JSON.stringify 对拍
@@ -344,7 +347,7 @@ test("干跑：three 与 media-clip 混排时作业数只计 spec 镜头", ...)
 
 - [ ] **Step 2: 跑测试确认红**
 
-Run: `node --test scripts/video/render-scene.media.test.mjs scripts/video/frame-dryrun.test.mjs`
+Run: `node --test scripts/video/render-scene.props.test.mjs scripts/video/frame-dryrun.test.mjs`
 Expected: 5 条新增失败（`three` 分支缺失）。
 
 - [ ] **Step 3: 实现**
@@ -383,7 +386,7 @@ Expected: 全套绿；出片 exit 0，`landscape.mp4` 存在，项目 JSON 追�
 - [ ] **Step 5: 提交**
 
 ```bash
-git add scripts/video/render-scene.mjs scripts/video/frame-dryrun.mjs scripts/video/render-scene.media.test.mjs scripts/video/frame-dryrun.test.mjs scripts/video/bake-three.mjs
+git add scripts/video/render-scene.mjs scripts/video/render-scene.props.mjs scripts/video/render-scene.props.test.mjs scripts/video/frame-dryrun.mjs scripts/video/frame-dryrun.test.mjs scripts/video/bake-three.mjs
 git commit -m "feat(video): three 镜头接入出片主链路并写入 3D 证据"
 ```
 
