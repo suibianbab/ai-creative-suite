@@ -3,16 +3,16 @@
 // Remotion 下载器用 contentType 推导资产文件名后缀（B1 注记）。
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const WORK = mkdirSync(path.join(tmpdir(), "acs-media-server-"), {
-  recursive: true,
-});
+// 每次运行独立目录：固定目录在并发跑或上次残留时会让 mkdirSync 返回 undefined，
+// 进而把 path.join 打崩（既有套件偶发红的根因）。
+const WORK = mkdtempSync(path.join(tmpdir(), "acs-media-server-"));
 test.after(() => rmSync(WORK, { recursive: true, force: true }));
 
 const KEY_A = "0123456789abcdef.mp4";
