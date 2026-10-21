@@ -12,6 +12,7 @@ import {
   applyPlan,
   applyStoryboard,
   describeStoryboardAppend,
+  storyboardConfirmLines,
 } from "./apply-plan.js";
 import { planFromSentence, planStoryboard } from "./planner.js";
 
@@ -271,6 +272,25 @@ test("两次应用分镜：applications 追加第二条，brief.sentence 为最�
   assert.equal(app1.filmShotCountAfter, 7);
   assert.equal(app1.filmTotalMsAfter, 40067);
   assert.equal(second.document.brief.sentence, secondSentence);
+});
+
+test("分镜确认卡逐镜头带出旁白与时长", () => {
+  const storyboard = planStoryboard(
+    "做一个30秒的STEM解说视频，主题是勾股定理，分4个镜头",
+  );
+  assert.ok(storyboard.ok);
+  const lines = storyboardConfirmLines(storyboard);
+  assert.equal(lines.length, 4);
+  assert.equal(lines[0]!.index, 1);
+  assert.equal(lines[0]!.label, "开场");
+  assert.equal(lines[0]!.narrationText, "勾股定理。");
+  assert.equal(lines[1]!.narrationText, "勾股定理，要点 1。");
+  assert.equal(lines[3]!.narrationText, "谢谢观看。");
+  assert.equal(
+    lines[1]!.durationSeconds,
+    storyboard.shots[1]!.plan.spec.durationMs / 1000,
+  );
+  assert.equal(lines[1]!.renderHint, storyboard.shots[1]!.plan.renderHint);
 });
 
 test("describeStoryboardAppend：确认卡算术预告（空项目/已有镜头）", () => {

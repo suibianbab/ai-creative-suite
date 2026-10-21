@@ -220,3 +220,25 @@ export function applyStoryboard(
     },
   };
 }
+
+export type StoryboardConfirmLine = {
+  index: number; // 1-based，渲染用
+  label: string;
+  durationSeconds: number;
+  renderHint: string;
+  narrationText: string;
+};
+
+// 确认卡与「确认后落库」共用同一规划快照：旁白就在 storyboard.shots 里，
+// 不在 UI 层另拼一份——两处各拼一次就是漂移的入口。
+export function storyboardConfirmLines(
+  storyboard: StoryboardResult & { ok: true },
+): StoryboardConfirmLine[] {
+  return storyboard.shots.map((shot, index) => ({
+    index: index + 1,
+    label: shot.label,
+    durationSeconds: shot.plan.spec.durationMs / 1000,
+    renderHint: shot.plan.renderHint,
+    narrationText: shot.narrationText,
+  }));
+}

@@ -499,6 +499,12 @@
   color: #5d7469;
 }
 
+.plan-shot-narration {
+  display: block;
+  color: #5d7469;
+  font-size: 0.85em;
+}
+
 .editor-shots {
   margin-bottom: 20px;
   display: grid;

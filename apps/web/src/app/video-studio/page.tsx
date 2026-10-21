@@ -18,6 +18,7 @@ import {
   applyPlan,
   applyStoryboard,
   describeStoryboardAppend,
+  storyboardConfirmLines,
 } from "./apply-plan";
 import {
   importVideoProject,
@@ -459,14 +460,14 @@ export default function VideoStudioPage() {
                 · {storyboard.totalMs / 1000}s
               </p>
               <ol className="plan-shot-list">
-                {storyboard.shots.map((shot, index) => (
-                  <li key={index} className="plan-shot-item">
+                {storyboardConfirmLines(storyboard).map((line) => (
+                  <li key={line.index} className="plan-shot-item">
                     <span className="plan-shot-label">
-                      {index + 1}. {shot.label} ·{" "}
-                      {shot.plan.spec.durationMs / 1000}s
+                      {line.index}. {line.label} · {line.durationSeconds}s
                     </span>
-                    <span className="plan-shot-hint">
-                      {shot.plan.renderHint}
+                    <span className="plan-shot-hint">{line.renderHint}</span>
+                    <span className="plan-shot-narration">
+                      旁白：{line.narrationText}
                     </span>
                   </li>
                 ))}
