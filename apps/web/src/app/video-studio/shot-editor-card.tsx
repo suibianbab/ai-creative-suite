@@ -51,6 +51,7 @@ import {
 } from "./media-clip-templates";
 import { LINE_TEMPLATE_LABELS, SHAPE_TEMPLATE_LABELS } from "./planner";
 import {
+  attachDescription,
   buildRevisePatch,
   draftFromWorking,
   type ShotEditDraft,
@@ -167,6 +168,7 @@ export type ShotEditorCardProps = {
   mediaAssets: MediaAsset[];
   onRevise: (patch: {
     narrationText?: string;
+    description?: string;
     spec?: unknown;
     mediaClip?: MediaClipPatch;
     threeScene?: ThreeSceneSpec;
@@ -215,10 +217,12 @@ export function ShotEditorCard({
           {
             narrationText: working.narrationText,
             durationMs: working.durationMs,
+            description: working.description,
           },
           editSpec,
         )
       : {
+          description: "",
           narrationText: "",
           background: "#ffffff",
           durationSeconds: 0,
@@ -309,6 +313,7 @@ export function ShotEditorCard({
           {
             narrationText: nextWorking.narrationText,
             durationMs: nextWorking.durationMs,
+            description: nextWorking.description,
           },
           nextEditSpec,
         ),
@@ -435,6 +440,17 @@ export function ShotEditorCard({
       </button>
       {expanded && canEdit && editSpec ? (
         <div className="shot-edit-form">
+          <label className="shot-edit-field">
+            镜头说明
+            <input
+              className="shot-description-input"
+              maxLength={200}
+              value={draft.description}
+              onChange={(event) =>
+                setDraft({ ...draft, description: event.target.value })
+              }
+            />
+          </label>
           <label className="shot-edit-field">
             旁白
             <textarea
@@ -1109,8 +1125,16 @@ export function ShotEditorCard({
                   }
                   setMediaError(null);
                   setMediaWarnings(built.warnings);
+                  const attached = attachDescription(
+                    built.patch,
+                    draft.description,
+                  );
+                  if ("error" in attached) {
+                    setEditError(attached.error);
+                    return;
+                  }
                   setEditError(null);
-                  onRevise(built.patch);
+                  onRevise(attached.patch);
                   return;
                 }
                 // 3D 臂（Ruling 11/4）：只换场景源；旁白沿用共享草稿，时长取
@@ -1121,11 +1145,19 @@ export function ShotEditorCard({
                     seed: spec?.seed ?? threeSource?.spec.seed ?? 1,
                     params: threeSource?.spec.params,
                   });
+                  const attached = attachDescription(
+                    {
+                      narrationText: draft.narrationText,
+                      threeScene: built.spec,
+                    },
+                    draft.description,
+                  );
+                  if ("error" in attached) {
+                    setEditError(attached.error);
+                    return;
+                  }
                   setEditError(null);
-                  onRevise({
-                    narrationText: draft.narrationText,
-                    threeScene: built.spec,
-                  });
+                  onRevise(attached.patch);
                   return;
                 }
                 // 换模板 = 以模板 spec 为基底；与同草稿的并发编辑（旁白/背景/
@@ -1266,7 +1298,12 @@ export function ShotEditorCard({
                 setStickError(null);
                 setSketchError(null);
                 setLoadingError(null);
-                onRevise(patch);
+                const attached = attachDescription(patch, draft.description);
+                if ("error" in attached) {
+                  setEditError(attached.error);
+                  return;
+                }
+                onRevise(attached.patch);
               }}
             >
               应用修订
@@ -1280,6 +1317,7 @@ export function ShotEditorCard({
                     {
                       narrationText: working.narrationText,
                       durationMs: working.durationMs,
+                      description: working.description,
                     },
                     editSpec,
                   ),

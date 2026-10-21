@@ -122,6 +122,43 @@ function editableProject(): VideoProject {
   };
 }
 
+// 本地小助手：查 shot 的 workingVersionId 对应版本（断言 working 内容用）。
+function workingOf(p: VideoProject, shotId: string) {
+  const shot = p.shots.find((s) => s.shotId === shotId)!;
+  return shot.contentVersions.find(
+    (version) => version.versionId === shot.workingVersionId,
+  )!;
+}
+
+test("reviseWorkingVersion：显式说明逐字落库，空/超长拒绝", () => {
+  const p = editableProject();
+  const shotId = p.shots[0]!.shotId;
+  const next = reviseWorkingVersion(
+    p,
+    shotId,
+    { description: "新说明" },
+    UUID2,
+    T,
+  );
+  assert.equal(workingOf(next, shotId).description, "新说明");
+  assert.throws(
+    () => reviseWorkingVersion(p, shotId, { description: "  " }, UUID2, T),
+    /镜头说明须为 1\.\.200 字符/,
+  );
+  assert.throws(
+    () =>
+      reviseWorkingVersion(
+        p,
+        shotId,
+        { description: "字".repeat(201) },
+        UUID2,
+        T,
+      ),
+    /镜头说明须为 1\.\.200 字符/,
+  );
+  // 不传 description 时维持原「（人工修订）」后缀口径（上一条测试已覆盖）
+});
+
 test("reviseWorkingVersion 追加 human 版本并前移指针", () => {
   const p = editableProject();
   const next = reviseWorkingVersion(

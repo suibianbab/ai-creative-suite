@@ -9,6 +9,8 @@ import { reseedSpecParams, speechAwareDurationMs } from "./planner";
 // 草稿构造 draftFromWorking、校验 buildRevisePatch、语速溢出 speechOverflowMs。
 
 export type ShotEditDraft = {
+  // 镜头说明（用户可读的画面意图，1..200）：随人工修订写入内容版本。
+  description: string;
   narrationText: string;
   background: string;
   durationSeconds: number;
@@ -20,7 +22,12 @@ export type ShotEditDraft = {
 
 const HEX = /^#[0-9a-fA-F]{6}$/;
 
-type WorkingLike = { narrationText: string; durationMs: number };
+type WorkingLike = {
+  narrationText: string;
+  durationMs: number;
+  // 旧调用方（只读旁白/时长）可省略；省略时草稿说明为空串。
+  description?: string;
+};
 
 type TextParams = { title?: string; subtitle?: string };
 
@@ -33,6 +40,8 @@ export function draftFromWorking(
     spec.componentId === "text-animation" ? spec.params : {}
   ) as TextParams;
   return {
+    // 不 trim：草稿是用户正在编辑的原文，校验留到应用时（attachDescription）。
+    description: working.description ?? "",
     narrationText: working.narrationText,
     background: spec.background,
     durationSeconds: working.durationMs / 1000,
@@ -40,6 +49,18 @@ export function draftFromWorking(
     subtitle: params.subtitle ?? "",
     templateAdvanced: false,
   };
+}
+
+// 说明附着（三个应用臂共用）：去首尾空白后校验 1..200，合法则并入 patch。
+// 返回联合类型而非抛错：卡片要把错误显示在表单里（setEditError）。
+export function attachDescription<T extends object>(
+  patch: T,
+  raw: string,
+): { patch: T & { description: string } } | { error: string } {
+  const description = raw.trim();
+  if (description.length === 0) return { error: "镜头说明不能为空" };
+  if (description.length > 200) return { error: "镜头说明不能超过 200 字符" };
+  return { patch: { ...patch, description } };
 }
 
 // 语速溢出（spec R5）：>0 表示旁白按语速估计超出当前时长草稿。

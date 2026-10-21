@@ -162,6 +162,31 @@ test("分镜：narrationText 如实——开场读标题、要点读标题+要�
   }
 });
 
+test("分镜每镜头产出可读说明（意图，而非组件名）", () => {
+  const storyboard = planStoryboard(
+    "做一个30秒的STEM解说视频，主题是勾股定理，分4个镜头",
+  );
+  assert.ok(storyboard.ok);
+  assert.equal(
+    storyboard.shots[0]!.description,
+    "开场（文字动画）：标题「勾股定理」进入画面",
+  );
+  assert.equal(
+    storyboard.shots[1]!.description,
+    "要点 1（文字动画）：标题「勾股定理」与副标题「要点 1」进入画面",
+  );
+  assert.equal(
+    storyboard.shots[2]!.description,
+    "示意 1（图形动画）：模板图形依次入场，不含讲解文字",
+  );
+  assert.equal(
+    storyboard.shots[3]!.description,
+    "结语（文字动画）：标题「勾股定理」与副标题「谢谢观看」进入画面",
+  );
+  for (const shot of storyboard.shots)
+    assert.ok(shot.description.length <= 200);
+});
+
 test("分镜：默认 4 镜头；「分3/8个镜头」生效且交替构成正确", () => {
   const d = planStoryboard("做一个12秒的STEM解说视频，主题是光的折射");
   assert.ok(d.ok);

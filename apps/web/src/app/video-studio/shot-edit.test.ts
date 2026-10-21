@@ -3,6 +3,7 @@ import test from "node:test";
 import { defaultRegistry, validateSceneSpec } from "@acs/video-scene";
 import { planFromSentence, reseedSpecParams } from "./planner.js";
 import {
+  attachDescription,
   buildRevisePatch,
   draftFromWorking,
   type ShotEditDraft,
@@ -163,6 +164,27 @@ test("buildRevisePatch：清空副标题后旧副标题不残留", () => {
   assert.equal(error, null);
   const nextSpec = patch!.spec as typeof spec;
   assert.equal("subtitle" in (nextSpec.params as object), false);
+});
+
+test("镜头说明：草稿带出、附着时去空白、空与超长被拒", () => {
+  const spec = textSpec();
+  const draft = draftFromWorking(
+    { narrationText: "旁白", durationMs: 8000, description: "开场说明" },
+    spec,
+  );
+  assert.equal(draft.description, "开场说明");
+  assert.deepEqual(
+    attachDescription({ narrationText: "旁白" }, "  开场说明  "),
+    {
+      patch: { narrationText: "旁白", description: "开场说明" },
+    },
+  );
+  const empty = attachDescription({}, "   ");
+  assert.ok("error" in empty);
+  assert.equal(empty.error, "镜头说明不能为空");
+  const tooLong = attachDescription({}, "字".repeat(201));
+  assert.ok("error" in tooLong);
+  assert.equal(tooLong.error, "镜头说明不能超过 200 字符");
 });
 
 test("speechOverflowMs：语速估计超时长为正，否则 0", () => {

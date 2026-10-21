@@ -117,6 +117,9 @@ export function reviseWorkingVersion(
   shotId: string,
   patch: {
     narrationText?: string;
+    // 镜头说明（用户可读的画面意图）：显式给出则原样落库；缺省沿用
+    // 「（人工修订）」后缀口径，保证说明仍能区分人工版本。
+    description?: string;
     spec?: unknown;
     mediaClip?: MediaClipPatch;
     threeScene?: ThreeSceneSpec;
@@ -144,6 +147,13 @@ export function reviseWorkingVersion(
       "spec、mediaClip 与 threeScene 互斥：一次修订只能指定一种场景源",
     );
   }
+  // 说明长度与 ContentVersion.description 的 1..200 契约一致，提前 fail-loud。
+  if (patch.description !== undefined) {
+    const d = patch.description.trim();
+    if (d.length === 0 || d.length > 200) {
+      throw new Error("镜头说明须为 1..200 字符");
+    }
+  }
   const version: ContentVersion = {
     ...base,
     versionId: newVersionId,
@@ -156,7 +166,10 @@ export function reviseWorkingVersion(
           : patch.spec === undefined
             ? base.durationMs
             : (patch.spec as { durationMs: number }).durationMs,
-    description: `${base.description.slice(0, 160)}（人工修订）`,
+    description:
+      patch.description === undefined
+        ? `${base.description.slice(0, 160)}（人工修订）`
+        : patch.description.trim(),
     narrationText: patch.narrationText ?? base.narrationText,
     sceneSource:
       patch.mediaClip !== undefined

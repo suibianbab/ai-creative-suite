@@ -4,6 +4,7 @@ import {
   type SceneSpec,
   validateSceneSpec,
 } from "@acs/video-scene";
+import { componentLabel } from "./component-labels.js";
 
 // P0 规则规划器（PhotoCraft M1 式「绝不猜」）：只认一个固定句式，解析失败就
 // 原样把语法告诉用户，绝不静默降级、绝不替用户补意图。
@@ -274,6 +275,9 @@ export function speechAwareDurationMs(
 
 export type StoryboardShot = {
   label: string;
+  // 镜头说明（画面意图，而非组件名）：规划期产出、随内容版本落库，
+  // 用户可在分镜编辑器里人工修订（见 applyStoryboard / reviseWorkingVersion）。
+  description: string;
   // D2：该镜头的旁白朗读文本——只读画面实际展示/表达的事实（标题/要点序号/
   // 谢谢观看），不虚构讲解词；合成走 scripts/video/tts-narration.mjs。
   narrationText: string;
@@ -331,8 +335,11 @@ export function planStoryboard(sentence: string): StoryboardResult {
       let params: unknown;
       let renderHint: string;
       let narrationText: string;
+      // 说明只描述画面意图（观众读到的是什么），组件名由统一模板补上。
+      let intent: string;
       if (index === 0) {
         label = "开场";
+        intent = `标题「${title}」进入画面`;
         params = {
           title,
           titleColor: "#1b2c29",
@@ -344,6 +351,7 @@ export function planStoryboard(sentence: string): StoryboardResult {
         narrationText = `${title}。`;
       } else if (!isMiddle) {
         label = "结语";
+        intent = `标题「${title}」与副标题「谢谢观看」进入画面`;
         params = {
           title,
           subtitle: "谢谢观看",
@@ -357,6 +365,7 @@ export function planStoryboard(sentence: string): StoryboardResult {
       } else if (useShapes) {
         shapeIndex += 1;
         label = `示意 ${shapeIndex}`;
+        intent = "模板图形依次入场，不含讲解文字";
         params = basicShapesParams(seed);
         renderHint = `示意镜头：从固定模板库按镜头 seed 抽取模板「${SHAPE_TEMPLATE_LABELS[seed % SHAPE_TEMPLATE_LABELS.length]}」依次入场，不含讲解文字`;
         // 画面无文字：旁白只读主题这个不争事实
@@ -364,6 +373,7 @@ export function planStoryboard(sentence: string): StoryboardResult {
       } else {
         pointIndex += 1;
         label = `要点 ${pointIndex}`;
+        intent = `标题「${title}」与副标题「要点 ${pointIndex}」进入画面`;
         params = {
           title,
           subtitle: `要点 ${pointIndex}`,
@@ -377,10 +387,12 @@ export function planStoryboard(sentence: string): StoryboardResult {
       }
       // 语速感知时长（spec R4）：等分是目标，语音预估是下限——旁白读不完的
       // 镜头不许出厂；totalMs 随实际 Σ 走，确认卡如实预告。
+      const componentId = useShapes ? "basic-shapes" : "text-animation";
+      const description = `${label}（${componentLabel(componentId)}动画）：${intent}`;
       const durationMs = speechAwareDurationMs(split[index]!, narrationText);
       const spec: SceneSpec = {
         specVersion: 1,
-        componentId: useShapes ? "basic-shapes" : "text-animation",
+        componentId,
         componentVersion: 1,
         durationMs,
         seed,
@@ -390,6 +402,7 @@ export function planStoryboard(sentence: string): StoryboardResult {
       validateSceneSpec(spec, defaultRegistry); // 兜底：构造结果必须过注册表校验
       return {
         label,
+        description,
         narrationText,
         plan: { ok: true, spec, title, renderHint },
       };

@@ -1,5 +1,6 @@
 import type { VideoProject } from "@acs/video-document";
 import type { SceneSpec } from "@acs/video-scene";
+import { componentLabel } from "./component-labels.js";
 import type { StoryboardResult } from "./planner.js";
 
 // P2-B：确认应用不得静默更换项目身份。两种模式：
@@ -16,12 +17,6 @@ export type PlanPayload = { spec: SceneSpec; title: string };
 
 export type PlanIds = { project: string; shot: string; version: string };
 
-const COMPONENT_LABEL: Record<string, string> = {
-  "text-animation": "文字",
-  "line-drawing": "线描",
-  "basic-shapes": "图形",
-};
-
 // 首镜头 = 初始内容版本 + submitted(human) 事件，workingVersionId 指向它。
 function firstShotDocument(
   base: Pick<
@@ -35,7 +30,7 @@ function firstShotDocument(
   ids: PlanIds,
 ): VideoProject {
   const now = new Date().toISOString();
-  const label = COMPONENT_LABEL[plan.spec.componentId] ?? plan.spec.componentId;
+  const label = componentLabel(plan.spec.componentId);
   return {
     schemaVersion: 1,
     id,
@@ -161,8 +156,6 @@ export function applyStoryboard(
     document.shots.reduce((max, shot) => Math.max(max, shot.order), -1) + 1;
   const newShots = storyboard.shots.map((shot, index) => {
     const versionId = ids.version();
-    const label =
-      COMPONENT_LABEL[shot.plan.spec.componentId] ?? shot.plan.spec.componentId;
     return {
       shotId: ids.shot(),
       order: nextOrder + index,
@@ -173,7 +166,8 @@ export function applyStoryboard(
           versionId,
           createdAt: now,
           durationMs: shot.plan.spec.durationMs,
-          description: `${shot.label}（${label}动画）：${shot.plan.title}`,
+          // 说明是规划产物（意图文案），应用层原样落库，不再二次拼接。
+          description: shot.description,
           narrationText: shot.narrationText,
           sceneSource: { type: "spec" as const, spec: shot.plan.spec },
           provenance: { engineId: "planner-rules", engineVersion: "1" },

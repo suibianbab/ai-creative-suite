@@ -148,6 +148,29 @@ test("应用分镜：narrationText 逐镜头落入内容版本，与分镜结果
   );
 });
 
+// Task 2：镜头说明是规划产物，应用层原样落库（不再二次拼接文案）。
+test("应用分镜：镜头说明逐字落入工作版本，与分镜结果一致", () => {
+  const result = applyStoryboard(emptyProject(), storyboard, {
+    shot: uuidFactory("cccccccc", 150),
+    version: uuidFactory("dddddddd", 150),
+  });
+  assert.ok(storyboard.ok);
+  result.document.shots.forEach((shot, index) => {
+    const working = shot.contentVersions.find(
+      (version) => version.versionId === shot.workingVersionId,
+    );
+    assert.equal(
+      working!.description,
+      storyboard.shots[index]!.description,
+      `镜头 ${index + 1} 说明未原样落档`,
+    );
+  });
+  assert.equal(
+    result.document.shots[0]!.contentVersions[0]!.description,
+    "开场（文字动画）：标题「勾股定理」进入画面",
+  );
+});
+
 test("已有镜头项目应用分镜：旧镜头逐字段不变，只追加演进通过", () => {
   const withShot = applyPlan(
     emptyProject(),
