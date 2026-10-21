@@ -1347,6 +1347,21 @@
         "Browser preview plays the stored media (readyState >= 2, 854px wide) and renders both aspects deterministically (double run byte-identical, media frame non-black (signalstats YAVG >= 100))",
         "Attribution ruling L6: e2e asserts ledger metadata (license/author/sourcePageUrl) and no product/render change adds in-frame credit; no TTS billing and zero console errors"
       ]
+    },
+    {
+      "id": "VID-024",
+      "tier": "integration",
+      "title": "Video Studio P3-A interactive HTML delivery (file:// step navigation, iframe embedding, deterministic double export)",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/e2e-interactive.mjs"],
+      "requiresPorts": [],
+      "checks": [
+        "Fixed 3-shot fixture exports via the CLI with exit 0 to index.html; the page carries data-total=\"3\" and the delivery frameMap is [24,37,24] (85 sampled frames in total)",
+        "Determinism: two independent exports (output directory cleared before each run) produce byte-identical index.html under SHA-256",
+        "Real trigger over file://: step 1 shows an SVG stage with 上一步 disabled; clicking 下一步 advances data-step to 2 and replaces the stage content; ArrowRight reaches step 3 with 下一步 disabled, ArrowLeft returns to 2, Home returns to 1; clicking 重新开始 while on step 1 replaces #stage children (MutationObserver) so the step-1 animation restarts",
+        "Embedding: a host page opened over file:// embeds index.html in an iframe; clicking 下一步 through frameLocator advances the frame's data-step from 1 to 2 with zero console errors (file:// responses have no HTTP headers, so X-Frame-Options is not observable)",
+        "Project JSON appends a kind:\"interactive-html\" delivery: versionIds = the 3 working versions, renderIds = [], frameMap = 3 positive integers, outputRef = \"index.html\", digest matches /^[0-9a-f]{64}$/ and equals the measured index.html SHA-256; savedVersion increments once per export (1 → 2 → 3) and validateVideoProject passes"
+      ]
     }
   ],
   "manual": [

@@ -1,7 +1,7 @@
 # P3-A 交互 HTML 交付设计（逐步点击的解说页）
 
 - 日期：2026-10-21
-- 状态：待实施
+- 状态：已实施
 - 前序：`docs/VIDEO_STUDIO_ALIGNMENT_REVIEW_2026-10-17.md`（P3：交互动画/动态网页走独立交互交付路径，保留可运行源、不经成片渲染；验收「实际触发+嵌入，不以 MP4 充数」）
 - 相关：`scripts/video/svg-serialize.mjs`（逐帧 SVG 翻页册）、`scripts/video/delivery.mjs`（DeliveryRecord 追加器）、`scripts/video/export-shot-svg.mjs`（同层导出先例）
 
