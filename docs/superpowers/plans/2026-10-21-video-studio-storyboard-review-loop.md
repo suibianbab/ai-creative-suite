@@ -1,5 +1,7 @@
 # Video Studio 分镜审阅环 Implementation Plan
 
+> **状态（2026-10-21）**：本计划 4 个任务已全部落地并通过评审，落地记录见 docs/VIDEO_STUDIO_STORYBOARD_REVIEW_LOOP_2026-10-21.md；下方 checkbox 保留为原始任务清单，不再逐项勾选。
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 让分镜「看得懂、改得动、改之前算得清」：确认卡逐镜头说清旁白，镜头说明（意图）随版本落库并可人工修订，改时长时当场算出整片帧数与相邻转场借帧是否失效。

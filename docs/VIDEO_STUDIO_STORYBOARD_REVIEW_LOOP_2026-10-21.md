@@ -1,6 +1,6 @@
 # Video Studio 分镜审阅环：落地与后续顺序（2026-10-21）
 
-依据 2026-10-21 差距复核与实施计划 `docs/superpowers/plans/2026-10-21-video-studio-storyboard-review-loop.md`（`2ca5a76`）：A1/A2/C 三个任务已合入并过评审。本文只记录本阶段落地范围、后续顺序与门禁、明确不做与证据口径，不复述计划全文；架构基线（ADR 0003、ADR 0012）不变。
+依据 2026-10-21 差距复核与实施计划 `docs/superpowers/plans/2026-10-21-video-studio-storyboard-review-loop.md`（`2ca5a76`）：A1/A2/C 三个任务已在分支 `worktree-video-studio-p4-storyboard` 落地并过评审（**未合并**）。本文只记录本阶段落地范围、后续顺序与门禁、明确不做与证据口径，不复述计划全文；架构基线（ADR 0003、ADR 0012）不变。
 
 ## 1. 本阶段落地
 
