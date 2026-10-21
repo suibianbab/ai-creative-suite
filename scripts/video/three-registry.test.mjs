@@ -139,6 +139,26 @@ test("orbit3d：createRig + pose 的旋转角只由帧号决定", () => {
     new THREE.Color(params.accent).getHexString(),
     "参照轴颜色来自 params.accent",
   );
+
+  // 上面的 params 是默认值，若 createRig 忽视入参写死默认色也照样通过；
+  // 换一组显式非默认色才能证明颜色确实来自 params。
+  const custom = orbit3d.validateParams({
+    color: "#112233",
+    accent: "#445566",
+  });
+  const customRig = orbit3d.createRig({
+    THREE,
+    params: custom,
+    width: 1280,
+    height: 720,
+    background: "#101820",
+  });
+  assert.equal(customRig.mesh.material.color.getHexString(), "112233");
+  const customAxis = customRig.scene.children.find(
+    (child) => child.isMesh && child !== customRig.mesh,
+  );
+  assert.ok(customAxis, "自定义场景同样必须有参照轴 Mesh");
+  assert.equal(customAxis.material.color.getHexString(), "445566");
 });
 
 test("orbit3d：createRig 的几何随 shape 变化", () => {
