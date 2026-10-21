@@ -1,0 +1,187 @@
+// 3D 注册表与 orbit3d 组件测试：node --test scripts/video/three-registry.test.mjs
+// 依赖 three（Node 侧）：把 THREE 命名空间显式传给 createRig，组件模块自身不 import three。
+import assert from "node:assert/strict";
+import test from "node:test";
+import * as THREE from "three";
+import * as orbit3d from "./three/components/orbit3d.mjs";
+import {
+  createThreeRegistry,
+  threeRegistry,
+  UnknownThreeComponentError,
+} from "./three/registry.mjs";
+import { validateThreeSpec } from "./three/spec.mjs";
+
+const FULL_SPEC = {
+  specVersion: 1,
+  componentId: "orbit3d",
+  componentVersion: 1,
+  durationMs: 4000,
+  seed: 7,
+  background: "#101820",
+  params: {},
+};
+
+test("注册表：重复注册同 componentId@version 抛错", () => {
+  const registry = createThreeRegistry([orbit3d]);
+  assert.throws(
+    () => registry.register(orbit3d),
+    (error) =>
+      error instanceof Error &&
+      !(error instanceof UnknownThreeComponentError) &&
+      /orbit3d@1/.test(error.message) &&
+      /重复|已注册/.test(error.message),
+  );
+});
+
+test("注册表：未知组件抛 UnknownThreeComponentError 且带 id/version", () => {
+  const registry = createThreeRegistry([orbit3d]);
+  assert.deepEqual(registry.list(), ["orbit3d@1"]);
+  assert.equal(registry.version, 1);
+  assert.equal(registry.get("orbit3d", 1), orbit3d);
+
+  assert.throws(
+    () => registry.get("ghost", 9),
+    (error) => {
+      assert.ok(error instanceof UnknownThreeComponentError);
+      assert.equal(error.componentId, "ghost");
+      assert.equal(error.componentVersion, 9);
+      assert.match(error.message, /ghost@9/);
+      return true;
+    },
+  );
+});
+
+test("orbit3d：validateParams 填默认值且拒绝未知键", () => {
+  assert.deepEqual(orbit3d.validateParams({}), {
+    shape: "box",
+    color: "#4f9dff",
+    accent: "#e8b04b",
+    spinPerFrame: 0.02,
+    tilt: 0.35,
+    zoom: 1,
+  });
+
+  assert.throws(
+    () => orbit3d.validateParams({ bounce: 1 }),
+    (error) => /未知参数/.test(error.message) && /bounce/.test(error.message),
+  );
+});
+
+test("orbit3d：shape/颜色/spinPerFrame/tilt/zoom 越界逐个拒绝", () => {
+  // 枚举与颜色格式
+  assert.throws(() => orbit3d.validateParams({ shape: "pyramid" }), /shape/);
+  assert.throws(() => orbit3d.validateParams({ color: "red" }), /color/);
+  assert.throws(() => orbit3d.validateParams({ color: "#12345" }), /color/);
+  assert.throws(() => orbit3d.validateParams({ accent: "#GGGGGG" }), /accent/);
+
+  // 数值范围越界
+  assert.throws(
+    () => orbit3d.validateParams({ spinPerFrame: -0.01 }),
+    /spinPerFrame/,
+  );
+  assert.throws(
+    () => orbit3d.validateParams({ spinPerFrame: 0.5001 }),
+    /spinPerFrame/,
+  );
+  assert.throws(() => orbit3d.validateParams({ tilt: -0.1 }), /tilt/);
+  assert.throws(() => orbit3d.validateParams({ tilt: 1.6 }), /tilt/);
+  assert.throws(() => orbit3d.validateParams({ zoom: 0.49 }), /zoom/);
+  assert.throws(() => orbit3d.validateParams({ zoom: 2.01 }), /zoom/);
+  assert.throws(() => orbit3d.validateParams({ zoom: "1" }), /zoom/);
+
+  // 数值范围含端点
+  assert.equal(orbit3d.validateParams({ spinPerFrame: 0 }).spinPerFrame, 0);
+  assert.equal(orbit3d.validateParams({ spinPerFrame: 0.5 }).spinPerFrame, 0.5);
+  assert.equal(orbit3d.validateParams({ tilt: 0 }).tilt, 0);
+  assert.equal(orbit3d.validateParams({ tilt: 1.5 }).tilt, 1.5);
+  assert.equal(orbit3d.validateParams({ zoom: 0.5 }).zoom, 0.5);
+  assert.equal(orbit3d.validateParams({ zoom: 2 }).zoom, 2);
+});
+
+test("orbit3d：createRig + pose 的旋转角只由帧号决定", () => {
+  const params = orbit3d.validateParams({});
+  const rig = orbit3d.createRig({
+    THREE,
+    params,
+    width: 1280,
+    height: 720,
+    background: "#101820",
+  });
+
+  assert.ok(rig.scene.isScene);
+  assert.equal(rig.camera.type, "OrthographicCamera");
+  assert.equal(rig.mesh.rotation.x, params.tilt);
+
+  orbit3d.pose(rig, 0, { fps: 24, durationFrames: 96 });
+  assert.equal(rig.mesh.rotation.y, 0);
+
+  orbit3d.pose(rig, 100, { fps: 24, durationFrames: 96 });
+  assert.equal(rig.mesh.rotation.y, 2); // 100 * 0.02
+
+  // 同一帧号换 fps/时长，角度不变：旋转不读时钟
+  orbit3d.pose(rig, 100, { fps: 30, durationFrames: 60 });
+  assert.equal(rig.mesh.rotation.y, 2);
+});
+
+test("orbit3d：createRig 的几何随 shape 变化", () => {
+  const expected = {
+    box: "BoxGeometry",
+    sphere: "SphereGeometry",
+    torus: "TorusGeometry",
+    icosahedron: "IcosahedronGeometry",
+  };
+  for (const [shape, geometryType] of Object.entries(expected)) {
+    const rig = orbit3d.createRig({
+      THREE,
+      params: orbit3d.validateParams({ shape }),
+      width: 1280,
+      height: 720,
+      background: "#101820",
+    });
+    assert.equal(rig.mesh.geometry.type, geometryType, `shape=${shape}`);
+  }
+});
+
+test("validateThreeSpec：未注册组件被拒且信息含 id@version", () => {
+  assert.throws(
+    () =>
+      validateThreeSpec(
+        { ...FULL_SPEC, componentId: "ghost", componentVersion: 7 },
+        threeRegistry,
+      ),
+    (error) => {
+      assert.ok(error instanceof UnknownThreeComponentError);
+      assert.match(error.message, /ghost@7/);
+      return true;
+    },
+  );
+});
+
+test("validateThreeSpec：params 越界由组件拒绝", () => {
+  assert.throws(
+    () =>
+      validateThreeSpec({ ...FULL_SPEC, params: { zoom: 5 } }, threeRegistry),
+    /zoom/,
+  );
+});
+
+test("validateThreeSpec：返回规范化 params（补齐默认值）", () => {
+  const spec = validateThreeSpec(
+    { ...FULL_SPEC, params: { color: "#ff0000" } },
+    threeRegistry,
+  );
+
+  assert.deepEqual(spec.params, {
+    shape: "box",
+    color: "#ff0000",
+    accent: "#e8b04b",
+    spinPerFrame: 0.02,
+    tilt: 0.35,
+    zoom: 1,
+  });
+  assert.equal(spec.componentId, "orbit3d");
+  assert.equal(spec.componentVersion, 1);
+  assert.equal(spec.durationMs, 4000);
+  assert.equal(spec.seed, 7);
+  assert.equal(spec.background, "#101820");
+});
