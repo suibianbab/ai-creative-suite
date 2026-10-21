@@ -368,7 +368,13 @@ export function applyDurationAlignments(
     aligned.createdAt = new Date().toISOString();
     aligned.durationMs = item.newDurationMs;
     aligned.description = `${old.description.slice(0, 160)}（时长对齐 ${item.newDurationMs}ms）`;
-    if (aligned.sceneSource.type === "spec")
+    // 3D 镜头的烘焙帧数由时长推导（render-scene 要求 spec.durationMs 与
+    // ContentVersion.durationMs 一致），拉伸与 spec 同口径；pose 按帧号索引，
+    // 更长的时长只是多烘焙若干确定性帧。
+    if (
+      aligned.sceneSource.type === "spec" ||
+      aligned.sceneSource.type === "three"
+    )
       aligned.sceneSource.spec.durationMs = item.newDurationMs;
     aligned.provenance = {
       engineId: "tts-duration-align",

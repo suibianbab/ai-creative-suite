@@ -121,6 +121,24 @@ test("orbit3d：createRig + pose 的旋转角只由帧号决定", () => {
   // 同一帧号换 fps/时长，角度不变：旋转不读时钟
   orbit3d.pose(rig, 100, { fps: 30, durationFrames: 60 });
   assert.equal(rig.mesh.rotation.y, 2);
+
+  // 规格 §6 要求覆盖帧 0/帧 100 的旋转角、几何类型与颜色：颜色由参数决定，
+  // 主体取 params.color，参照轴取 params.accent（orbit3d 用 normalized.accent
+  // 构建它）。这是刻画既有行为的测试，不打补丁。
+  assert.equal(
+    rig.mesh.material.color.getHexString(),
+    new THREE.Color(params.color).getHexString(),
+    "主体颜色来自 params.color",
+  );
+  const axis = rig.scene.children.find(
+    (child) => child.isMesh && child !== rig.mesh,
+  );
+  assert.ok(axis, "场景里必须有参照轴 Mesh");
+  assert.equal(
+    axis.material.color.getHexString(),
+    new THREE.Color(params.accent).getHexString(),
+    "参照轴颜色来自 params.accent",
+  );
 });
 
 test("orbit3d：createRig 的几何随 shape 变化", () => {

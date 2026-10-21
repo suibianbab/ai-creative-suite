@@ -350,6 +350,7 @@ test("bakeThreeShots：渲染器不含 SwiftShader 时中文报错并含镜头�
     bakeThreeShots({ jobs: [jobOf()], outDir, deps: harness.deps }),
     (error) => {
       assert.match(error.message, /SwiftShader/);
+      assert.match(error.message, /3D 输出不可复现，已拒绝/);
       assert.match(error.message, /镜头 1/);
       assert.match(error.message, /64x36/);
       assert.match(error.message, /landscape/);

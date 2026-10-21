@@ -416,7 +416,9 @@ function assertBakeInfo(info, job) {
     typeof info.glRenderer !== "string" ||
     !info.glRenderer.includes("SwiftShader")
   ) {
-    throw new Error(`渲染器未使用 SwiftShader：${info.glRenderer}`);
+    throw new Error(
+      `渲染器未使用 SwiftShader：${info.glRenderer}，3D 输出不可复现，已拒绝`,
+    );
   }
   if (info.antialias !== false)
     throw new Error("页面未关闭抗锯齿（antialias）");
