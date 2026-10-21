@@ -4,7 +4,10 @@
 // 后两条钉 three 镜头与 media-clip 同形 props 的取值口径。
 import assert from "node:assert/strict";
 import test from "node:test";
-import { buildTimelineProps } from "./render-scene.props.mjs";
+import {
+  buildTimelineProps,
+  findMissingThreeBakes,
+} from "./render-scene.props.mjs";
 
 const FPS = 24;
 
@@ -182,6 +185,51 @@ test("按画幅组装的 props：three 镜头生成 media 块（inMs=0、fit=con
       },
     ],
   });
+});
+
+// —— Codex 复核 D：3D 镜头缺本画幅烘焙结果须在装配前点名 ——
+test("findMissingThreeBakes：three 镜头缺烘焙结果时点名镜头号与画幅", () => {
+  const missing = findMissingThreeBakes({
+    timeline: threeTimeline(24),
+    shotEntries: [
+      {
+        shot: { shotId: "s1" },
+        version: { versionId: "v1" },
+        three: { componentId: "orbit3d", componentVersion: 1 },
+      },
+    ],
+    threeByShot: new Map(),
+    aspect: "portrait",
+  });
+  assert.deepEqual(missing, ["镜头 1（portrait）缺少 3D 烘焙结果"]);
+});
+
+test("findMissingThreeBakes：three 镜头有烘焙结果、spec 镜头无烘焙结果都通过", () => {
+  const timeline = {
+    shots: [
+      { shotIndex: 0, startFrame: 0, frames: 24 },
+      { shotIndex: 1, startFrame: 24, frames: 12 },
+    ],
+    totalFrames: 36,
+  };
+  const missing = findMissingThreeBakes({
+    timeline,
+    shotEntries: [
+      {
+        shot: { shotId: "s1" },
+        version: { versionId: "v1" },
+        three: { componentId: "orbit3d", componentVersion: 1 },
+      },
+      {
+        shot: { shotId: "s2" },
+        version: { versionId: "v2" },
+        spec: specOf("text-animation", 500),
+      },
+    ],
+    threeByShot: new Map([[0, bakedOf()]]),
+    aspect: "landscape",
+  });
+  assert.deepEqual(missing, []);
 });
 
 test("按画幅组装的 props：three 镜头 outMs = round(frames/24*1000)", () => {

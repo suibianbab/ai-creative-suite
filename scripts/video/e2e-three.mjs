@@ -22,6 +22,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { inflateSync } from "node:zlib";
+import { quoteShellArg } from "./bake-three.mjs";
 import { validateVideoProject } from "./delivery.mjs";
 
 const ROOT = path.resolve(
@@ -41,6 +42,7 @@ const THREE_SHOT_INDEX = 0;
 const THREE_SHOT_FRAMES = 24;
 const EXPECTED_USAGE_LINES = 34;
 const THREE_TEMP_PREFIX = "acs-three-";
+const LUMA_TIMEOUT_MS = 60_000;
 const PNG_SIGNATURE = Buffer.from([
   0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
 ]);
@@ -156,8 +158,9 @@ function parseBake(stdout) {
 // PATH 上的 ffmpeg）把首帧 area 缩放成 1×1 PNG，再在 Node 侧按 BT.601 求亮度均值。
 // 口径：黑帧 RGB 均值 0（signalstats 黑帧 YAVG=16），阈值 >16 只比原口径更严。
 function firstFrameLuma(videoPath) {
+  // shell:true 下逐项预加引号：videoPath 可能含空格（临时目录/输出目录）。
   const result = spawnSync(
-    "pnpm",
+    quoteShellArg("pnpm"),
     [
       "--filter",
       "@acs/remotion-engine",
@@ -177,14 +180,19 @@ function firstFrameLuma(videoPath) {
       "-f",
       "image2pipe",
       "-",
-    ],
+    ].map(quoteShellArg),
     {
       cwd: ROOT,
       shell: true,
       maxBuffer: 8 * 1024 * 1024,
+      timeout: LUMA_TIMEOUT_MS,
     },
   );
-  if (result.error) throw result.error;
+  if (result.error) {
+    throw new Error(
+      `首帧抽取失败（timeout=${LUMA_TIMEOUT_MS}ms）：${describeError(result.error)}`,
+    );
+  }
   if (result.status !== 0)
     throw new Error(
       `ffmpeg exit ${result.status}: ${String(result.stderr ?? "").slice(0, 400)}`,
@@ -335,15 +343,16 @@ async function main() {
   const hashesA = {};
   const hashesB = {};
   at("出片 A/B 字节一致", () => {
+    // 双画幅都必须逐字节一致（不能只比 landscape）。
     for (const aspect of ASPECTS) {
       hashesA[aspect] = sha256(videosA[aspect]);
       hashesB[aspect] = sha256(path.join(renderBOut, `${aspect}.mp4`));
+      assert.equal(
+        hashesA[aspect],
+        hashesB[aspect],
+        `两次完整出片的 ${aspect}.mp4 SHA-256 不一致`,
+      );
     }
-    assert.equal(
-      hashesA.landscape,
-      hashesB.landscape,
-      "两次完整出片的 landscape.mp4 SHA-256 不一致",
-    );
   });
   console.log("[e2e-three] 出片 A/B SHA-256:");
   for (const aspect of ASPECTS) {
@@ -423,6 +432,9 @@ async function main() {
         ASPECTS.length,
         `项目 ${label} 带 three 的 RenderRecord 数 ${records.length} ≠ ${ASPECTS.length}`,
       );
+      // 画幅从 outputAssetRef 精确解析并收成集合：两条记录必须恰好覆盖
+      // {landscape, portrait}，杜绝「两条都比了 landscape」的假一致。
+      const observedAspects = new Set();
       for (const record of records) {
         for (const key of [
           "componentId",
@@ -444,9 +456,16 @@ async function main() {
           /SwiftShader/,
           "RenderRecord.glRenderer 未含 SwiftShader",
         );
-        const aspect = record.outputAssetRef.endsWith("landscape.mp4")
-          ? "landscape"
-          : "portrait";
+        const outputName = String(record.outputAssetRef).split("/").pop();
+        const aspectMatch = /^(landscape|portrait)\.mp4$/.exec(
+          outputName ?? "",
+        );
+        assert.ok(
+          aspectMatch,
+          `项目 ${label} RenderRecord.outputAssetRef 无法识别画幅: ${record.outputAssetRef}`,
+        );
+        const aspect = aspectMatch[1];
+        observedAspects.add(aspect);
         const baked = bakeByAspect.get(aspect);
         assert.equal(
           record.three.framesDigest,
@@ -459,6 +478,11 @@ async function main() {
           `项目 ${label} ${aspect} clipSha256 与独立烘焙不一致`,
         );
       }
+      assert.deepEqual(
+        [...observedAspects].sort(),
+        [...ASPECTS].sort(),
+        `项目 ${label} RenderRecord 画幅集合 {${[...observedAspects].join(", ")}} ≠ {${ASPECTS.join(", ")}}`,
+      );
     }
   });
 

@@ -35,7 +35,11 @@ import {
   parseTailYavg,
   verifyMediaAssets,
 } from "./render-scene.media.mjs";
-import { buildTimelineProps, DIMENSIONS } from "./render-scene.props.mjs";
+import {
+  buildTimelineProps,
+  DIMENSIONS,
+  findMissingThreeBakes,
+} from "./render-scene.props.mjs";
 import { sha256File } from "./sha256-file.mjs";
 import { validateThreeSpec } from "./three/spec.mjs";
 import { buildNarrationEntries, readSubtitleCues } from "./tts-sse.mjs";
@@ -509,6 +513,15 @@ for (const aspect of aspects) {
       frames: timeline.shots[shotIndex].frames,
     });
   }
+  // Codex 复核 D：3D 镜头缺本画幅烘焙结果时提前点名镜头号与画幅——不让
+  // undefined 流进 props 组装后才以难以定位的方式失败。
+  const missingThreeBakes = findMissingThreeBakes({
+    timeline,
+    shotEntries,
+    threeByShot,
+    aspect,
+  });
+  if (missingThreeBakes.length > 0) fail(missingThreeBakes.join("；"));
   const timelineProps = buildTimelineProps({
     timeline,
     shotEntries,

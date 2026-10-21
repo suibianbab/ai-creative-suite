@@ -35,6 +35,25 @@ export function buildTimelineShotThree(entry, src, fps = PROPS_FPS) {
   };
 }
 
+// P3-B 修复（Codex 复核 D）：3D 镜头必须有本画幅的烘焙结果。缺项若不提前
+// 拦截，buildTimelineProps 会落到 spec 分支，把 undefined 带进 props 深处才炸，
+// 错误既不点名镜头也不点名画幅。这里返回逐条中文错误（调用方负责 fail）。
+export function findMissingThreeBakes({
+  timeline,
+  shotEntries,
+  threeByShot = new Map(),
+  aspect,
+}) {
+  const missing = [];
+  for (const span of timeline.shots) {
+    const entry = shotEntries[span.shotIndex];
+    if (entry?.three && !threeByShot.has(span.shotIndex)) {
+      missing.push(`镜头 ${span.shotIndex + 1}（${aspect}）缺少 3D 烘焙结果`);
+    }
+  }
+  return missing;
+}
+
 // timelineProps 组装（单参对象，Ruling 5）。threeByShot 是「本画幅」的烘焙结果
 // （entry 已带 span 的 frames）；无 three 镜头时该分支不执行，输出与抽取前一致。
 export function buildTimelineProps({

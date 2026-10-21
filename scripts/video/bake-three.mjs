@@ -198,6 +198,22 @@ export function buildBakeJobs({ project, aspects }) {
   return jobs;
 }
 
+// 编码超时：ffmpeg 卡死（坏帧/磁盘挂起）不得无限挂住出片进程。
+export const ENCODE_TIMEOUT_MS = 120_000;
+
+// shell:true 时 Node 把参数数组用空格拼接、且不加引号——"a b" 会被拆成两个
+// token，含空格的帧目录/输出路径因此被截断。这里预先给每个元素加平台引号，
+// 保证 shell 始终把每个元素当成单个 token。
+export function quoteShellArg(arg) {
+  const text = String(arg);
+  if (process.platform === "win32") {
+    // cmd.exe：双引号包裹，内嵌 " 以 "" 转义。
+    return `"${text.replaceAll('"', '""')}"`;
+  }
+  // POSIX sh：单引号包裹，内嵌 ' 以 '\'' 转义。
+  return `'${text.replaceAll("'", "'\\''")}'`;
+}
+
 // —— 默认编码器：pnpm 调 Remotion 自带的 ffmpeg（不依赖 PATH 里的 ffmpeg）——
 // spawn 可注入（单测用假实现，不跑 ffmpeg 进程）。
 export function runEncoder(framesDir, fps, outFile, spawn = spawnSync) {
@@ -224,19 +240,35 @@ export function runEncoder(framesDir, fps, outFile, spawn = spawnSync) {
     "+faststart",
     outFile,
   ];
+  // 逐项预加引号：含空格路径在 shell 拼接后仍是单 token（见 quoteShellArg）。
   const result = spawn(
-    "pnpm",
-    ["--filter", "@acs/remotion-engine", "exec", "remotion", "ffmpeg", ...args],
-    { cwd: ROOT, shell: true, encoding: "utf8" },
+    quoteShellArg("pnpm"),
+    [
+      "--filter",
+      "@acs/remotion-engine",
+      "exec",
+      "remotion",
+      "ffmpeg",
+      ...args,
+    ].map(quoteShellArg),
+    {
+      cwd: ROOT,
+      shell: true,
+      encoding: "utf8",
+      timeout: ENCODE_TIMEOUT_MS,
+    },
   );
-  if (result.status !== 0) {
+  if (result.error || result.status !== 0) {
     const tail = `${result.stderr ?? ""}`
       .trimEnd()
       .split(/\r?\n/)
       .slice(-20)
       .join("\n");
+    const reason = result.error
+      ? `进程错误（timeout=${ENCODE_TIMEOUT_MS}ms）：${result.error.message}`
+      : `status=${result.status ?? "signal"}`;
     throw new Error(
-      `ffmpeg 编码失败（status=${result.status ?? "signal"}）：\n${tail}`,
+      `ffmpeg 编码失败（${reason}）：\n${tail || "（无 stderr 输出）"}`,
     );
   }
   return outFile;
