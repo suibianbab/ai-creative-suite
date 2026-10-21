@@ -42,6 +42,7 @@ export function describeDurationImpact(
   ) {
     return {
       changed: false,
+      // 哨兵值：changed=false 时调用方不得读取 beforeFrames/afterFrames。
       beforeFrames: 0,
       afterFrames: null,
       frameError: `镜头序号 ${shotIndex} 越界（共 ${current.length} 个镜头）`,
@@ -83,23 +84,39 @@ export function describeDurationImpact(
 
   let transitionIssue: string | null = null;
   // 只有与本次改动相邻的边界（shotIndex - 1 / shotIndex）会因这次改时长
-  // 而改变借帧余量；远处转场的窗口依赖的 span 没动。因此无相邻转场时不
-  // 解析——否则远处一条早已存在的转场问题会被误报在这次改动头上。
-  // 有相邻转场时仍用全量 transitions 调一次 resolveTransitionWindows：
-  // 它同时校验逐条与相邻合计借帧，错误信息即出片期的真实拒绝原因。
-  const transitions = project.transitions ?? [];
-  const touchesAdjacent = transitions.some(
+  // 而改变借帧余量；远处转场的窗口依赖的 span 没动。文档校验只查转场
+  // 形状/取值范围、不查逐帧容量（packages/video-document/src/validate.ts），
+  // 因此别处既有的非法转场不该算在本次编辑头上——只把相邻转场交给
+  // resolveTransitionWindows，它同时校验逐条与相邻合计借帧，错误信息即
+  // 出片期的真实拒绝原因。
+  const adjacentTransitions = (project.transitions ?? []).filter(
     (transition) =>
       transition.boundary === shotIndex - 1 ||
       transition.boundary === shotIndex,
   );
-  if (afterFrames !== null && spans !== null && touchesAdjacent) {
+  if (
+    afterFrames !== null &&
+    spans !== null &&
+    adjacentTransitions.length > 0
+  ) {
     try {
-      resolveTransitionWindows(transitions, spans, fps);
+      resolveTransitionWindows(adjacentTransitions, spans, fps);
     } catch (error) {
       transitionIssue = errorMessage(error);
     }
   }
 
   return { changed, beforeFrames, afterFrames, frameError, transitionIssue };
+}
+
+// 应用闸门：零帧时长挡在 onRevise 之前——否则下一次渲染 quantizeTimeline 会抛
+// ZeroFrameShotError，整页崩溃，未保存草稿全丢。
+export function durationApplyError(
+  impact: DurationImpact | null,
+): string | null {
+  // 不可编辑等场景没有 impact；时长未改（含越界哨兵）不拦。
+  if (impact === null || !impact.changed) return null;
+  // transitionIssue 仍只警告不拦：导出期已是 fail-loud，编辑期不重复拦。
+  if (impact.frameError !== null) return `无法应用：${impact.frameError}`;
+  return null;
 }

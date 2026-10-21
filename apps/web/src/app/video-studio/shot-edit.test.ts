@@ -28,7 +28,11 @@ function textSpec() {
 function draft(overrides: Partial<ShotEditDraft> = {}): ShotEditDraft {
   const spec = lineSpec();
   const base = draftFromWorking(
-    { narrationText: "水循环。", durationMs: spec.durationMs },
+    {
+      narrationText: "水循环。",
+      durationMs: spec.durationMs,
+      description: "",
+    },
     spec,
   );
   return { ...base, ...overrides };
@@ -37,7 +41,7 @@ function draft(overrides: Partial<ShotEditDraft> = {}): ShotEditDraft {
 test("draftFromWorking：旁白/时长取 working，画面字段取 spec", () => {
   const spec = textSpec();
   const d = draftFromWorking(
-    { narrationText: "水循环。", durationMs: 10000 },
+    { narrationText: "水循环。", durationMs: 10000, description: "" },
     spec,
   );
   assert.equal(d.narrationText, "水循环。");
@@ -50,7 +54,10 @@ test("draftFromWorking：旁白/时长取 working，画面字段取 spec", () =>
 
 test("draftFromWorking：非文字动画的标题草稿为空（不经标题输入编辑）", () => {
   const spec = lineSpec();
-  const d = draftFromWorking({ narrationText: "", durationMs: 10000 }, spec);
+  const d = draftFromWorking(
+    { narrationText: "", durationMs: 10000, description: "" },
+    spec,
+  );
   assert.equal(d.title, "");
 });
 
@@ -157,7 +164,7 @@ test("buildRevisePatch：清空副标题后旧副标题不残留", () => {
     params: { ...(textSpec().params as object), subtitle: "旧副标题" },
   };
   const d = draftFromWorking(
-    { narrationText: "水循环。", durationMs: spec.durationMs },
+    { narrationText: "水循环。", durationMs: spec.durationMs, description: "" },
     spec,
   );
   const { patch, error } = buildRevisePatch({ ...d, subtitle: "" }, spec);

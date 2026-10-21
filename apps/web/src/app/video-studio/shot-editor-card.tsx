@@ -17,7 +17,7 @@ import {
   draftChartFromSpec,
   isChartComponentId,
 } from "./chart-templates";
-import { describeDurationImpact } from "./duration-impact";
+import { describeDurationImpact, durationApplyError } from "./duration-impact";
 import {
   applyFlowTemplate,
   buildFlowRevisePatch,
@@ -1161,6 +1161,7 @@ export function ShotEditorCard({
                   );
                   if ("error" in attached) {
                     setEditError(attached.error);
+                    setMediaError(null);
                     return;
                   }
                   setMediaError(null);
@@ -1321,6 +1322,13 @@ export function ShotEditorCard({
                 );
                 if (error || !patch) {
                   setEditError(error ?? "草稿无效");
+                  return;
+                }
+                // 零帧时长必须挡在 onRevise 之前：否则下一次渲染
+                // quantizeTimeline 抛 ZeroFrameShotError，整页崩溃丢草稿。
+                const blocked = durationApplyError(durationImpact);
+                if (blocked) {
+                  setEditError(blocked);
                   return;
                 }
                 setEditError(null);

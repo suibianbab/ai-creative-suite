@@ -25,8 +25,7 @@ const HEX = /^#[0-9a-fA-F]{6}$/;
 type WorkingLike = {
   narrationText: string;
   durationMs: number;
-  // 旧调用方（只读旁白/时长）可省略；省略时草稿说明为空串。
-  description?: string;
+  description: string;
 };
 
 type TextParams = { title?: string; subtitle?: string };
@@ -41,7 +40,7 @@ export function draftFromWorking(
   ) as TextParams;
   return {
     // 不 trim：草稿是用户正在编辑的原文，校验留到应用时（attachDescription）。
-    description: working.description ?? "",
+    description: working.description,
     narrationText: working.narrationText,
     background: spec.background,
     durationSeconds: working.durationMs / 1000,

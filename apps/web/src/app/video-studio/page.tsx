@@ -290,12 +290,21 @@ export default function VideoStudioPage() {
       durations.every((duration) => duration > 0) &&
       perShot.every((item) => item !== null)
     ) {
-      pieceTimeline = quantizeTimeline(durations, 24);
-      pieceItems = perShot.map((item, index) => ({
-        ...item!,
-        startFrame: pieceTimeline!.shots[index]!.startFrame,
-        frames: pieceTimeline!.shots[index]!.frames,
-      }));
+      // 存量文档若已含零帧镜头（修复前的产物、外部导入数据），
+      // quantizeTimeline 会抛 ZeroFrameShotError；渲染期不能炸掉整页
+      // （会白屏并丢失未保存草稿），整片降级为不可预览：pieceTimeline /
+      // pieceItems 保持 null，走既有「不可预览」路径，不新增 UI。
+      try {
+        pieceTimeline = quantizeTimeline(durations, 24);
+        pieceItems = perShot.map((item, index) => ({
+          ...item!,
+          startFrame: pieceTimeline!.shots[index]!.startFrame,
+          frames: pieceTimeline!.shots[index]!.frames,
+        }));
+      } catch {
+        pieceTimeline = null;
+        pieceItems = null;
+      }
     }
     // 转场草稿落文档：transitionsAfterEdit 决定字段值——非法编辑返回 previous
     // 同引用（文档保持上一合法态，草稿重建 effect 不触发，行内提示指路）；
