@@ -206,7 +206,7 @@ Expected: `ERR_MODULE_NOT_FOUND`（模块尚不存在）。
 
 - `registry.mjs`：`Map` 键 `${componentId}@${version}`，重复注册抛 `Error`（中文），`get` 查不到抛 `UnknownThreeComponentError`；单例末尾 `register(orbit3d)`。
 - `components/orbit3d.mjs`：常量 + 参数规范化 + 场景构建 + `pose`。所有 three 对象都由传入的 `THREE` 构造，文件顶层零 import。
-- `spec.mjs`：结构校验（与 validate.ts 同口径，错误信息带字段路径）+ 字节上限 256 KiB + `registry.get` + `component.validateParams`。
+- `spec.mjs`：只做 `componentId`/`componentVersion` 存在性检查（给出可读错误）+ `registry.get` + `component.validateParams`；结构规则与 256 KiB 字节上限的唯一实现点是 `validateVideoProject`（Ruling 1），此处不重复。
 
 - [ ] **Step 4: 跑测试确认全绿**
 
