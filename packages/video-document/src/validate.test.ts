@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import type { MediaAsset } from "./types.js";
+import type {
+  MediaAsset,
+  ThreeRenderEvidence,
+  ThreeSceneSpec,
+} from "./types.js";
 import { type VideoProject, validateVideoProject } from "./validate.js";
 
 const UUID = "0b0b13a2-6c63-4d3d-9a52-a70f6a3b1001";
@@ -464,7 +468,8 @@ test("旧项目（无 mediaAssets 键）原样通过（迁移回归）", () => {
   assert.equal(out.mediaAssets, undefined);
 });
 
-test("未知 sceneSource.type 错误消息包含三类型", () => {
+// 兼容见证：三值子串断言仍成立；当前错误信息已扩为四值（含 three）。
+test("未知 sceneSource.type 错误消息包含四类型", () => {
   const p = baseProject();
   p.shots[0]!.contentVersions[0]!.sceneSource = {
     type: "future-thing",
@@ -840,7 +845,7 @@ test("有 outputRef+digest 但无 kind → 通过（固定既有放行行为）"
 const THREE_VERSION_ID = "0b0b13a2-6c63-4d3d-9a52-a70f6a3b5001";
 const THREE_SHOT_ID = "0b0b13a2-6c63-4d3d-9a52-a70f6a3b5002";
 
-function threeSpec(overrides: Record<string, unknown> = {}) {
+function threeSpec(overrides: Record<string, unknown> = {}): ThreeSceneSpec {
   return {
     specVersion: 1,
     componentId: "orbit3d",
@@ -856,7 +861,6 @@ function threeSpec(overrides: Record<string, unknown> = {}) {
 function withThreeShot(
   p: VideoProject,
   specOverrides: Record<string, unknown> = {},
-  versionOverrides: Record<string, unknown> = {},
 ): VideoProject {
   p.shots.push({
     shotId: THREE_SHOT_ID,
@@ -870,13 +874,11 @@ function withThreeShot(
         durationMs: 5000,
         description: "3D 镜头",
         narrationText: "",
-        // 类型分支由 Task 1 实现；实现前先 as never 保持测试可编译，红在断言上。
         sceneSource: {
           type: "three",
           spec: threeSpec(specOverrides),
-        } as never,
+        },
         provenance: { engineId: "three-registry", engineVersion: "1" },
-        ...versionOverrides,
       },
     ],
     events: [],
@@ -886,11 +888,9 @@ function withThreeShot(
 
 test("three 镜头：合法 spec 通过", () => {
   const out = validateVideoProject(withThreeShot(baseProject()));
-  const source = out.shots[1]!.contentVersions[0]!.sceneSource as unknown as {
-    type: string;
-    spec: { componentId: string; durationMs: number };
-  };
+  const source = out.shots[1]!.contentVersions[0]!.sceneSource;
   assert.equal(source.type, "three");
+  if (source.type !== "three") throw new Error("期望 three 分支");
   assert.equal(source.spec.componentId, "orbit3d");
   assert.equal(
     source.spec.durationMs,
@@ -943,7 +943,7 @@ test("three 镜头：durationMs 与版本时长不等被拒", () => {
   assert.throws(
     () =>
       validateVideoProject(withThreeShot(baseProject(), { durationMs: 4000 })),
-    /durationMs/,
+    /spec\.durationMs\(4000\).*ContentVersion\.durationMs\(5000\)/,
   );
 });
 
@@ -999,7 +999,9 @@ test("sceneSource.type 未知时错误信息列出 three", () => {
 
 const THREE_DIGEST = "f".repeat(64);
 
-function threeEvidence(overrides: Record<string, unknown> = {}) {
+function threeEvidence(
+  overrides: Record<string, unknown> = {},
+): ThreeRenderEvidence {
   return {
     componentId: "orbit3d",
     componentVersion: 1,
@@ -1014,19 +1016,116 @@ function threeEvidence(overrides: Record<string, unknown> = {}) {
 
 test("RenderRecord.three 合法通过", () => {
   const project = baseWithRenderRecord();
-  (project.renderRecords[0] as Record<string, unknown>).three = threeEvidence();
+  project.renderRecords[0]!.three = threeEvidence();
   const out = validateVideoProject(project);
-  const record = out.renderRecords[0] as unknown as {
-    three?: { componentId?: string; framesDigest?: string };
-  };
-  assert.equal(record.three?.componentId, "orbit3d");
-  assert.equal(record.three?.framesDigest, THREE_DIGEST);
+  assert.equal(out.renderRecords[0]!.three?.componentId, "orbit3d");
+  assert.equal(out.renderRecords[0]!.three?.framesDigest, THREE_DIGEST);
 });
 
 test("RenderRecord.three 的 framesDigest 非 64 位小写 hex 被拒", () => {
   const project = baseWithRenderRecord();
-  (project.renderRecords[0] as Record<string, unknown>).three = threeEvidence({
+  project.renderRecords[0]!.three = threeEvidence({
     framesDigest: "F".repeat(64),
   });
   assert.throws(() => validateVideoProject(project), /three\.framesDigest/);
+});
+
+// 表驱动负路径：每一行只破坏一个字段，删掉任一字段检查都会让对应行变红。
+function withoutThreeKey(
+  key: "framesDigest" | "clipSha256",
+): Record<string, unknown> {
+  const evidence: Record<string, unknown> = { ...threeEvidence() };
+  delete evidence[key];
+  return evidence;
+}
+
+const INVALID_THREE_CASES: Array<{
+  name: string;
+  three: unknown;
+  pattern: RegExp;
+}> = [
+  {
+    name: "three 为字符串",
+    three: "evidence",
+    pattern: /three must be an object/,
+  },
+  { name: "three 为数组", three: [], pattern: /three must be an object/ },
+  {
+    name: "componentId 空串",
+    three: threeEvidence({ componentId: "" }),
+    pattern: /three\.componentId/,
+  },
+  {
+    name: "componentId 65 字符",
+    three: threeEvidence({ componentId: "a".repeat(65) }),
+    pattern: /three\.componentId/,
+  },
+  {
+    name: "componentVersion 为 0",
+    three: threeEvidence({ componentVersion: 0 }),
+    pattern: /three\.componentVersion/,
+  },
+  {
+    name: "componentVersion 为 1.5",
+    three: threeEvidence({ componentVersion: 1.5 }),
+    pattern: /three\.componentVersion/,
+  },
+  {
+    name: "threeVersion 空串",
+    three: threeEvidence({ threeVersion: "" }),
+    pattern: /three\.threeVersion/,
+  },
+  {
+    name: "threeVersion 65 字符",
+    three: threeEvidence({ threeVersion: "0".repeat(65) }),
+    pattern: /three\.threeVersion/,
+  },
+  {
+    name: "chromiumVersion 空串",
+    three: threeEvidence({ chromiumVersion: "" }),
+    pattern: /three\.chromiumVersion/,
+  },
+  {
+    name: "chromiumVersion 65 字符",
+    three: threeEvidence({ chromiumVersion: "1".repeat(65) }),
+    pattern: /three\.chromiumVersion/,
+  },
+  {
+    name: "glRenderer 空串",
+    three: threeEvidence({ glRenderer: "" }),
+    pattern: /three\.glRenderer/,
+  },
+  {
+    name: "glRenderer 257 字符",
+    three: threeEvidence({ glRenderer: "g".repeat(257) }),
+    pattern: /three\.glRenderer/,
+  },
+  {
+    name: "clipSha256 大写 hex",
+    three: threeEvidence({ clipSha256: "E".repeat(64) }),
+    pattern: /three\.clipSha256/,
+  },
+  {
+    name: "clipSha256 63 位",
+    three: threeEvidence({ clipSha256: "e".repeat(63) }),
+    pattern: /three\.clipSha256/,
+  },
+  {
+    name: "clipSha256 缺失",
+    three: withoutThreeKey("clipSha256"),
+    pattern: /three\.clipSha256/,
+  },
+  {
+    name: "framesDigest 缺失",
+    three: withoutThreeKey("framesDigest"),
+    pattern: /three\.framesDigest/,
+  },
+];
+
+test("RenderRecord.three 字段逐项非法被拒（表驱动）", () => {
+  for (const { name, three, pattern } of INVALID_THREE_CASES) {
+    const project = baseWithRenderRecord();
+    Object.assign(project.renderRecords[0]!, { three });
+    assert.throws(() => validateVideoProject(project), pattern, name);
+  }
 });
