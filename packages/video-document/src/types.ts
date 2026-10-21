@@ -97,7 +97,9 @@ export type ThreeRenderEvidence = {
   threeVersion: string; // 1..64 字符
   chromiumVersion: string; // 1..64 字符
   glRenderer: string; // 1..256 字符
-  framesDigest: string; // 逐帧像素摘要，64 位小写 hex
+  // 64 位小写 hex：同环境逐帧 PNG 字节哈希，用于同环境可复现判定，
+  // 不等价于跨编码器的解码像素比对（换浏览器/编码器时可能不同）。
+  framesDigest: string;
   clipSha256: string; // 片段文件 sha256，64 位小写 hex
 };
 
