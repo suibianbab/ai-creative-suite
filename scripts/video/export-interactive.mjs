@@ -170,6 +170,20 @@ async function main() {
     fail(`项目校验失败: ${error.message}`);
   }
 
+  // 输出目标在构建前就确定：若项目文件恰好是 <out>/index.html，落账与两次
+  // rename 会让账本和产物互相覆盖（第二次 rename 用项目 JSON 覆盖刚写出的
+  // HTML），所以必须在 appendDelivery 与任何写盘之前失败。
+  const outDir = path.resolve(values.out ?? path.dirname(projectPath));
+  const htmlPath = path.join(outDir, "index.html");
+  // 只比路径字符串；软/硬链接别名未覆盖（挂账，不做真实身份检查）。
+  const comparablePath = (value) =>
+    process.platform === "win32" ? value.toLowerCase() : value;
+  if (comparablePath(projectPath) === comparablePath(htmlPath)) {
+    fail(
+      "--project 与输出冲突: 项目文件不能是 <out>/index.html，请改 --out 或重命名项目文件",
+    );
+  }
+
   let result;
   try {
     result = buildInteractiveExport({ project, fps, aspect });
@@ -196,8 +210,6 @@ async function main() {
 
   // 写入临时文件再 rename（同卷覆盖原子）：两步都成功才算交付成功；项目
   // rename 失败时把 index.html 恢复成旧字节（原本不存在则删除新产物）。
-  const outDir = path.resolve(values.out ?? path.dirname(projectPath));
-  const htmlPath = path.join(outDir, "index.html");
   const htmlTmp = path.join(outDir, `.index.html.${randomUUID()}.tmp`);
   const projectTmp = `${projectPath}.${randomUUID()}.tmp`;
   let writeError;

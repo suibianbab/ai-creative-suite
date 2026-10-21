@@ -239,6 +239,42 @@ test("倒序夹具经 validateVideoProject 拒绝（顺序不变量）", () => {
   assert.throws(() => validateVideoProject(project), /must be >/);
 });
 
+// —— 收口 3：项目文件恰好是 <out>/index.html 时必须拒绝 ——
+// 否则两次 rename 互相覆盖：账本 +1，目录里却没有交互页面（Codex 实测 exit 0）。
+test("--project 与输出 index.html 路径冲突：拒绝且不落账、不覆盖", () => {
+  const workDir = mkdtempSync(path.join(tmpdir(), "export-interactive-"));
+  try {
+    const projectPath = path.join(workDir, "index.html");
+    copyFileSync(FIXTURE, projectPath);
+    const bytesBefore = readFileSync(projectPath);
+
+    assert.throws(
+      () =>
+        execFileSync(
+          process.execPath,
+          [CLI, "--project", projectPath, "--out", workDir],
+          { encoding: "utf8" },
+        ),
+      (error) => {
+        assert.notEqual(error.status, 0);
+        const output = `${error.stdout ?? ""}${error.stderr ?? ""}`;
+        assert.match(output, /\[export-interactive\]/);
+        assert.match(output, /冲突/);
+        assert.match(output, /index\.html/);
+        return true;
+      },
+    );
+
+    // 项目文件原样保留：仍是 JSON、deliveries 未增加，未被页面内容覆盖。
+    const after = readFileSync(projectPath);
+    assert.ok(after.equals(bytesBefore), "项目文件被改写");
+    const parsed = JSON.parse(after.toString("utf8"));
+    assert.equal(parsed.deliveries.length, 0);
+  } finally {
+    rmSync(workDir, { recursive: true, force: true });
+  }
+});
+
 // —— 修复 I-2：先落账校验、后写盘；第 1001 条失败不得覆盖旧产物 ——
 function legacyDelivery(index, versionId) {
   return {
