@@ -33,6 +33,21 @@ export function describeDurationImpact(
     );
     return working?.durationMs ?? 0;
   });
+  // 越界守卫：调用方传错序号时不能把 undefined 塞进时间线，也不量化
+  // beforeFrames（此时没有可信的前后对比），直接返回可操作错误。
+  if (
+    !Number.isInteger(shotIndex) ||
+    shotIndex < 0 ||
+    shotIndex >= current.length
+  ) {
+    return {
+      changed: false,
+      beforeFrames: 0,
+      afterFrames: null,
+      frameError: `镜头序号 ${shotIndex} 越界（共 ${current.length} 个镜头）`,
+      transitionIssue: null,
+    };
+  }
   const next = [...current];
   next[shotIndex] = Math.round(nextDurationMs);
   const changed = next[shotIndex] !== current[shotIndex];

@@ -96,14 +96,26 @@ test("相邻转场借帧失效：给出可操作提示", () => {
 
 test("无转场：不报转场问题", () => {
   const impact = describeDurationImpact(projectWith([1000, 1000]), 0, 100);
+  assert.equal(impact.changed, true);
+  assert.equal(impact.frameError, null);
   assert.equal(impact.transitionIssue, null);
 });
 
 test("非相邻镜头变化：不误报远处转场", () => {
+  // 静止状态下 boundary 0 就已非法（halfIn 12 ≥ 右 span 7 帧）：只有真正
+  // 的相邻守卫在，才不会被远处这条旧问题连坐。
   const project = projectWith(
-    [1000, 1000, 1000],
+    [1000, 300, 1000],
     [{ boundary: 0, kind: "fade", durationMs: 1000 }],
   );
   const impact = describeDurationImpact(project, 2, 100);
+  assert.equal(impact.changed, true);
+  assert.equal(impact.frameError, null);
   assert.equal(impact.transitionIssue, null);
+});
+
+test("镜头序号越界：给出 frameError 且不量化", () => {
+  const impact = describeDurationImpact(projectWith([1000, 1000]), 5, 500);
+  assert.equal(impact.afterFrames, null);
+  assert.match(impact.frameError ?? "", /越界/);
 });

@@ -293,7 +293,7 @@ export function ShotEditorCard({
   const [mediaError, setMediaError] = useState<string | null>(null);
   const [mediaWarnings, setMediaWarnings] = useState<string[]>([]);
 
-  // 改时长的影响提示（纯预览）：草稿秒数非有限或 <0.1s 时不量化，
+  // 改时长的影响提示（纯预览）：草稿秒数非有限或 <1ms 时不量化，
   // 避免把非法输入当成编辑结果；其余一律走 duration-impact 的纯逻辑。
   const durationImpact = useMemo(() => {
     if (!canEdit) return null;
