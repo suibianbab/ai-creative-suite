@@ -136,11 +136,14 @@ function fail(message) {
   process.exit(1);
 }
 
-// 项目文件与产物文件是否同一路径/同一文件：先比规范化字符串（win32 折
-// 大小写），再兜底 stat 身份（dev+ino 相等）覆盖软链接 / junction / 硬链接
+// 项目文件与产物文件是否同一路径/同一文件：先比规范化字符串（win32 无条件
+// 折大小写），再兜底 stat 身份（dev+ino 相等）覆盖软链接 / junction / 硬链接
 // 别名。任一路径 stat 失败（如产物尚不存在）就返回 false，不把合法导出拒掉。
-// 已知限制：macOS 大小写不敏感卷上「INDEX.HTML 与 index.html 同名」仍不识别
-// （挂账，不做真实身份之外的卷语义探测）。
+// 已知限制，两个方向相反：
+// - win32 的字符串快路径在**大小写敏感目录**（WSL 的 per-directory case
+//   sensitivity）上会把 Index.html / index.html 误判为同一文件而拒绝导出；
+// - 文件系统恒返回 ino=0（FAT32/exFAT、部分 SMB/NFS、云同步占位文件）时只剩
+//   字符串比较，别名仍能绕过。macOS 大小写不敏感卷由 stat 身份兜底识别，无缺口。
 function sameFile(a, b) {
   const comparable = (value) =>
     process.platform === "win32" ? value.toLowerCase() : value;
