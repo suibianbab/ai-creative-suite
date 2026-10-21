@@ -320,7 +320,7 @@ test("缩到零帧：frameError 指名镜头，afterFrames 为 null", () => {
 });
 
 test("相邻转场借帧失效：给出可操作提示", () => {
-  const project = projectWith([1000, 1000], [{ boundary: 0, durationMs: 1000 }]);
+  const project = projectWith([1000, 1000], [{ boundary: 0, kind: "fade", durationMs: 1000 }]);
   const impact = describeDurationImpact(project, 0, 100);
   assert.match(impact.transitionIssue ?? "", /超出相邻 span/);
   assert.equal(impact.frameError, null);
@@ -332,7 +332,7 @@ test("无转场：不报转场问题", () => {
 });
 
 test("非相邻镜头变化：不误报远处转场", () => {
-  const project = projectWith([1000, 1000, 1000], [{ boundary: 0, durationMs: 1000 }]);
+  const project = projectWith([1000, 1000, 1000], [{ boundary: 0, kind: "fade", durationMs: 1000 }]);
   const impact = describeDurationImpact(project, 2, 100);
   assert.equal(impact.transitionIssue, null);
 });
