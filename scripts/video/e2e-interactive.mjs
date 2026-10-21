@@ -1,21 +1,23 @@
 #!/usr/bin/env node
 // P3-A 交互交付 e2e（VID-024，spec §5/R7）：真实浏览器 + file:// + iframe 嵌入。
-//   临时目录 D:/tmp/acs-interactive-e2e-<rand>/：复制夹具 → 导出两次（第二次前清空输出）
+//   临时目录 os.tmpdir()/acs-interactive-e2e-<rand>/：复制夹具 → 导出两次（第二次前清空输出）
 //   → 双跑 SHA-256 相同 → 交付记录断言 → Chromium 打开 index.html 真实点击/键盘
 //   → 宿主页 frameLocator 内点击 → 零非文档请求 / 控制台零 error
 //   → 非 spec 镜头失败路径 exit 1 且指名镜头号 → 留存证据 → 清理临时目录。
 // 退出码: 0 = 全部断言通过；1 = `[e2e-interactive] FAIL at <步骤>: <原因>`。
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { createHash, randomUUID } from "node:crypto";
+import { createHash } from "node:crypto";
 import {
   copyFileSync,
   existsSync,
   mkdirSync,
+  mkdtempSync,
   readFileSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { chromium } from "playwright-core";
@@ -203,15 +205,11 @@ async function main() {
     .sort((a, b) => a.order - b.order)
     .map((shot) => shot.workingVersionId);
 
-  tempDir = path.join(
-    "D:/tmp",
-    `acs-interactive-e2e-${randomUUID().slice(0, 8)}`,
-  );
+  tempDir = mkdtempSync(path.join(tmpdir(), "acs-interactive-e2e-"));
   const projectPath = path.join(tempDir, "sample.video-project.json");
   const outDir = path.join(tempDir, "out");
 
   await at("临时目录与夹具", () => {
-    mkdirSync(tempDir, { recursive: true });
     copyFileSync(FIXTURE, projectPath);
   });
 

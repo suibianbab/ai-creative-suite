@@ -524,6 +524,9 @@ export function validateVideoProject(value: unknown): VideoProject {
   const knownVersionIds = new Set<string>();
   const knownShotIds = new Set<string>();
   const knownOrders = new Set<number>();
+  // 全管线顺序契约（P3-A 修复 I-1）：MP4/TTS/转场边界按数组序消费，交互页按
+  // order 排序。要求数组本身严格升序，两边叙事顺序天然一致；允许跳号。
+  let previousOrder: number | undefined;
   for (const [index, shot] of parsed.shots.entries()) {
     const parsedShot = validateShot(
       shot,
@@ -540,6 +543,12 @@ export function validateVideoProject(value: unknown): VideoProject {
       );
     }
     knownOrders.add(parsedShot.order);
+    if (previousOrder !== undefined && parsedShot.order <= previousOrder) {
+      fail(
+        `shots must be sorted by order: shots[${index}].order(${parsedShot.order}) < shots[${index - 1}].order(${previousOrder}) is violated`,
+      );
+    }
+    previousOrder = parsedShot.order;
     for (const version of parsedShot.contentVersions) {
       if (knownVersionIds.has(version.versionId)) {
         fail(
@@ -676,6 +685,16 @@ export function validateVideoProject(value: unknown): VideoProject {
     // —— P3-A 交互 HTML 交付：可选字段，仅在存在时校验（旧记录形状不变）——
     if (delivery.kind !== undefined && delivery.kind !== "interactive-html") {
       fail(`${field}.kind 须为 interactive-html`);
+    }
+    // kind 一出现就要求「产物名 + 摘要」齐全：只写 kind 的记录无法定位具体
+    // 产物，等于伪完整交付（P3-A 修复 Minor 1）。旧五键记录仍合法。
+    if (delivery.kind === "interactive-html") {
+      if (delivery.outputRef === undefined) {
+        fail(`${field}.outputRef is required when kind is "interactive-html"`);
+      }
+      if (delivery.digest === undefined) {
+        fail(`${field}.digest is required when kind is "interactive-html"`);
+      }
     }
     if (delivery.outputRef !== undefined) {
       if (

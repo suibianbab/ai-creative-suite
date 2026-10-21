@@ -643,6 +643,67 @@ test("跨镜头 order 重复 → 拒绝", () => {
   assert.throws(() => validateVideoProject(project), /order/);
 });
 
+// —— P3-A 修复 I-1：全管线顺序契约 = shots 数组必须按 order 严格升序 ——
+// 数组序遍历是 MP4/TTS/转场边界的消费口径；只查唯一会让「校验通过的乱序
+// 项目」在两个交付物里讲相反的故事。跳号（0,2,5）合法，但次序不得回退。
+function projectWithOrders(orders: number[]): VideoProject {
+  const project = baseProject();
+  const template = project.shots[0]!;
+  project.shots = orders.map((order, index) => {
+    const shot = structuredClone(template);
+    shot.shotId = `0b0b13a2-6c63-4d3d-9a52-a70f6a3b${(0x4100 + index)
+      .toString(16)
+      .padStart(4, "0")}`;
+    shot.order = order;
+    shot.workingVersionId = `0b0b13a2-6c63-4d3d-9a52-a70f6a3b${(0x4200 + index)
+      .toString(16)
+      .padStart(4, "0")}`;
+    shot.contentVersions[0]!.versionId = shot.workingVersionId;
+    for (const event of shot.events)
+      if ("versionId" in event) event.versionId = shot.workingVersionId;
+    return shot;
+  });
+  return project;
+}
+
+test("shots 数组倒序（order 1,0）→ 拒绝并指出下标与两个 order", () => {
+  const project = withSecondShot(baseProject());
+  project.shots.reverse();
+  assert.throws(
+    () => validateVideoProject(project),
+    (error: unknown) => {
+      assert.ok(error instanceof Error);
+      assert.match(error.message, /shots must be sorted by order/);
+      assert.match(
+        error.message,
+        /shots\[1\]\.order\(0\) < shots\[0\]\.order\(1\)/,
+      );
+      return true;
+    },
+  );
+});
+
+test("交换两镜头 order（数组序 1,0）→ 拒绝", () => {
+  const project = withSecondShot(baseProject());
+  project.shots[0]!.order = 1;
+  project.shots[1]!.order = 0;
+  assert.throws(() => validateVideoProject(project), /sorted by order/);
+});
+
+test("跳号升序（order 0,2,5）→ 通过", () => {
+  const out = validateVideoProject(projectWithOrders([0, 2, 5]));
+  assert.deepEqual(
+    out.shots.map((shot) => shot.order),
+    [0, 2, 5],
+  );
+});
+
+test("单镜头与三镜头升序（0,1,2）→ 通过（既有合法用例不回退）", () => {
+  assert.equal(validateVideoProject(baseProject()).shots.length, 1);
+  const out = validateVideoProject(projectWithOrders([0, 1, 2]));
+  assert.equal(out.shots.length, 3);
+});
+
 // —— P1 转场（Feature ④ spec R1）：可变编排元数据，schema 层查形状/枚举/范围/重复 ——
 test("transitions 合法条目通过并原样返回", () => {
   const project = withSecondShot(baseProject());
@@ -738,5 +799,33 @@ test("交互 HTML 交付元数据非法 → 拒绝并指向 deliveries[0]（P3-A
   assert.throws(
     () => validateVideoProject(badDigest),
     /deliveries\[0\]\.digest/,
+  );
+});
+
+// —— P3-A 修复 Minor 1：kind 存在时 outputRef/digest 必须齐全 ——
+// 三键是「这条交付可定位到具体产物」的最小事实；允许只写 kind 会留下伪完整记录。
+test("kind=interactive-html 缺 outputRef 与 digest → 拒绝", () => {
+  const project = baseWithDelivery();
+  project.deliveries[0]!.kind = "interactive-html";
+  assert.throws(
+    () => validateVideoProject(project),
+    /deliveries\[0\]\.outputRef/,
+  );
+});
+
+test("kind=interactive-html 缺 digest → 拒绝", () => {
+  const project = baseWithDelivery();
+  project.deliveries[0]!.kind = "interactive-html";
+  project.deliveries[0]!.outputRef = "index.html";
+  assert.throws(() => validateVideoProject(project), /deliveries\[0\]\.digest/);
+});
+
+test("kind=interactive-html 缺 outputRef → 拒绝", () => {
+  const project = baseWithDelivery();
+  project.deliveries[0]!.kind = "interactive-html";
+  project.deliveries[0]!.digest = "a".repeat(64);
+  assert.throws(
+    () => validateVideoProject(project),
+    /deliveries\[0\]\.outputRef/,
   );
 });

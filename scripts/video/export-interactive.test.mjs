@@ -6,9 +6,11 @@ import { createHash } from "node:crypto";
 import {
   copyFileSync,
   existsSync,
+  mkdirSync,
   mkdtempSync,
   readFileSync,
   rmSync,
+  writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -227,4 +229,98 @@ test("CLI 未知参数：统一中文前缀且不泄漏 Node 错误码", () => {
   const output = `${result.stdout ?? ""}${result.stderr ?? ""}`;
   assert.match(output, /\[export-interactive\]/);
   assert.ok(!output.includes("ERR_PARSE_ARGS_UNKNOWN_OPTION"));
+});
+
+// —— 修复 I-1：交付入口不接受与数组序不一致的叙事顺序 ——
+test("倒序夹具经 validateVideoProject 拒绝（/sorted by order/）", () => {
+  const project = fixture();
+  project.shots.reverse();
+  assert.throws(() => validateVideoProject(project), /sorted by order/);
+});
+
+// —— 修复 I-2：先落账校验、后写盘；第 1001 条失败不得覆盖旧产物 ——
+function legacyDelivery(index, versionId) {
+  return {
+    deliveryId: `00000000-0000-4000-8000-${String(index).padStart(12, "0")}`,
+    at: "2026-10-21T00:00:00.000Z",
+    versionIds: [versionId],
+    renderIds: [],
+    frameMap: [24],
+  };
+}
+
+test("第 1001 条交付落账失败：旧 index.html 与项目文件逐字节不变", () => {
+  const workDir = mkdtempSync(path.join(tmpdir(), "export-interactive-"));
+  try {
+    const projectPath = path.join(workDir, "full.video-project.json");
+    const outDir = path.join(workDir, "out");
+    const raw = JSON.parse(readFileSync(FIXTURE, "utf8"));
+    const versionId = raw.shots[0].workingVersionId;
+    raw.deliveries = Array.from({ length: 1000 }, (_, index) =>
+      legacyDelivery(index, versionId),
+    );
+    writeFileSync(projectPath, `${JSON.stringify(raw, null, 2)}\n`);
+    mkdirSync(outDir, { recursive: true });
+    const htmlPath = path.join(outDir, "index.html");
+    const sentinel = Buffer.from("PREVIOUS-VALID-HTML-SENTINEL");
+    writeFileSync(htmlPath, sentinel);
+    const projectBytesBefore = readFileSync(projectPath);
+
+    assert.throws(
+      () =>
+        execFileSync(
+          process.execPath,
+          [CLI, "--project", projectPath, "--out", outDir],
+          { encoding: "utf8" },
+        ),
+      (error) => {
+        assert.notEqual(error.status, 0);
+        const output = `${error.stdout ?? ""}${error.stderr ?? ""}`;
+        assert.match(output, /\[export-interactive\]/);
+        return true;
+      },
+    );
+
+    // 落账校验先于任何写盘：旧产物与账本都必须原样（equals 避免失败时
+    // 对大 Buffer 生成巨型 diff，Node 26 下会拖垮测试进程）。
+    assert.ok(readFileSync(htmlPath).equals(sentinel), "index.html 被改写");
+    assert.ok(
+      readFileSync(projectPath).equals(projectBytesBefore),
+      "项目文件被改写",
+    );
+  } finally {
+    rmSync(workDir, { recursive: true, force: true });
+  }
+});
+
+test("正常导出覆盖旧 index.html 且台账 +1（先落账后写盘的成功路径）", () => {
+  const workDir = mkdtempSync(path.join(tmpdir(), "export-interactive-"));
+  try {
+    const projectPath = path.join(workDir, "sample.video-project.json");
+    const outDir = path.join(workDir, "out");
+    copyFileSync(FIXTURE, projectPath);
+    mkdirSync(outDir, { recursive: true });
+    const htmlPath = path.join(outDir, "index.html");
+    writeFileSync(htmlPath, "PREVIOUS-VALID-HTML-SENTINEL");
+
+    execFileSync(
+      process.execPath,
+      [CLI, "--project", projectPath, "--out", outDir],
+      { encoding: "utf8" },
+    );
+
+    const html = readFileSync(htmlPath, "utf8");
+    assert.ok(html.startsWith("<!doctype html>"));
+    assert.ok(!html.includes("PREVIOUS-VALID-HTML-SENTINEL"));
+    const next = validateVideoProject(
+      JSON.parse(readFileSync(projectPath, "utf8")),
+    );
+    assert.equal(next.deliveries.length, 1);
+    assert.equal(next.savedVersion, 2);
+    assert.equal(next.deliveries[0].kind, "interactive-html");
+    assert.equal(next.deliveries[0].outputRef, "index.html");
+    assert.match(next.deliveries[0].digest, /^[0-9a-f]{64}$/);
+  } finally {
+    rmSync(workDir, { recursive: true, force: true });
+  }
 });

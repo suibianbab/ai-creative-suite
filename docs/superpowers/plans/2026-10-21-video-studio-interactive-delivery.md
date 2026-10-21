@@ -181,7 +181,7 @@ git commit -m "feat(video-studio): P3-A 交互 HTML 导出 CLI 与固定夹具"
 
 - [x] **Step 1: 写 e2e**
 
-`e2e-interactive.mjs` 流程（临时目录 `D:/tmp/acs-interactive-e2e-<rand>/`）：复制夹具 → 跑 CLI 两次（第二次前清空输出）→ 断言两次 `index.html` SHA-256 相同 → `chromium.launch({headless:true})`：
+`e2e-interactive.mjs` 流程（临时目录 `os.tmpdir()/acs-interactive-e2e-<rand>/`，由 `mkdtempSync` 创建）：复制夹具 → 跑 CLI 两次（第二次前清空输出）→ 断言两次 `index.html` SHA-256 相同 → `chromium.launch({headless:true})`：
 
 1. `file://` 打开：`body[data-step="1"]`、`#stage svg` 存在、`#prev` disabled；点 `#next` → `data-step="2"` 且 `#stage` innerHTML 变化；`ArrowRight` → 3；`ArrowLeft` → 2；`Home` → 1；回到第 1 步后再点 `#restart`，用 `MutationObserver` 断言 `#stage` 子节点被替换（重新开始必须重播当前步动画，含已在第 1 步时）。
 2. 宿主页 `host.html`（`<iframe src="index.html" width="960" height="540">`）打开：`frameLocator` 内点 `#next` → `data-step="2"`。

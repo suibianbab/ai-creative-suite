@@ -3,8 +3,14 @@
 // 每步用既有 SVG 翻页册采样后拼进单个自包含 index.html，并落 DeliveryRecord。
 // 纯函数只算不写盘；CLI 成功写 <out>/index.html、追加交付、回写项目。
 // 用法: node scripts/video/export-interactive.mjs --project <path.json> [--out <dir>] [--fps 12] [--aspect landscape|portrait]
-import { createHash } from "node:crypto";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { createHash, randomUUID } from "node:crypto";
+import {
+  mkdirSync,
+  readFileSync,
+  renameSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
@@ -171,14 +177,11 @@ async function main() {
     fail(error.message);
   }
 
-  // 落盘段同样收口：目录创建/两次写入的 fs 异常都必须带 CLI 前缀。
-  const outDir = path.resolve(values.out ?? path.dirname(projectPath));
-  const htmlPath = path.join(outDir, "index.html");
+  // 先落账校验、后写盘（P3-A 修复 I-2）：appendDelivery 会重校验项目，
+  // 1000 条交付上限等失败必须发生在任何文件被改写之前。
   let next;
   let delivery;
   try {
-    mkdirSync(outDir, { recursive: true });
-    writeFileSync(htmlPath, result.html);
     ({ project: next, delivery } = appendDelivery(project, {
       versionIds: result.versionIds,
       renderIds: [],
@@ -187,10 +190,42 @@ async function main() {
       outputRef: "index.html",
       digest: result.digest,
     }));
-    writeFileSync(projectPath, `${JSON.stringify(next, null, 2)}\n`);
   } catch (error) {
     fail(`写盘失败: ${error.message}`);
   }
+
+  // 写入临时文件再 rename（同卷覆盖原子）：两步都成功才算交付成功；项目
+  // rename 失败时把 index.html 恢复成旧字节（原本不存在则删除新产物）。
+  const outDir = path.resolve(values.out ?? path.dirname(projectPath));
+  const htmlPath = path.join(outDir, "index.html");
+  const htmlTmp = path.join(outDir, `.index.html.${randomUUID()}.tmp`);
+  const projectTmp = `${projectPath}.${randomUUID()}.tmp`;
+  let writeError;
+  try {
+    mkdirSync(outDir, { recursive: true });
+    let previousHtml;
+    try {
+      previousHtml = readFileSync(htmlPath);
+    } catch (error) {
+      if (error.code !== "ENOENT") throw error;
+    }
+    writeFileSync(htmlTmp, result.html);
+    writeFileSync(projectTmp, `${JSON.stringify(next, null, 2)}\n`);
+    renameSync(htmlTmp, htmlPath);
+    try {
+      renameSync(projectTmp, projectPath);
+    } catch (error) {
+      if (previousHtml === undefined) rmSync(htmlPath, { force: true });
+      else writeFileSync(htmlPath, previousHtml);
+      throw error;
+    }
+  } catch (error) {
+    writeError = error;
+  } finally {
+    rmSync(htmlTmp, { force: true });
+    rmSync(projectTmp, { force: true });
+  }
+  if (writeError) fail(`写盘失败: ${writeError.message}`);
   const totalFrames = result.frameMap.reduce((sum, frames) => sum + frames, 0);
   console.log(
     `[export-interactive] 完成: ${htmlPath}（${result.versionIds.length} 步, 共 ${totalFrames} 帧, ${Buffer.byteLength(result.html, "utf8")} 字节）; DeliveryRecord ${delivery.deliveryId.slice(0, 8)} 已回写 ${path.basename(projectPath)} (savedVersion=${next.savedVersion})`,
