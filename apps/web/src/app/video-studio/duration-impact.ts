@@ -157,6 +157,10 @@ export function durationApplyError(
   // 当前文档本来就无法量化（存量零帧）：这次改动只修好了本镜头，其余零帧
   // 镜头仍会在提示里点名；放行它，否则多个零帧镜头互相锁死。只有本次镜头
   // 改后自己仍为零帧才拦。
+  // 已知边界：quantizeTimeline 只报第一个零帧镜头，所以序号更小的存量零帧
+  // 会遮住本次镜头——[1,1000] 把镜头 2 再改小也会被放行。此时文档本就不可
+  // 量化、页面已降级为"不可预览"（不会白屏），提示仍点名实际报错镜头；
+  // 要求逐镜头零帧检查时再收紧。
   if (
     impact.beforeFrames === null &&
     impact.zeroFrameShotIndex !== impact.shotIndex

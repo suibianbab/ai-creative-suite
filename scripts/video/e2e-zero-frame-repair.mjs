@@ -104,9 +104,7 @@ function makeShot({ order, durationMs, title, seed }) {
         provenance: { engineId: "planner-rules", engineVersion: "1" },
       },
     ],
-    events: [
-      { kind: "submitted", versionId, at: CREATED_AT, actor: "human" },
-    ],
+    events: [{ kind: "submitted", versionId, at: CREATED_AT, actor: "human" }],
   };
 }
 
@@ -386,8 +384,7 @@ const fixtureC = JSON.parse(readFileSync(THREE_FIXTURE, "utf8"));
 fixtureC.id = randomUUID();
 fixtureC.title = "零帧 3D 镜头修复回归 C";
 const threeWorking = fixtureC.shots[0].contentVersions.find(
-  (version) =>
-    version.versionId === fixtureC.shots[0].workingVersionId,
+  (version) => version.versionId === fixtureC.shots[0].workingVersionId,
 );
 if (threeWorking?.sceneSource.type !== "three")
   fail("C1 构造夹具", "three-sample 镜头 1 工作版本不是 three 场景源");
@@ -433,10 +430,7 @@ if (cWorking.sceneSource.spec.durationMs !== 2000)
     `spec.durationMs ${cWorking.sceneSource.spec.durationMs} ≠ 2000`,
   );
 if (cWorking.sceneSource.spec.componentId !== "orbit3d")
-  fail(
-    "C5 导出",
-    `组件 ${cWorking.sceneSource.spec.componentId} ≠ orbit3d`,
-  );
+  fail("C5 导出", `组件 ${cWorking.sceneSource.spec.componentId} ≠ orbit3d`);
 console.log(
   `[e2e-zero-frame-repair] C4/C5 3D 镜头修复：type=three，组件=${cWorking.sceneSource.spec.componentId}，版本/spec 时长同步 2000ms`,
 );
@@ -460,6 +454,10 @@ console.log(
   `[e2e-zero-frame-repair] 控制台 error 0 条；tts-usage.jsonl ${usageBefore} → ${usageAfter} 行（零 TTS）`,
 );
 console.log("[e2e-zero-frame-repair] 逐步骤摘要：");
-console.log("  A PASS 导入 2×1ms → 卡保留/降级 → 逐镜头改 2s → 96 帧 → 保存 v2 → 重开 96 帧");
+console.log(
+  "  A PASS 导入 2×1ms → 卡保留/降级 → 逐镜头改 2s → 96 帧 → 保存 v2 → 重开 96 帧",
+);
 console.log("  B PASS 合法项目改 0.001s → 「无法应用：…」→ 文档仍 2000ms");
-console.log("  C PASS 1ms three 镜头时长输入可见 → 改 2s → 仍为 three，spec 同步 2000ms");
+console.log(
+  "  C PASS 1ms three 镜头时长输入可见 → 改 2s → 仍为 three，spec 同步 2000ms",
+);

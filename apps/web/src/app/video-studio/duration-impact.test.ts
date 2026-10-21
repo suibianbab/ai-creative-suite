@@ -246,6 +246,19 @@ test("合法文档改出新零帧仍必须拦截", () => {
   assert.notEqual(durationApplyError(impact), null);
 });
 
+test("合法文档改坏别的镜头（本次镜头自己没零帧）仍必须拦截", () => {
+  // [1000,40] 合计 25 帧（镜头 2 只有 1 帧）；镜头 1 改成 980ms 后累计边界
+  // 24/24，镜头 2 变零帧。报错镜头不是本次编辑的镜头，但当前文档是可量化的，
+  // 闸门不能把它当成"存量零帧的局部修复"放行。
+  const impact = describeDurationImpact(projectWith([1000, 40]), 0, 980);
+  assert.equal(impact.changed, true);
+  assert.equal(impact.shotIndex, 0);
+  assert.equal(impact.beforeFrames, 25);
+  assert.equal(impact.afterFrames, null);
+  assert.equal(impact.zeroFrameShotIndex, 1);
+  assert.notEqual(durationApplyError(impact), null);
+});
+
 test("存量零帧且本镜头改后仍零帧：拦截", () => {
   // 2ms @24fps 仍是零帧：本镜头没修好，闸门不能借"存量零帧"放行。
   const impact = describeDurationImpact(projectWith([1, 1000]), 0, 2);

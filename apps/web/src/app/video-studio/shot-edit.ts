@@ -62,7 +62,8 @@ export function attachDescription<T extends object>(
   return { patch: { ...patch, description } };
 }
 
-// 草稿时长（秒）→ 文档毫秒：四个编辑臂共用同一校验口径。
+// 草稿时长（秒）→ 文档毫秒：spec 与 3D 编辑臂共用同一校验口径
+//（媒体臂的时长来自出入点，不走草稿秒数）。
 export function draftDurationMs(
   draft: ShotEditDraft,
 ): { durationMs: number } | { error: string } {
