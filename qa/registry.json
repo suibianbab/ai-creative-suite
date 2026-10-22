@@ -2241,6 +2241,25 @@
       ]
     },
     {
+      "id": "VID-027",
+      "title": "Video Studio key-shot dual candidates (compare two content versions side by side, choose one as the working version, persistence after reopen)",
+      "fixture": "Script-generated fixture validated with validateVideoProject before import: 2 text-animation spec shots at 2000ms with submitted(human) events; the second candidate is produced through the real 单镜重做 path (做 一个6秒的图形动画，标题是候选对比). Live loop scripted in scripts/video/e2e-candidate-compare.mjs (rerun: BASE_URL=http://127.0.0.1:3211 node scripts/video/e2e-candidate-compare.mjs; needs the :3210 dev server behind the :3211 proxy, zero TTS billing)",
+      "steps": [
+        "Import the fixture and redo shot 1 with a 6-second directive: assert the version select now lists 2 options and the working version moved to #2",
+        "Open 对比候选: assert two columns render, the working column shows 当前 N 帧, the other column shows N → M 帧, the two 拍法说明 differ, and each column's version select excludes the other column's current version",
+        "Lock shot 1, then choose the original shot #1 from the right column: assert 已回滚到所选版本, #1 becomes （工作）, and the lock stays on (ADR 0003 human path)",
+        "Save, reload and reopen the project from .project-table: assert 2 versions, working version #1 and the lock persist; reopening 对比候选 defaults to #1 + #2 again",
+        "Export the JSON: validateVideoProject passes, workingVersionId is version #1, lock-changed and audit 回滚工作版本 events exist, no approved event was added, savedVersion is 2"
+      ],
+      "passCriteria": [
+        "Two existing content versions can be compared in place with description, duration and whole-piece frame impact computed by the same quantize path as rendering (no separate frame math)",
+        "Choosing a candidate moves only the working pointer through the existing rollback operation; locked shots stay allowed and the audit trail records the choice",
+        "Persistence holds: after save/reload/reopen the chosen version is still working, both versions remain and no approval state was invented",
+        "The two column selects are mutually exclusive, so a version cannot be compared with itself",
+        "Browser console logs zero errors and artifacts/tts-usage.jsonl line count is unchanged (zero TTS)"
+      ]
+    },
+    {
       "id": "3D-001",
       "title": "Exact product model advertisement",
       "fixture": "Rights-cleared customer-approved accurate 3D model and product reference photos",

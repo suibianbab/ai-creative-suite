@@ -146,7 +146,7 @@ git commit -m "feat(video-studio): 候选摘要与默认对比对纯函数"
 
 **Files:**
 - Create: `scripts/video/e2e-candidate-compare.mjs`
-- Modify: `qa/registry.json`（新增 `VID-027`，`tier: "integration"`、`cwd: "."`、`argv: ["node", "scripts/video/e2e-candidate-compare.mjs"]`、`requiresPorts: []`）
+- Modify: `qa/registry.json`（在 `manual` 数组新增 `VID-027`，与 `VID-026` 同口径：e2e 需要 3210 dev server 与 3211 代理，不进自动化执行）
 
 **Interfaces:**
 - Consumes: 工作台的既有选择器约定——`html[data-studio-ready]`、`.project-import`（隐藏 `input[type=file]`）、`.shot-redo-input`、`.shot-redo-button`、`.shot-version-select`、`.shot-rollback`；导出按钮与项目列表的既有类名从 `e2e-zero-frame-repair.mjs` 复制用法。
@@ -172,9 +172,9 @@ Expected: FAIL，第一个缺的是 `.shot-compare-toggle` 不可见。
 
 - [ ] **Step 3: 注册 QA 用例并验证注册表**
 
-在 `qa/registry.json` 增加 `VID-027`（标题：关键镜头双候选对比与选用；`passCriteria` 覆盖步骤 2–5 的断言）。
+在 `qa/registry.json` 的 `manual` 数组增加 `VID-027`（标题：关键镜头双候选对比与选用；`passCriteria` 覆盖步骤 2–5 的断言）。
 Run: `node scripts/qa/run-regression.mjs validate`
-Expected: PASS，automated 86 / manual 52（当前 85/52）。
+Expected: PASS，automated 85 / manual 53（当前 85/52）。
 
 - [ ] **Step 4: 提交**
 
