@@ -79,6 +79,7 @@ export type RenderRecord = {
   codec: string;
   frames: number;
   fontDigests: Record<string, string>;
+  styleBibleRef?: StyleBibleRef; // 本次渲染实际采用的独立风格版本
   outputAssetRef: string; // 本地 P0 为输出文件相对路径
   // ADR §2.5：无头浏览器是确定性输入，出片时记录实际浏览器标识与版本。
   // 可选：早期存储文档无此字段，重开仍须通过校验。
@@ -143,11 +144,43 @@ export type VideoProject = {
   renderRecords: RenderRecord[];
   deliveries: DeliveryRecord[];
   savedVersion: number; // 文档版本，乐观并发用
+  // 独立 Style Bible 的不可变内容版本引用；风格正文不嵌入项目。
+  styleBibleRef?: StyleBibleRef;
   // —— P1 转场（Feature ④ spec）：project 级编排元数据，可自由改写（title 同级），
   // 不进 shots/events/renderRecords/deliveries 的只追加纪律；缺省/空 = 全硬切 ——
   transitions?: ShotTransition[];
   // —— P2.5 媒体混编：素材元数据账本（二进制不入文档，只追加）——
   mediaAssets?: MediaAsset[];
+};
+
+export type StyleBibleRef = {
+  bibleId: string;
+  versionId: string;
+  digest: string; // canonicalJson(StyleBibleVersion) 的 SHA-256
+};
+
+export type StyleBibleVersion = {
+  versionId: string;
+  createdAt: string;
+  name: string;
+  palette: {
+    background: string;
+    foreground: string;
+    secondary: string;
+    accent: string;
+    object: string;
+  };
+  // 当前渲染器只支持已打包的 NotoSansSC；禁止记下无法兑现的自由字体。
+  fontFamily: "NotoSansSC";
+  // 当前 orbit3d@1 灯光是固定 rig；不宣称任意场景可调光。
+  lightingPreset: "orbit3d-fixed-soft-studio";
+};
+
+export type StyleBible = {
+  schemaVersion: 1;
+  id: string;
+  currentVersionId: string;
+  versions: StyleBibleVersion[];
 };
 
 export type TransitionKind = "fade";

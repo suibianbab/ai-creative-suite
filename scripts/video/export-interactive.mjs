@@ -18,6 +18,7 @@ import { parseArgs } from "node:util";
 import { appendDelivery, validateVideoProject } from "./delivery.mjs";
 import { sampledFrameCount } from "./export-shot-svg.mjs";
 import { buildPlayerHtml } from "./interactive-player.mjs";
+import { verifyProjectStyleBible } from "./style-bible-file.mjs";
 import { buildAnimatedSvg } from "./svg-serialize.mjs";
 
 // 与出片/其他导出同口径（render-scene.mjs 为 24fps）。
@@ -170,6 +171,7 @@ async function main() {
     ({ values } = parseArgs({
       options: {
         project: { type: "string" },
+        "style-bible": { type: "string" },
         out: { type: "string" },
         fps: { type: "string", default: "12" },
         aspect: { type: "string", default: "landscape" },
@@ -197,6 +199,7 @@ async function main() {
   } catch (error) {
     fail(`项目校验失败: ${error.message}`);
   }
+  await verifyProjectStyleBible(project, values["style-bible"]);
 
   // 输出目标在构建前就确定：若项目文件恰好是 <out>/index.html，落账与两次
   // rename 会让账本和产物互相覆盖（第二次 rename 用项目 JSON 覆盖刚写出的

@@ -2,6 +2,7 @@
 
 import {
   addCandidateVersion,
+  applyStyleBible,
   type MediaAsset,
   type QuantizedTimeline,
   quantizeTimeline,
@@ -9,6 +10,7 @@ import {
   ShotLockedError,
   setLocked,
   type VideoProject,
+  validateStyleBible,
 } from "@acs/video-document";
 import type { SceneSpec } from "@acs/video-scene";
 import Link from "next/link";
@@ -22,7 +24,9 @@ import {
 import {
   importVideoProject,
   listVideoProjects,
+  openStyleBible,
   openVideoProject,
+  saveStyleBible,
   saveVideoProject,
   type VideoProjectSummary,
 } from "./local-video-projects";
@@ -45,6 +49,7 @@ import {
 import { ShotEditorCard } from "./shot-editor-card";
 import { shotWorkingMediaClip, shotWorkingSpec } from "./shot-specs";
 import { importStockForShot } from "./stock-apply";
+import { StyleBiblePanel } from "./style-bible-panel";
 import { threeSceneFromVersion } from "./three-templates";
 import {
   type TransitionDraftRow,
@@ -105,12 +110,24 @@ export default function VideoStudioPage() {
     setTransitionError(null);
   }, [editor?.document.shots.length, editor?.document.transitions]);
   const importInputRef = useRef<HTMLInputElement>(null);
+  const styleImportInputRef = useRef<HTMLInputElement>(null);
   // P2.6-T7 U5：最新文档 ref——下载期间允许继续编辑其他镜头，导入完成时
   // 必须以 ref 当前值（而非发起下载时的快照）为基线。
   const documentRef = useRef<VideoProject | null>(null);
   useEffect(() => {
     documentRef.current = editor?.document ?? null;
   }, [editor?.document]);
+
+  const applyLinkedStyle = async (
+    project: VideoProject,
+  ): Promise<VideoProject> => {
+    const ref = project.styleBibleRef;
+    if (!ref) return project;
+    const record = await openStyleBible(ref.bibleId);
+    if (!record)
+      throw new Error("风格规范本地记录缺失，请先导入 Style Bible JSON");
+    return applyStyleBible(project, record.document, ref.versionId);
+  };
 
   // U5 下载并应用：先 POST 取资产并解析 {asset}/{error}，再读最新文档 ref，
   // 最后经 stock-apply 在「账本 + 镜头修订」上一次保存。失败函数式复位 busy
@@ -401,6 +418,13 @@ export default function VideoStudioPage() {
             />
           </label>
 
+          <StyleBiblePanel
+            project={document}
+            onApply={(next, note) =>
+              setEditor({ ...editor, document: next, message: note })
+            }
+          />
+
           {/* P2.5-T3 U4/X1：素材面板——上传入账本 + 逐条列出（含同内容提示）。
               挂在标题下方、规划器上方：先有素材，才有媒体镜头可编辑。 */}
           <MediaPanel assets={mediaAssets} busy={busy} onUpload={uploadMedia} />
@@ -490,20 +514,31 @@ export default function VideoStudioPage() {
                 <button
                   type="button"
                   className="plan-apply"
-                  onClick={() => {
+                  onClick={async () => {
                     // P1：分镜应用 = 在当前项目上只追加 N 个镜头
-                    const applied = applyStoryboard(document, storyboard, {
-                      shot: () => crypto.randomUUID(),
-                      version: () => crypto.randomUUID(),
-                    });
-                    setEditor({
-                      document: applied.document,
-                      message: applied.notice,
-                      busy: false,
-                      sentence,
-                      plan: null,
-                      storyboard: null,
-                    });
+                    try {
+                      const applied = applyStoryboard(document, storyboard, {
+                        shot: () => crypto.randomUUID(),
+                        version: () => crypto.randomUUID(),
+                      });
+                      const styled = await applyLinkedStyle(applied.document);
+                      setEditor({
+                        document: styled,
+                        message: applied.notice,
+                        busy: false,
+                        sentence,
+                        plan: null,
+                        storyboard: null,
+                      });
+                    } catch (error) {
+                      setEditor({
+                        ...editor,
+                        message:
+                          error instanceof Error
+                            ? error.message
+                            : "分镜应用失败",
+                      });
+                    }
                   }}
                 >
                   确认应用（追加 {storyboard.shots.length} 个镜头）
@@ -530,21 +565,37 @@ export default function VideoStudioPage() {
                 <button
                   type="button"
                   className="plan-apply"
-                  onClick={() => {
+                  onClick={async () => {
                     // P2-B：空项目 = 首次规划落当前文档；已有镜头 = 明示另存为新项目
-                    const applied = applyPlan(document, sentence.trim(), plan, {
-                      project: crypto.randomUUID(),
-                      shot: crypto.randomUUID(),
-                      version: crypto.randomUUID(),
-                    });
-                    setEditor({
-                      document: applied.document,
-                      message: applied.notice,
-                      busy: false,
-                      sentence: sentence,
-                      plan: null,
-                      storyboard: null,
-                    });
+                    try {
+                      const applied = applyPlan(
+                        document,
+                        sentence.trim(),
+                        plan,
+                        {
+                          project: crypto.randomUUID(),
+                          shot: crypto.randomUUID(),
+                          version: crypto.randomUUID(),
+                        },
+                      );
+                      const styled = await applyLinkedStyle(applied.document);
+                      setEditor({
+                        document: styled,
+                        message: applied.notice,
+                        busy: false,
+                        sentence,
+                        plan: null,
+                        storyboard: null,
+                      });
+                    } catch (error) {
+                      setEditor({
+                        ...editor,
+                        message:
+                          error instanceof Error
+                            ? error.message
+                            : "镜头应用失败",
+                      });
+                    }
                   }}
                 >
                   {document.shots.length > 0
@@ -614,14 +665,15 @@ export default function VideoStudioPage() {
                     onImportStock={(pageTitle, derivativeUrl) =>
                       handleStockImport(shot.shotId, pageTitle, derivativeUrl)
                     }
-                    onRevise={(patch) => {
+                    onRevise={async (patch) => {
                       try {
-                        const next = reviseWorkingVersion(
+                        const revised = reviseWorkingVersion(
                           document,
                           shot.shotId,
                           patch,
                           crypto.randomUUID(),
                         );
+                        const next = await applyLinkedStyle(revised);
                         setEditor({
                           ...editor,
                           document: next,
@@ -637,7 +689,7 @@ export default function VideoStudioPage() {
                         });
                       }
                     }}
-                    onRedo={(directive) => {
+                    onRedo={async (directive) => {
                       // 单镜头重做：规划器只认固定句式；锁定镜头按 ADR 0003 §1.3
                       // 拒机器改写。重做只换画面，旁白从当前 working 版本继承。
                       const plan = planFromSentence(directive);
@@ -661,7 +713,7 @@ export default function VideoStudioPage() {
                       }
                       const versionId = crypto.randomUUID();
                       try {
-                        const next = addCandidateVersion(
+                        const candidate = addCandidateVersion(
                           document,
                           shot.shotId,
                           {
@@ -678,6 +730,7 @@ export default function VideoStudioPage() {
                             },
                           },
                         );
+                        const next = await applyLinkedStyle(candidate);
                         setRedoErrors({ ...redoErrors, [shot.shotId]: null });
                         setEditor({
                           ...editor,
@@ -696,17 +749,18 @@ export default function VideoStudioPage() {
                         });
                       }
                     }}
-                    onRollback={(versionId) => {
+                    onRollback={async (versionId) => {
                       try {
-                        const next = selectWorkingVersion(
+                        const selected = selectWorkingVersion(
                           document,
                           index,
                           versionId,
                         );
+                        const next = await applyLinkedStyle(selected);
                         setEditor({
                           ...editor,
                           document: next,
-                          message: `镜头 ${index + 1} 已回滚到所选版本`,
+                          message: `镜头 ${index + 1} 已回滚到所选版本${document.styleBibleRef ? "，并应用当前风格" : ""}`,
                         });
                         return null;
                       } catch (error) {
@@ -860,7 +914,7 @@ export default function VideoStudioPage() {
               URL.revokeObjectURL(url);
               setEditor({
                 ...editor,
-                message: `已导出 ${anchor.download}。CLI 出片：node scripts/video/render-scene.mjs --project <导出件> --out <目录>；整片 GIF：node scripts/video/export-gif.mjs --project <导出件> --aspect landscape；单镜头 SVG：node scripts/video/export-shot-svg.mjs --project <导出件> --shot 1，完成后回列表页「导入项目 JSON」`,
+                message: `已导出 ${anchor.download}。${document.styleBibleRef ? "请同时点上方「导出风格规范 JSON」，CLI 出片/导出须传 --style-bible <风格规范.json>；" : ""}CLI 出片：node scripts/video/render-scene.mjs --project <导出件> --out <目录>；整片 GIF：node scripts/video/export-gif.mjs --project <导出件> --aspect landscape；单镜头 SVG：node scripts/video/export-shot-svg.mjs --project <导出件> --shot 1，完成后回列表页「导入项目 JSON」`,
               });
             }}
           >
@@ -922,6 +976,38 @@ export default function VideoStudioPage() {
           >
             导入项目 JSON
           </button>
+          <button
+            type="button"
+            className="project-import"
+            onClick={() => styleImportInputRef.current?.click()}
+          >
+            导入 Style Bible JSON
+          </button>
+          <input
+            ref={styleImportInputRef}
+            type="file"
+            accept=".json,application/json"
+            hidden
+            onChange={async (event) => {
+              const file = event.target.files?.[0];
+              event.target.value = "";
+              if (!file) return;
+              try {
+                const bible = validateStyleBible(JSON.parse(await file.text()));
+                const stored = await openStyleBible(bible.id);
+                await saveStyleBible(bible, stored?.revision ?? 0);
+                setListMessage(
+                  `已导入 Style Bible（${bible.versions.length} 个版本）；现在可导入引用它的项目 JSON`,
+                );
+              } catch (error) {
+                setListMessage(
+                  error instanceof Error
+                    ? error.message
+                    : "导入 Style Bible 失败",
+                );
+              }
+            }}
+          />
           <input
             ref={importInputRef}
             type="file"

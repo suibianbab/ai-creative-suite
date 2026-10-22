@@ -15,11 +15,12 @@ const tiers = new Set([
   "live-model",
   "live-grounding",
   "browser-image",
+  "browser-video",
 ]);
 const mode = process.argv[2] ?? "validate";
 if (![...tiers, "all", "validate"].includes(mode) || process.argv.length > 3) {
   throw new Error(
-    "Usage: run-regression.mjs <validate|smoke|integration|oidc|image-qa|live-model|live-grounding|browser-image|all>",
+    "Usage: run-regression.mjs <validate|smoke|integration|oidc|image-qa|live-model|live-grounding|browser-image|browser-video|all>",
   );
 }
 

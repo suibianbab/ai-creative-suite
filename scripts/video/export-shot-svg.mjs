@@ -9,6 +9,7 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
 import { appendDelivery, commitDeliveryFiles } from "./delivery.mjs";
+import { verifyProjectStyleBible } from "./style-bible-file.mjs";
 import { buildAnimatedSvg, buildStaticSvg } from "./svg-serialize.mjs";
 
 const RENDER_FPS = 24;
@@ -66,6 +67,7 @@ async function main() {
   const { values } = parseArgs({
     options: {
       project: { type: "string" },
+      "style-bible": { type: "string" },
       shot: { type: "string" },
       fps: { type: "string" },
       frame: { type: "string" },
@@ -94,6 +96,7 @@ async function main() {
   } catch (error) {
     fail(`项目校验失败: ${error.message}`);
   }
+  await verifyProjectStyleBible(project, values["style-bible"]);
 
   let version;
   try {

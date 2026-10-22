@@ -4,12 +4,18 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
-import type { VideoProject } from "@acs/video-document";
+import {
+  type StyleBible,
+  styleVersionDigest,
+  type VideoProject,
+} from "@acs/video-document";
 import { IDBFactory } from "fake-indexeddb";
 import {
   importVideoProject,
+  openStyleBible,
   openVideoProject,
   readVideoProjectVersion,
+  saveStyleBible,
   saveVideoProject,
   VideoProjectConflictError,
   VideoProjectMutationError,
@@ -97,6 +103,57 @@ test("双标签并发保存：恰有一个成功，另一个收到冲突错误",
       fulfilled[0]?.status === "fulfilled" && fulfilled[0].value.savedVersion,
       3,
     );
+  });
+});
+
+test("Style Bible 独立记录保存、重开、追加版本与拒绝改写旧版本", async () => {
+  await withTabs(async () => {
+    const bible: StyleBible = {
+      schemaVersion: 1,
+      id: "66666666-6666-4666-8666-666666666666",
+      currentVersionId: "77777777-7777-4777-8777-777777777777",
+      versions: [
+        {
+          versionId: "77777777-7777-4777-8777-777777777777",
+          createdAt: "2026-10-22T00:00:00.000Z",
+          name: "v1",
+          palette: {
+            background: "#101820",
+            foreground: "#f3e6cf",
+            secondary: "#e8b04b",
+            accent: "#e8b04b",
+            object: "#c98548",
+          },
+          fontFamily: "NotoSansSC",
+          lightingPreset: "orbit3d-fixed-soft-studio",
+        },
+      ],
+    };
+    const first = await saveStyleBible(bible);
+    assert.equal(first.revision, 1);
+    assert.deepEqual((await openStyleBible(bible.id))?.document, bible);
+    const v2: StyleBible = structuredClone(bible);
+    v2.versions.push({
+      ...structuredClone(v2.versions[0]!),
+      versionId: "88888888-8888-4888-8888-888888888888",
+      name: "v2",
+    });
+    v2.currentVersionId = v2.versions[1]!.versionId;
+    assert.equal((await saveStyleBible(v2, 1)).revision, 2);
+    await assert.rejects(saveStyleBible(bible, 1), /已在别处更新/);
+    const tampered = structuredClone(v2);
+    tampered.versions[0]!.palette.background = "#ffffff";
+    await assert.rejects(saveStyleBible(tampered, 2), /不可改写/);
+
+    const project = makeProject({
+      styleBibleRef: {
+        bibleId: bible.id,
+        versionId: v2.versions[1]!.versionId,
+        digest: await styleVersionDigest(v2.versions[1]!),
+      },
+    });
+    await assert.rejects(saveVideoProject(project), /Style Bible 校验未通过/);
+    assert.equal((await openStyleBible(bible.id))?.document.versions.length, 2);
   });
 });
 

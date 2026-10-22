@@ -499,6 +499,24 @@ export function validateVideoProject(value: unknown): VideoProject {
   ) {
     fail("savedVersion must be a positive integer");
   }
+  if (parsed.styleBibleRef !== undefined) {
+    const ref = parsed.styleBibleRef;
+    if (
+      !isRecord(ref) ||
+      !isUuid(ref.bibleId) ||
+      !isUuid(ref.versionId) ||
+      typeof ref.digest !== "string" ||
+      !SHA256_HEX.test(ref.digest)
+    ) {
+      fail("styleBibleRef 须包含 bibleId、versionId 与 SHA-256 digest");
+    }
+    if (
+      Object.keys(ref).some(
+        (key) => !["bibleId", "versionId", "digest"].includes(key),
+      )
+    )
+      fail("styleBibleRef 只能保存独立风格记录的引用，不得内嵌正文");
+  }
   if (!isRecord(parsed.brief)) fail("brief must be an object");
   if (
     typeof parsed.brief.sentence !== "string" ||
@@ -631,6 +649,17 @@ export function validateVideoProject(value: unknown): VideoProject {
   for (const [index, record] of parsed.renderRecords.entries()) {
     const field = `renderRecords[${index}]`;
     if (!isRecord(record)) fail(`${field} must be an object`);
+    if (record.styleBibleRef !== undefined) {
+      const ref = record.styleBibleRef;
+      if (
+        !isRecord(ref) ||
+        !isUuid(ref.bibleId) ||
+        !isUuid(ref.versionId) ||
+        typeof ref.digest !== "string" ||
+        !SHA256_HEX.test(ref.digest)
+      )
+        fail(`${field}.styleBibleRef 无效`);
+    }
     if (!isUuid(record.renderId)) fail(`${field}.renderId must be a UUID`);
     if (knownRenderIds.has(record.renderId))
       fail(`${field}.renderId is duplicated`);

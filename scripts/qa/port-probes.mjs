@@ -13,6 +13,7 @@ const HTTP_PROBE_URLS = new Map([
   [4112, "http://127.0.0.1:4112/health"],
   [3000, "http://localhost:3000/image-studio/photocraft"],
   [3100, "http://127.0.0.1:3100/image-studio/photocraft"],
+  [3210, "http://localhost:3210/video-studio"],
   // 本机掩码服务（scripts/image_quality/local_mask_provider.py）的既有 GET /health。
   [4101, "http://127.0.0.1:4101/health"],
   [4104, "http://127.0.0.1:4104/health"],

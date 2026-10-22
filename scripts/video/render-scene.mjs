@@ -41,6 +41,7 @@ import {
   findMissingThreeBakes,
 } from "./render-scene.props.mjs";
 import { sha256File } from "./sha256-file.mjs";
+import { verifyProjectStyleBible } from "./style-bible-file.mjs";
 import { validateThreeSpec } from "./three/spec.mjs";
 import { buildNarrationEntries, readSubtitleCues } from "./tts-sse.mjs";
 
@@ -165,6 +166,7 @@ function buildThreeRecordEvidence(spec, baked, shotIndex, aspect) {
 const { values } = parseArgs({
   options: {
     project: { type: "string" },
+    "style-bible": { type: "string" },
     out: { type: "string" },
     narration: { type: "string" },
     "skip-dryrun": { type: "boolean" },
@@ -189,6 +191,11 @@ try {
   project = validateVideoProject(JSON.parse(readFileSync(projectPath, "utf8")));
 } catch (error) {
   fail(`项目校验失败: ${error.message}`);
+}
+try {
+  await verifyProjectStyleBible(project, values["style-bible"]);
+} catch (error) {
+  fail(`Style Bible 校验失败: ${error.message}`);
 }
 
 // 2. 全镜头 working version 的 spec | media-clip | three（多镜头整片；单镜头是 N=1 特例）
@@ -438,6 +445,7 @@ const manifest = {
   remotion: remotionVersion,
   browser,
   fontDigests,
+  ...(project.styleBibleRef ? { styleBibleRef: project.styleBibleRef } : {}),
   aspects: {},
 };
 // Timeline props 组装已抽成纯函数（render-scene.props.mjs，Ruling 3）：量化帧图 +
@@ -759,6 +767,9 @@ for (const aspect of aspects) {
       codec: "h264",
       frames: span.frames,
       fontDigests,
+      ...(project.styleBibleRef
+        ? { styleBibleRef: project.styleBibleRef }
+        : {}),
       outputAssetRef,
     });
   }

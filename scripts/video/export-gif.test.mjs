@@ -117,6 +117,27 @@ test("findRenderBlock 无该画幅记录报错指路 render-scene", () => {
   assert.throws(() => findRenderBlock(p, "portrait"), /先跑 render-scene/);
 });
 
+test("带风格项目拒绝从旧风格或旧镜头渲染记录派生 GIF", () => {
+  const p = project();
+  const [a, b] = p.shots.map((s) => s.workingVersionId);
+  const ref = {
+    bibleId: "65a9df5b-3e3a-4b4e-b50e-fb91a0bd6c07",
+    versionId: "88519557-c3a4-44c8-a615-503ed00a67c6",
+    digest: "a".repeat(64),
+  };
+  p.styleBibleRef = ref;
+  p.renderRecords = [
+    { ...record("landscape", "r/landscape.mp4", a, 48), styleBibleRef: ref },
+    { ...record("landscape", "r/landscape.mp4", b, 72), styleBibleRef: ref },
+  ];
+  assert.equal(findRenderBlock(p, "landscape").records.length, 2);
+  p.renderRecords[1].styleBibleRef = { ...ref, digest: "b".repeat(64) };
+  assert.throws(() => findRenderBlock(p, "landscape"), /Style Bible/);
+  p.renderRecords[1].styleBibleRef = ref;
+  p.shots[1].workingVersionId = "3b56d627-a04a-48dd-82b0-9394ca9f0b45";
+  assert.throws(() => findRenderBlock(p, "landscape"), /工作镜头版本/);
+});
+
 test("findRenderBlock 块长度与镜头数不符报错", () => {
   const p = project();
   const a = p.shots[0].contentVersions[0].versionId;

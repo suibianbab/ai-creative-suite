@@ -1364,6 +1364,33 @@
       ]
     },
     {
+      "id": "VID-028",
+      "tier": "integration",
+      "title": "Video Studio Style Bible four-shot visual consistency, version switching and real exports",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/e2e-style-bible.mjs"],
+      "requiresPorts": [],
+      "checks": [
+        "Four-shot text/3D sample renders under a pinned independent Style Bible version with NotoSansSC and fixed orbit3d lighting; render records pin the style reference",
+        "Editing only shot 4 leaves the first three source shots identical; switching to version 2 appends content versions and changes the whole-piece palette",
+        "MP4, GIF and SVG export succeed with the matching sidecar; GIF/SVG delivery digests match actual bytes",
+        "Missing Style Bible sidecar fails before mutating the project; legacy projects without a style reference remain readable"
+      ]
+    },
+    {
+      "id": "VID-029",
+      "tier": "browser-video",
+      "title": "Video Studio Style Bible browser save/reopen, version switch and one-shot edit",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/e2e-style-bible-browser.mjs"],
+      "requiresPorts": [3210],
+      "checks": [
+        "Real browser creates a four-shot storyboard, creates an independent Style Bible, saves project and sidecar, and reopens with the same reference",
+        "A new palette version changes the pinned reference and appends shot content versions; switching back retains both historical versions",
+        "Editing only shot 1 preserves other working version IDs, then save/reopen succeeds with zero browser console errors and no TTS billing"
+      ]
+    },
+    {
       "id": "VID-025",
       "tier": "integration",
       "title": "Video Studio P3-B three 镜头预烘焙出片与确定性",

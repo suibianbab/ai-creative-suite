@@ -188,7 +188,7 @@ export type ShotEditorCardProps = {
   }) => void;
   onRedo: (directive: string) => void;
   // 成功返回 null；被统一选版本闸门拦下时返回用户可见错误。
-  onRollback: (versionId: string) => string | null;
+  onRollback: (versionId: string) => Promise<string | null>;
   onToggleLock: (locked: boolean) => void;
   redoError: string | null;
   // P2.6-T7：媒体臂在线素材面板的「下载并应用」回调（返回成功消息）。
@@ -333,8 +333,8 @@ export function ShotEditorCard({
   }, [shot.workingVersionId]);
 
   // 两列面板与旧版“回滚到此版本”共享 page 的选版本闸门。
-  const chooseCandidate = (summary: CandidateSummary) => {
-    setCompareError(onRollback(summary.versionId));
+  const chooseCandidate = async (summary: CandidateSummary) => {
+    setCompareError(await onRollback(summary.versionId));
   };
 
   // working 版本变了（应用修订/重做/回滚后）→ 草稿重置到新工作版本。
@@ -484,7 +484,7 @@ export function ShotEditorCard({
         type="button"
         className="shot-rollback"
         disabled={selectedVersion === shot.workingVersionId}
-        onClick={() => onRollback(selectedVersion)}
+        onClick={() => void onRollback(selectedVersion)}
       >
         回滚到此版本
       </button>

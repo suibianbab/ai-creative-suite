@@ -1,15 +1,20 @@
 import {
   assertAppendOnlyEvolution,
+  assertStyleBibleEvolution,
   canonicalJson,
+  resolveStyleBibleRef,
+  type StyleBible,
   type VideoProject,
   VideoProjectMutationError,
+  validateStyleBible,
   validateVideoProject,
+  workingStyleIssues,
 } from "@acs/video-document";
 
 export { VideoProjectMutationError };
 
 const DATABASE_NAME = "acs-video-studio-local";
-const DATABASE_VERSION = 2;
+const DATABASE_VERSION = 3;
 
 // 乐观并发：本地副本落后（或超前）于存储即拒绝落库，调用方提示刷新重开。
 export class VideoProjectConflictError extends Error {
@@ -39,6 +44,8 @@ type VersionSnapshot = {
   document: VideoProject;
 };
 
+type StyleRecord = { id: string; revision: number; document: StyleBible };
+
 function requestResult<T>(request: IDBRequest<T>): Promise<T> {
   return new Promise((resolve, reject) => {
     request.onsuccess = () => resolve(request.result);
@@ -62,6 +69,9 @@ function openDatabase(): Promise<IDBDatabase> {
     const request = indexedDB.open(DATABASE_NAME, DATABASE_VERSION);
     request.onupgradeneeded = () => {
       const database = request.result;
+      if (!database.objectStoreNames.contains("styleBibles")) {
+        database.createObjectStore("styleBibles", { keyPath: "id" });
+      }
       if (!database.objectStoreNames.contains("projects")) {
         database.createObjectStore("projects", { keyPath: "id" });
       }
@@ -96,6 +106,73 @@ function openDatabase(): Promise<IDBDatabase> {
     request.onblocked = () =>
       reject(new Error("请关闭其他旧版编辑器标签后重试"));
   });
+}
+
+export async function openStyleBible(id: string): Promise<StyleRecord | null> {
+  const database = await openDatabase();
+  try {
+    const transaction = database.transaction("styleBibles", "readonly");
+    const record = await requestResult(
+      transaction.objectStore("styleBibles").get(id) as IDBRequest<
+        StyleRecord | undefined
+      >,
+    );
+    return record ?? null;
+  } finally {
+    database.close();
+  }
+}
+
+export async function saveStyleBible(
+  document: StyleBible,
+  expectedRevision = 0,
+): Promise<StyleRecord> {
+  validateStyleBible(document);
+  const database = await openDatabase();
+  try {
+    const transaction = database.transaction("styleBibles", "readwrite");
+    const done = transactionDone(transaction);
+    const store = transaction.objectStore("styleBibles");
+    const stored = await requestResult(
+      store.get(document.id) as IDBRequest<StyleRecord | undefined>,
+    );
+    if (stored && canonicalJson(stored.document) === canonicalJson(document)) {
+      await done;
+      return stored;
+    }
+    if ((stored?.revision ?? 0) !== expectedRevision) {
+      done.catch(() => {});
+      transaction.abort();
+      throw new Error(
+        `Style Bible 已在别处更新（本地 r${expectedRevision}，存储 r${stored?.revision ?? 0}），请重开`,
+      );
+    }
+    if (stored) assertStyleBibleEvolution(stored.document, document);
+    const next: StyleRecord = {
+      id: document.id,
+      revision: expectedRevision + 1,
+      document,
+    };
+    store.put(next);
+    await done;
+    return next;
+  } finally {
+    database.close();
+  }
+}
+
+async function checkStyleReference(document: VideoProject): Promise<void> {
+  if (!document.styleBibleRef) return;
+  const record = await openStyleBible(document.styleBibleRef.bibleId);
+  if (!record)
+    throw new Error("项目引用的 Style Bible 不在本地，请先导入风格规范 JSON");
+  const version = await resolveStyleBibleRef(
+    document.styleBibleRef,
+    record.document,
+  );
+  const issues = workingStyleIssues(document, version);
+  if (issues.length)
+    throw new Error(`Style Bible 校验未通过：${issues.join("；")}`);
 }
 
 export async function listVideoProjects(): Promise<VideoProjectSummary[]> {
@@ -151,6 +228,7 @@ export async function saveVideoProject(
   document: VideoProject,
 ): Promise<VideoProject> {
   validateVideoProject(document);
+  await checkStyleReference(document);
   const database = await openDatabase();
   try {
     const transaction = database.transaction(
@@ -217,6 +295,7 @@ export async function importVideoProject(
   document: VideoProject,
 ): Promise<VideoProject> {
   validateVideoProject(document);
+  await checkStyleReference(document);
   const database = await openDatabase();
   try {
     const transaction = database.transaction(

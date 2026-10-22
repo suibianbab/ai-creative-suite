@@ -1,5 +1,9 @@
 # Current State v2
 
+## 2026-10-22 Video Studio D：Style Bible 独立版本与四镜头样片
+
+先用文字→3D→3D→文字的四镜头真实出片验证配色、打包字体和固定 3D 灯光；随后落独立 `StyleBible` 版本记录、`VideoProject.styleBibleRef` 摘要引用、浏览器 IndexedDB 独立存储与版本切换、渲染/导出 sidecar 校验。风格应用通过追加内容版本调整镜头，旧版本不改写；浏览器保存/重开/单镜修订和 MP4/GIF/SVG 真实导出纳入 `VID-028/029`。限制：当前字体与 3D 灯光是受支持的固定预设，媒体和外部编辑器镜头须人工处理；详见 `docs/VIDEO_STUDIO_STYLE_BIBLE_D_2026-10-22.md`。
+
 ## 2026-10-22 Video Studio E0：GIF / SVG 交付记录补齐
 
 `DeliveryRecord` 新增 `gif` / `shot-svg` 类型；两条导出链路落实际产物文件名 `outputRef` 与文件字节 SHA-256 `digest`。旧五键交付记录仍可读取，不迁移。暂存产物、先校验落账，再提交产物与项目；项目回写失败则恢复旧产物或删除新产物。`VID-015` 实际渲染/转码/导出回归同时核对记录哈希及失败不落账；详见 `docs/VIDEO_STUDIO_E0_DELIVERY_RECORDS_2026-10-22.md`。

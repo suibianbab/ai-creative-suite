@@ -1209,3 +1209,44 @@
   font-size: 12px;
   color: #5d7469;
 }
+.style-bible-panel {
+  margin: 18px 0;
+  padding: 16px;
+  border: 1px solid #cbd9ec;
+  border-radius: 10px;
+  background: #f5f8fc;
+  color: #23364e;
+}
+
+.style-bible-panel h3 {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+.style-bible-panel p {
+  margin: 6px 0 12px;
+  font-size: 13px;
+}
+.style-bible-panel button {
+  margin: 8px 8px 0 0;
+}
+.style-bible-panel select {
+  margin-left: 8px;
+}
+.style-bible-colors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.style-bible-colors label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+.style-bible-colors input {
+  width: 34px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}

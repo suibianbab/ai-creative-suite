@@ -10,6 +10,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
 import { appendDelivery, commitDeliveryFiles } from "./delivery.mjs";
 import { sha256File } from "./sha256-file.mjs";
+import { verifyProjectStyleBible } from "./style-bible-file.mjs";
 
 // 测试与共享方从本模块取交付追加器（计划 Interfaces 约定）。
 export { appendDelivery };
@@ -45,8 +46,26 @@ export function findRenderBlock(project, aspect) {
     throw new Error(
       `${aspect} 最近渲染块长度 ${block.length} 不是当前镜头数 ${shotCount} 的整倍数（渲染后镜头已增删，需重渲染）`,
     );
+  const records = block.slice(-shotCount);
+  if (project.styleBibleRef) {
+    const current = project.styleBibleRef;
+    const stale = records.some((record, index) => {
+      const used = record.styleBibleRef;
+      return (
+        !used ||
+        used.bibleId !== current.bibleId ||
+        used.versionId !== current.versionId ||
+        used.digest !== current.digest ||
+        record.versionId !== project.shots[index]?.workingVersionId
+      );
+    });
+    if (stale)
+      throw new Error(
+        `${aspect} 最近渲染记录与当前 Style Bible 或工作镜头版本不一致，先重新运行 render-scene 再导出 GIF`,
+      );
+  }
   return {
-    records: block.slice(-shotCount),
+    records,
     outputAssetRef: ref,
   };
 }
@@ -92,6 +111,7 @@ async function main() {
   const { values } = parseArgs({
     options: {
       project: { type: "string" },
+      "style-bible": { type: "string" },
       aspect: { type: "string", default: "landscape" },
       out: { type: "string" },
       fps: { type: "string", default: "12" },
@@ -124,6 +144,7 @@ async function main() {
   } catch (error) {
     fail(`项目校验失败: ${error.message}`);
   }
+  await verifyProjectStyleBible(project, values["style-bible"]);
 
   let block;
   try {

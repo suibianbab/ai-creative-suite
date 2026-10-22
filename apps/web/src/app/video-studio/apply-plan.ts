@@ -21,7 +21,7 @@ export type PlanIds = { project: string; shot: string; version: string };
 function firstShotDocument(
   base: Pick<
     VideoProject,
-    "brief" | "renderRecords" | "deliveries" | "savedVersion"
+    "brief" | "renderRecords" | "deliveries" | "savedVersion" | "styleBibleRef"
   >,
   id: string,
   title: string,
@@ -65,6 +65,7 @@ function firstShotDocument(
     ],
     renderRecords: base.renderRecords,
     deliveries: base.deliveries,
+    ...(base.styleBibleRef ? { styleBibleRef: base.styleBibleRef } : {}),
     savedVersion: base.savedVersion,
   };
 }

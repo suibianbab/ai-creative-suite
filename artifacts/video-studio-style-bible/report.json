@@ -1,0 +1,27 @@
+{
+  "shots": 4,
+  "font": "NotoSansSC (render font digest pinned)",
+  "lighting": "orbit3d@1 fixed ambient 0.35 + directional 2.0, position (2.5,4,3)",
+  "darkVersionId": "dbb73356-dd93-4e13-8c48-280f84558905",
+  "lightVersionId": "e811870c-85bf-4134-a051-36b866d61330",
+  "darkMp4Sha256": "2b4082effc52044343148cf0da59e2b0265450478b9a9ed06a5b6076c6afff41",
+  "editedMp4Sha256": "b525d0e4b4ff9144ba8d3429f1dca5f34b8c66bdd4ccc1cc27f4f973cfbe2730",
+  "lightMp4Sha256": "b0b2f5af3193de0a74d794cad46ef1acd170ea288172c6de11db7e1b885dcf3a",
+  "firstThreeShotSourcesIdentical": true,
+  "firstThreeDecodedPsnrDb": 70.300262,
+  "finalShotSourceDifferent": true,
+  "deliveries": [
+    {
+      "kind": "gif",
+      "outputRef": "landscape.gif",
+      "digest": "e744733f931b4be5652efeb0f1ec3ea994fbefda632473f5bb0c17660c5932b1"
+    },
+    {
+      "kind": "shot-svg",
+      "outputRef": "shot-1-frame-12.svg",
+      "digest": "b267a64d4c309697ad276331f7fb1230a9215d5f6cf5310327830f4f17148999"
+    }
+  ],
+  "legacyRead": true,
+  "missingSidecarRejected": true
+}
