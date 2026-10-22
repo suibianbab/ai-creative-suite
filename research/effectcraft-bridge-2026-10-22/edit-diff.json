@@ -1,0 +1,50 @@
+[
+  {
+    "comp": "L_01",
+    "before": "189e6a0b3ed790e7d917c9e90552cff39051a98dc048ad36881044e4ecd77f84",
+    "after": "189e6a0b3ed790e7d917c9e90552cff39051a98dc048ad36881044e4ecd77f84",
+    "changed": false
+  },
+  {
+    "comp": "L_02",
+    "before": "76c5f0da4df25e642b9cc1809ad0becfe11d405e62d9a5a14afbfa23b71bd312",
+    "after": "76c5f0da4df25e642b9cc1809ad0becfe11d405e62d9a5a14afbfa23b71bd312",
+    "changed": false
+  },
+  {
+    "comp": "L_03",
+    "before": "20ddf585ce59fe23e815cb350b4df874e63d170cfb63c9e527bd8422499afb41",
+    "after": "20ddf585ce59fe23e815cb350b4df874e63d170cfb63c9e527bd8422499afb41",
+    "changed": false
+  },
+  {
+    "comp": "L_04",
+    "before": "94974a33e09d6b8a1ed04ee82a211433060f7a5707116d20d9ac6867a0ca23a6",
+    "after": "b8b8b82962a74c8590622da50c8beb58e29a7db70055f3888b89be86fedf4f7d",
+    "changed": true
+  },
+  {
+    "comp": "P_01",
+    "before": "02c0102c85b51bde109102c6189ddbaff2d13b35d3eaa44655e5d931a265f812",
+    "after": "02c0102c85b51bde109102c6189ddbaff2d13b35d3eaa44655e5d931a265f812",
+    "changed": false
+  },
+  {
+    "comp": "P_02",
+    "before": "77581bb5e24f41864f12a9c68a8cee0d34f1275a474faedc5a8ac38575bb7be3",
+    "after": "77581bb5e24f41864f12a9c68a8cee0d34f1275a474faedc5a8ac38575bb7be3",
+    "changed": false
+  },
+  {
+    "comp": "P_03",
+    "before": "470812b84f17b37f56346fa01ca7311b6559710deaa74f570f0891c89c197083",
+    "after": "470812b84f17b37f56346fa01ca7311b6559710deaa74f570f0891c89c197083",
+    "changed": false
+  },
+  {
+    "comp": "P_04",
+    "before": "c60ef6884a6f00ea87bca9221856de44d81de110c493df2949cca5e9c49efb2d",
+    "after": "84e715baeaff7c71d83382bb6a6150e15a530e1c370fd8474a6b13d7847e7c30",
+    "changed": true
+  }
+]

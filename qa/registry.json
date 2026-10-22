@@ -1405,6 +1405,25 @@
       ]
     },
     {
+      "id": "VID-031",
+      "tier": "integration",
+      "title": "EffectCraft evidence bundle integrity and Video Studio dual-aspect handoff",
+      "cwd": ".",
+      "argv": ["node", "research/effectcraft-bridge-2026-10-22/qa-bridge.mjs"],
+      "requiresFiles": [
+        "research/effectcraft-bridge-2026-10-22/data-motion-edited.ecproj",
+        "research/effectcraft-bridge-2026-10-22/bridge-manifest.json",
+        "research/effectcraft-bridge-2026-10-22/video-studio-landscape/landscape.mp4",
+        "research/effectcraft-bridge-2026-10-22/video-studio-portrait/portrait.mp4"
+      ],
+      "checks": [
+        "One VideoProject ID and four shot IDs survive source, landscape and portrait handoff snapshots",
+        "Saved native .ecproj and eight rendered clips match recorded SHA-256 and dimensions",
+        "Single-shot edit changes only L_04 and P_04 comparison frames",
+        "Existing Video Studio export returns 12-second 24 fps 1280x720 and 720x1280 videos with four render records each"
+      ]
+    },
+    {
       "id": "VID-025",
       "tier": "integration",
       "title": "Video Studio P3-B three 镜头预烘焙出片与确定性",
@@ -1421,6 +1440,21 @@
     }
   ],
   "manual": [
+    {
+      "id": "VID-032",
+      "title": "EffectCraft bridge visual comparison and native editor inspection",
+      "fixture": "research/effectcraft-bridge-2026-10-22/comparison-landscape.png, comparison-portrait.png, effectcraft-ui-composition-shot4.png and the two 12-second MP4 outputs",
+      "steps": [
+        "Open the native project in EffectCraft v0.14.0 and inspect the L_04 and P_04 timeline and changed title",
+        "Play the Video Studio landscape and portrait exports and inspect all four scene transitions and typography",
+        "Compare each shot to the same VideoProject's programmatic baseline contact sheets and record both advantages and regressions"
+      ],
+      "passCriteria": [
+        "The edited source is reusable and only shot 4 differs from the pre-edit source",
+        "No title, data label or footer is cropped or overlapped in either EffectCraft aspect output",
+        "The report distinguishes manual art direction benefits from demonstrated engine capability and records remaining integration limits"
+      ]
+    },
     {
       "id": "UI-001",
       "title": "Local Image Studio project round trip",

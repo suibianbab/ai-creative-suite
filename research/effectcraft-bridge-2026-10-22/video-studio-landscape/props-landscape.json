@@ -1,0 +1,64 @@
+{
+  "shots": [
+    {
+      "media": {
+        "src": "http://127.0.0.1:14625/original/39fb24314b163f19.mp4",
+        "assetWidth": 1280,
+        "assetHeight": 720,
+        "inMs": 0,
+        "outMs": 3000,
+        "fit": "contain",
+        "focalX": 0.5,
+        "audio": "mute",
+        "trimBefore": 0
+      },
+      "startFrame": 0,
+      "frames": 72
+    },
+    {
+      "media": {
+        "src": "http://127.0.0.1:14625/original/20c18353e021d524.mp4",
+        "assetWidth": 1280,
+        "assetHeight": 720,
+        "inMs": 0,
+        "outMs": 3000,
+        "fit": "contain",
+        "focalX": 0.5,
+        "audio": "mute",
+        "trimBefore": 0
+      },
+      "startFrame": 72,
+      "frames": 72
+    },
+    {
+      "media": {
+        "src": "http://127.0.0.1:14625/original/838ffb9e4c7a6a11.mp4",
+        "assetWidth": 1280,
+        "assetHeight": 720,
+        "inMs": 0,
+        "outMs": 3000,
+        "fit": "contain",
+        "focalX": 0.5,
+        "audio": "mute",
+        "trimBefore": 0
+      },
+      "startFrame": 144,
+      "frames": 72
+    },
+    {
+      "media": {
+        "src": "http://127.0.0.1:14625/original/ce69c8b947969eee.mp4",
+        "assetWidth": 1280,
+        "assetHeight": 720,
+        "inMs": 0,
+        "outMs": 3000,
+        "fit": "contain",
+        "focalX": 0.5,
+        "audio": "mute",
+        "trimBefore": 0
+      },
+      "startFrame": 216,
+      "frames": 72
+    }
+  ]
+}

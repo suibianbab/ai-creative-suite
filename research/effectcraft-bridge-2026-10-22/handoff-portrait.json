@@ -1,0 +1,768 @@
+{
+  "schemaVersion": 1,
+  "id": "7a7935aa-9349-496a-9c25-42d2af41ec3d",
+  "title": "季度销量 · EffectCraft 动效桥验证",
+  "brief": {
+    "sentence": "四镜头季度销量数据动画，逐镜 3 秒；横版和竖版使用同一 VideoProject。",
+    "aspectTargets": ["portrait"]
+  },
+  "shots": [
+    {
+      "shotId": "3a02862d-8749-40ee-a1fb-4907291df726",
+      "order": 0,
+      "locked": false,
+      "workingVersionId": "3aa63b85-9463-4166-8497-f28decdd682b",
+      "contentVersions": [
+        {
+          "versionId": "50c0b477-441a-4774-8ae5-8aaa0265f1b7",
+          "createdAt": "2026-10-22T14:03:30.771Z",
+          "durationMs": 3000,
+          "description": "开场：介绍季度销量数据",
+          "narrationText": "季度销量观察。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 3000,
+              "seed": 4201,
+              "background": "#122137",
+              "params": {
+                "title": "季度销量观察",
+                "subtitle": "用数据看增长",
+                "titleColor": "#f5f7fa",
+                "subtitleColor": "#afcde6",
+                "entrance": "fade-up",
+                "enterMs": 450
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        },
+        {
+          "versionId": "8ee09496-a0d5-49a8-b7e4-f45da210c9e2",
+          "createdAt": "2026-10-22T14:05:49.808Z",
+          "durationMs": 3000,
+          "description": "开场：介绍季度销量数据",
+          "narrationText": "季度销量观察。",
+          "sceneSource": {
+            "type": "editor-binding",
+            "engineId": "effectcraft",
+            "engineVersion": "0.14.0",
+            "assetId": "sha256:16d0da91006c9e0fa2d3787bdb98733f20f955bb8053d8d02dc24699edaef0f4"
+          },
+          "provenance": {
+            "engineId": "effectcraft",
+            "engineVersion": "0.14.0",
+            "parentVersionId": "50c0b477-441a-4774-8ae5-8aaa0265f1b7"
+          }
+        },
+        {
+          "versionId": "26275d8b-1844-4857-8880-9ed4e6f8026f",
+          "createdAt": "2026-10-22T14:05:49.808Z",
+          "durationMs": 3000,
+          "description": "开场：介绍季度销量数据",
+          "narrationText": "季度销量观察。",
+          "sceneSource": {
+            "type": "media-clip",
+            "mediaAssetId": "7ff839a9-0f52-4643-849b-7aae2985ca8d",
+            "inMs": 0,
+            "outMs": 3000,
+            "fit": "contain",
+            "focalX": 0.5,
+            "audio": "mute"
+          },
+          "provenance": {
+            "engineId": "effectcraft",
+            "engineVersion": "0.14.0",
+            "parentVersionId": "8ee09496-a0d5-49a8-b7e4-f45da210c9e2"
+          }
+        },
+        {
+          "versionId": "3aa63b85-9463-4166-8497-f28decdd682b",
+          "createdAt": "2026-10-22T14:05:49.808Z",
+          "durationMs": 3000,
+          "description": "开场：介绍季度销量数据",
+          "narrationText": "季度销量观察。",
+          "sceneSource": {
+            "type": "media-clip",
+            "mediaAssetId": "e89829a3-e000-4e71-a3b1-14439415b320",
+            "inMs": 0,
+            "outMs": 3000,
+            "fit": "contain",
+            "focalX": 0.5,
+            "audio": "mute"
+          },
+          "provenance": {
+            "engineId": "effectcraft",
+            "engineVersion": "0.14.0",
+            "parentVersionId": "8ee09496-a0d5-49a8-b7e4-f45da210c9e2"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "50c0b477-441a-4774-8ae5-8aaa0265f1b7",
+          "at": "2026-10-22T14:03:30.771Z",
+          "actor": "human"
+        },
+        {
+          "kind": "submitted",
+          "versionId": "8ee09496-a0d5-49a8-b7e4-f45da210c9e2",
+          "at": "2026-10-22T14:05:49.808Z",
+          "actor": "human"
+        },
+        {
+          "kind": "submitted",
+          "versionId": "26275d8b-1844-4857-8880-9ed4e6f8026f",
+          "at": "2026-10-22T14:05:49.808Z",
+          "actor": "human"
+        },
+        {
+          "kind": "submitted",
+          "versionId": "3aa63b85-9463-4166-8497-f28decdd682b",
+          "at": "2026-10-22T14:05:49.808Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "3e1a0f1f-5e39-4b0e-b578-eb14ea783079",
+      "order": 1,
+      "locked": false,
+      "workingVersionId": "6a21a16c-2523-4014-b157-542c117b6d7e",
+      "contentVersions": [
+        {
+          "versionId": "c99de8f1-4755-4f49-b4b6-9448b95bda3e",
+          "createdAt": "2026-10-22T14:03:30.771Z",
+          "durationMs": 3000,
+          "description": "柱状图对比四个季度",
+          "narrationText": "第四季度达到最高。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "bar-chart",
+              "componentVersion": 1,
+              "durationMs": 3000,
+              "seed": 4202,
+              "background": "#122137",
+              "params": {
+                "title": "四季度销量对比",
+                "bars": [
+                  {
+                    "label": "一季度",
+                    "value": 32
+                  },
+                  {
+                    "label": "二季度",
+                    "value": 46
+                  },
+                  {
+                    "label": "三季度",
+                    "value": 58
+                  },
+                  {
+                    "label": "四季度",
+                    "value": 82
+                  }
+                ],
+                "barColor": "#4a9fdb",
+                "accentColor": "#ffbc60",
+                "textColor": "#f5f7fa",
+                "enterMs": 1400
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        },
+        {
+          "versionId": "5b22e36a-db5f-4d94-95b7-ed79decb9f14",
+          "createdAt": "2026-10-22T14:05:49.808Z",
+          "durationMs": 3000,
+          "description": "柱状图对比四个季度",
+          "narrationText": "第四季度达到最高。",
+          "sceneSource": {
+            "type": "editor-binding",
+            "engineId": "effectcraft",
+            "engineVersion": "0.14.0",
+            "assetId": "sha256:16d0da91006c9e0fa2d3787bdb98733f20f955bb8053d8d02dc24699edaef0f4"
+          },
+          "provenance": {
+            "engineId": "effectcraft",
+            "engineVersion": "0.14.0",
+            "parentVersionId": "c99de8f1-4755-4f49-b4b6-9448b95bda3e"
+          }
+        },
+        {
+          "versionId": "87f82ea0-c7be-4752-b5d3-97be52d76cda",
+          "createdAt": "2026-10-22T14:05:49.808Z",
+          "durationMs": 3000,
+          "description": "柱状图对比四个季度",
+          "narrationText": "第四季度达到最高。",
+          "sceneSource": {
+            "type": "media-clip",
+            "mediaAssetId": "a0607d99-2d8b-4389-96af-1569d8376cfd",
+            "inMs": 0,
+            "outMs": 3000,
+            "fit": "contain",
+            "focalX": 0.5,
+            "audio": "mute"
+          },
+          "provenance": {
+            "engineId": "effectcraft",
+            "engineVersion": "0.14.0",
+            "parentVersionId": "5b22e36a-db5f-4d94-95b7-ed79decb9f14"
+          }
+        },
+        {
+          "versionId": "6a21a16c-2523-4014-b157-542c117b6d7e",
+          "createdAt": "2026-10-22T14:05:49.808Z",
+          "durationMs": 3000,
+          "description": "柱状图对比四个季度",
+          "narrationText": "第四季度达到最高。",
+          "sceneSource": {
+            "type": "media-clip",
+            "mediaAssetId": "c5cc6a0c-40be-4a1a-865d-dbf1f05708b4",
+            "inMs": 0,
+            "outMs": 3000,
+            "fit": "contain",
+            "focalX": 0.5,
+            "audio": "mute"
+          },
+          "provenance": {
+            "engineId": "effectcraft",
+            "engineVersion": "0.14.0",
+            "parentVersionId": "5b22e36a-db5f-4d94-95b7-ed79decb9f14"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "c99de8f1-4755-4f49-b4b6-9448b95bda3e",
+          "at": "2026-10-22T14:03:30.771Z",
+          "actor": "human"
+        },
+        {
+          "kind": "submitted",
+          "versionId": "5b22e36a-db5f-4d94-95b7-ed79decb9f14",
+          "at": "2026-10-22T14:05:49.808Z",
+          "actor": "human"
+        },
+        {
+          "kind": "submitted",
+          "versionId": "87f82ea0-c7be-4752-b5d3-97be52d76cda",
+          "at": "2026-10-22T14:05:49.808Z",
+          "actor": "human"
+        },
+        {
+          "kind": "submitted",
+          "versionId": "6a21a16c-2523-4014-b157-542c117b6d7e",
+          "at": "2026-10-22T14:05:49.808Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "91f42916-971a-427f-b8c7-8b955791e91b",
+      "order": 2,
+      "locked": false,
+      "workingVersionId": "c7049ab9-2cad-4659-b44b-b11159b329a7",
+      "contentVersions": [
+        {
+          "versionId": "66ed950f-d304-4225-9285-45d9d4c83997",
+          "createdAt": "2026-10-22T14:03:30.771Z",
+          "durationMs": 3000,
+          "description": "关键数字：四季度 82 单位",
+          "narrationText": "关键数字是八十二。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "number-counter",
+              "componentVersion": 1,
+              "durationMs": 3000,
+              "seed": 4203,
+              "background": "#122137",
+              "params": {
+                "title": "四季度销量",
+                "value": 82,
+                "prefix": "",
+                "suffix": " 单位",
+                "decimals": 0,
+                "countMs": 1400,
+                "numberColor": "#f5f7fa",
+                "accentColor": "#ffbc60"
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        },
+        {
+          "versionId": "4fd65220-e49e-42a9-9451-118ae1f4a918",
+          "createdAt": "2026-10-22T14:05:49.808Z",
+          "durationMs": 3000,
+          "description": "关键数字：四季度 82 单位",
+          "narrationText": "关键数字是八十二。",
+          "sceneSource": {
+            "type": "editor-binding",
+            "engineId": "effectcraft",
+            "engineVersion": "0.14.0",
+            "assetId": "sha256:16d0da91006c9e0fa2d3787bdb98733f20f955bb8053d8d02dc24699edaef0f4"
+          },
+          "provenance": {
+            "engineId": "effectcraft",
+            "engineVersion": "0.14.0",
+            "parentVersionId": "66ed950f-d304-4225-9285-45d9d4c83997"
+          }
+        },
+        {
+          "versionId": "c060270e-d576-45a0-9d2c-da38b082b4e0",
+          "createdAt": "2026-10-22T14:05:49.808Z",
+          "durationMs": 3000,
+          "description": "关键数字：四季度 82 单位",
+          "narrationText": "关键数字是八十二。",
+          "sceneSource": {
+            "type": "media-clip",
+            "mediaAssetId": "0c8f19f4-1b12-4d7b-9953-4ce9cf33a743",
+            "inMs": 0,
+            "outMs": 3000,
+            "fit": "contain",
+            "focalX": 0.5,
+            "audio": "mute"
+          },
+          "provenance": {
+            "engineId": "effectcraft",
+            "engineVersion": "0.14.0",
+            "parentVersionId": "4fd65220-e49e-42a9-9451-118ae1f4a918"
+          }
+        },
+        {
+          "versionId": "c7049ab9-2cad-4659-b44b-b11159b329a7",
+          "createdAt": "2026-10-22T14:05:49.808Z",
+          "durationMs": 3000,
+          "description": "关键数字：四季度 82 单位",
+          "narrationText": "关键数字是八十二。",
+          "sceneSource": {
+            "type": "media-clip",
+            "mediaAssetId": "17459c4e-d7ed-466a-9ce2-ea2bb6487efe",
+            "inMs": 0,
+            "outMs": 3000,
+            "fit": "contain",
+            "focalX": 0.5,
+            "audio": "mute"
+          },
+          "provenance": {
+            "engineId": "effectcraft",
+            "engineVersion": "0.14.0",
+            "parentVersionId": "4fd65220-e49e-42a9-9451-118ae1f4a918"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "66ed950f-d304-4225-9285-45d9d4c83997",
+          "at": "2026-10-22T14:03:30.771Z",
+          "actor": "human"
+        },
+        {
+          "kind": "submitted",
+          "versionId": "4fd65220-e49e-42a9-9451-118ae1f4a918",
+          "at": "2026-10-22T14:05:49.808Z",
+          "actor": "human"
+        },
+        {
+          "kind": "submitted",
+          "versionId": "c060270e-d576-45a0-9d2c-da38b082b4e0",
+          "at": "2026-10-22T14:05:49.808Z",
+          "actor": "human"
+        },
+        {
+          "kind": "submitted",
+          "versionId": "c7049ab9-2cad-4659-b44b-b11159b329a7",
+          "at": "2026-10-22T14:05:49.808Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "3b30ccf8-7e6d-47b1-a1cf-6f2c1b6c3800",
+      "order": 3,
+      "locked": false,
+      "workingVersionId": "13ab8dcc-911d-40dd-8250-40233e03c89c",
+      "contentVersions": [
+        {
+          "versionId": "f1b85e1d-b80a-4b29-9373-75f82e9b6093",
+          "createdAt": "2026-10-22T14:03:30.771Z",
+          "durationMs": 3000,
+          "description": "收尾：给出增长结论",
+          "narrationText": "趋势清晰可见。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 3000,
+              "seed": 4204,
+              "background": "#122137",
+              "params": {
+                "title": "增长，清晰可见",
+                "subtitle": "替换为你的真实数据",
+                "titleColor": "#f5f7fa",
+                "subtitleColor": "#afcde6",
+                "entrance": "fade-up",
+                "enterMs": 450
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        },
+        {
+          "versionId": "fd4747bc-4790-419e-b68f-acbd5356fb62",
+          "createdAt": "2026-10-22T14:05:49.808Z",
+          "durationMs": 3000,
+          "description": "收尾：给出增长结论",
+          "narrationText": "趋势清晰可见。",
+          "sceneSource": {
+            "type": "editor-binding",
+            "engineId": "effectcraft",
+            "engineVersion": "0.14.0",
+            "assetId": "sha256:16d0da91006c9e0fa2d3787bdb98733f20f955bb8053d8d02dc24699edaef0f4"
+          },
+          "provenance": {
+            "engineId": "effectcraft",
+            "engineVersion": "0.14.0",
+            "parentVersionId": "f1b85e1d-b80a-4b29-9373-75f82e9b6093"
+          }
+        },
+        {
+          "versionId": "5392c624-487b-4034-bd9d-848461a0bbc3",
+          "createdAt": "2026-10-22T14:05:49.808Z",
+          "durationMs": 3000,
+          "description": "收尾：给出增长结论",
+          "narrationText": "趋势清晰可见。",
+          "sceneSource": {
+            "type": "media-clip",
+            "mediaAssetId": "5d8054f7-ca84-4655-b039-931ef7ce595f",
+            "inMs": 0,
+            "outMs": 3000,
+            "fit": "contain",
+            "focalX": 0.5,
+            "audio": "mute"
+          },
+          "provenance": {
+            "engineId": "effectcraft",
+            "engineVersion": "0.14.0",
+            "parentVersionId": "fd4747bc-4790-419e-b68f-acbd5356fb62"
+          }
+        },
+        {
+          "versionId": "13ab8dcc-911d-40dd-8250-40233e03c89c",
+          "createdAt": "2026-10-22T14:05:49.808Z",
+          "durationMs": 3000,
+          "description": "收尾：给出增长结论",
+          "narrationText": "趋势清晰可见。",
+          "sceneSource": {
+            "type": "media-clip",
+            "mediaAssetId": "5e56242b-45df-4ab4-8599-ef1f15e656c2",
+            "inMs": 0,
+            "outMs": 3000,
+            "fit": "contain",
+            "focalX": 0.5,
+            "audio": "mute"
+          },
+          "provenance": {
+            "engineId": "effectcraft",
+            "engineVersion": "0.14.0",
+            "parentVersionId": "fd4747bc-4790-419e-b68f-acbd5356fb62"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "f1b85e1d-b80a-4b29-9373-75f82e9b6093",
+          "at": "2026-10-22T14:03:30.771Z",
+          "actor": "human"
+        },
+        {
+          "kind": "submitted",
+          "versionId": "fd4747bc-4790-419e-b68f-acbd5356fb62",
+          "at": "2026-10-22T14:05:49.808Z",
+          "actor": "human"
+        },
+        {
+          "kind": "submitted",
+          "versionId": "5392c624-487b-4034-bd9d-848461a0bbc3",
+          "at": "2026-10-22T14:05:49.808Z",
+          "actor": "human"
+        },
+        {
+          "kind": "submitted",
+          "versionId": "13ab8dcc-911d-40dd-8250-40233e03c89c",
+          "at": "2026-10-22T14:05:49.808Z",
+          "actor": "human"
+        }
+      ]
+    }
+  ],
+  "renderRecords": [
+    {
+      "renderId": "bc7112c2-7946-44a0-8f64-072691c0e933",
+      "versionId": "3aa63b85-9463-4166-8497-f28decdd682b",
+      "contentDigest": "040d76c00deec0978ef295a957c8c57f3f7cd773cacbe54bff3a75ffa3fdc014",
+      "assetDigests": {
+        "e89829a3-e000-4e71-a3b1-14439415b320": "6edf70b9c322e2e22561a1e3c9bf41d37b5edb85be28d937eb06e72f1bdb8981"
+      },
+      "engineId": "remotion",
+      "engineVersion": "7",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "video-studio-portrait/portrait.mp4"
+    },
+    {
+      "renderId": "35ad7f9d-147d-4a9f-b33e-0688f25b0e6d",
+      "versionId": "6a21a16c-2523-4014-b157-542c117b6d7e",
+      "contentDigest": "76d77fe90c9468b00e58aeaa614620567b53914b1956265e41d44366b0255708",
+      "assetDigests": {
+        "c5cc6a0c-40be-4a1a-865d-dbf1f05708b4": "9f70e74910cc7ea4e5934d720f402af94f6febcc7cb598e49149feff4fa0917e"
+      },
+      "engineId": "remotion",
+      "engineVersion": "7",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "video-studio-portrait/portrait.mp4"
+    },
+    {
+      "renderId": "bc39eccc-4fa8-4d0b-bd52-155f06487a1f",
+      "versionId": "c7049ab9-2cad-4659-b44b-b11159b329a7",
+      "contentDigest": "68fc21bdd27523635f74e78b896f919545bdfddf45336ff873671953f8107ce0",
+      "assetDigests": {
+        "17459c4e-d7ed-466a-9ce2-ea2bb6487efe": "d06075ff59b56c8e6cb0a751d1b56221b64ef6add40237cee8983b674a8f7836"
+      },
+      "engineId": "remotion",
+      "engineVersion": "7",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "video-studio-portrait/portrait.mp4"
+    },
+    {
+      "renderId": "09d98aa0-ef3f-4754-8675-5fbbaf9cb4da",
+      "versionId": "13ab8dcc-911d-40dd-8250-40233e03c89c",
+      "contentDigest": "e0ed1f76580df4986f308af591e2e59b6996fac5447ea6f6191517973c6c83ef",
+      "assetDigests": {
+        "5e56242b-45df-4ab4-8599-ef1f15e656c2": "e9829bc8301af0922a5f1840f2a7c08b0cfe658b274eddadc5253262f85281bc"
+      },
+      "engineId": "remotion",
+      "engineVersion": "7",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "video-studio-portrait/portrait.mp4"
+    }
+  ],
+  "deliveries": [],
+  "savedVersion": 3,
+  "mediaAssets": [
+    {
+      "assetId": "7ff839a9-0f52-4643-849b-7aae2985ca8d",
+      "createdAt": "2026-10-22T14:04:05.682Z",
+      "origin": {
+        "kind": "local-upload",
+        "fileName": "L_01.mp4"
+      },
+      "original": {
+        "sha256": "39fb24314b163f1970fc064719e1b1cf2cb61bc3ecea32e412f9f57855189e90",
+        "bytes": 304748,
+        "durationMs": 3000,
+        "width": 1280,
+        "height": 720,
+        "fps": 24,
+        "codec": "h264",
+        "hasAudio": false,
+        "storeKey": "39fb24314b163f19.mp4"
+      }
+    },
+    {
+      "assetId": "a0607d99-2d8b-4389-96af-1569d8376cfd",
+      "createdAt": "2026-10-22T14:04:05.908Z",
+      "origin": {
+        "kind": "local-upload",
+        "fileName": "L_02.mp4"
+      },
+      "original": {
+        "sha256": "20c18353e021d52426abfff067d9d0b05e94037cba360144d0abaee4b66e1cc4",
+        "bytes": 213636,
+        "durationMs": 3000,
+        "width": 1280,
+        "height": 720,
+        "fps": 24,
+        "codec": "h264",
+        "hasAudio": false,
+        "storeKey": "20c18353e021d524.mp4"
+      }
+    },
+    {
+      "assetId": "0c8f19f4-1b12-4d7b-9953-4ce9cf33a743",
+      "createdAt": "2026-10-22T14:04:06.112Z",
+      "origin": {
+        "kind": "local-upload",
+        "fileName": "L_03.mp4"
+      },
+      "original": {
+        "sha256": "838ffb9e4c7a6a11fd0edb420acc38d31a02a39c4ca651cf1ad473611994f544",
+        "bytes": 356074,
+        "durationMs": 3000,
+        "width": 1280,
+        "height": 720,
+        "fps": 24,
+        "codec": "h264",
+        "hasAudio": false,
+        "storeKey": "838ffb9e4c7a6a11.mp4"
+      }
+    },
+    {
+      "assetId": "5d8054f7-ca84-4655-b039-931ef7ce595f",
+      "createdAt": "2026-10-22T14:04:06.31Z",
+      "origin": {
+        "kind": "local-upload",
+        "fileName": "L_04.mp4"
+      },
+      "original": {
+        "sha256": "ce69c8b947969eee6d213d7a8d16fa210bff8e43828245f50566fb83921860a4",
+        "bytes": 290105,
+        "durationMs": 3000,
+        "width": 1280,
+        "height": 720,
+        "fps": 24,
+        "codec": "h264",
+        "hasAudio": false,
+        "storeKey": "ce69c8b947969eee.mp4"
+      }
+    },
+    {
+      "assetId": "e89829a3-e000-4e71-a3b1-14439415b320",
+      "createdAt": "2026-10-22T14:04:06.494Z",
+      "origin": {
+        "kind": "local-upload",
+        "fileName": "P_01.mp4"
+      },
+      "original": {
+        "sha256": "6edf70b9c322e2e22561a1e3c9bf41d37b5edb85be28d937eb06e72f1bdb8981",
+        "bytes": 223118,
+        "durationMs": 3000,
+        "width": 720,
+        "height": 1280,
+        "fps": 24,
+        "codec": "h264",
+        "hasAudio": false,
+        "storeKey": "6edf70b9c322e2e2.mp4"
+      }
+    },
+    {
+      "assetId": "c5cc6a0c-40be-4a1a-865d-dbf1f05708b4",
+      "createdAt": "2026-10-22T14:04:06.678Z",
+      "origin": {
+        "kind": "local-upload",
+        "fileName": "P_02.mp4"
+      },
+      "original": {
+        "sha256": "9f70e74910cc7ea4e5934d720f402af94f6febcc7cb598e49149feff4fa0917e",
+        "bytes": 166914,
+        "durationMs": 3000,
+        "width": 720,
+        "height": 1280,
+        "fps": 24,
+        "codec": "h264",
+        "hasAudio": false,
+        "storeKey": "9f70e74910cc7ea4.mp4"
+      }
+    },
+    {
+      "assetId": "17459c4e-d7ed-466a-9ce2-ea2bb6487efe",
+      "createdAt": "2026-10-22T14:04:06.863Z",
+      "origin": {
+        "kind": "local-upload",
+        "fileName": "P_03.mp4"
+      },
+      "original": {
+        "sha256": "d06075ff59b56c8e6cb0a751d1b56221b64ef6add40237cee8983b674a8f7836",
+        "bytes": 296828,
+        "durationMs": 3000,
+        "width": 720,
+        "height": 1280,
+        "fps": 24,
+        "codec": "h264",
+        "hasAudio": false,
+        "storeKey": "d06075ff59b56c8e.mp4"
+      }
+    },
+    {
+      "assetId": "5e56242b-45df-4ab4-8599-ef1f15e656c2",
+      "createdAt": "2026-10-22T14:04:07.052Z",
+      "origin": {
+        "kind": "local-upload",
+        "fileName": "P_04.mp4"
+      },
+      "original": {
+        "sha256": "e9829bc8301af0922a5f1840f2a7c08b0cfe658b274eddadc5253262f85281bc",
+        "bytes": 215959,
+        "durationMs": 3000,
+        "width": 720,
+        "height": 1280,
+        "fps": 24,
+        "codec": "h264",
+        "hasAudio": false,
+        "storeKey": "e9829bc8301af092.mp4"
+      }
+    }
+  ]
+}

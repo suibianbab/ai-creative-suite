@@ -1,0 +1,43 @@
+{
+  "pass": true,
+  "nativeReopenVerified": true,
+  "projectId": "7a7935aa-9349-496a-9c25-42d2af41ec3d",
+  "shotCount": 4,
+  "durationMs": 12000,
+  "nativeProjectSha256": "16d0da91006c9e0fa2d3787bdb98733f20f955bb8053d8d02dc24699edaef0f4",
+  "editedComps": ["L_04", "P_04"],
+  "outputs": {
+    "landscape": {
+      "effectCraft": {
+        "width": 1280,
+        "height": 720,
+        "fps": "24/1",
+        "duration": 12,
+        "sha256": "fd2afc9d02c5dd4021a06f5cdb3f7ef43085bd5e78517f30cdeffc3ddfde0d8a"
+      },
+      "programmatic": {
+        "width": 1280,
+        "height": 720,
+        "fps": "24/1",
+        "duration": 12,
+        "sha256": "38ab1cd48294f4e3b06091c6185a797f625e324c3cbd26cd525950ffb145fc82"
+      }
+    },
+    "portrait": {
+      "effectCraft": {
+        "width": 720,
+        "height": 1280,
+        "fps": "24/1",
+        "duration": 12,
+        "sha256": "e80b71e202c67396bab171a8271929c7ddb8d78c5e188dbde09fe413f79929ae"
+      },
+      "programmatic": {
+        "width": 720,
+        "height": 1280,
+        "fps": "24/1",
+        "duration": 12,
+        "sha256": "ffaf3c15c153f1538d9795383bd737b995ade7ef5a99c2fbe0238c640b2f401c"
+      }
+    }
+  }
+}

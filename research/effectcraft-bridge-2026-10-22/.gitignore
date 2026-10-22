@@ -1,0 +1,8 @@
+# Local scratch previews; the reproducible before/after frames and final
+# delivery files are tracked separately.
+/L_??.png
+/P_??.png
+/L_04-edited.png
+/effectcraft-ui-composition.png
+/effectcraft-ui-timeline.png
+/clips/

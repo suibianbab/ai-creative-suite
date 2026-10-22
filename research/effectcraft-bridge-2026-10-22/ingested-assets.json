@@ -1,0 +1,178 @@
+[
+  {
+    "comp": "L_01",
+    "asset": {
+      "assetId": "7ff839a9-0f52-4643-849b-7aae2985ca8d",
+      "createdAt": "2026-10-22T14:04:05.682Z",
+      "origin": {
+        "kind": "local-upload",
+        "fileName": "L_01.mp4"
+      },
+      "original": {
+        "sha256": "39fb24314b163f1970fc064719e1b1cf2cb61bc3ecea32e412f9f57855189e90",
+        "bytes": 304748,
+        "durationMs": 3000,
+        "width": 1280,
+        "height": 720,
+        "fps": 24,
+        "codec": "h264",
+        "hasAudio": false,
+        "storeKey": "39fb24314b163f19.mp4"
+      }
+    }
+  },
+  {
+    "comp": "L_02",
+    "asset": {
+      "assetId": "a0607d99-2d8b-4389-96af-1569d8376cfd",
+      "createdAt": "2026-10-22T14:04:05.908Z",
+      "origin": {
+        "kind": "local-upload",
+        "fileName": "L_02.mp4"
+      },
+      "original": {
+        "sha256": "20c18353e021d52426abfff067d9d0b05e94037cba360144d0abaee4b66e1cc4",
+        "bytes": 213636,
+        "durationMs": 3000,
+        "width": 1280,
+        "height": 720,
+        "fps": 24,
+        "codec": "h264",
+        "hasAudio": false,
+        "storeKey": "20c18353e021d524.mp4"
+      }
+    }
+  },
+  {
+    "comp": "L_03",
+    "asset": {
+      "assetId": "0c8f19f4-1b12-4d7b-9953-4ce9cf33a743",
+      "createdAt": "2026-10-22T14:04:06.112Z",
+      "origin": {
+        "kind": "local-upload",
+        "fileName": "L_03.mp4"
+      },
+      "original": {
+        "sha256": "838ffb9e4c7a6a11fd0edb420acc38d31a02a39c4ca651cf1ad473611994f544",
+        "bytes": 356074,
+        "durationMs": 3000,
+        "width": 1280,
+        "height": 720,
+        "fps": 24,
+        "codec": "h264",
+        "hasAudio": false,
+        "storeKey": "838ffb9e4c7a6a11.mp4"
+      }
+    }
+  },
+  {
+    "comp": "L_04",
+    "asset": {
+      "assetId": "5d8054f7-ca84-4655-b039-931ef7ce595f",
+      "createdAt": "2026-10-22T14:04:06.31Z",
+      "origin": {
+        "kind": "local-upload",
+        "fileName": "L_04.mp4"
+      },
+      "original": {
+        "sha256": "ce69c8b947969eee6d213d7a8d16fa210bff8e43828245f50566fb83921860a4",
+        "bytes": 290105,
+        "durationMs": 3000,
+        "width": 1280,
+        "height": 720,
+        "fps": 24,
+        "codec": "h264",
+        "hasAudio": false,
+        "storeKey": "ce69c8b947969eee.mp4"
+      }
+    }
+  },
+  {
+    "comp": "P_01",
+    "asset": {
+      "assetId": "e89829a3-e000-4e71-a3b1-14439415b320",
+      "createdAt": "2026-10-22T14:04:06.494Z",
+      "origin": {
+        "kind": "local-upload",
+        "fileName": "P_01.mp4"
+      },
+      "original": {
+        "sha256": "6edf70b9c322e2e22561a1e3c9bf41d37b5edb85be28d937eb06e72f1bdb8981",
+        "bytes": 223118,
+        "durationMs": 3000,
+        "width": 720,
+        "height": 1280,
+        "fps": 24,
+        "codec": "h264",
+        "hasAudio": false,
+        "storeKey": "6edf70b9c322e2e2.mp4"
+      }
+    }
+  },
+  {
+    "comp": "P_02",
+    "asset": {
+      "assetId": "c5cc6a0c-40be-4a1a-865d-dbf1f05708b4",
+      "createdAt": "2026-10-22T14:04:06.678Z",
+      "origin": {
+        "kind": "local-upload",
+        "fileName": "P_02.mp4"
+      },
+      "original": {
+        "sha256": "9f70e74910cc7ea4e5934d720f402af94f6febcc7cb598e49149feff4fa0917e",
+        "bytes": 166914,
+        "durationMs": 3000,
+        "width": 720,
+        "height": 1280,
+        "fps": 24,
+        "codec": "h264",
+        "hasAudio": false,
+        "storeKey": "9f70e74910cc7ea4.mp4"
+      }
+    }
+  },
+  {
+    "comp": "P_03",
+    "asset": {
+      "assetId": "17459c4e-d7ed-466a-9ce2-ea2bb6487efe",
+      "createdAt": "2026-10-22T14:04:06.863Z",
+      "origin": {
+        "kind": "local-upload",
+        "fileName": "P_03.mp4"
+      },
+      "original": {
+        "sha256": "d06075ff59b56c8e6cb0a751d1b56221b64ef6add40237cee8983b674a8f7836",
+        "bytes": 296828,
+        "durationMs": 3000,
+        "width": 720,
+        "height": 1280,
+        "fps": 24,
+        "codec": "h264",
+        "hasAudio": false,
+        "storeKey": "d06075ff59b56c8e.mp4"
+      }
+    }
+  },
+  {
+    "comp": "P_04",
+    "asset": {
+      "assetId": "5e56242b-45df-4ab4-8599-ef1f15e656c2",
+      "createdAt": "2026-10-22T14:04:07.052Z",
+      "origin": {
+        "kind": "local-upload",
+        "fileName": "P_04.mp4"
+      },
+      "original": {
+        "sha256": "e9829bc8301af0922a5f1840f2a7c08b0cfe658b274eddadc5253262f85281bc",
+        "bytes": 215959,
+        "durationMs": 3000,
+        "width": 720,
+        "height": 1280,
+        "fps": 24,
+        "codec": "h264",
+        "hasAudio": false,
+        "storeKey": "e9829bc8301af092.mp4"
+      }
+    }
+  }
+]

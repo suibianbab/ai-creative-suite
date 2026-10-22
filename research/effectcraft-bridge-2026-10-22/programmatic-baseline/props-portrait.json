@@ -1,0 +1,91 @@
+{
+  "shots": [
+    {
+      "spec": {
+        "specVersion": 1,
+        "componentId": "text-animation",
+        "componentVersion": 1,
+        "durationMs": 3000,
+        "seed": 4201,
+        "background": "#122137",
+        "params": {
+          "title": "季度销量观察",
+          "subtitle": "用数据看增长",
+          "titleColor": "#f5f7fa",
+          "subtitleColor": "#afcde6",
+          "entrance": "fade-up",
+          "enterMs": 450
+        }
+      },
+      "startFrame": 0,
+      "frames": 72
+    },
+    {
+      "spec": {
+        "specVersion": 1,
+        "componentId": "bar-chart",
+        "componentVersion": 1,
+        "durationMs": 3000,
+        "seed": 4202,
+        "background": "#122137",
+        "params": {
+          "title": "四季度销量对比",
+          "bars": [
+            { "label": "一季度", "value": 32 },
+            { "label": "二季度", "value": 46 },
+            { "label": "三季度", "value": 58 },
+            { "label": "四季度", "value": 82 }
+          ],
+          "barColor": "#4a9fdb",
+          "accentColor": "#ffbc60",
+          "textColor": "#f5f7fa",
+          "enterMs": 1400
+        }
+      },
+      "startFrame": 72,
+      "frames": 72
+    },
+    {
+      "spec": {
+        "specVersion": 1,
+        "componentId": "number-counter",
+        "componentVersion": 1,
+        "durationMs": 3000,
+        "seed": 4203,
+        "background": "#122137",
+        "params": {
+          "title": "四季度销量",
+          "value": 82,
+          "prefix": "",
+          "suffix": " 单位",
+          "decimals": 0,
+          "countMs": 1400,
+          "numberColor": "#f5f7fa",
+          "accentColor": "#ffbc60"
+        }
+      },
+      "startFrame": 144,
+      "frames": 72
+    },
+    {
+      "spec": {
+        "specVersion": 1,
+        "componentId": "text-animation",
+        "componentVersion": 1,
+        "durationMs": 3000,
+        "seed": 4204,
+        "background": "#122137",
+        "params": {
+          "title": "增长，清晰可见",
+          "subtitle": "替换为你的真实数据",
+          "titleColor": "#f5f7fa",
+          "subtitleColor": "#afcde6",
+          "entrance": "fade-up",
+          "enterMs": 450
+        }
+      },
+      "startFrame": 216,
+      "frames": 72
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+[
+  {
+    "shotId": "3a02862d-8749-40ee-a1fb-4907291df726",
+    "order": 0,
+    "durationMs": 3000,
+    "landscapeComp": "L_01",
+    "portraitComp": "P_01"
+  },
+  {
+    "shotId": "3e1a0f1f-5e39-4b0e-b578-eb14ea783079",
+    "order": 1,
+    "durationMs": 3000,
+    "landscapeComp": "L_02",
+    "portraitComp": "P_02"
+  },
+  {
+    "shotId": "91f42916-971a-427f-b8c7-8b955791e91b",
+    "order": 2,
+    "durationMs": 3000,
+    "landscapeComp": "L_03",
+    "portraitComp": "P_03"
+  },
+  {
+    "shotId": "3b30ccf8-7e6d-47b1-a1cf-6f2c1b6c3800",
+    "order": 3,
+    "durationMs": 3000,
+    "landscapeComp": "L_04",
+    "portraitComp": "P_04"
+  }
+]

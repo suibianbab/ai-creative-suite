@@ -1,0 +1,87 @@
+{
+  "projectId": "7a7935aa-9349-496a-9c25-42d2af41ec3d",
+  "editor": "EffectCraft 0.14.0",
+  "nativeSource": {
+    "file": "data-motion-edited.ecproj",
+    "assetId": "sha256:16d0da91006c9e0fa2d3787bdb98733f20f955bb8053d8d02dc24699edaef0f4",
+    "sha256": "16d0da91006c9e0fa2d3787bdb98733f20f955bb8053d8d02dc24699edaef0f4"
+  },
+  "shots": [
+    {
+      "shotId": "3a02862d-8749-40ee-a1fb-4907291df726",
+      "order": 0,
+      "durationMs": 3000,
+      "landscapeComp": "L_01",
+      "portraitComp": "P_01",
+      "landscape": {
+        "comp": "L_01",
+        "file": "clips-final/L_01.mp4",
+        "sha256": "39fb24314b163f1970fc064719e1b1cf2cb61bc3ecea32e412f9f57855189e90",
+        "mediaAssetId": "7ff839a9-0f52-4643-849b-7aae2985ca8d"
+      },
+      "portrait": {
+        "comp": "P_01",
+        "file": "clips-final/P_01.mp4",
+        "sha256": "6edf70b9c322e2e22561a1e3c9bf41d37b5edb85be28d937eb06e72f1bdb8981",
+        "mediaAssetId": "e89829a3-e000-4e71-a3b1-14439415b320"
+      }
+    },
+    {
+      "shotId": "3e1a0f1f-5e39-4b0e-b578-eb14ea783079",
+      "order": 1,
+      "durationMs": 3000,
+      "landscapeComp": "L_02",
+      "portraitComp": "P_02",
+      "landscape": {
+        "comp": "L_02",
+        "file": "clips-final/L_02.mp4",
+        "sha256": "20c18353e021d52426abfff067d9d0b05e94037cba360144d0abaee4b66e1cc4",
+        "mediaAssetId": "a0607d99-2d8b-4389-96af-1569d8376cfd"
+      },
+      "portrait": {
+        "comp": "P_02",
+        "file": "clips-final/P_02.mp4",
+        "sha256": "9f70e74910cc7ea4e5934d720f402af94f6febcc7cb598e49149feff4fa0917e",
+        "mediaAssetId": "c5cc6a0c-40be-4a1a-865d-dbf1f05708b4"
+      }
+    },
+    {
+      "shotId": "91f42916-971a-427f-b8c7-8b955791e91b",
+      "order": 2,
+      "durationMs": 3000,
+      "landscapeComp": "L_03",
+      "portraitComp": "P_03",
+      "landscape": {
+        "comp": "L_03",
+        "file": "clips-final/L_03.mp4",
+        "sha256": "838ffb9e4c7a6a11fd0edb420acc38d31a02a39c4ca651cf1ad473611994f544",
+        "mediaAssetId": "0c8f19f4-1b12-4d7b-9953-4ce9cf33a743"
+      },
+      "portrait": {
+        "comp": "P_03",
+        "file": "clips-final/P_03.mp4",
+        "sha256": "d06075ff59b56c8e6cb0a751d1b56221b64ef6add40237cee8983b674a8f7836",
+        "mediaAssetId": "17459c4e-d7ed-466a-9ce2-ea2bb6487efe"
+      }
+    },
+    {
+      "shotId": "3b30ccf8-7e6d-47b1-a1cf-6f2c1b6c3800",
+      "order": 3,
+      "durationMs": 3000,
+      "landscapeComp": "L_04",
+      "portraitComp": "P_04",
+      "landscape": {
+        "comp": "L_04",
+        "file": "clips-final/L_04.mp4",
+        "sha256": "ce69c8b947969eee6d213d7a8d16fa210bff8e43828245f50566fb83921860a4",
+        "mediaAssetId": "5d8054f7-ca84-4655-b039-931ef7ce595f"
+      },
+      "portrait": {
+        "comp": "P_04",
+        "file": "clips-final/P_04.mp4",
+        "sha256": "e9829bc8301af0922a5f1840f2a7c08b0cfe658b274eddadc5253262f85281bc",
+        "mediaAssetId": "5e56242b-45df-4ab4-8599-ef1f15e656c2"
+      }
+    }
+  ]
+}
