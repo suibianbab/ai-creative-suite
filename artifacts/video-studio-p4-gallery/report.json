@@ -1,0 +1,81 @@
+[
+  {
+    "sampleId": "stem",
+    "steps": [
+      "gallery-create",
+      "edited-and-saved",
+      "reopened",
+      "dual-mp4-rendered-and-ledger-saved"
+    ],
+    "projectId": "b6f25aa8-d432-4e9b-bc27-966c49629cde",
+    "shotCount": 4,
+    "outputs": [
+      {
+        "aspect": "landscape",
+        "bytes": 144004,
+        "digest": "be05c1f8c83ed81312ec42b9559a37475bf8cedc9a22ab47aab24da1a257fc21",
+        "duration": 9
+      },
+      {
+        "aspect": "portrait",
+        "bytes": 171598,
+        "digest": "9a0857b434f405c023a82832242f67ad7125755cee9c89d9366456f40dd3f076",
+        "duration": 9
+      }
+    ],
+    "errors": []
+  },
+  {
+    "sampleId": "data",
+    "steps": [
+      "gallery-create",
+      "edited-and-saved",
+      "reopened",
+      "dual-mp4-rendered-and-ledger-saved"
+    ],
+    "projectId": "09701838-9e0a-4cef-a9df-730596b873e5",
+    "shotCount": 4,
+    "outputs": [
+      {
+        "aspect": "landscape",
+        "bytes": 141858,
+        "digest": "d1e7f4ef8e66ed5b0f0e74e89ada72161a92ecb48c3d1f516e268d7d0c527eb3",
+        "duration": 9
+      },
+      {
+        "aspect": "portrait",
+        "bytes": 169615,
+        "digest": "1c9c61b471d5657caa6727d5e66dd59729c5f08e6d1e14fd3c6b96344aa198e5",
+        "duration": 9
+      }
+    ],
+    "errors": []
+  },
+  {
+    "sampleId": "product",
+    "steps": [
+      "gallery-create",
+      "media-replaced",
+      "edited-and-saved",
+      "reopened",
+      "dual-mp4-rendered-and-ledger-saved"
+    ],
+    "projectId": "e871cf7f-7b55-426d-ba4a-c322e8faebfd",
+    "shotCount": 5,
+    "outputs": [
+      {
+        "aspect": "landscape",
+        "bytes": 260294,
+        "digest": "04edb9d17d0a7410645ac2dbc7cee9e7205883c61aa2dd081cf44753bfa3bd92",
+        "duration": 11.5
+      },
+      {
+        "aspect": "portrait",
+        "bytes": 420599,
+        "digest": "5b94b8799351d6578f48f64e060abbf376cc6d1b891bea966a01b12fc2dd68c0",
+        "duration": 11.5
+      }
+    ],
+    "errors": []
+  }
+]

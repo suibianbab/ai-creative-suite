@@ -104,6 +104,27 @@ function validateParams(value: unknown): FlowStepsParams {
 
 function render(spec: SceneSpecLike, ctx: FrameContext): SvgNode {
   const params = spec.params as FlowStepsParams;
+  // Style Bible can independently map boxColor and textColor to two light roles.
+  // Keep the title color, but give labels a legible fill on their own boxes.
+  const luminance = (hex: string): number => {
+    const rgb = [1, 3, 5].map(
+      (offset) => Number.parseInt(hex.slice(offset, offset + 2), 16) / 255,
+    );
+    const linear = rgb.map((value) =>
+      value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4,
+    );
+    return 0.2126 * linear[0]! + 0.7152 * linear[1]! + 0.0722 * linear[2]!;
+  };
+  const boxLum = luminance(params.boxColor);
+  const textLum = luminance(params.textColor);
+  const ratio =
+    (Math.max(boxLum, textLum) + 0.05) / (Math.min(boxLum, textLum) + 0.05);
+  const labelColor =
+    ratio >= 4.5
+      ? params.textColor
+      : (boxLum + 0.05) / 0.05 >= 1.05 / (boxLum + 0.05)
+        ? "#000000"
+        : "#ffffff";
   const tMs = (ctx.frame / ctx.fps) * 1000;
   const n = params.steps.length;
   const horizontal = params.direction === "horizontal";
@@ -142,7 +163,7 @@ function render(spec: SceneSpecLike, ctx: FrameContext): SvgNode {
         x: cx,
         y: cy + fontSize * 0.36,
         "font-size": fontSize,
-        fill: params.textColor,
+        fill: labelColor,
         "text-anchor": "middle",
         opacity: clamp01((tMs - delay - params.enterMs) / LABEL_FADE_MS),
       },

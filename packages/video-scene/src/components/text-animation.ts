@@ -101,8 +101,13 @@ function render(spec: SceneSpecLike, ctx: FrameContext): SvgNode {
     params.subtitle ?? "",
     ctx.width * TEXT_SAFE_WIDTH,
   );
-  const titleY = ctx.height / 2;
-  const subtitleY = ctx.height / 2 + titleSize * 0.9;
+  // Both lines use middle baselines. Their center distance is half the sum of
+  // font sizes plus a gap, so portrait widths can shrink either font without
+  // making the two lines collide.
+  const gap = params.subtitle ? Math.max(20, titleSize * 0.18) : 0;
+  const titleY =
+    ctx.height / 2 - (params.subtitle ? (subtitleSize + gap) / 2 : 0);
+  const subtitleY = ctx.height / 2 + (titleSize + gap) / 2;
 
   const texts: SvgNode[] = [
     {
@@ -135,6 +140,7 @@ function render(spec: SceneSpecLike, ctx: FrameContext): SvgNode {
         "font-size": subtitleSize,
         fill: params.subtitleColor,
         "text-anchor": "middle",
+        "dominant-baseline": "middle",
         opacity: subtitleProgress,
         transform: entranceTransform(
           params.entrance,

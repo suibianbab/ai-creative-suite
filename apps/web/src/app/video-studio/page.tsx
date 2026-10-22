@@ -11,6 +11,7 @@ import {
   setLocked,
   type VideoProject,
   validateStyleBible,
+  validateVideoProject,
 } from "@acs/video-document";
 import type { SceneSpec } from "@acs/video-scene";
 import Link from "next/link";
@@ -41,6 +42,11 @@ import {
   specSummary,
 } from "./planner";
 import { exportFileName, parseProjectJson } from "./project-io";
+import {
+  createGallerySample,
+  GALLERY_SAMPLES,
+  type GallerySampleId,
+} from "./sample-gallery";
 import {
   ScenePreview,
   TimelinePreview,
@@ -87,6 +93,16 @@ export default function VideoStudioPage() {
   const [projects, setProjects] = useState<VideoProjectSummary[]>([]);
   const [editor, setEditor] = useState<EditorState | null>(null);
   const [listMessage, setListMessage] = useState<string | null>(null);
+  const [galleryBusy, setGalleryBusy] = useState<GallerySampleId | null>(null);
+  const [renderDownloads, setRenderDownloads] = useState<{
+    projectId: string;
+    signature: string;
+    files: Array<{
+      aspect: "landscape" | "portrait";
+      url: string;
+      digest: string;
+    }>;
+  } | null>(null);
   // 分镜编辑器：单镜头重做的失败文案按 shotId 存（锁定/句式不合等），
   // 修订/回滚/锁定的结果走 editor.message。
   const [redoErrors, setRedoErrors] = useState<Record<string, string | null>>(
@@ -117,6 +133,123 @@ export default function VideoStudioPage() {
   useEffect(() => {
     documentRef.current = editor?.document ?? null;
   }, [editor?.document]);
+
+  const useGallerySample = async (id: GallerySampleId) => {
+    if (galleryBusy) return;
+    setGalleryBusy(id);
+    setListMessage(null);
+    try {
+      let productAsset: MediaAsset | undefined;
+      if (id === "product") {
+        const clip = await fetch("/samples/p4-hat-product.mp4");
+        if (!clip.ok) throw new Error("内置商品视频不可用，请刷新页面后重试");
+        const form = new FormData();
+        form.append(
+          "file",
+          new File([await clip.blob()], "p4-hat-product.mp4", {
+            type: "video/mp4",
+          }),
+        );
+        const response = await fetch("/api/media/ingest", {
+          method: "POST",
+          body: form,
+        });
+        const payload = (await response.json()) as {
+          asset?: MediaAsset;
+          error?: string;
+        };
+        if (!response.ok || !payload.asset)
+          throw new Error(payload.error ?? "商品样片素材导入失败");
+        productAsset = payload.asset;
+      }
+      const { project, bible } = await createGallerySample(id, productAsset);
+      if (bible) await saveStyleBible(bible);
+      const saved = await saveVideoProject(project);
+      await refreshProjects();
+      setEditor({
+        document: saved,
+        message:
+          "已从样片库创建独立项目。修改镜头后点「保存」，可直接预览或导出双画幅。",
+        busy: false,
+        sentence: saved.brief.sentence,
+        plan: null,
+        storyboard: null,
+      });
+      setRenderDownloads(null);
+    } catch (error) {
+      setListMessage(error instanceof Error ? error.message : "创建样片失败");
+    } finally {
+      setGalleryBusy(null);
+    }
+  };
+
+  const renderSignature = (project: VideoProject): string =>
+    [
+      project.styleBibleRef?.digest ?? "none",
+      ...project.shots.map((shot) => shot.workingVersionId),
+    ].join(":");
+
+  const renderFromWorkbench = async (state: EditorState) => {
+    const project = state.document;
+    setEditor({ ...state, busy: true, message: "正在生成横竖版 MP4…" });
+    let saved: VideoProject | null = null;
+    try {
+      saved = await saveVideoProject(project);
+      let styleBible = null;
+      if (saved.styleBibleRef) {
+        const record = await openStyleBible(saved.styleBibleRef.bibleId);
+        if (!record)
+          throw new Error("风格规范缺失，请先导入对应的 Style Bible JSON");
+        styleBible = record.document;
+      }
+      const response = await fetch("/api/video/render", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ project: saved, styleBible }),
+      });
+      const payload = (await response.json()) as {
+        project?: VideoProject;
+        downloads?: Array<{
+          aspect: "landscape" | "portrait";
+          url: string;
+          digest: string;
+        }>;
+        error?: string;
+      };
+      if (!response.ok || !payload.project || payload.downloads?.length !== 2)
+        throw new Error(payload.error ?? "双画幅出片失败");
+      const returned = validateVideoProject(payload.project);
+      const imported = await importVideoProject(returned);
+      setRenderDownloads({
+        projectId: imported.id,
+        signature: renderSignature(imported),
+        files: payload.downloads,
+      });
+      setEditor((current) =>
+        current?.document.id === project.id
+          ? {
+              ...current,
+              document: imported,
+              busy: false,
+              message:
+                "横竖版视频已生成，点击下方链接下载；渲染记录已保存到项目。",
+            }
+          : current,
+      );
+    } catch (error) {
+      setEditor((current) =>
+        current?.document.id === project.id
+          ? {
+              ...current,
+              document: saved ?? project,
+              busy: false,
+              message:
+                error instanceof Error ? error.message : "双画幅出片失败",
+            }
+          : current,
+      );
+    }
+  };
 
   const applyLinkedStyle = async (
     project: VideoProject,
@@ -898,6 +1031,28 @@ export default function VideoStudioPage() {
           </button>
           <button
             type="button"
+            className="editor-render"
+            disabled={busy || document.shots.length === 0}
+            onClick={() => void renderFromWorkbench(editor)}
+          >
+            {busy ? "处理中…" : "生成横竖版 MP4"}
+          </button>
+          {renderDownloads?.projectId === document.id &&
+          renderDownloads.signature === renderSignature(document) ? (
+            <div className="editor-downloads">
+              {renderDownloads.files.map((file) => (
+                <a
+                  key={file.aspect}
+                  href={file.url}
+                  download={`${file.aspect}.mp4`}
+                >
+                  下载{file.aspect === "landscape" ? "横版" : "竖版"} MP4
+                </a>
+              ))}
+            </div>
+          ) : null}
+          <button
+            type="button"
             className="editor-export"
             disabled={busy}
             onClick={() => {
@@ -951,6 +1106,39 @@ export default function VideoStudioPage() {
         <span className="studio-badge">P0 本地工作台</span>
       </header>
       <section className="project-pane">
+        <section className="sample-gallery" aria-label="可编辑样片库">
+          <div className="sample-gallery-heading">
+            <div>
+              <h2>从样片开始</h2>
+              <p>选择后复制为你的独立项目；镜头、文字和素材都可继续编辑。</p>
+            </div>
+          </div>
+          <div className="sample-gallery-grid">
+            {GALLERY_SAMPLES.map((sample) => (
+              <article className="sample-card" key={sample.id}>
+                <div
+                  className="sample-card-poster"
+                  role="img"
+                  aria-label={`${sample.title}画面预览`}
+                  style={{ backgroundImage: `url(${sample.poster})` }}
+                />
+                <div className="sample-card-body">
+                  <h3>{sample.title}</h3>
+                  <p>{sample.summary}</p>
+                  <small>{sample.detail}</small>
+                  <button
+                    type="button"
+                    className="sample-use"
+                    disabled={galleryBusy !== null}
+                    onClick={() => void useGallerySample(sample.id)}
+                  >
+                    {galleryBusy === sample.id ? "正在创建…" : "使用此样片"}
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
         <div className="project-toolbar">
           <h2>本地项目</h2>
           <button

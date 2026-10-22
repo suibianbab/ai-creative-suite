@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360">
+  <rect width="640" height="360" fill="#101f34"/>
+  <circle cx="95" cy="70" r="70" fill="#1b4260" opacity=".5"/>
+  <text x="48" y="82" fill="#f3f5f7" font-family="sans-serif" font-size="29" font-weight="700">水的旅程</text>
+  <text x="49" y="115" fill="#b4d8e4" font-family="sans-serif" font-size="15">蒸发 → 凝结 → 降水 → 汇流</text>
+  <path d="M88 240 C180 140 270 140 360 240 S530 330 574 205" fill="none" stroke="#f5b652" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="88" cy="240" r="17" fill="#42a5a0"/><circle cx="270" cy="170" r="17" fill="#42a5a0"/>
+  <circle cx="448" cy="278" r="17" fill="#42a5a0"/><circle cx="574" cy="205" r="17" fill="#42a5a0"/>
+</svg>

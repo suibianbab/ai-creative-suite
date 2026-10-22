@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360">
+  <rect width="640" height="360" fill="#122137"/>
+  <text x="48" y="76" fill="#f5f7fa" font-family="sans-serif" font-size="28" font-weight="700">季度销量观察</text>
+  <text x="49" y="109" fill="#afcde6" font-family="sans-serif" font-size="15">四季度对比 · 趋势清晰可见</text>
+  <path d="M62 299 H590" stroke="#afcde6" opacity=".5" stroke-width="2"/>
+  <rect x="99" y="228" width="72" height="71" rx="8" fill="#4a9fdb"/>
+  <rect x="215" y="198" width="72" height="101" rx="8" fill="#4a9fdb"/>
+  <rect x="331" y="172" width="72" height="127" rx="8" fill="#4a9fdb"/>
+  <rect x="447" y="120" width="72" height="179" rx="8" fill="#ffbc60"/>
+  <text x="126" y="326" fill="#afcde6" font-family="sans-serif" font-size="14">Q1</text>
+  <text x="242" y="326" fill="#afcde6" font-family="sans-serif" font-size="14">Q2</text>
+  <text x="358" y="326" fill="#afcde6" font-family="sans-serif" font-size="14">Q3</text>
+  <text x="474" y="326" fill="#afcde6" font-family="sans-serif" font-size="14">Q4</text>
+</svg>

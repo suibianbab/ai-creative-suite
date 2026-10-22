@@ -1391,6 +1391,20 @@
       ]
     },
     {
+      "id": "VID-030",
+      "tier": "browser-video",
+      "title": "Video Studio P4 gallery sample edit, reopen and dual-aspect export",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/e2e-gallery.mjs"],
+      "requiresPorts": [3210],
+      "checks": [
+        "STEM, data and product samples create independent valid projects from the browser gallery and edit via the existing shot editor",
+        "Edited text and a replacement product video survive save and browser reload",
+        "Each sample exports landscape and portrait MP4 files with matching SHA-256, expected dimensions and persisted render records",
+        "All three paths finish without browser console or page errors"
+      ]
+    },
+    {
       "id": "VID-025",
       "tier": "integration",
       "title": "Video Studio P3-B three 镜头预烘焙出片与确定性",

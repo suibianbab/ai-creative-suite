@@ -172,6 +172,17 @@ test("梯次弹入与标签两级节奏（tMs=100，enterMs=200）", () => {
   );
 });
 
+test("浅色盒与浅色文字同时来自风格规范时，标签改用可读的深色", () => {
+  const params = { ...BASE, boxColor: "#b4d8e4", textColor: "#f3f5f7" };
+  const node = flowSteps.render(
+    specWith(params) as never,
+    makeCtx({ frame: 60 }),
+  );
+  const texts = collect(node, "text");
+  assert.equal(texts[0]!.attrs.fill, params.textColor);
+  assert.equal(texts[1]!.attrs.fill, "#000000");
+});
+
 test("箭头描画时窗与三角淡入（enterMs=200 → 首箭头 delay=200）", () => {
   const at = (frame: number) =>
     flowSteps.render(specWith(BASE) as never, makeCtx({ frame }));

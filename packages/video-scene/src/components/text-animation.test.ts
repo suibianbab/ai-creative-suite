@@ -145,6 +145,26 @@ test("竖版画布长标题/副标题字号钳制到画布宽内，横版字号�
   );
 });
 
+test("竖版较长双行标题保持竖向留白，不发生标题与副标题重叠", () => {
+  const spec = specWith({
+    ...BASE,
+    title: "STEM 自定义标题",
+    subtitle: "看见一滴水的循环",
+  });
+  const portrait = makeCtx({ width: 720, height: 1280, durationFrames: 216 });
+  const rendered = textAnimation.render(spec, portrait);
+  const title = requireText(rendered, "STEM 自定义标题");
+  const subtitle = requireText(rendered, "看见一滴水的循环");
+  const centerDistance =
+    (subtitle.attrs.y as number) - (title.attrs.y as number);
+  const halfHeights =
+    ((title.attrs["font-size"] as number) +
+      (subtitle.attrs["font-size"] as number)) /
+    2;
+  assert.equal(subtitle.attrs["dominant-baseline"], "middle");
+  assert.ok(centerDistance - halfHeights >= 20);
+});
+
 test("params 校验：未知 entrance / 空 title / 非法颜色 / enterMs 越界均拒绝", () => {
   assert.throws(
     () => textAnimation.validateParams({ ...BASE, entrance: "spin" }),
