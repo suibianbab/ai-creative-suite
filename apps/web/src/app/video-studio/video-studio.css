@@ -690,6 +690,87 @@
   max-width: 220px;
 }
 
+/* 关键镜头双候选（B）：两列并排比较既有内容版本，选用只移动工作指针。 */
+.shot-compare-toggle,
+.shot-compare-choose {
+  font-size: 12px;
+  padding: 3px 10px;
+  border: 1px solid #bfd6c8;
+  border-radius: 6px;
+  background: #fff;
+  color: #173f3b;
+  cursor: pointer;
+}
+
+.shot-compare-toggle:hover,
+.shot-compare-choose:hover {
+  background: #ecf5ee;
+}
+
+.shot-compare-choose:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.shot-compare-panel {
+  flex-basis: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 10px 12px;
+  border-top: 1px dashed #e7efe9;
+}
+
+@media (max-width: 720px) {
+  .shot-compare-panel {
+    grid-template-columns: 1fr;
+  }
+}
+
+.shot-compare-column {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+  border: 1px solid #e7efe9;
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.shot-compare-title {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #173f3b;
+}
+
+.shot-compare-select {
+  font-size: 12px;
+  padding: 3px 6px;
+  border: 1px solid #bfd6c8;
+  border-radius: 6px;
+  background: #fff;
+  color: #1b2c29;
+}
+
+.shot-compare-description {
+  margin: 0;
+  font-size: 12px;
+  color: #1b2c29;
+}
+
+.shot-compare-meta {
+  margin: 0;
+  font-size: 12px;
+  color: #5d7469;
+}
+
+.shot-compare-note {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 11px;
+  color: #5d7469;
+}
+
 .shot-edit-form {
   flex-basis: 100%;
   display: grid;

@@ -10,6 +10,13 @@ import type {
 import type { SceneSpec } from "@acs/video-scene";
 import { useEffect, useMemo, useState } from "react";
 import {
+  type CandidateSummary,
+  candidateChoices,
+  candidateSummaries,
+  defaultCandidatePair,
+  statusLabel,
+} from "./candidate-compare";
+import {
   applyChartTemplate,
   buildChartRevisePatch,
   CHART_TEMPLATES,
@@ -241,6 +248,17 @@ export function ShotEditorCard({
   const [editError, setEditError] = useState<string | null>(null);
   const [directive, setDirective] = useState("");
   const [selectedVersion, setSelectedVersion] = useState(shot.workingVersionId);
+  // 关键镜头双候选（B）：两列对比既有内容版本；不新增文档字段与事件。
+  const candidatePair = defaultCandidatePair(shot);
+  const candidateList = candidateSummaries(shot);
+  const [compareOpen, setCompareOpen] = useState(false);
+  const [compareError, setCompareError] = useState<string | null>(null);
+  const [leftCandidateId, setLeftCandidateId] = useState(
+    candidatePair?.leftId ?? "",
+  );
+  const [rightCandidateId, setRightCandidateId] = useState(
+    candidatePair?.rightId ?? "",
+  );
   const [pendingTemplateId, setPendingTemplateId] = useState("");
   // 媒体臂启用条件：已选媒体条目，或工作版本就是媒体且未选 spec 模板
   const editingMedia =
@@ -303,6 +321,28 @@ export function ShotEditorCard({
     if (!Number.isFinite(ms) || ms < 1) return null;
     return describeDurationImpact(project, index, ms);
   }, [canEdit, project, index, draft.durationSeconds]);
+
+  // 工作版本变化（应用修订/重做/回滚）→ 对比面板回到默认对，不显示陈旧两列。
+  // 只盯 workingVersionId：锁定切换会换 shot 对象身份但不动工作版本。
+  useEffect(() => {
+    const next = defaultCandidatePair(shot);
+    setLeftCandidateId(next?.leftId ?? "");
+    setRightCandidateId(next?.rightId ?? "");
+    setCompareError(null);
+  }, [shot.workingVersionId]);
+
+  // 选用候选：换版本实际改变该镜时长，先走与编辑同源的零帧闸门，再移动
+  // 工作指针（rollback 自带 audit 留痕；锁定镜头按 ADR 0003 人工路径允许）。
+  const chooseCandidate = (summary: CandidateSummary) => {
+    const impact = describeDurationImpact(project, index, summary.durationMs);
+    const blocked = durationApplyError(impact);
+    if (blocked) {
+      setCompareError(blocked);
+      return;
+    }
+    setCompareError(null);
+    onRollback(summary.versionId);
+  };
 
   // working 版本变了（应用修订/重做/回滚后）→ 草稿重置到新工作版本。
   // 只盯 workingVersionId（终评整改）：锁定切换会换 shot 对象身份但不动
@@ -455,6 +495,90 @@ export function ShotEditorCard({
       >
         回滚到此版本
       </button>
+      {shot.contentVersions.length >= 2 ? (
+        <button
+          type="button"
+          className="shot-compare-toggle"
+          onClick={() => {
+            setCompareOpen(!compareOpen);
+            setCompareError(null);
+          }}
+        >
+          {compareOpen ? "收起对比" : "对比候选"}
+        </button>
+      ) : null}
+      {compareOpen && shot.contentVersions.length >= 2 ? (
+        <div className="shot-compare-panel">
+          {[
+            {
+              label: "候选 A",
+              value: leftCandidateId,
+              setValue: setLeftCandidateId,
+              exclude: rightCandidateId,
+            },
+            {
+              label: "候选 B",
+              value: rightCandidateId,
+              setValue: setRightCandidateId,
+              exclude: leftCandidateId,
+            },
+          ].map((column) => {
+            const summary = candidateList.find(
+              (candidate) => candidate.versionId === column.value,
+            );
+            if (!summary) return null;
+            const impact = describeDurationImpact(
+              project,
+              index,
+              summary.durationMs,
+            );
+            const framesText = summary.isWorking
+              ? `当前 ${impact.beforeFrames ?? "不可量化"} 帧`
+              : `${impact.beforeFrames ?? "不可量化"} → ${impact.afterFrames ?? "不可量化"} 帧`;
+            return (
+              <div className="shot-compare-column" key={column.label}>
+                <p className="shot-compare-title">
+                  {column.label} #{summary.index} {statusLabel(summary.status)}
+                </p>
+                <select
+                  className="shot-compare-select"
+                  aria-label={`镜头 ${index + 1} ${column.label}`}
+                  value={column.value}
+                  onChange={(event) => column.setValue(event.target.value)}
+                >
+                  {candidateChoices(candidateList, column.exclude).map(
+                    (choice) => (
+                      <option key={choice.versionId} value={choice.versionId}>
+                        #{choice.index} {choice.description.slice(0, 24)}
+                      </option>
+                    ),
+                  )}
+                </select>
+                <p className="shot-compare-description">
+                  {summary.description}
+                </p>
+                <p className="shot-compare-meta">
+                  {summary.durationMs / 1000}s · {framesText}
+                </p>
+                <button
+                  type="button"
+                  className="shot-compare-choose"
+                  disabled={summary.isWorking}
+                  onClick={() => chooseCandidate(summary)}
+                >
+                  选用此候选
+                </button>
+              </div>
+            );
+          })}
+          {compareError ? (
+            <p className="shot-edit-error">{compareError}</p>
+          ) : null}
+          <p className="shot-compare-note">
+            说明来自版本记录，不代表画面质量；选用只切换工作版本，不改变审批状态。
+          </p>
+        </div>
+      ) : null}
       {expanded && canEdit && editSpec ? (
         <div className="shot-edit-form">
           <label className="shot-edit-field">
