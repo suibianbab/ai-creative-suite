@@ -1,3 +1,4 @@
+import { layoutFor } from "../aspect-layout.js";
 import { clamp01, easeOutCubic } from "../easing.js";
 import type {
   FrameContext,
@@ -20,6 +21,115 @@ type LineChartParams = {
   textColor: string;
   drawMs: number; // 200..6000
 };
+
+// 每画幅版式覆写（2026-10-23 brief §三B）：只动轴标签层——labelStep 显示
+// 间隔（命中 index%step===0 或末点恒显）、shortLabels 逐项短标签（原样
+// 显示，绕过既有 >6 字截断）。数据值与未覆写标签行为不变。
+type LineChartLayoutOverride = {
+  labelStep?: number;
+  shortLabels?: Array<{ index: number; text: string }>;
+};
+
+const LINE_CHART_LAYOUT_KEYS = ["labelStep", "shortLabels"] as const;
+
+export type LineChartLabelItem = {
+  index: number;
+  label: string | undefined;
+  show: boolean;
+  text: string;
+};
+
+// 标签显示规则（渲染与工作台「哪些标签被隐藏/截断/简写」提示共用）：
+// 未覆写标签维持既有 >6 字截断；shortLabels 命中项原样显示。
+export function lineChartLabelDisplay(
+  points: Array<{ label?: string; value: number }>,
+  override: LineChartLayoutOverride | undefined,
+): LineChartLabelItem[] {
+  const n = points.length;
+  const step = override?.labelStep ?? 1;
+  const shortByIndex = new Map(
+    (override?.shortLabels ?? []).map((item) => [item.index, item.text]),
+  );
+  return points.map((point, index) => {
+    const label = point.label;
+    const shortened = label === undefined ? undefined : shortByIndex.get(index);
+    const text =
+      shortened !== undefined
+        ? shortened
+        : label === undefined
+          ? ""
+          : label.length > 6
+            ? `${label.slice(0, 6)}…`
+            : label;
+    return {
+      index,
+      label,
+      show:
+        label !== undefined &&
+        (step <= 1 || index % step === 0 || index === n - 1),
+      text,
+    };
+  });
+}
+
+function validateLayout(aspectValue: unknown, params: unknown): void {
+  if (!isRecord(aspectValue))
+    throw new Error("line-chart layout 覆写必须是对象");
+  for (const key of Object.keys(aspectValue)) {
+    if (!(LINE_CHART_LAYOUT_KEYS as readonly string[]).includes(key)) {
+      throw new Error(
+        `line-chart layout 不支持 ${key}（允许 ${LINE_CHART_LAYOUT_KEYS.join("/")}）`,
+      );
+    }
+  }
+  const points =
+    isRecord(params) && Array.isArray(params.points) ? params.points : [];
+  const maxStep = Math.max(points.length, 1);
+  if (aspectValue.labelStep !== undefined) {
+    const step = aspectValue.labelStep;
+    if (
+      typeof step !== "number" ||
+      !Number.isInteger(step) ||
+      step < 1 ||
+      step > maxStep
+    ) {
+      throw new Error(
+        `line-chart layout.labelStep 必须是 1..${maxStep} 的整数`,
+      );
+    }
+  }
+  if (aspectValue.shortLabels !== undefined) {
+    const entries = aspectValue.shortLabels;
+    if (!Array.isArray(entries)) {
+      throw new Error("line-chart layout.shortLabels 必须是数组");
+    }
+    const seen = new Set<number>();
+    entries.forEach((entry) => {
+      if (!isRecord(entry)) {
+        throw new Error("line-chart layout.shortLabels[] 必须是对象");
+      }
+      const index = entry.index;
+      if (typeof index !== "number" || !Number.isInteger(index)) {
+        throw new Error("line-chart layout.shortLabels[].index 必须是整数");
+      }
+      if (index < 0 || index >= points.length) {
+        throw new Error(
+          `line-chart layout.shortLabels[].index ${index} 越界（0..${points.length - 1}）`,
+        );
+      }
+      if (seen.has(index)) {
+        throw new Error(`line-chart layout.shortLabels[].index ${index} 重复`);
+      }
+      seen.add(index);
+      const text = entry.text;
+      if (typeof text !== "string" || text.length < 1 || text.length > 12) {
+        throw new Error(
+          "line-chart layout.shortLabels[].text 必须是 1..12 个字符",
+        );
+      }
+    });
+  }
+}
 
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
 const DESIGN_SPACE = 1000;
@@ -149,10 +259,12 @@ function renderPortrait(
   });
   const labelSlot = plotWidth / (n - 1);
   const labels: SvgNode[] = [];
-  params.points.forEach((point, index) => {
-    if (!point.label) return;
-    const text =
-      point.label.length > 6 ? `${point.label.slice(0, 6)}…` : point.label;
+  for (const item of lineChartLabelDisplay(
+    params.points,
+    layoutFor(spec, ctx) as LineChartLayoutOverride | undefined,
+  )) {
+    if (!item.show) continue;
+    const index = item.index;
     labels.push({
       tag: "text",
       attrs: {
@@ -160,7 +272,7 @@ function renderPortrait(
         y: baseline + ctx.height * 0.048,
         "font-size": fitFontSize(
           ctx.width * 0.036,
-          text,
+          item.text,
           index === 0 || index === n - 1 ? labelSlot * 1.7 : labelSlot * 0.9,
         ),
         fill: params.textColor,
@@ -169,9 +281,9 @@ function renderPortrait(
         "dominant-baseline": "middle",
         opacity: clamp01(progress * 2),
       },
-      text,
+      text: item.text,
     });
-  });
+  }
   return {
     tag: "g",
     attrs: {},
@@ -290,23 +402,24 @@ function render(spec: SceneSpecLike, ctx: FrameContext): SvgNode {
   });
 
   const labels: SvgNode[] = [];
-  params.points.forEach((point, i) => {
-    if (!point.label) return;
-    const text =
-      point.label.length > 6 ? `${point.label.slice(0, 6)}…` : point.label;
+  for (const item of lineChartLabelDisplay(
+    params.points,
+    layoutFor(spec, ctx) as LineChartLayoutOverride | undefined,
+  )) {
+    if (!item.show) continue;
     labels.push({
       tag: "text",
       attrs: {
-        x: xs[i]!,
+        x: xs[item.index]!,
         y: 875,
         "font-size": 26,
         fill: params.textColor,
         "text-anchor": "middle",
         opacity: clamp01(progress * 2), // 随描画前半程淡入
       },
-      text,
+      text: item.text,
     });
-  });
+  }
 
   const grids: SvgNode[] = [0.25, 0.5, 0.75].map((ratio) => ({
     tag: "line" as const,
@@ -396,5 +509,6 @@ export const lineChart: SceneComponent = {
   componentId: "line-chart",
   version: 1,
   validateParams,
+  validateLayout,
   render,
 };
