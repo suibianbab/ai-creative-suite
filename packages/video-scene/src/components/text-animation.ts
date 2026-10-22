@@ -4,6 +4,7 @@ import type {
   SceneComponent,
   SceneSpecLike,
 } from "../registry.js";
+import { fitWrappedText, isPortrait, safeFrame } from "../safe-layout.js";
 import type { SvgNode } from "../svg.js";
 import { fitFontSize } from "../text-width.js";
 
@@ -22,7 +23,7 @@ type TextAnimationParams = {
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
 const SUBTITLE_DELAY_MS = 400;
 // 文本行两侧留白：字号钳制后行宽 ≤ 画布宽 × 该系数。
-const TEXT_SAFE_WIDTH = 0.88;
+const TEXT_SAFE_WIDTH = 0.78;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -90,6 +91,100 @@ function render(spec: SceneSpecLike, ctx: FrameContext): SvgNode {
   const subtitleProgress = easeOutCubic(
     clamp01((tMs - SUBTITLE_DELAY_MS) / params.enterMs),
   );
+  if (isPortrait(ctx)) {
+    const safe = safeFrame(ctx);
+    const title = fitWrappedText(
+      params.title,
+      Math.min(ctx.width * 0.1, ctx.height / 12),
+      safe.textWidth,
+      2,
+    );
+    const subtitle = params.subtitle
+      ? fitWrappedText(
+          params.subtitle,
+          Math.min(ctx.width * 0.055, ctx.height / 20),
+          safe.textWidth,
+          3,
+        )
+      : null;
+    const titleStep = title.fontSize * 1.2;
+    const subtitleStep = subtitle ? subtitle.fontSize * 1.3 : 0;
+    const gap = subtitle ? Math.max(32, title.fontSize * 0.55) : 0;
+    const blockHeight =
+      title.lines.length * titleStep +
+      gap +
+      (subtitle?.lines.length ?? 0) * subtitleStep;
+    const top = ctx.height / 2 - blockHeight / 2;
+    const texts: SvgNode[] = [
+      ...title.lines.map((line, index): SvgNode => {
+        const y = top + titleStep * (index + 0.5);
+        return {
+          tag: "text",
+          attrs: {
+            x: ctx.width / 2,
+            y,
+            "font-size": title.fontSize,
+            fill: params.titleColor,
+            "text-anchor": "middle",
+            "dominant-baseline": "middle",
+            opacity: titleProgress,
+            transform: entranceTransform(
+              params.entrance,
+              titleProgress,
+              ctx.height,
+              ctx.width / 2,
+              y,
+            ),
+          },
+          text: line,
+        };
+      }),
+      ...(subtitle?.lines ?? []).map((line, index): SvgNode => {
+        const y =
+          top +
+          title.lines.length * titleStep +
+          gap +
+          subtitleStep * (index + 0.5);
+        return {
+          tag: "text",
+          attrs: {
+            x: ctx.width / 2,
+            y,
+            "font-size": subtitle!.fontSize,
+            fill: params.subtitleColor,
+            "text-anchor": "middle",
+            "dominant-baseline": "middle",
+            opacity: subtitleProgress,
+            transform: entranceTransform(
+              params.entrance,
+              subtitleProgress,
+              ctx.height,
+              ctx.width / 2,
+              y,
+            ),
+          },
+          text: line,
+        };
+      }),
+    ];
+    return {
+      tag: "g",
+      attrs: {},
+      children: [
+        {
+          tag: "rect",
+          attrs: {
+            x: 0,
+            y: 0,
+            width: ctx.width,
+            height: ctx.height,
+            fill: spec.background,
+          },
+        },
+        ...texts,
+      ],
+    };
+  }
   // 字号按高度推，再按文本行宽钳制（竖版画布 height 大 width 小，长标题会横向溢出裁切）
   const titleSize = fitFontSize(
     ctx.height / 8,

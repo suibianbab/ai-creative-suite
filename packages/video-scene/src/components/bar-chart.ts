@@ -4,6 +4,7 @@ import type {
   SceneComponent,
   SceneSpecLike,
 } from "../registry.js";
+import { fitWrappedText, isPortrait, safeFrame } from "../safe-layout.js";
 import type { SvgNode } from "../svg.js";
 import { fitFontSize } from "../text-width.js";
 
@@ -93,9 +94,142 @@ function validateParams(value: unknown): BarChartParams {
   return value as BarChartParams;
 }
 
+function renderPortrait(
+  spec: SceneSpecLike,
+  ctx: FrameContext,
+  params: BarChartParams,
+  tMs: number,
+): SvgNode {
+  const safe = safeFrame(ctx);
+  const title = fitWrappedText(
+    params.title,
+    ctx.width * 0.075,
+    safe.textWidth,
+    2,
+  );
+  const titleStep = title.fontSize * 1.25;
+  const titleCenter = ctx.height * 0.255;
+  const plotTop = ctx.height * 0.42;
+  const baseline = ctx.height * 0.72;
+  const plotHeight = baseline - plotTop;
+  const slot = safe.width / params.bars.length;
+  const barWidth = slot * 0.56;
+  const maxValue = Math.max(...params.bars.map((bar) => bar.value));
+  const yMax = maxValue * 1.1 || 1;
+  const bars: SvgNode[] = [];
+  const values: SvgNode[] = [];
+  const labels: SvgNode[] = [];
+  params.bars.forEach((bar, index) => {
+    const delay = index * STAGGER_MS;
+    const grow = easeOutCubic(clamp01((tMs - delay) / params.enterMs));
+    const center = safe.left + slot * (index + 0.5);
+    const height = (bar.value / yMax) * plotHeight * grow;
+    bars.push({
+      tag: "rect",
+      attrs: {
+        x: center - barWidth / 2,
+        y: baseline - height,
+        width: barWidth,
+        height,
+        rx: Math.min(6, barWidth * 0.08),
+        fill: bar.value === maxValue ? params.accentColor : params.barColor,
+      },
+    });
+    values.push({
+      tag: "text",
+      attrs: {
+        x: center,
+        y: baseline - height - ctx.height * 0.022,
+        "font-size": fitFontSize(
+          ctx.width * 0.038,
+          String(bar.value),
+          slot * 0.78,
+        ),
+        fill: params.textColor,
+        "text-anchor": "middle",
+        "dominant-baseline": "middle",
+        opacity: clamp01((tMs - delay - params.enterMs) / VALUE_FADE_MS),
+      },
+      text: String(bar.value),
+    });
+    labels.push({
+      tag: "text",
+      attrs: {
+        x: center,
+        y: baseline + ctx.height * 0.048,
+        "font-size": fitFontSize(ctx.width * 0.036, bar.label, slot * 0.78),
+        fill: params.textColor,
+        "text-anchor": "middle",
+        "dominant-baseline": "middle",
+        opacity: grow,
+      },
+      text: bar.label,
+    });
+  });
+  const grids: SvgNode[] = [0.25, 0.5, 0.75].map((ratio) => ({
+    tag: "line",
+    attrs: {
+      x1: safe.left,
+      y1: plotTop + plotHeight * ratio,
+      x2: safe.right,
+      y2: plotTop + plotHeight * ratio,
+      stroke: params.textColor,
+      opacity: 0.15,
+      "stroke-width": 2,
+    },
+  }));
+  return {
+    tag: "g",
+    attrs: {},
+    children: [
+      {
+        tag: "rect",
+        attrs: {
+          x: 0,
+          y: 0,
+          width: ctx.width,
+          height: ctx.height,
+          fill: spec.background,
+        },
+      },
+      ...title.lines.map(
+        (line, index): SvgNode => ({
+          tag: "text",
+          attrs: {
+            x: ctx.width / 2,
+            y: titleCenter + (index - (title.lines.length - 1) / 2) * titleStep,
+            "font-size": title.fontSize,
+            fill: params.textColor,
+            "text-anchor": "middle",
+            "dominant-baseline": "middle",
+          },
+          text: line,
+        }),
+      ),
+      ...grids,
+      {
+        tag: "line",
+        attrs: {
+          x1: safe.left,
+          y1: baseline,
+          x2: safe.right,
+          y2: baseline,
+          stroke: params.textColor,
+          opacity: 0.5,
+          "stroke-width": 3,
+        },
+      },
+      ...bars,
+      ...values,
+      ...labels,
+    ],
+  };
+}
+
 function render(spec: SceneSpecLike, ctx: FrameContext): SvgNode {
   const params = spec.params as BarChartParams;
   const tMs = (ctx.frame / ctx.fps) * 1000;
+  if (isPortrait(ctx)) return renderPortrait(spec, ctx, params, tMs);
   const values = params.bars.map((bar) => bar.value);
   const maxValue = Math.max(...values);
   // y 上限 = max×1.1（值标签头空间）；全零归一为 1 防除零
@@ -126,7 +260,7 @@ function render(spec: SceneSpecLike, ctx: FrameContext): SvgNode {
       tag: "text",
       attrs: {
         x: center,
-        y: 890,
+        y: 875,
         "font-size": 26,
         fill: params.textColor,
         "text-anchor": "middle",
@@ -190,7 +324,7 @@ function render(spec: SceneSpecLike, ctx: FrameContext): SvgNode {
             tag: "text",
             attrs: {
               x: 500,
-              y: 100,
+              y: 155,
               "font-size": fitFontSize(48, params.title, 880),
               fill: params.textColor,
               "text-anchor": "middle",

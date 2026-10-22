@@ -4,6 +4,7 @@ import { seededRandom } from "../random.js";
 import type { FrameContext } from "../registry.js";
 import type { SceneSpec } from "../spec.js";
 import type { SvgNode } from "../svg.js";
+import { emUnits } from "../text-width.js";
 import { lineChart } from "./line-chart.js";
 
 function makeCtx(over: Partial<FrameContext> = {}): FrameContext {
@@ -71,6 +72,33 @@ test("折线路径首尾端点坐标按值映射（yMax = max×1.1）", () => {
   const lastY = 850 - (30 / yMax) * 650;
   assert.ok(d.startsWith(`M120.00 ${firstY.toFixed(2)}`), d);
   assert.ok(d.endsWith(`L880.00 ${lastY.toFixed(2)}`), d);
+});
+
+test("竖版折线、标题和端点标签落在安全区", () => {
+  const node = lineChart.render(
+    specWith({ ...BASE, title: "年度产量变化趋势及目标进展" }),
+    makeCtx({ width: 720, height: 1280, frame: 72 }),
+  );
+  assert.equal(collect(node, "svg").length, 0);
+  const points = collect(node, "circle");
+  assert.equal(points.length, 4);
+  for (const point of points) {
+    assert.ok((point.attrs.cx as number) >= 72);
+    assert.ok((point.attrs.cx as number) <= 648);
+    assert.ok((point.attrs.cy as number) >= 128);
+    assert.ok((point.attrs.cy as number) <= 1152);
+  }
+  for (const label of collect(node, "text")) {
+    const x = label.attrs.x as number;
+    const size = label.attrs["font-size"] as number;
+    const width = emUnits(label.text!) * size;
+    const anchor = label.attrs["text-anchor"];
+    const left =
+      anchor === "start" ? x : anchor === "end" ? x - width : x - width / 2;
+    const right = left + width;
+    assert.ok(left >= 72 - 1e-6, `${label.text}: ${left}`);
+    assert.ok(right <= 648 + 1e-6, `${label.text}: ${right}`);
+  }
 });
 
 test("数据点圆标随描画进度弹出：t=0 全 r=0，中期首点已现而末点未现，末帧全部 r=9", () => {

@@ -4,6 +4,7 @@ import type {
   SceneComponent,
   SceneSpecLike,
 } from "../registry.js";
+import { fitWrappedText, isPortrait, safeFrame } from "../safe-layout.js";
 import type { SvgNode } from "../svg.js";
 import { fitFontSize } from "../text-width.js";
 
@@ -84,6 +85,73 @@ function render(spec: SceneSpecLike, ctx: FrameContext): SvgNode {
   const displayed = (params.value * progress).toFixed(params.decimals);
   const text = `${params.prefix}${displayed}${params.suffix}`;
   const underlineW = UNDERLINE_FULL * progress;
+
+  if (isPortrait(ctx)) {
+    const safe = safeFrame(ctx);
+    const numberSize = fitFontSize(ctx.width * 0.24, text, safe.textWidth);
+    const title = fitWrappedText(
+      params.title,
+      ctx.width * 0.068,
+      safe.textWidth,
+      2,
+    );
+    const titleStep = title.fontSize * 1.25;
+    return {
+      tag: "g",
+      attrs: {},
+      children: [
+        {
+          tag: "rect",
+          attrs: {
+            x: 0,
+            y: 0,
+            width: ctx.width,
+            height: ctx.height,
+            fill: spec.background,
+          },
+        },
+        {
+          tag: "text",
+          attrs: {
+            x: ctx.width / 2,
+            y: ctx.height * 0.46,
+            "font-size": numberSize,
+            fill: params.numberColor,
+            "text-anchor": "middle",
+            "dominant-baseline": "middle",
+          },
+          text,
+        },
+        {
+          tag: "rect",
+          attrs: {
+            x: (ctx.width - underlineW * (safe.width / 840)) / 2,
+            y: ctx.height * 0.565,
+            width: underlineW * (safe.width / 840),
+            height: ctx.height * 0.008,
+            rx: ctx.height * 0.004,
+            fill: params.accentColor,
+          },
+        },
+        ...title.lines.map(
+          (line, index): SvgNode => ({
+            tag: "text",
+            attrs: {
+              x: ctx.width / 2,
+              y:
+                ctx.height * 0.66 +
+                (index - (title.lines.length - 1) / 2) * titleStep,
+              "font-size": title.fontSize,
+              fill: params.numberColor,
+              "text-anchor": "middle",
+              "dominant-baseline": "middle",
+            },
+            text: line,
+          }),
+        ),
+      ],
+    };
+  }
 
   return {
     tag: "g",

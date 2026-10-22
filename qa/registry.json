@@ -1405,6 +1405,30 @@
       ]
     },
     {
+      "id": "VID-034",
+      "tier": "integration",
+      "title": "Video Studio data motion dual-aspect safe layout and long-title export",
+      "cwd": ".",
+      "argv": [
+        "node",
+        "artifacts/video-aspect-layout-2026-10-22/audit-exports.mjs"
+      ],
+      "requiresPorts": [],
+      "requiresFiles": [
+        "artifacts/video-aspect-layout-2026-10-22/before/landscape.mp4",
+        "artifacts/video-aspect-layout-2026-10-22/before/portrait.mp4",
+        "artifacts/video-aspect-layout-2026-10-22/after/landscape.mp4",
+        "artifacts/video-aspect-layout-2026-10-22/after/portrait.mp4",
+        "artifacts/video-aspect-layout-2026-10-22/long-title/landscape.mp4",
+        "artifacts/video-aspect-layout-2026-10-22/long-title/portrait.mp4"
+      ],
+      "checks": [
+        "Four mid-motion samples per shot and aspect are decoded from before, after and long-title MP4s",
+        "The 10% visible-content safe region catches the old layout and all 32 updated and 32 stress frames stay inside it",
+        "The same four-shot VideoProject renders 12-second landscape and portrait videos without a parallel timeline"
+      ]
+    },
+    {
       "id": "VID-025",
       "tier": "integration",
       "title": "Video Studio P3-B three 镜头预烘焙出片与确定性",

@@ -4,6 +4,7 @@ import type {
   SceneComponent,
   SceneSpecLike,
 } from "../registry.js";
+import { fitWrappedText, isPortrait, safeFrame } from "../safe-layout.js";
 import type { SvgNode } from "../svg.js";
 import { fitFontSize } from "../text-width.js";
 
@@ -91,10 +92,167 @@ function validateParams(value: unknown): LineChartParams {
   return value as LineChartParams;
 }
 
+function renderPortrait(
+  spec: SceneSpecLike,
+  ctx: FrameContext,
+  params: LineChartParams,
+  progress: number,
+): SvgNode {
+  const safe = safeFrame(ctx);
+  const title = fitWrappedText(
+    params.title,
+    ctx.width * 0.075,
+    safe.textWidth,
+    2,
+  );
+  const plotLeft = safe.left + ctx.width * 0.035;
+  const plotRight = safe.right - ctx.width * 0.035;
+  const plotTop = ctx.height * 0.42;
+  const baseline = ctx.height * 0.72;
+  const plotHeight = baseline - plotTop;
+  const plotWidth = plotRight - plotLeft;
+  const values = params.points.map((point) => point.value);
+  const yMax = Math.max(...values) * 1.1 || 1;
+  const n = params.points.length;
+  const xs = params.points.map(
+    (_, index) => plotLeft + (plotWidth * index) / (n - 1),
+  );
+  const ys = params.points.map(
+    (point) => baseline - (point.value / yMax) * plotHeight,
+  );
+  const d = xs
+    .map(
+      (x, index) =>
+        `${index === 0 ? "M" : "L"}${x.toFixed(2)} ${ys[index]!.toFixed(2)}`,
+    )
+    .join(" ");
+  const cum = [0];
+  for (let index = 1; index < n; index++) {
+    cum.push(
+      cum[index - 1]! +
+        Math.hypot(xs[index]! - xs[index - 1]!, ys[index]! - ys[index - 1]!),
+    );
+  }
+  const total = cum[n - 1]!;
+  const markers: SvgNode[] = params.points.map((_, index) => {
+    const frac = Math.min(cum[index]! / total, 1 - MARKER_WINDOW);
+    const appear = easeOutCubic(clamp01((progress - frac) / MARKER_WINDOW));
+    return {
+      tag: "circle",
+      attrs: {
+        cx: xs[index]!,
+        cy: ys[index]!,
+        r: ctx.width * 0.0125 * appear,
+        fill: params.markerColor,
+      },
+    };
+  });
+  const labelSlot = plotWidth / (n - 1);
+  const labels: SvgNode[] = [];
+  params.points.forEach((point, index) => {
+    if (!point.label) return;
+    const text =
+      point.label.length > 6 ? `${point.label.slice(0, 6)}…` : point.label;
+    labels.push({
+      tag: "text",
+      attrs: {
+        x: xs[index]!,
+        y: baseline + ctx.height * 0.048,
+        "font-size": fitFontSize(
+          ctx.width * 0.036,
+          text,
+          index === 0 || index === n - 1 ? labelSlot * 1.7 : labelSlot * 0.9,
+        ),
+        fill: params.textColor,
+        "text-anchor":
+          index === 0 ? "start" : index === n - 1 ? "end" : "middle",
+        "dominant-baseline": "middle",
+        opacity: clamp01(progress * 2),
+      },
+      text,
+    });
+  });
+  return {
+    tag: "g",
+    attrs: {},
+    children: [
+      {
+        tag: "rect",
+        attrs: {
+          x: 0,
+          y: 0,
+          width: ctx.width,
+          height: ctx.height,
+          fill: spec.background,
+        },
+      },
+      ...title.lines.map(
+        (line, index): SvgNode => ({
+          tag: "text",
+          attrs: {
+            x: ctx.width / 2,
+            y:
+              ctx.height * 0.255 +
+              (index - (title.lines.length - 1) / 2) * title.fontSize * 1.25,
+            "font-size": title.fontSize,
+            fill: params.textColor,
+            "text-anchor": "middle",
+            "dominant-baseline": "middle",
+          },
+          text: line,
+        }),
+      ),
+      ...[0.25, 0.5, 0.75].map(
+        (ratio): SvgNode => ({
+          tag: "line",
+          attrs: {
+            x1: plotLeft,
+            y1: plotTop + plotHeight * ratio,
+            x2: plotRight,
+            y2: plotTop + plotHeight * ratio,
+            stroke: params.textColor,
+            opacity: 0.15,
+            "stroke-width": 2,
+          },
+        }),
+      ),
+      {
+        tag: "line",
+        attrs: {
+          x1: plotLeft,
+          y1: baseline,
+          x2: plotRight,
+          y2: baseline,
+          stroke: params.textColor,
+          opacity: 0.5,
+          "stroke-width": 3,
+        },
+      },
+      {
+        tag: "path",
+        attrs: {
+          d,
+          fill: "none",
+          stroke: params.lineColor,
+          "stroke-width": ctx.width * 0.011,
+          "stroke-linecap": "round",
+          "stroke-linejoin": "round",
+          pathLength: 1,
+          "stroke-dasharray": 1,
+          "stroke-dashoffset": 1 - progress,
+        },
+      },
+      ...markers,
+      ...labels,
+    ],
+  };
+}
+
 function render(spec: SceneSpecLike, ctx: FrameContext): SvgNode {
   const params = spec.params as LineChartParams;
   const tMs = (ctx.frame / ctx.fps) * 1000;
   const progress = easeOutCubic(clamp01(tMs / params.drawMs));
+  if (isPortrait(ctx)) return renderPortrait(spec, ctx, params, progress);
   const values = params.points.map((point) => point.value);
   const yMax = Math.max(...values) * 1.1 || 1;
   const n = params.points.length;
@@ -140,7 +298,7 @@ function render(spec: SceneSpecLike, ctx: FrameContext): SvgNode {
       tag: "text",
       attrs: {
         x: xs[i]!,
-        y: 890,
+        y: 875,
         "font-size": 26,
         fill: params.textColor,
         "text-anchor": "middle",
@@ -191,7 +349,7 @@ function render(spec: SceneSpecLike, ctx: FrameContext): SvgNode {
             tag: "text",
             attrs: {
               x: 500,
-              y: 100,
+              y: 155,
               "font-size": fitFontSize(48, params.title, 880),
               fill: params.textColor,
               "text-anchor": "middle",

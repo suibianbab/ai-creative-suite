@@ -1,0 +1,407 @@
+{
+  "schemaVersion": 1,
+  "id": "7a7935aa-9349-496a-9c25-42d2af41ec3d",
+  "title": "季度销量 · EffectCraft 动效桥验证",
+  "brief": {
+    "sentence": "四镜头季度销量数据动画，逐镜 3 秒；横版和竖版使用同一 VideoProject。",
+    "aspectTargets": ["landscape", "portrait"]
+  },
+  "shots": [
+    {
+      "shotId": "3a02862d-8749-40ee-a1fb-4907291df726",
+      "order": 0,
+      "locked": false,
+      "workingVersionId": "50c0b477-441a-4774-8ae5-8aaa0265f1b7",
+      "contentVersions": [
+        {
+          "versionId": "50c0b477-441a-4774-8ae5-8aaa0265f1b7",
+          "createdAt": "2026-10-22T14:03:30.771Z",
+          "durationMs": 3000,
+          "description": "开场：介绍季度销量数据",
+          "narrationText": "季度销量观察。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 3000,
+              "seed": 4201,
+              "background": "#122137",
+              "params": {
+                "title": "季度销量观察",
+                "subtitle": "用数据看增长",
+                "titleColor": "#f5f7fa",
+                "subtitleColor": "#afcde6",
+                "entrance": "fade-up",
+                "enterMs": 450
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "50c0b477-441a-4774-8ae5-8aaa0265f1b7",
+          "at": "2026-10-22T14:03:30.771Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "3e1a0f1f-5e39-4b0e-b578-eb14ea783079",
+      "order": 1,
+      "locked": false,
+      "workingVersionId": "c99de8f1-4755-4f49-b4b6-9448b95bda3e",
+      "contentVersions": [
+        {
+          "versionId": "c99de8f1-4755-4f49-b4b6-9448b95bda3e",
+          "createdAt": "2026-10-22T14:03:30.771Z",
+          "durationMs": 3000,
+          "description": "柱状图对比四个季度",
+          "narrationText": "第四季度达到最高。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "bar-chart",
+              "componentVersion": 1,
+              "durationMs": 3000,
+              "seed": 4202,
+              "background": "#122137",
+              "params": {
+                "title": "四季度销量对比",
+                "bars": [
+                  {
+                    "label": "一季度",
+                    "value": 32
+                  },
+                  {
+                    "label": "二季度",
+                    "value": 46
+                  },
+                  {
+                    "label": "三季度",
+                    "value": 58
+                  },
+                  {
+                    "label": "四季度",
+                    "value": 82
+                  }
+                ],
+                "barColor": "#4a9fdb",
+                "accentColor": "#ffbc60",
+                "textColor": "#f5f7fa",
+                "enterMs": 1400
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "c99de8f1-4755-4f49-b4b6-9448b95bda3e",
+          "at": "2026-10-22T14:03:30.771Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "91f42916-971a-427f-b8c7-8b955791e91b",
+      "order": 2,
+      "locked": false,
+      "workingVersionId": "66ed950f-d304-4225-9285-45d9d4c83997",
+      "contentVersions": [
+        {
+          "versionId": "66ed950f-d304-4225-9285-45d9d4c83997",
+          "createdAt": "2026-10-22T14:03:30.771Z",
+          "durationMs": 3000,
+          "description": "关键数字：四季度 82 单位",
+          "narrationText": "关键数字是八十二。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "number-counter",
+              "componentVersion": 1,
+              "durationMs": 3000,
+              "seed": 4203,
+              "background": "#122137",
+              "params": {
+                "title": "四季度销量",
+                "value": 82,
+                "prefix": "",
+                "suffix": " 单位",
+                "decimals": 0,
+                "countMs": 1400,
+                "numberColor": "#f5f7fa",
+                "accentColor": "#ffbc60"
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "66ed950f-d304-4225-9285-45d9d4c83997",
+          "at": "2026-10-22T14:03:30.771Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "3b30ccf8-7e6d-47b1-a1cf-6f2c1b6c3800",
+      "order": 3,
+      "locked": false,
+      "workingVersionId": "f1b85e1d-b80a-4b29-9373-75f82e9b6093",
+      "contentVersions": [
+        {
+          "versionId": "f1b85e1d-b80a-4b29-9373-75f82e9b6093",
+          "createdAt": "2026-10-22T14:03:30.771Z",
+          "durationMs": 3000,
+          "description": "收尾：给出增长结论",
+          "narrationText": "趋势清晰可见。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 3000,
+              "seed": 4204,
+              "background": "#122137",
+              "params": {
+                "title": "增长，清晰可见",
+                "subtitle": "替换为你的真实数据",
+                "titleColor": "#f5f7fa",
+                "subtitleColor": "#afcde6",
+                "entrance": "fade-up",
+                "enterMs": 450
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "f1b85e1d-b80a-4b29-9373-75f82e9b6093",
+          "at": "2026-10-22T14:03:30.771Z",
+          "actor": "human"
+        }
+      ]
+    }
+  ],
+  "renderRecords": [
+    {
+      "renderId": "d3091af2-3703-4bd6-aa56-00b56b149cf4",
+      "versionId": "50c0b477-441a-4774-8ae5-8aaa0265f1b7",
+      "contentDigest": "31b6f1524a840bd6d997daea83cf1e7981c8faaeee26c862d4a85b039dcbef46",
+      "engineId": "remotion",
+      "engineVersion": "7",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "dfed08bf-c91b-4cbf-badb-e815d0d35b0d",
+        "versionId": "60437c1d-892b-4399-a6d0-f0f2d82adfb3",
+        "digest": "8cb789bfe6960a68ffee87d62a64e19191f2b14f852543321d2869e2eb0dd26c"
+      },
+      "outputAssetRef": "programmatic-baseline/landscape.mp4"
+    },
+    {
+      "renderId": "8bc962a5-b67f-44d7-a92f-5e0d8d6b7d96",
+      "versionId": "c99de8f1-4755-4f49-b4b6-9448b95bda3e",
+      "contentDigest": "b074e1aaff74d6f6b5396e7355146562602178f1814764b0adedf167adaea128",
+      "engineId": "remotion",
+      "engineVersion": "7",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "dfed08bf-c91b-4cbf-badb-e815d0d35b0d",
+        "versionId": "60437c1d-892b-4399-a6d0-f0f2d82adfb3",
+        "digest": "8cb789bfe6960a68ffee87d62a64e19191f2b14f852543321d2869e2eb0dd26c"
+      },
+      "outputAssetRef": "programmatic-baseline/landscape.mp4"
+    },
+    {
+      "renderId": "9594837d-1236-4d26-90c0-c956fc03fd68",
+      "versionId": "66ed950f-d304-4225-9285-45d9d4c83997",
+      "contentDigest": "b7e88b4a1906a8d778284e3a7a2a52d401450ffa1da1a3ad6bceaf9d36c87468",
+      "engineId": "remotion",
+      "engineVersion": "7",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "dfed08bf-c91b-4cbf-badb-e815d0d35b0d",
+        "versionId": "60437c1d-892b-4399-a6d0-f0f2d82adfb3",
+        "digest": "8cb789bfe6960a68ffee87d62a64e19191f2b14f852543321d2869e2eb0dd26c"
+      },
+      "outputAssetRef": "programmatic-baseline/landscape.mp4"
+    },
+    {
+      "renderId": "2e16bace-efe3-4ae6-8950-533fca363c0f",
+      "versionId": "f1b85e1d-b80a-4b29-9373-75f82e9b6093",
+      "contentDigest": "f8cbfd59b5846ca2529322bc0612a77b291fba0cdf15962ee9c911ddb3df3b7a",
+      "engineId": "remotion",
+      "engineVersion": "7",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "dfed08bf-c91b-4cbf-badb-e815d0d35b0d",
+        "versionId": "60437c1d-892b-4399-a6d0-f0f2d82adfb3",
+        "digest": "8cb789bfe6960a68ffee87d62a64e19191f2b14f852543321d2869e2eb0dd26c"
+      },
+      "outputAssetRef": "programmatic-baseline/landscape.mp4"
+    },
+    {
+      "renderId": "9cc431ad-e7ad-4bd1-9c12-b1ed4871b845",
+      "versionId": "50c0b477-441a-4774-8ae5-8aaa0265f1b7",
+      "contentDigest": "31b6f1524a840bd6d997daea83cf1e7981c8faaeee26c862d4a85b039dcbef46",
+      "engineId": "remotion",
+      "engineVersion": "7",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "dfed08bf-c91b-4cbf-badb-e815d0d35b0d",
+        "versionId": "60437c1d-892b-4399-a6d0-f0f2d82adfb3",
+        "digest": "8cb789bfe6960a68ffee87d62a64e19191f2b14f852543321d2869e2eb0dd26c"
+      },
+      "outputAssetRef": "programmatic-baseline/portrait.mp4"
+    },
+    {
+      "renderId": "4798f688-6d9a-4535-8283-6b68db0b5dc3",
+      "versionId": "c99de8f1-4755-4f49-b4b6-9448b95bda3e",
+      "contentDigest": "b074e1aaff74d6f6b5396e7355146562602178f1814764b0adedf167adaea128",
+      "engineId": "remotion",
+      "engineVersion": "7",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "dfed08bf-c91b-4cbf-badb-e815d0d35b0d",
+        "versionId": "60437c1d-892b-4399-a6d0-f0f2d82adfb3",
+        "digest": "8cb789bfe6960a68ffee87d62a64e19191f2b14f852543321d2869e2eb0dd26c"
+      },
+      "outputAssetRef": "programmatic-baseline/portrait.mp4"
+    },
+    {
+      "renderId": "b25dcb88-8fe9-429b-8bbb-722e462c40a7",
+      "versionId": "66ed950f-d304-4225-9285-45d9d4c83997",
+      "contentDigest": "b7e88b4a1906a8d778284e3a7a2a52d401450ffa1da1a3ad6bceaf9d36c87468",
+      "engineId": "remotion",
+      "engineVersion": "7",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "dfed08bf-c91b-4cbf-badb-e815d0d35b0d",
+        "versionId": "60437c1d-892b-4399-a6d0-f0f2d82adfb3",
+        "digest": "8cb789bfe6960a68ffee87d62a64e19191f2b14f852543321d2869e2eb0dd26c"
+      },
+      "outputAssetRef": "programmatic-baseline/portrait.mp4"
+    },
+    {
+      "renderId": "8aeb1026-d4ba-4407-9e0b-2a07a8ebc008",
+      "versionId": "f1b85e1d-b80a-4b29-9373-75f82e9b6093",
+      "contentDigest": "f8cbfd59b5846ca2529322bc0612a77b291fba0cdf15962ee9c911ddb3df3b7a",
+      "engineId": "remotion",
+      "engineVersion": "7",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "dfed08bf-c91b-4cbf-badb-e815d0d35b0d",
+        "versionId": "60437c1d-892b-4399-a6d0-f0f2d82adfb3",
+        "digest": "8cb789bfe6960a68ffee87d62a64e19191f2b14f852543321d2869e2eb0dd26c"
+      },
+      "outputAssetRef": "programmatic-baseline/portrait.mp4"
+    }
+  ],
+  "deliveries": [],
+  "savedVersion": 2,
+  "styleBibleRef": {
+    "bibleId": "dfed08bf-c91b-4cbf-badb-e815d0d35b0d",
+    "versionId": "60437c1d-892b-4399-a6d0-f0f2d82adfb3",
+    "digest": "8cb789bfe6960a68ffee87d62a64e19191f2b14f852543321d2869e2eb0dd26c"
+  }
+}

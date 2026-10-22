@@ -1,0 +1,67 @@
+{
+  "pass": true,
+  "projectId": "7a7935aa-9349-496a-9c25-42d2af41ec3d",
+  "shotIds": [
+    "3a02862d-8749-40ee-a1fb-4907291df726",
+    "3e1a0f1f-5e39-4b0e-b578-eb14ea783079",
+    "91f42916-971a-427f-b8c7-8b955791e91b",
+    "3b30ccf8-7e6d-47b1-a1cf-6f2c1b6c3800"
+  ],
+  "appendedRenderRecordsPerVariant": 8,
+  "outputs": {
+    "before": {
+      "landscape": {
+        "width": 1280,
+        "height": 720,
+        "fps": "24/1",
+        "durationSeconds": 12,
+        "sha256": "38ab1cd48294f4e3b06091c6185a797f625e324c3cbd26cd525950ffb145fc82",
+        "fullDecode": "pass"
+      },
+      "portrait": {
+        "width": 720,
+        "height": 1280,
+        "fps": "24/1",
+        "durationSeconds": 12,
+        "sha256": "ffaf3c15c153f1538d9795383bd737b995ade7ef5a99c2fbe0238c640b2f401c",
+        "fullDecode": "pass"
+      }
+    },
+    "after": {
+      "landscape": {
+        "width": 1280,
+        "height": 720,
+        "fps": "24/1",
+        "durationSeconds": 12,
+        "sha256": "468563e83477b85dc129be4c6b55f5b59dee3ee728845ab020335dd36df7aa44",
+        "fullDecode": "pass"
+      },
+      "portrait": {
+        "width": 720,
+        "height": 1280,
+        "fps": "24/1",
+        "durationSeconds": 12,
+        "sha256": "9915d3e5820d5b6dd590df4c232674c590a66d8ad1d7f23a84ec630f1556c99a",
+        "fullDecode": "pass"
+      }
+    },
+    "long-title": {
+      "landscape": {
+        "width": 1280,
+        "height": 720,
+        "fps": "24/1",
+        "durationSeconds": 12,
+        "sha256": "c941408ddab22a4b9434ceda42bbb23537a05010e1cb056f24485c3269b68fc6",
+        "fullDecode": "pass"
+      },
+      "portrait": {
+        "width": 720,
+        "height": 1280,
+        "fps": "24/1",
+        "durationSeconds": 12,
+        "sha256": "4c4aad3e220ba239700d936ebf5064174eccda7defef42cbb5bbb6d0bc9667eb",
+        "fullDecode": "pass"
+      }
+    }
+  }
+}

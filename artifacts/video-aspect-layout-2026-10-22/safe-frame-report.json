@@ -1,0 +1,2062 @@
+{
+  "criterion": "Visible pixels stay inside the central 80% of the exported frame; 2 px raster tolerance",
+  "samplesPerAspect": 16,
+  "beforeOutside": [
+    {
+      "version": "before",
+      "aspect": "landscape",
+      "shot": 2,
+      "atSeconds": 3.3,
+      "contentBounds": [
+        364,
+        48,
+        920,
+        648
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": false
+    },
+    {
+      "version": "before",
+      "aspect": "landscape",
+      "shot": 2,
+      "atSeconds": 3.9,
+      "contentBounds": [
+        364,
+        48,
+        920,
+        648
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": false
+    },
+    {
+      "version": "before",
+      "aspect": "landscape",
+      "shot": 2,
+      "atSeconds": 4.8,
+      "contentBounds": [
+        364,
+        48,
+        920,
+        648
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": false
+    },
+    {
+      "version": "before",
+      "aspect": "landscape",
+      "shot": 2,
+      "atSeconds": 5.7,
+      "contentBounds": [
+        364,
+        48,
+        920,
+        648
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": false
+    },
+    {
+      "version": "before",
+      "aspect": "portrait",
+      "shot": 1,
+      "atSeconds": 0.3,
+      "contentBounds": [
+        44,
+        519,
+        677,
+        645
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": false
+    },
+    {
+      "version": "before",
+      "aspect": "portrait",
+      "shot": 1,
+      "atSeconds": 0.9,
+      "contentBounds": [
+        44,
+        518,
+        677,
+        755
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": false
+    },
+    {
+      "version": "before",
+      "aspect": "portrait",
+      "shot": 1,
+      "atSeconds": 1.8,
+      "contentBounds": [
+        44,
+        518,
+        677,
+        755
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": false
+    },
+    {
+      "version": "before",
+      "aspect": "portrait",
+      "shot": 1,
+      "atSeconds": 2.7,
+      "contentBounds": [
+        44,
+        518,
+        677,
+        755
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": false
+    },
+    {
+      "version": "before",
+      "aspect": "portrait",
+      "shot": 4,
+      "atSeconds": 9.3,
+      "contentBounds": [
+        44,
+        544,
+        676,
+        654
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": false
+    },
+    {
+      "version": "before",
+      "aspect": "portrait",
+      "shot": 4,
+      "atSeconds": 9.9,
+      "contentBounds": [
+        41,
+        540,
+        680,
+        771
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": false
+    },
+    {
+      "version": "before",
+      "aspect": "portrait",
+      "shot": 4,
+      "atSeconds": 10.8,
+      "contentBounds": [
+        41,
+        540,
+        680,
+        771
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": false
+    },
+    {
+      "version": "before",
+      "aspect": "portrait",
+      "shot": 4,
+      "atSeconds": 11.7,
+      "contentBounds": [
+        41,
+        540,
+        680,
+        771
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": false
+    }
+  ],
+  "afterOutside": [],
+  "stressOutside": [],
+  "frames": [
+    {
+      "version": "before",
+      "aspect": "landscape",
+      "shot": 1,
+      "atSeconds": 0.3,
+      "contentBounds": [
+        367,
+        270,
+        914,
+        368
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "before",
+      "aspect": "landscape",
+      "shot": 1,
+      "atSeconds": 0.9,
+      "contentBounds": [
+        367,
+        272,
+        914,
+        444
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "before",
+      "aspect": "landscape",
+      "shot": 1,
+      "atSeconds": 1.8,
+      "contentBounds": [
+        367,
+        272,
+        914,
+        444
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "before",
+      "aspect": "landscape",
+      "shot": 1,
+      "atSeconds": 2.7,
+      "contentBounds": [
+        367,
+        272,
+        914,
+        444
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "before",
+      "aspect": "landscape",
+      "shot": 2,
+      "atSeconds": 3.3,
+      "contentBounds": [
+        364,
+        48,
+        920,
+        648
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": false
+    },
+    {
+      "version": "before",
+      "aspect": "landscape",
+      "shot": 2,
+      "atSeconds": 3.9,
+      "contentBounds": [
+        364,
+        48,
+        920,
+        648
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": false
+    },
+    {
+      "version": "before",
+      "aspect": "landscape",
+      "shot": 2,
+      "atSeconds": 4.8,
+      "contentBounds": [
+        364,
+        48,
+        920,
+        648
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": false
+    },
+    {
+      "version": "before",
+      "aspect": "landscape",
+      "shot": 2,
+      "atSeconds": 5.7,
+      "contentBounds": [
+        364,
+        48,
+        920,
+        648
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": false
+    },
+    {
+      "version": "before",
+      "aspect": "landscape",
+      "shot": 3,
+      "atSeconds": 6.3,
+      "contentBounds": [
+        398,
+        242,
+        880,
+        496
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "before",
+      "aspect": "landscape",
+      "shot": 3,
+      "atSeconds": 6.9,
+      "contentBounds": [
+        402,
+        242,
+        880,
+        496
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "before",
+      "aspect": "landscape",
+      "shot": 3,
+      "atSeconds": 7.8,
+      "contentBounds": [
+        400,
+        242,
+        880,
+        496
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "before",
+      "aspect": "landscape",
+      "shot": 3,
+      "atSeconds": 8.7,
+      "contentBounds": [
+        400,
+        242,
+        880,
+        496
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "before",
+      "aspect": "landscape",
+      "shot": 4,
+      "atSeconds": 9.3,
+      "contentBounds": [
+        320,
+        272,
+        960,
+        368
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "before",
+      "aspect": "landscape",
+      "shot": 4,
+      "atSeconds": 9.9,
+      "contentBounds": [
+        320,
+        272,
+        960,
+        446
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "before",
+      "aspect": "landscape",
+      "shot": 4,
+      "atSeconds": 10.8,
+      "contentBounds": [
+        320,
+        272,
+        960,
+        446
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "before",
+      "aspect": "landscape",
+      "shot": 4,
+      "atSeconds": 11.7,
+      "contentBounds": [
+        320,
+        272,
+        960,
+        446
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "before",
+      "aspect": "portrait",
+      "shot": 1,
+      "atSeconds": 0.3,
+      "contentBounds": [
+        44,
+        519,
+        677,
+        645
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": false
+    },
+    {
+      "version": "before",
+      "aspect": "portrait",
+      "shot": 1,
+      "atSeconds": 0.9,
+      "contentBounds": [
+        44,
+        518,
+        677,
+        755
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": false
+    },
+    {
+      "version": "before",
+      "aspect": "portrait",
+      "shot": 1,
+      "atSeconds": 1.8,
+      "contentBounds": [
+        44,
+        518,
+        677,
+        755
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": false
+    },
+    {
+      "version": "before",
+      "aspect": "portrait",
+      "shot": 1,
+      "atSeconds": 2.7,
+      "contentBounds": [
+        44,
+        518,
+        677,
+        755
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": false
+    },
+    {
+      "version": "before",
+      "aspect": "portrait",
+      "shot": 2,
+      "atSeconds": 3.3,
+      "contentBounds": [
+        84,
+        328,
+        640,
+        928
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "before",
+      "aspect": "portrait",
+      "shot": 2,
+      "atSeconds": 3.9,
+      "contentBounds": [
+        84,
+        328,
+        640,
+        928
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "before",
+      "aspect": "portrait",
+      "shot": 2,
+      "atSeconds": 4.8,
+      "contentBounds": [
+        84,
+        328,
+        640,
+        930
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "before",
+      "aspect": "portrait",
+      "shot": 2,
+      "atSeconds": 5.7,
+      "contentBounds": [
+        84,
+        328,
+        640,
+        930
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "before",
+      "aspect": "portrait",
+      "shot": 3,
+      "atSeconds": 6.3,
+      "contentBounds": [
+        112,
+        528,
+        600,
+        768
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "before",
+      "aspect": "portrait",
+      "shot": 3,
+      "atSeconds": 6.9,
+      "contentBounds": [
+        123,
+        528,
+        600,
+        768
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "before",
+      "aspect": "portrait",
+      "shot": 3,
+      "atSeconds": 7.8,
+      "contentBounds": [
+        120,
+        528,
+        600,
+        768
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "before",
+      "aspect": "portrait",
+      "shot": 3,
+      "atSeconds": 8.7,
+      "contentBounds": [
+        120,
+        528,
+        600,
+        768
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "before",
+      "aspect": "portrait",
+      "shot": 4,
+      "atSeconds": 9.3,
+      "contentBounds": [
+        44,
+        544,
+        676,
+        654
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": false
+    },
+    {
+      "version": "before",
+      "aspect": "portrait",
+      "shot": 4,
+      "atSeconds": 9.9,
+      "contentBounds": [
+        41,
+        540,
+        680,
+        771
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": false
+    },
+    {
+      "version": "before",
+      "aspect": "portrait",
+      "shot": 4,
+      "atSeconds": 10.8,
+      "contentBounds": [
+        41,
+        540,
+        680,
+        771
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": false
+    },
+    {
+      "version": "before",
+      "aspect": "portrait",
+      "shot": 4,
+      "atSeconds": 11.7,
+      "contentBounds": [
+        41,
+        540,
+        680,
+        771
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": false
+    },
+    {
+      "version": "after",
+      "aspect": "landscape",
+      "shot": 1,
+      "atSeconds": 0.3,
+      "contentBounds": [
+        367,
+        270,
+        914,
+        368
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "after",
+      "aspect": "landscape",
+      "shot": 1,
+      "atSeconds": 0.9,
+      "contentBounds": [
+        367,
+        272,
+        914,
+        444
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "after",
+      "aspect": "landscape",
+      "shot": 1,
+      "atSeconds": 1.8,
+      "contentBounds": [
+        367,
+        272,
+        914,
+        444
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "after",
+      "aspect": "landscape",
+      "shot": 1,
+      "atSeconds": 2.7,
+      "contentBounds": [
+        367,
+        272,
+        914,
+        444
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "after",
+      "aspect": "landscape",
+      "shot": 2,
+      "atSeconds": 3.3,
+      "contentBounds": [
+        364,
+        88,
+        920,
+        635
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "after",
+      "aspect": "landscape",
+      "shot": 2,
+      "atSeconds": 3.9,
+      "contentBounds": [
+        364,
+        88,
+        920,
+        640
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "after",
+      "aspect": "landscape",
+      "shot": 2,
+      "atSeconds": 4.8,
+      "contentBounds": [
+        364,
+        88,
+        920,
+        640
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "after",
+      "aspect": "landscape",
+      "shot": 2,
+      "atSeconds": 5.7,
+      "contentBounds": [
+        364,
+        88,
+        920,
+        640
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "after",
+      "aspect": "landscape",
+      "shot": 3,
+      "atSeconds": 6.3,
+      "contentBounds": [
+        398,
+        242,
+        880,
+        496
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "after",
+      "aspect": "landscape",
+      "shot": 3,
+      "atSeconds": 6.9,
+      "contentBounds": [
+        402,
+        242,
+        880,
+        496
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "after",
+      "aspect": "landscape",
+      "shot": 3,
+      "atSeconds": 7.8,
+      "contentBounds": [
+        400,
+        242,
+        880,
+        496
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "after",
+      "aspect": "landscape",
+      "shot": 3,
+      "atSeconds": 8.7,
+      "contentBounds": [
+        400,
+        242,
+        880,
+        496
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "after",
+      "aspect": "landscape",
+      "shot": 4,
+      "atSeconds": 9.3,
+      "contentBounds": [
+        320,
+        272,
+        960,
+        368
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "after",
+      "aspect": "landscape",
+      "shot": 4,
+      "atSeconds": 9.9,
+      "contentBounds": [
+        320,
+        272,
+        960,
+        446
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "after",
+      "aspect": "landscape",
+      "shot": 4,
+      "atSeconds": 10.8,
+      "contentBounds": [
+        320,
+        272,
+        960,
+        446
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "after",
+      "aspect": "landscape",
+      "shot": 4,
+      "atSeconds": 11.7,
+      "contentBounds": [
+        320,
+        272,
+        960,
+        446
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "after",
+      "aspect": "portrait",
+      "shot": 1,
+      "atSeconds": 0.3,
+      "contentBounds": [
+        142,
+        544,
+        578,
+        638
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "after",
+      "aspect": "portrait",
+      "shot": 1,
+      "atSeconds": 0.9,
+      "contentBounds": [
+        143,
+        548,
+        578,
+        739
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "after",
+      "aspect": "portrait",
+      "shot": 1,
+      "atSeconds": 1.8,
+      "contentBounds": [
+        143,
+        548,
+        578,
+        739
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "after",
+      "aspect": "portrait",
+      "shot": 1,
+      "atSeconds": 2.7,
+      "contentBounds": [
+        143,
+        548,
+        578,
+        739
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "after",
+      "aspect": "portrait",
+      "shot": 2,
+      "atSeconds": 3.3,
+      "contentBounds": [
+        72,
+        288,
+        648,
+        994
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "after",
+      "aspect": "portrait",
+      "shot": 2,
+      "atSeconds": 3.9,
+      "contentBounds": [
+        72,
+        288,
+        648,
+        1000
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "after",
+      "aspect": "portrait",
+      "shot": 2,
+      "atSeconds": 4.8,
+      "contentBounds": [
+        72,
+        288,
+        648,
+        1000
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "after",
+      "aspect": "portrait",
+      "shot": 2,
+      "atSeconds": 5.7,
+      "contentBounds": [
+        72,
+        288,
+        648,
+        1000
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "after",
+      "aspect": "portrait",
+      "shot": 3,
+      "atSeconds": 6.3,
+      "contentBounds": [
+        128,
+        504,
+        592,
+        864
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "after",
+      "aspect": "portrait",
+      "shot": 3,
+      "atSeconds": 6.9,
+      "contentBounds": [
+        134,
+        504,
+        592,
+        864
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "after",
+      "aspect": "portrait",
+      "shot": 3,
+      "atSeconds": 7.8,
+      "contentBounds": [
+        134,
+        504,
+        592,
+        864
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "after",
+      "aspect": "portrait",
+      "shot": 3,
+      "atSeconds": 8.7,
+      "contentBounds": [
+        134,
+        504,
+        592,
+        864
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "after",
+      "aspect": "portrait",
+      "shot": 4,
+      "atSeconds": 9.3,
+      "contentBounds": [
+        107,
+        548,
+        616,
+        626
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "after",
+      "aspect": "portrait",
+      "shot": 4,
+      "atSeconds": 9.9,
+      "contentBounds": [
+        107,
+        548,
+        616,
+        723
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "after",
+      "aspect": "portrait",
+      "shot": 4,
+      "atSeconds": 10.8,
+      "contentBounds": [
+        107,
+        548,
+        616,
+        723
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "after",
+      "aspect": "portrait",
+      "shot": 4,
+      "atSeconds": 11.7,
+      "contentBounds": [
+        107,
+        548,
+        616,
+        723
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "long-title",
+      "aspect": "landscape",
+      "shot": 1,
+      "atSeconds": 0.3,
+      "contentBounds": [
+        140,
+        288,
+        1144,
+        352
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "long-title",
+      "aspect": "landscape",
+      "shot": 1,
+      "atSeconds": 0.9,
+      "contentBounds": [
+        140,
+        288,
+        1144,
+        426
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "long-title",
+      "aspect": "landscape",
+      "shot": 1,
+      "atSeconds": 1.8,
+      "contentBounds": [
+        140,
+        288,
+        1144,
+        426
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "long-title",
+      "aspect": "landscape",
+      "shot": 1,
+      "atSeconds": 2.7,
+      "contentBounds": [
+        140,
+        288,
+        1144,
+        426
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "long-title",
+      "aspect": "landscape",
+      "shot": 2,
+      "atSeconds": 3.3,
+      "contentBounds": [
+        364,
+        88,
+        920,
+        635
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "long-title",
+      "aspect": "landscape",
+      "shot": 2,
+      "atSeconds": 3.9,
+      "contentBounds": [
+        364,
+        88,
+        920,
+        640
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "long-title",
+      "aspect": "landscape",
+      "shot": 2,
+      "atSeconds": 4.8,
+      "contentBounds": [
+        364,
+        88,
+        920,
+        640
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "long-title",
+      "aspect": "landscape",
+      "shot": 2,
+      "atSeconds": 5.7,
+      "contentBounds": [
+        364,
+        88,
+        920,
+        640
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "long-title",
+      "aspect": "landscape",
+      "shot": 3,
+      "atSeconds": 6.3,
+      "contentBounds": [
+        398,
+        242,
+        880,
+        496
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "long-title",
+      "aspect": "landscape",
+      "shot": 3,
+      "atSeconds": 6.9,
+      "contentBounds": [
+        402,
+        242,
+        880,
+        496
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "long-title",
+      "aspect": "landscape",
+      "shot": 3,
+      "atSeconds": 7.8,
+      "contentBounds": [
+        400,
+        242,
+        880,
+        496
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "long-title",
+      "aspect": "landscape",
+      "shot": 3,
+      "atSeconds": 8.7,
+      "contentBounds": [
+        400,
+        242,
+        880,
+        496
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "long-title",
+      "aspect": "landscape",
+      "shot": 4,
+      "atSeconds": 9.3,
+      "contentBounds": [
+        140,
+        288,
+        1144,
+        352
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "long-title",
+      "aspect": "landscape",
+      "shot": 4,
+      "atSeconds": 9.9,
+      "contentBounds": [
+        140,
+        288,
+        1144,
+        450
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "long-title",
+      "aspect": "landscape",
+      "shot": 4,
+      "atSeconds": 10.8,
+      "contentBounds": [
+        140,
+        288,
+        1144,
+        450
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "long-title",
+      "aspect": "landscape",
+      "shot": 4,
+      "atSeconds": 11.7,
+      "contentBounds": [
+        140,
+        288,
+        1144,
+        450
+      ],
+      "safeBounds": [
+        128.0,
+        72.0,
+        1152.0,
+        648.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "long-title",
+      "aspect": "portrait",
+      "shot": 1,
+      "atSeconds": 0.3,
+      "contentBounds": [
+        96,
+        528,
+        624,
+        658
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "long-title",
+      "aspect": "portrait",
+      "shot": 1,
+      "atSeconds": 0.9,
+      "contentBounds": [
+        96,
+        528,
+        624,
+        745
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "long-title",
+      "aspect": "portrait",
+      "shot": 1,
+      "atSeconds": 1.8,
+      "contentBounds": [
+        96,
+        528,
+        624,
+        745
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "long-title",
+      "aspect": "portrait",
+      "shot": 1,
+      "atSeconds": 2.7,
+      "contentBounds": [
+        96,
+        528,
+        624,
+        757
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "long-title",
+      "aspect": "portrait",
+      "shot": 2,
+      "atSeconds": 3.3,
+      "contentBounds": [
+        72,
+        288,
+        648,
+        994
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "long-title",
+      "aspect": "portrait",
+      "shot": 2,
+      "atSeconds": 3.9,
+      "contentBounds": [
+        72,
+        288,
+        648,
+        1000
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "long-title",
+      "aspect": "portrait",
+      "shot": 2,
+      "atSeconds": 4.8,
+      "contentBounds": [
+        72,
+        288,
+        648,
+        1000
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "long-title",
+      "aspect": "portrait",
+      "shot": 2,
+      "atSeconds": 5.7,
+      "contentBounds": [
+        72,
+        288,
+        648,
+        1000
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "long-title",
+      "aspect": "portrait",
+      "shot": 3,
+      "atSeconds": 6.3,
+      "contentBounds": [
+        128,
+        504,
+        592,
+        864
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "long-title",
+      "aspect": "portrait",
+      "shot": 3,
+      "atSeconds": 6.9,
+      "contentBounds": [
+        134,
+        504,
+        592,
+        864
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "long-title",
+      "aspect": "portrait",
+      "shot": 3,
+      "atSeconds": 7.8,
+      "contentBounds": [
+        134,
+        504,
+        592,
+        864
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "long-title",
+      "aspect": "portrait",
+      "shot": 3,
+      "atSeconds": 8.7,
+      "contentBounds": [
+        134,
+        504,
+        592,
+        864
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "long-title",
+      "aspect": "portrait",
+      "shot": 4,
+      "atSeconds": 9.3,
+      "contentBounds": [
+        96,
+        528,
+        626,
+        656
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "long-title",
+      "aspect": "portrait",
+      "shot": 4,
+      "atSeconds": 9.9,
+      "contentBounds": [
+        96,
+        528,
+        626,
+        736
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "long-title",
+      "aspect": "portrait",
+      "shot": 4,
+      "atSeconds": 10.8,
+      "contentBounds": [
+        96,
+        528,
+        626,
+        738
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": true
+    },
+    {
+      "version": "long-title",
+      "aspect": "portrait",
+      "shot": 4,
+      "atSeconds": 11.7,
+      "contentBounds": [
+        96,
+        528,
+        626,
+        738
+      ],
+      "safeBounds": [
+        72.0,
+        128.0,
+        648.0,
+        1152.0
+      ],
+      "inside": true
+    }
+  ]
+}

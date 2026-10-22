@@ -1,0 +1,220 @@
+{
+  "schemaVersion": 1,
+  "id": "7a7935aa-9349-496a-9c25-42d2af41ec3d",
+  "title": "季度销量 · EffectCraft 动效桥验证",
+  "brief": {
+    "sentence": "四镜头季度销量数据动画，逐镜 3 秒；横版和竖版使用同一 VideoProject。",
+    "aspectTargets": [
+      "landscape",
+      "portrait"
+    ]
+  },
+  "shots": [
+    {
+      "shotId": "3a02862d-8749-40ee-a1fb-4907291df726",
+      "order": 0,
+      "locked": false,
+      "workingVersionId": "50c0b477-441a-4774-8ae5-8aaa0265f1b7",
+      "contentVersions": [
+        {
+          "versionId": "50c0b477-441a-4774-8ae5-8aaa0265f1b7",
+          "createdAt": "2026-10-22T14:03:30.771Z",
+          "durationMs": 3000,
+          "description": "开场：介绍季度销量数据",
+          "narrationText": "季度销量观察。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 3000,
+              "seed": 4201,
+              "background": "#122137",
+              "params": {
+                "title": "季度销量增长趋势与市场表现的完整观察",
+                "subtitle": "用数据看增长",
+                "titleColor": "#f5f7fa",
+                "subtitleColor": "#afcde6",
+                "entrance": "fade-up",
+                "enterMs": 450
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "50c0b477-441a-4774-8ae5-8aaa0265f1b7",
+          "at": "2026-10-22T14:03:30.771Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "3e1a0f1f-5e39-4b0e-b578-eb14ea783079",
+      "order": 1,
+      "locked": false,
+      "workingVersionId": "c99de8f1-4755-4f49-b4b6-9448b95bda3e",
+      "contentVersions": [
+        {
+          "versionId": "c99de8f1-4755-4f49-b4b6-9448b95bda3e",
+          "createdAt": "2026-10-22T14:03:30.771Z",
+          "durationMs": 3000,
+          "description": "柱状图对比四个季度",
+          "narrationText": "第四季度达到最高。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "bar-chart",
+              "componentVersion": 1,
+              "durationMs": 3000,
+              "seed": 4202,
+              "background": "#122137",
+              "params": {
+                "title": "四季度销量对比",
+                "bars": [
+                  {
+                    "label": "一季度",
+                    "value": 32
+                  },
+                  {
+                    "label": "二季度",
+                    "value": 46
+                  },
+                  {
+                    "label": "三季度",
+                    "value": 58
+                  },
+                  {
+                    "label": "四季度",
+                    "value": 82
+                  }
+                ],
+                "barColor": "#4a9fdb",
+                "accentColor": "#ffbc60",
+                "textColor": "#f5f7fa",
+                "enterMs": 1400
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "c99de8f1-4755-4f49-b4b6-9448b95bda3e",
+          "at": "2026-10-22T14:03:30.771Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "91f42916-971a-427f-b8c7-8b955791e91b",
+      "order": 2,
+      "locked": false,
+      "workingVersionId": "66ed950f-d304-4225-9285-45d9d4c83997",
+      "contentVersions": [
+        {
+          "versionId": "66ed950f-d304-4225-9285-45d9d4c83997",
+          "createdAt": "2026-10-22T14:03:30.771Z",
+          "durationMs": 3000,
+          "description": "关键数字：四季度 82 单位",
+          "narrationText": "关键数字是八十二。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "number-counter",
+              "componentVersion": 1,
+              "durationMs": 3000,
+              "seed": 4203,
+              "background": "#122137",
+              "params": {
+                "title": "四季度销量",
+                "value": 82,
+                "prefix": "",
+                "suffix": " 单位",
+                "decimals": 0,
+                "countMs": 1400,
+                "numberColor": "#f5f7fa",
+                "accentColor": "#ffbc60"
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "66ed950f-d304-4225-9285-45d9d4c83997",
+          "at": "2026-10-22T14:03:30.771Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "3b30ccf8-7e6d-47b1-a1cf-6f2c1b6c3800",
+      "order": 3,
+      "locked": false,
+      "workingVersionId": "f1b85e1d-b80a-4b29-9373-75f82e9b6093",
+      "contentVersions": [
+        {
+          "versionId": "f1b85e1d-b80a-4b29-9373-75f82e9b6093",
+          "createdAt": "2026-10-22T14:03:30.771Z",
+          "durationMs": 3000,
+          "description": "收尾：给出增长结论",
+          "narrationText": "趋势清晰可见。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 3000,
+              "seed": 4204,
+              "background": "#122137",
+              "params": {
+                "title": "增长趋势清晰可见，继续观察下一季度表现",
+                "subtitle": "替换为你的真实数据",
+                "titleColor": "#f5f7fa",
+                "subtitleColor": "#afcde6",
+                "entrance": "fade-up",
+                "enterMs": 450
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "f1b85e1d-b80a-4b29-9373-75f82e9b6093",
+          "at": "2026-10-22T14:03:30.771Z",
+          "actor": "human"
+        }
+      ]
+    }
+  ],
+  "renderRecords": [],
+  "deliveries": [],
+  "savedVersion": 1
+}

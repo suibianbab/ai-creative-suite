@@ -4,6 +4,7 @@ import { seededRandom } from "../random.js";
 import type { FrameContext } from "../registry.js";
 import type { SceneSpec } from "../spec.js";
 import type { SvgNode } from "../svg.js";
+import { emUnits } from "../text-width.js";
 import { textAnimation } from "./text-animation.js";
 
 function makeCtx(over: Partial<FrameContext> = {}): FrameContext {
@@ -163,6 +164,25 @@ test("竖版较长双行标题保持竖向留白，不发生标题与副标题�
     2;
   assert.equal(subtitle.attrs["dominant-baseline"], "middle");
   assert.ok(centerDistance - halfHeights >= 20);
+});
+
+test("竖版长标题分行后仍在水平和垂直安全区", () => {
+  const title = "季度销量增长趋势与市场表现的完整观察";
+  const node = textAnimation.render(
+    specWith({ ...BASE, title, subtitle: "用数据看增长" }),
+    makeCtx({ width: 720, height: 1280, frame: 48 }),
+  );
+  const lines = (node.children ?? []).filter(
+    (child) => child.tag === "text" && child.text !== "用数据看增长",
+  );
+  assert.equal(lines.length, 2);
+  assert.equal(lines.map((line) => line.text).join(""), title);
+  for (const line of lines) {
+    const size = line.attrs["font-size"] as number;
+    const y = line.attrs.y as number;
+    assert.ok(emUnits(line.text!) * size <= 576 + 1e-6);
+    assert.ok(y - size / 2 >= 128 && y + size / 2 <= 1152);
+  }
 });
 
 test("params 校验：未知 entrance / 空 title / 非法颜色 / enterMs 越界均拒绝", () => {

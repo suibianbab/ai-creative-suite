@@ -4,6 +4,7 @@ import { seededRandom } from "../random.js";
 import type { FrameContext } from "../registry.js";
 import type { SceneSpec } from "../spec.js";
 import type { SvgNode } from "../svg.js";
+import { emUnits } from "../text-width.js";
 import { numberCounter } from "./number-counter.js";
 
 function makeCtx(over: Partial<FrameContext> = {}): FrameContext {
@@ -97,6 +98,28 @@ test("长文本字号自适应：prefix+长数字+suffix 钳制到 ≤200 且行
   // text = "累计123456789012.0件作品"（decimals=1 带 .0）：
   // emUnits = 5 CJK + 14×0.6（12 数字 + "." + "0"）= 13.4 → 840/13.4
   assert.ok(Math.abs(size - 840 / 13.4) < 1e-9);
+});
+
+test("竖版长数字和标题落在安全区，数字仍逐帧计数", () => {
+  const spec = specWith({
+    ...BASE,
+    title: "四季度销量增长的关键数据",
+    value: 123456789012,
+    prefix: "累计",
+    suffix: "件",
+    decimals: 0,
+  });
+  const ctx = makeCtx({ width: 720, height: 1280, frame: 72 });
+  const node = numberCounter.render(spec, ctx);
+  assert.equal(collect(node, "svg").length, 0);
+  const labels = collect(node, "text");
+  assert.ok(labels[0]!.text!.includes("123456789012"));
+  for (const label of labels) {
+    const size = label.attrs["font-size"] as number;
+    assert.ok(emUnits(label.text!) * size <= 576 + 1e-6);
+    assert.ok((label.attrs.y as number) >= 128);
+    assert.ok((label.attrs.y as number) <= 1152);
+  }
 });
 
 test("accent 下划线随 countMs 生长：t=0 宽 0，末帧宽 320 且居中", () => {

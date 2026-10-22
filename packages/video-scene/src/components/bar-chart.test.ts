@@ -4,6 +4,7 @@ import { seededRandom } from "../random.js";
 import type { FrameContext } from "../registry.js";
 import type { SceneSpec } from "../spec.js";
 import type { SvgNode } from "../svg.js";
+import { emUnits } from "../text-width.js";
 import { barChart } from "./bar-chart.js";
 
 function makeCtx(over: Partial<FrameContext> = {}): FrameContext {
@@ -114,6 +115,37 @@ test("背景为首个子节点（fill = spec.background），标题存在且居�
   const title = collect(node, "text").find((t) => t.text === "四种方案对比")!;
   assert.equal(title.attrs.x, 500);
   assert.equal(title.attrs["text-anchor"], "middle");
+});
+
+test("竖版图表、数值和季度标签使用画布安全区", () => {
+  const bars = [
+    { label: "一季度", value: 32 },
+    { label: "二季度", value: 46 },
+    { label: "三季度", value: 58 },
+    { label: "四季度", value: 82 },
+  ];
+  const node = barChart.render(
+    specWith({ ...BASE, bars }),
+    makeCtx({ width: 720, height: 1280, frame: 72 }),
+  );
+  assert.equal(
+    collect(node, "svg").length,
+    0,
+    "竖版不应被方形 viewBox 缩成小图",
+  );
+  const barNodes = collect(node, "rect").filter(
+    (rect) => rect.attrs.fill !== "#ffffff",
+  );
+  assert.equal(barNodes.length, 4);
+  for (const rect of barNodes) {
+    assert.ok((rect.attrs.x as number) >= 72);
+    assert.ok((rect.attrs.x as number) + (rect.attrs.width as number) <= 648);
+  }
+  for (const text of collect(node, "text")) {
+    assert.ok(emUnits(text.text!) * (text.attrs["font-size"] as number) <= 576);
+    assert.ok((text.attrs.y as number) >= 128);
+    assert.ok((text.attrs.y as number) <= 1152);
+  }
 });
 
 test("全零数据：yMax 归一为 1，柱高 0，attrs 无 NaN（Review Focus#1）", () => {

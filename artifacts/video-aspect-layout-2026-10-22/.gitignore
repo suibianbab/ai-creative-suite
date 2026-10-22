@@ -1,0 +1,5 @@
+__pycache__/
+after/*.log
+after/props-*.json
+long-title/*.log
+long-title/props-*.json
