@@ -1429,6 +1429,42 @@
       ]
     },
     {
+      "id": "VID-035",
+      "tier": "integration",
+      "title": "Video Studio dual-aspect layout override real export audit",
+      "cwd": ".",
+      "argv": [
+        "node",
+        "artifacts/video-studio-dual-aspect-edit-2026-10-23/audit-exports.mjs"
+      ],
+      "requiresPorts": [],
+      "requiresFiles": [
+        "artifacts/video-studio-dual-aspect-edit-2026-10-23/render-before/landscape.mp4",
+        "artifacts/video-studio-dual-aspect-edit-2026-10-23/render-before/portrait.mp4",
+        "artifacts/video-studio-dual-aspect-edit-2026-10-23/render-after/landscape.mp4",
+        "artifacts/video-studio-dual-aspect-edit-2026-10-23/render-after/portrait.mp4"
+      ],
+      "checks": [
+        "The same browser-edited four-shot project (long title + 12-point long-label line chart) renders dual-aspect MP4s with and without the portrait layout override",
+        "Dimensions, 24 fps frame rate, quantized total duration and 8 appended render records per variant are verified by ffprobe and document checks",
+        "Sixteen sampled frames per aspect and variant stay inside the 10% safe area; label readability is reported separately via human-review keyframes"
+      ]
+    },
+    {
+      "id": "VID-036",
+      "tier": "browser-video",
+      "title": "Video Studio dual-aspect preview toggle and per-aspect layout editing",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/e2e-dual-aspect-edit.mjs"],
+      "requiresPorts": [3210],
+      "checks": [
+        "Piece and single-shot previews switch between landscape and portrait with the export canvas viewBox and toggleable safe-area guides",
+        "Long-title text and 12-point long-label line-chart shots get portrait-only overrides (title lines, label step, short labels) applied through the existing revision chain",
+        "Save, browser reload and reopen keep the overrides on the same content version; the landscape render keeps the automatic single-line layout",
+        "The SVG-level assertions count title lines and visible labels per aspect and the run finishes without console or page errors"
+      ]
+    },
+    {
       "id": "VID-025",
       "tier": "integration",
       "title": "Video Studio P3-B three 镜头预烘焙出片与确定性",

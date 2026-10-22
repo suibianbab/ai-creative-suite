@@ -1,0 +1,60 @@
+{
+  "pass": true,
+  "projectId": "0df3a542-cfae-4143-b956-4e7ba7a72a64",
+  "shotIds": [
+    "d07cac1b-c025-4444-9e1d-75b8b89767c8",
+    "018c8337-1962-4d9f-b6fb-a22ed11eab66",
+    "67963e2c-a07c-4e04-a8dc-207e81165aa4",
+    "cb43e84f-3d86-4762-9fed-ec8c81a26185"
+  ],
+  "totalFrames": 216,
+  "appendedRenderRecordsPerVariant": 8,
+  "outputs": {
+    "before": {
+      "landscape": {
+        "width": 1280,
+        "height": 720,
+        "fps": "24/1",
+        "durationSeconds": 9,
+        "frames": 216,
+        "sha256": "af93a5c2d40bc7a73111bcd4a5811e7b4cc639c9087532bcee17427e69eb7827",
+        "fullDecode": "pass"
+      },
+      "portrait": {
+        "width": 720,
+        "height": 1280,
+        "fps": "24/1",
+        "durationSeconds": 9,
+        "frames": 216,
+        "sha256": "7a455202150703c26b63d865355f132d0c8f2783871729012d621d8aae73539d",
+        "fullDecode": "pass"
+      }
+    },
+    "after": {
+      "landscape": {
+        "width": 1280,
+        "height": 720,
+        "fps": "24/1",
+        "durationSeconds": 9,
+        "frames": 216,
+        "sha256": "af93a5c2d40bc7a73111bcd4a5811e7b4cc639c9087532bcee17427e69eb7827",
+        "fullDecode": "pass"
+      },
+      "portrait": {
+        "width": 720,
+        "height": 1280,
+        "fps": "24/1",
+        "durationSeconds": 9,
+        "frames": 216,
+        "sha256": "2541f90f2956dfa7a9b8e0d1419ee1f89fd57cae0a0fe08d6821979e1176daaf",
+        "fullDecode": "pass"
+      }
+    }
+  },
+  "humanReviewKeyframes": [
+    "keyframes/before-landscape-line-chart.png",
+    "keyframes/before-portrait-line-chart.png",
+    "keyframes/after-landscape-line-chart.png",
+    "keyframes/after-portrait-line-chart.png"
+  ]
+}

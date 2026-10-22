@@ -6,6 +6,9 @@
 !*.md
 !*.json
 !*.mjs
+!*.py
 !*.png
 !*.mp4
+render-*/*.log
+render-*/props-*.json
 probe-full.png
