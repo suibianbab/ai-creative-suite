@@ -20,6 +20,7 @@ export * from "./media-crop.js";
 export * from "./random.js";
 export * from "./react-svg-attrs.js";
 export * from "./registry.js";
+export * from "./safe-layout.js";
 export * from "./spec.js";
 export * from "./svg.js";
 export * from "./svg-budget.js";

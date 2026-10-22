@@ -5,17 +5,34 @@ export function isPortrait(ctx: FrameContext): boolean {
   return ctx.height > ctx.width;
 }
 
+// 安全区内缩比例：组件布局（safeFrame）与工作台预览辅助线（safeFrameRect）
+// 共用同一口径，预览所见即导出所判。
+export const SAFE_INSET_RATIO = 0.1;
+
+// 任意画布尺寸的 10% 内缩矩形（预览辅助线用；组件侧继续走 safeFrame）。
+export function safeFrameRect(width: number, height: number) {
+  const insetX = width * SAFE_INSET_RATIO;
+  const insetY = height * SAFE_INSET_RATIO;
+  return {
+    x: insetX,
+    y: insetY,
+    width: width - insetX * 2,
+    height: height - insetY * 2,
+  };
+}
+
 // Keep titles, values and labels clear of device crops and player controls.
 export function safeFrame(ctx: FrameContext) {
+  const rect = safeFrameRect(ctx.width, ctx.height);
   return {
-    left: ctx.width * 0.1,
-    right: ctx.width * 0.9,
-    top: ctx.height * 0.1,
-    bottom: ctx.height * 0.9,
-    width: ctx.width * 0.8,
+    left: rect.x,
+    right: ctx.width - rect.x,
+    top: rect.y,
+    bottom: ctx.height - rect.y,
+    width: rect.width,
     // emUnits is an estimate; reserve another 10% for actual font glyph widths.
     textWidth: ctx.width * 0.72,
-    height: ctx.height * 0.8,
+    height: rect.height,
   };
 }
 

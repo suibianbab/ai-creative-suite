@@ -1,3 +1,4 @@
+export * from "./aspect.js";
 export * from "./canonical-json.js";
 export * from "./events.js";
 export * from "./evolve.js";

@@ -5,7 +5,9 @@
 // 顶层 = shots, transitions?（改键序即破坏 props 文件的字节恒等）。
 import { buildTimelineShotMedia } from "./render-scene.media.mjs";
 
-// 出片帧率与画幅尺寸：与 render-scene.mjs 同一口径（三处使用方共享一份映射）。
+// 出片帧率与画幅尺寸：事实源是 packages/video-document/src/aspect.ts 的
+// EXPORT_FPS/EXPORT_DIMENSIONS（工作台预览直接引包）；本模块为保持纯同步设计
+// 留本地常量，由 render-scene.props.test.mjs 的跨源一致性断言钉住不漂移。
 export const PROPS_FPS = 24;
 export const DIMENSIONS = { landscape: [1280, 720], portrait: [720, 1280] };
 

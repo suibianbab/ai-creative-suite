@@ -3,10 +3,14 @@
 // media + 旁白 + 字幕 + 转场）与改动前 render-scene.mjs 内联构造的输出逐字节对拍；
 // 后两条钉 three 镜头与 media-clip 同形 props 的取值口径。
 import assert from "node:assert/strict";
+import path from "node:path";
 import test from "node:test";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import {
   buildTimelineProps,
+  DIMENSIONS,
   findMissingThreeBakes,
+  PROPS_FPS,
 } from "./render-scene.props.mjs";
 
 const FPS = 24;
@@ -251,3 +255,20 @@ test("按画幅组装的 props：three 镜头 outMs = round(frames/24*1000)", ()
   assert.equal(portrait.shots[0].media.assetWidth, 720);
   assert.equal(portrait.shots[0].media.assetHeight, 1280);
 });
+
+// —— 跨源一致性（2026-10-23 双画幅预览）：本地常量与 @acs/video-document 对齐 ——
+// props 模块保持纯同步设计（Ruling 见 SDD ledger），物理上留有两份出片常量；
+// 此处钉住两源不漂移。dist 需先构建（pnpm --filter @acs/video-document run build）。
+{
+  const here = path.dirname(fileURLToPath(import.meta.url));
+  const { EXPORT_DIMENSIONS, EXPORT_FPS } = await import(
+    pathToFileURL(
+      path.join(here, "../../packages/video-document/dist/index.js"),
+    ).href
+  );
+  test("出片尺寸/帧率与 video-document EXPORT_* 常量一致", () => {
+    assert.equal(PROPS_FPS, EXPORT_FPS);
+    assert.deepEqual(DIMENSIONS.landscape, [...EXPORT_DIMENSIONS.landscape]);
+    assert.deepEqual(DIMENSIONS.portrait, [...EXPORT_DIMENSIONS.portrait]);
+  });
+}
