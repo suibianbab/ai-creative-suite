@@ -18,7 +18,7 @@
 
 2026-10-21 复核结论，**顺序勿重开**：
 
-1. **B — 关键镜头双候选**：1–2 个关键镜头给两个候选版本供人工挑选；复用既有内容版本 + `submitted` 事件，零 schema。
+1. **B — 关键镜头双候选**：**已完成（2026-10-22）**。1–2 个关键镜头给两个候选版本供人工挑选；复用既有内容版本 + `submitted` 事件，零 schema。落地见 `docs/superpowers/specs/2026-10-22-video-studio-dual-candidate-design.md`：镜头卡「对比候选」两列并排显示说明/时长/整片帧数，选用复用 `rollbackWorkingVersion`（audit 留痕、锁定允许），并新增与 C 同源的零帧选择闸门；回归 QA `VID-027`。
 2. **E0 — 交付记录补齐**：GIF / SVG 的 `DeliveryRecord` 补 `outputRef` / `digest`，与 P3-A 交互 HTML 交付口径对齐（当下仅 `interactive-html` 记录这两字段）。
 3. **D — Style Bible**：按 ADR 0003 第 7 条作为独立版本化记录，项目文档只存引用（ADR-0012：品牌与风格约束归平台）；**须有真实样片证据才开工**，不以设计稿替代。
 4. **PDF / 大纲导出**：按需再做，不与上述阶段绑定。

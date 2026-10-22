@@ -1,7 +1,7 @@
 # 关键镜头双候选（B）设计
 
 日期：2026-10-22
-状态：设计已定（决策由 Claude 按用户授权代定；实现前仍以本文件为准）
+状态：已实现（2026-10-22；实现与证据见文末「实现记录」）
 上游：`docs/VIDEO_STUDIO_LAPER_STORY2BOARD_DESIGN_INPUT_2026-10-21.md` §2 候选 B、§3 验收 2；ADR 0003（内容版本模型）、ADR 0012（平台/编辑器边界）
 范围：Video Studio 分镜编辑工作台，P0 本地项目
 
@@ -109,3 +109,10 @@ B 只补「两个候选并排看 → 选定 → 回到唯一工作版本」这�
 4. **选择走 `rollbackWorkingVersion`。** 它已经就是「移动工作指针 + audit 留痕」，语义完全吻合；新 op 会重复校验与事件逻辑。
 5. **选择前跑 C 的时长闸门。** 换候选实际改变该镜时长，不拦会重演「零帧 → 渲染期崩溃」。复用 `describeDurationImpact` 保持与渲染同源。
 6. **不新增「关键镜头」字段。** 对比入口按版本数出现，验收时人工挑 1–2 个关键镜头走一遍；持久化「哪些是关键」没有下游消费者。
+
+## 9. 实现记录（2026-10-22）
+
+- 纯逻辑：`apps/web/src/app/video-studio/candidate-compare.ts`（摘要、默认对、两列互斥、状态文案）与 `candidate-compare.test.ts` 6 例。
+- UI：`shot-editor-card.tsx` 版本行新增「对比候选」，两列显示序号/状态/说明/时长/整片帧数；选用先过 `durationApplyError` 再走 `rollbackWorkingVersion`；工作版本变化后回到默认对。样式见 `video-studio.css` 的 `.shot-compare-*`。
+- 浏览器回归：`scripts/video/e2e-candidate-compare.mjs`（QA `VID-027`）7 步全 PASS——重做产生候选 → 两列对比与互斥 → 锁定下选用原拍法 → 保存/重开持久化 → 导出校验（working/#1、`lock-changed`、`audit 回滚工作版本`、无 `approved`、v2）→ 零帧候选被「无法应用：」拦下且工作版本仍 2000ms；控制台 error 0，TTS 台账 0 → 0。
+- 回归数字：`@acs/web` 244、`@acs/video-document` 146、`scripts/video` 152 全绿；`pnpm --filter @acs/web typecheck` exit 0；`biome check .` 385 文件 clean；`qa:validate` 85 automated / 53 manual。
