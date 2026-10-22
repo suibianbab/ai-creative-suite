@@ -451,6 +451,108 @@
   padding: 1px 5px;
 }
 
+/* —— 双画幅版式覆写（画幅微调区块，2026-10-23）—— */
+.aspect-layout-fieldset {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid #dce5df;
+  border-radius: 10px;
+  background: #fff;
+  display: grid;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.aspect-layout-fieldset legend {
+  padding: 0 6px;
+  font-size: 12px;
+  color: #5d7469;
+}
+
+.aspect-layout-tabs {
+  display: inline-flex;
+  gap: 6px;
+  justify-self: start;
+}
+
+.aspect-layout-tab {
+  border: 1px solid #cadbd1;
+  border-radius: 8px;
+  background: #fff;
+  color: #1b2c29;
+  padding: 4px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.aspect-layout-tab.is-active {
+  background: #173f3b;
+  border-color: #173f3b;
+  color: #fff;
+}
+
+.layout-title-lines {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #cadbd1;
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 13px;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.layout-short-labels {
+  display: grid;
+  gap: 4px;
+}
+
+.layout-short-labels-title {
+  margin: 0;
+  color: #5d7469;
+  font-size: 12px;
+}
+
+.layout-short-label-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  align-items: center;
+}
+
+.layout-short-label-input {
+  border: 1px solid #cadbd1;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 13px;
+}
+
+.layout-label-hints {
+  display: grid;
+  gap: 2px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: #f2f7f4;
+  color: #3d574d;
+  font-size: 12px;
+}
+
+.layout-label-hints p {
+  margin: 0;
+}
+
+.aspect-layout-hint {
+  margin: 0;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.layout-edit-error {
+  margin: 0;
+  color: #a3230f;
+  font-size: 12px;
+}
+
 /* 画幅切换 + 安全区开关（预览控制行内） */
 .preview-aspect-controls {
   display: inline-flex;

@@ -10,6 +10,14 @@ import type {
 import type { SceneSpec } from "@acs/video-scene";
 import { useEffect, useMemo, useState } from "react";
 import {
+  applyLayoutToSpec,
+  describeLineChartLabels,
+  EMPTY_LAYOUT_DRAFTS,
+  type LayoutEditDraft,
+  layoutDraftFromSpec,
+  previewLineOverride,
+} from "./aspect-layout-edit";
+import {
   type CandidateSummary,
   candidateChoices,
   candidateSummaries,
@@ -306,6 +314,19 @@ export function ShotEditorCard({
       : EMPTY_LOADING_DRAFT,
   );
   const [loadingError, setLoadingError] = useState<string | null>(null);
+  // 双画幅版式覆写（2026-10-23 brief §三B）：仅 text-animation / line-chart
+  // 出「画幅微调」区块；草稿随工作版本重置，换模板 = 新视觉基底 → 清空。
+  const layoutEditable =
+    editSpec !== null &&
+    (editSpec.componentId === "text-animation" ||
+      editSpec.componentId === "line-chart");
+  const [layoutDraft, setLayoutDraft] = useState<LayoutEditDraft | null>(() =>
+    editSpec && layoutEditable ? layoutDraftFromSpec(editSpec) : null,
+  );
+  const [layoutAspect, setLayoutAspect] = useState<"portrait" | "landscape">(
+    "portrait",
+  );
+  const [layoutError, setLayoutError] = useState<string | null>(null);
   // P2.5-T3 媒体草稿（第七族）：素材/入出点/fit/注视点/原声，校验与预警全走
   // media-clip-templates.ts 纯逻辑，非法草稿不回调。
   const [mediaDraft, setMediaDraft] = useState<MediaEditDraft | null>(
@@ -409,8 +430,53 @@ export function ShotEditorCard({
         ? draftLoadingFromSpec(nextSpec)
         : EMPTY_LOADING_DRAFT,
     );
+    setLayoutError(null);
+    setLayoutAspect("portrait");
+    setLayoutDraft(
+      nextSpec &&
+        (nextSpec.componentId === "text-animation" ||
+          nextSpec.componentId === "line-chart")
+        ? layoutDraftFromSpec(nextSpec)
+        : null,
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps -- 依赖收紧是有意的（见上注）
   }, [shot.workingVersionId]);
+
+  // 换模板 = 换视觉基底：旧画幅覆写不再适用 → 草稿清空（应用链还有
+  // componentId 兜底，家族换走时静默不并入 layout）。
+  useEffect(() => {
+    if (pendingTemplateId === "") return;
+    setLayoutError(null);
+    setLayoutDraft((current) => {
+      if (!current) return current;
+      return current.componentId === "text-animation"
+        ? {
+            componentId: "text-animation",
+            portrait: { ...EMPTY_LAYOUT_DRAFTS.text },
+            landscape: { ...EMPTY_LAYOUT_DRAFTS.text },
+          }
+        : {
+            componentId: "line-chart",
+            portrait: { ...EMPTY_LAYOUT_DRAFTS.line },
+            landscape: { ...EMPTY_LAYOUT_DRAFTS.line },
+          };
+    });
+  }, [pendingTemplateId]);
+
+  // 覆写草稿的单字段更新（联合类型按画幅分桶，计算键展开需窄化辅助）。
+  const updateLayoutField = (
+    aspect: "portrait" | "landscape",
+    patch: Partial<LayoutEditDraft["portrait"]>,
+  ) => {
+    setLayoutDraft((current) =>
+      current
+        ? ({
+            ...current,
+            [aspect]: { ...current[aspect], ...patch },
+          } as LayoutEditDraft)
+        : current,
+    );
+  };
 
   const overflowMs = canEdit ? speechOverflowMs(draft) : 0;
   const templateLabels =
@@ -1117,6 +1183,192 @@ export function ShotEditorCard({
                       ) : null}
                     </>
                   ) : null}
+                  {layoutDraft && editSpec ? (
+                    <fieldset className="aspect-layout-fieldset">
+                      <legend>画幅微调（另一画幅保持自动布局）</legend>
+                      <div className="aspect-layout-tabs">
+                        <button
+                          type="button"
+                          className={`aspect-layout-tab${layoutAspect === "portrait" ? " is-active" : ""}`}
+                          onClick={() => setLayoutAspect("portrait")}
+                        >
+                          竖版
+                        </button>
+                        <button
+                          type="button"
+                          className={`aspect-layout-tab${layoutAspect === "landscape" ? " is-active" : ""}`}
+                          onClick={() => setLayoutAspect("landscape")}
+                        >
+                          横版
+                        </button>
+                      </div>
+                      {layoutDraft.componentId === "text-animation" ? (
+                        <>
+                          <label className="shot-edit-field">
+                            标题换行（每行一条；各行拼接须等于标题）
+                            <textarea
+                              className="layout-title-lines"
+                              rows={3}
+                              value={layoutDraft[layoutAspect].titleLinesText}
+                              onChange={(event) =>
+                                updateLayoutField(layoutAspect, {
+                                  titleLinesText: event.target.value,
+                                })
+                              }
+                            />
+                          </label>
+                          <label className="shot-edit-field">
+                            字号缩放（0.5–1.3，空 = 自动）
+                            <input
+                              className="layout-title-scale"
+                              type="number"
+                              step="0.05"
+                              min="0.5"
+                              max="1.3"
+                              value={layoutDraft[layoutAspect].titleScale}
+                              onChange={(event) =>
+                                updateLayoutField(layoutAspect, {
+                                  titleScale: event.target.value,
+                                })
+                              }
+                            />
+                          </label>
+                          <label className="shot-edit-field">
+                            垂直位置（-0.25–0.25，正 = 下移，空 = 居中）
+                            <input
+                              className="layout-vertical-offset"
+                              type="number"
+                              step="0.05"
+                              min="-0.25"
+                              max="0.25"
+                              value={layoutDraft[layoutAspect].verticalOffset}
+                              onChange={(event) =>
+                                updateLayoutField(layoutAspect, {
+                                  verticalOffset: event.target.value,
+                                })
+                              }
+                            />
+                          </label>
+                        </>
+                      ) : (
+                        <>
+                          <label className="shot-edit-field">
+                            轴标签间隔（1–点数；首点与末点恒显，空 = 全显）
+                            <input
+                              className="layout-label-step"
+                              type="number"
+                              min="1"
+                              value={layoutDraft[layoutAspect].labelStepText}
+                              onChange={(event) =>
+                                updateLayoutField(layoutAspect, {
+                                  labelStepText: event.target.value,
+                                })
+                              }
+                            />
+                          </label>
+                          <div className="layout-short-labels">
+                            <p className="layout-short-labels-title">
+                              逐项短标签（留空 = 原样；≤12 字）
+                            </p>
+                            {(
+                              (
+                                editSpec.params as {
+                                  points?: Array<{ label?: string }>;
+                                }
+                              ).points ?? []
+                            ).map((point, pointIndex) => (
+                              <label
+                                key={pointIndex}
+                                className="layout-short-label-row"
+                              >
+                                <span>
+                                  {point.label ?? `#${pointIndex + 1}`}
+                                </span>
+                                <input
+                                  className="layout-short-label-input"
+                                  maxLength={12}
+                                  value={
+                                    layoutDraft[layoutAspect].shortLabels[
+                                      pointIndex
+                                    ] ?? ""
+                                  }
+                                  onChange={(event) =>
+                                    updateLayoutField(layoutAspect, {
+                                      shortLabels: {
+                                        ...layoutDraft[layoutAspect]
+                                          .shortLabels,
+                                        [pointIndex]: event.target.value,
+                                      },
+                                    })
+                                  }
+                                />
+                              </label>
+                            ))}
+                          </div>
+                          {(() => {
+                            const preview = previewLineOverride(
+                              layoutDraft[layoutAspect],
+                              (
+                                (editSpec.params as { points?: unknown[] })
+                                  .points ?? []
+                              ).length,
+                            );
+                            const hints = describeLineChartLabels(
+                              editSpec.params as {
+                                points: Array<{
+                                  label?: string;
+                                  value: number;
+                                }>;
+                              },
+                              preview ? { [layoutAspect]: preview } : undefined,
+                              layoutAspect,
+                            );
+                            if (
+                              hints.hidden.length === 0 &&
+                              hints.truncated.length === 0 &&
+                              hints.shortened.length === 0
+                            )
+                              return null;
+                            return (
+                              <div className="layout-label-hints">
+                                {hints.hidden.length > 0 ? (
+                                  <p>
+                                    已隐藏（间隔）：
+                                    {hints.hidden
+                                      .map((item) => item.label)
+                                      .join("、")}
+                                  </p>
+                                ) : null}
+                                {hints.truncated.length > 0 ? (
+                                  <p>
+                                    超长截断：
+                                    {hints.truncated
+                                      .map((item) => `${item.from}→${item.to}`)
+                                      .join("、")}
+                                  </p>
+                                ) : null}
+                                {hints.shortened.length > 0 ? (
+                                  <p>
+                                    已简写：
+                                    {hints.shortened
+                                      .map((item) => `${item.from}→${item.to}`)
+                                      .join("、")}
+                                  </p>
+                                ) : null}
+                              </div>
+                            );
+                          })()}
+                        </>
+                      )}
+                      <p className="aspect-layout-hint">
+                        覆写仅影响所选画幅；清空全部字段 = 回到自动布局。
+                        随「应用修订」一并保存为新的镜头内容版本。
+                      </p>
+                      {layoutError ? (
+                        <p className="layout-edit-error">{layoutError}</p>
+                      ) : null}
+                    </fieldset>
+                  ) : null}
                   {overflowMs > 0 ? (
                     <span className="shot-overflow-note">
                       旁白按语速需{" "}
@@ -1475,6 +1727,30 @@ export function ShotEditorCard({
                   setEditError(error ?? "草稿无效");
                   return;
                 }
+                // 画幅微调并入（2026-10-23）：在最终 spec（含模板/图表链产物）
+                // 上应用 layout 草稿；换模板换家族时静默不并入（草稿已清空，
+                // 此处是兜底）。错误显示在画幅微调区块内，不落库。
+                let reviseSpec: unknown = patch.spec;
+                if (layoutDraft) {
+                  const finalSpec =
+                    (patch.spec as SceneSpec | undefined) ?? editSpec;
+                  if (
+                    finalSpec &&
+                    (finalSpec.componentId === "text-animation" ||
+                      finalSpec.componentId === "line-chart") &&
+                    finalSpec.componentId === layoutDraft.componentId
+                  ) {
+                    const appliedLayout = applyLayoutToSpec(
+                      finalSpec,
+                      layoutDraft,
+                    );
+                    if ("error" in appliedLayout) {
+                      setLayoutError(appliedLayout.error);
+                      return;
+                    }
+                    reviseSpec = appliedLayout.spec;
+                  }
+                }
                 // 零帧时长必须挡在 onRevise 之前：否则下一次渲染
                 // quantizeTimeline 抛 ZeroFrameShotError，整页崩溃丢草稿。
                 const blocked = durationApplyError(durationImpact);
@@ -1489,7 +1765,11 @@ export function ShotEditorCard({
                 setStickError(null);
                 setSketchError(null);
                 setLoadingError(null);
-                const attached = attachDescription(patch, draft.description);
+                setLayoutError(null);
+                const attached = attachDescription(
+                  { ...patch, spec: reviseSpec },
+                  draft.description,
+                );
                 if ("error" in attached) {
                   setEditError(attached.error);
                   return;
@@ -1514,6 +1794,12 @@ export function ShotEditorCard({
                   ),
                 );
                 setEditError(null);
+                setLayoutError(null);
+                setLayoutDraft(
+                  editSpec && layoutEditable
+                    ? layoutDraftFromSpec(editSpec)
+                    : null,
+                );
               }}
             >
               取消
