@@ -361,6 +361,81 @@ console.log(
   `[e2e-candidate-compare] 6 PASS 导出校验：working=#1，2 个版本，lock-changed + audit 留痕，无 approved，v${exported.savedVersion}`,
 );
 
+// ============================== 步骤 7 ==============================
+// 零帧候选必须挡在选用之前：合法项目里加一个 1ms 的非工作候选，选它会把
+// 整片变成不可量化（镜头 1 零帧），UI 必须显示「无法应用：」且文档不变。
+const blockedFixture = makeProject({
+  title: "候选零帧拦截回归",
+  sentence: "回归：零帧候选不得进入工作版本",
+  shots: [
+    makeShot({ order: 0, durationMs: 2000, title: "正常镜头", seed: 501 }),
+    makeShot({ order: 1, durationMs: 2000, title: "正常镜头二", seed: 502 }),
+  ],
+});
+const blockedShot = blockedFixture.shots[0];
+const zeroCandidate = {
+  ...blockedShot.contentVersions[0],
+  versionId: randomUUID(),
+  durationMs: 1,
+  description: "零帧候选拍法",
+  sceneSource: {
+    type: "spec",
+    spec: textSpec({ durationMs: 1, title: "零帧候选", seed: 511 }),
+  },
+};
+blockedShot.contentVersions.push(zeroCandidate);
+blockedShot.events.push({
+  kind: "submitted",
+  versionId: zeroCandidate.versionId,
+  at: CREATED_AT,
+  actor: "ai",
+});
+const blockedFile = writeFixture(blockedFixture);
+await gotoWorkbench("7 零帧候选拦截");
+await page.locator('input[type="file"]').setInputFiles(blockedFile);
+await waitForMessage("已导入", "7 零帧候选拦截");
+const blockedCard = cardAt(0);
+await blockedCard.locator(".shot-compare-toggle").click();
+await expectVisible(
+  blockedCard.locator(".shot-compare-panel"),
+  "7 零帧候选拦截",
+  ".shot-compare-panel",
+);
+const blockedColumns = blockedCard.locator(".shot-compare-column");
+const blockedRightText = await blockedColumns.nth(1).textContent();
+if (!blockedRightText?.includes("不可量化"))
+  fail("7 零帧候选拦截", `零帧候选列未标注不可量化: ${blockedRightText}`);
+await blockedColumns.nth(1).locator(".shot-compare-choose").click();
+await expectVisible(
+  blockedCard.locator(".shot-edit-error"),
+  "7 零帧候选拦截",
+  ".shot-edit-error",
+);
+const blockedError = await blockedCard
+  .locator(".shot-edit-error")
+  .textContent();
+if (!blockedError?.startsWith("无法应用："))
+  fail("7 零帧候选拦截", `错误文案不以「无法应用：」开头: ${blockedError}`);
+const blockedMessage = await page.locator(".editor-message").textContent();
+if (blockedMessage?.includes("已回滚到所选版本"))
+  fail("7 零帧候选拦截", `零帧候选仍被落库: ${blockedMessage}`);
+const blockedExport = path.join(OUT_DIR, "blocked.video-project.json");
+const [blockedDownload] = await Promise.all([
+  page.waitForEvent("download", { timeout: 15_000 }),
+  page.click(".editor-export"),
+]);
+await blockedDownload.saveAs(blockedExport);
+const blockedExported = JSON.parse(readFileSync(blockedExport, "utf8"));
+validateVideoProject(blockedExported);
+const blockedWorking = blockedExported.shots[0].contentVersions.find(
+  (version) => version.versionId === blockedExported.shots[0].workingVersionId,
+);
+if (blockedWorking?.durationMs !== 2000)
+  fail("7 零帧候选拦截", `工作版本时长 ${blockedWorking?.durationMs} ≠ 2000`);
+console.log(
+  `[e2e-candidate-compare] 7 PASS 零帧候选被拦：${blockedError?.trim()}（工作版本仍 2000ms）`,
+);
+
 // ============================== 收尾断言 ==============================
 await page.screenshot({
   path: path.join(OUT_DIR, "candidate-compare.png"),
