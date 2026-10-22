@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "0e7123bc-905d-4e49-86c0-56cd9b924ccb",
+  "currentVersionId": "57df3d5a-3f69-4929-9f34-39b904eab72d",
+  "versions": [
+    {
+      "versionId": "57df3d5a-3f69-4929-9f34-39b904eab72d",
+      "createdAt": "2026-10-22T23:37:48.260Z",
+      "name": "深蓝科学",
+      "palette": {
+        "background": "#101f34",
+        "foreground": "#f3f5f7",
+        "secondary": "#b4d8e4",
+        "accent": "#f5b652",
+        "object": "#42a5a0"
+      },
+      "fontFamily": "NotoSansSC",
+      "lightingPreset": "orbit3d-fixed-soft-studio"
+    }
+  ]
+}

@@ -1,11 +1,11 @@
 {
   "pass": true,
-  "projectId": "0df3a542-cfae-4143-b956-4e7ba7a72a64",
+  "projectId": "18d4c8c8-14fa-4f46-8b4f-d412ef3875dd",
   "shotIds": [
-    "d07cac1b-c025-4444-9e1d-75b8b89767c8",
-    "018c8337-1962-4d9f-b6fb-a22ed11eab66",
-    "67963e2c-a07c-4e04-a8dc-207e81165aa4",
-    "cb43e84f-3d86-4762-9fed-ec8c81a26185"
+    "a9d178eb-b888-47fc-a6de-72b28cb4d117",
+    "6f2e048f-32f8-4252-81e7-872aa2691638",
+    "b391db37-a570-48a3-8c3e-7ee9a6c4f4f6",
+    "570bd045-dfe4-413b-8a3f-f553bd9ef00b"
   ],
   "totalFrames": 216,
   "appendedRenderRecordsPerVariant": 8,
@@ -46,7 +46,7 @@
         "fps": "24/1",
         "durationSeconds": 9,
         "frames": 216,
-        "sha256": "2541f90f2956dfa7a9b8e0d1419ee1f89fd57cae0a0fe08d6821979e1176daaf",
+        "sha256": "64c4bc4715614c14a94988c2a945715c6405d01b42f1b1ca77cfd46ea2555caa",
         "fullDecode": "pass"
       }
     }

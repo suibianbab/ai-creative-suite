@@ -84,7 +84,10 @@ async function runSample(sampleId, position) {
       .click();
     await page.locator(".shot-card").first().waitFor({ timeout: 45_000 });
     const count = await page.locator(".shot-card").count();
-    assert.equal(count, sampleId === "product" ? 5 : 4);
+    assert.equal(
+      count,
+      sampleId === "product" ? 5 : sampleId === "stem" ? 7 : 4,
+    );
     steps.push("gallery-create");
     await page.screenshot({
       path: path.join(OUT, `${sampleId}-created.png`),
@@ -95,7 +98,9 @@ async function runSample(sampleId, position) {
       page,
       0,
       ".shot-title-input",
-      `${sampleId.toUpperCase()} 自定义标题`,
+      sampleId === "stem"
+        ? "水的旅程：科学解说"
+        : `${sampleId.toUpperCase()} 自定义标题`,
     );
     if (sampleId === "stem")
       await editShot(page, 1, ".flow-title-input", "水循环：蒸发、凝结、降水");
@@ -143,7 +148,11 @@ async function runSample(sampleId, position) {
       .waitFor({ timeout: 20_000 });
     const before = await exportProject(page, `${sampleId}-edited`);
     assert(
-      JSON.stringify(before).includes(`${sampleId.toUpperCase()} 自定义标题`),
+      JSON.stringify(before).includes(
+        sampleId === "stem"
+          ? "水的旅程：科学解说"
+          : `${sampleId.toUpperCase()} 自定义标题`,
+      ),
     );
     if (sampleId === "product") {
       assert.equal(before.styleBibleRef, undefined);
@@ -157,6 +166,13 @@ async function runSample(sampleId, position) {
       );
     } else {
       assert(before.styleBibleRef);
+      if (sampleId === "stem") {
+        const [bibleDownload] = await Promise.all([
+          page.waitForEvent("download"),
+          page.getByRole("button", { name: "导出风格规范 JSON" }).click(),
+        ]);
+        await bibleDownload.saveAs(path.join(OUT, "stem.style-bible.json"));
+      }
     }
     steps.push("edited-and-saved");
 
@@ -166,13 +182,31 @@ async function runSample(sampleId, position) {
     const reopened = await exportProject(page, `${sampleId}-reopened`);
     assert.equal(reopened.id, before.id);
     assert(
-      JSON.stringify(reopened).includes(`${sampleId.toUpperCase()} 自定义标题`),
+      JSON.stringify(reopened).includes(
+        sampleId === "stem"
+          ? "水的旅程：科学解说"
+          : `${sampleId.toUpperCase()} 自定义标题`,
+      ),
     );
     steps.push("reopened");
     await page.screenshot({
       path: path.join(OUT, `${sampleId}-reopened.png`),
       fullPage: true,
     });
+    if (sampleId === "stem") {
+      const preview = page.locator(".piece-preview");
+      for (const [label, viewBox] of [
+        ["竖版", "0 0 720 1280"],
+        ["横版", "0 0 1280 720"],
+      ]) {
+        await preview.getByRole("button", { name: label }).click();
+        assert.equal(
+          await preview.locator(".preview-canvas").getAttribute("viewBox"),
+          viewBox,
+        );
+      }
+      steps.push("dual-aspect-previewed");
+    }
 
     const renderResponse = page.waitForResponse(
       (response) =>

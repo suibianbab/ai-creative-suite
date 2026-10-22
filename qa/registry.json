@@ -1465,6 +1465,25 @@
       ]
     },
     {
+      "id": "VID-037",
+      "tier": "integration",
+      "title": "Video Studio narrated 26-second STEM sample dual-aspect delivery audit",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/audit-stem-sample.mjs"],
+      "requiresPorts": [],
+      "requiresFiles": [
+        "artifacts/video-studio-stem-sample-final-2026-10-23/stem.video-project.json",
+        "artifacts/video-studio-stem-sample-final-2026-10-23/stem.style-bible.json",
+        "artifacts/video-studio-stem-sample-final-2026-10-23/render/landscape.mp4",
+        "artifacts/video-studio-stem-sample-final-2026-10-23/render/portrait.mp4"
+      ],
+      "checks": [
+        "The retained editable project has seven narrated shots, a pinned Style Bible, and a 20–30 second quantized timeline",
+        "Both MP4 outputs have the expected aspect dimensions, AAC audio, seven subtitle entries and fourteen persisted render records",
+        "The evidence audit is free of TTS calls; visual quality is judged separately in the shot-by-shot report"
+      ]
+    },
+    {
       "id": "VID-025",
       "tier": "integration",
       "title": "Video Studio P3-B three 镜头预烘焙出片与确定性",

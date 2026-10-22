@@ -29,6 +29,7 @@ type FlowDiagramParams = {
   boxColor: string;
   arrowColor: string;
   textColor: string;
+  nodeTextColor?: string;
   enterMs: number; // 200..6000
   drawMs: number; // 200..6000
 };
@@ -143,6 +144,9 @@ function validateParams(value: unknown): FlowDiagramParams {
       throw new Error(`flow-diagram params.${key} 必须是 #rrggbb`);
     }
   }
+  if (value.nodeTextColor !== undefined && !isHexColor(value.nodeTextColor)) {
+    throw new Error("flow-diagram params.nodeTextColor 必须是 #rrggbb");
+  }
   for (const key of ["enterMs", "drawMs"] as const) {
     const v = value[key];
     if (!Number.isInteger(v) || (v as number) < 200 || (v as number) > 6000) {
@@ -206,7 +210,7 @@ function render(spec: SceneSpecLike, ctx: FrameContext): SvgNode {
             x: 0,
             y: fontSize * 0.36,
             "font-size": fontSize,
-            fill: params.textColor,
+            fill: params.nodeTextColor ?? params.textColor,
             "text-anchor": "middle",
           },
           text: node.label,

@@ -1,0 +1,873 @@
+{
+  "schemaVersion": 1,
+  "id": "85277ef6-bc0f-465f-8146-786b0f0643df",
+  "title": "水循环 · STEM 解说",
+  "brief": {
+    "sentence": "样片库：水循环 · STEM 解说。这是可编辑起点，请在发布前替换示例文案和素材。",
+    "aspectTargets": [
+      "landscape",
+      "portrait"
+    ]
+  },
+  "shots": [
+    {
+      "shotId": "d0882a65-499a-4c03-98c6-b5a0a8489c84",
+      "order": 0,
+      "locked": false,
+      "workingVersionId": "5993c1c3-48b8-4525-ac74-8d69ebf1b198",
+      "contentVersions": [
+        {
+          "versionId": "4ffbb38d-d4b6-4723-95fb-10a8d91428f9",
+          "createdAt": "2026-10-22T23:37:48.260Z",
+          "durationMs": 3000,
+          "description": "问题开场：一滴水会走过哪里",
+          "narrationText": "一滴水，会走过哪里？",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 3000,
+              "seed": 4101,
+              "background": "#101f34",
+              "params": {
+                "title": "一滴水的旅程",
+                "subtitle": "水循环是怎样发生的？",
+                "titleColor": "#f3f5f7",
+                "subtitleColor": "#b4d8e4",
+                "entrance": "fade-up",
+                "enterMs": 450
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        },
+        {
+          "versionId": "5993c1c3-48b8-4525-ac74-8d69ebf1b198",
+          "createdAt": "2026-10-22T23:37:48.612Z",
+          "durationMs": 3000,
+          "description": "问题开场：一滴水会走过哪里",
+          "narrationText": "一滴水，会走过哪里？",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 3000,
+              "seed": 4101,
+              "background": "#101f34",
+              "params": {
+                "title": "水的旅程：科学解说",
+                "titleColor": "#f3f5f7",
+                "subtitleColor": "#b4d8e4",
+                "entrance": "fade-up",
+                "enterMs": 450,
+                "subtitle": "水循环是怎样发生的？"
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "human-edit",
+            "engineVersion": "1",
+            "parentVersionId": "4ffbb38d-d4b6-4723-95fb-10a8d91428f9"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "4ffbb38d-d4b6-4723-95fb-10a8d91428f9",
+          "at": "2026-10-22T23:37:48.260Z",
+          "actor": "human"
+        },
+        {
+          "kind": "submitted",
+          "versionId": "5993c1c3-48b8-4525-ac74-8d69ebf1b198",
+          "at": "2026-10-22T23:37:48.612Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "dc6ea591-5205-440f-8b3f-00a7b253a5c5",
+      "order": 1,
+      "locked": false,
+      "workingVersionId": "c36dacab-7c3b-4cf8-ad00-a7415aabd247",
+      "contentVersions": [
+        {
+          "versionId": "464c5c5a-fbda-4826-b78f-6fca17b2eaae",
+          "createdAt": "2026-10-22T23:37:48.260Z",
+          "durationMs": 4000,
+          "description": "总览：水在海洋、天空和陆地间循环",
+          "narrationText": "水在海洋、天空和陆地间不停移动。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "flow-steps",
+              "componentVersion": 1,
+              "durationMs": 4000,
+              "seed": 4102,
+              "background": "#101f34",
+              "params": {
+                "title": "水循环的四个阶段",
+                "steps": [
+                  {
+                    "label": "蒸发"
+                  },
+                  {
+                    "label": "凝结"
+                  },
+                  {
+                    "label": "降水"
+                  },
+                  {
+                    "label": "汇流"
+                  }
+                ],
+                "direction": "horizontal",
+                "boxColor": "#b4d8e4",
+                "arrowColor": "#f5b652",
+                "textColor": "#f3f5f7",
+                "enterMs": 1700
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        },
+        {
+          "versionId": "8faa71c2-d954-44fc-9cf1-290eb602701c",
+          "createdAt": "2026-10-22T23:37:48.759Z",
+          "durationMs": 4000,
+          "description": "总览：水在海洋、天空和陆地间循环",
+          "narrationText": "水在海洋、天空和陆地间不停移动。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "flow-steps",
+              "componentVersion": 1,
+              "durationMs": 4000,
+              "seed": 4102,
+              "background": "#101f34",
+              "params": {
+                "title": "水循环：蒸发、凝结、降水",
+                "steps": [
+                  {
+                    "label": "蒸发"
+                  },
+                  {
+                    "label": "凝结"
+                  },
+                  {
+                    "label": "降水"
+                  },
+                  {
+                    "label": "汇流"
+                  }
+                ],
+                "direction": "horizontal",
+                "boxColor": "#b4d8e4",
+                "arrowColor": "#f5b652",
+                "textColor": "#f3f5f7",
+                "enterMs": 1700
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "human-edit",
+            "engineVersion": "1",
+            "parentVersionId": "464c5c5a-fbda-4826-b78f-6fca17b2eaae"
+          }
+        },
+        {
+          "versionId": "c36dacab-7c3b-4cf8-ad00-a7415aabd247",
+          "createdAt": "2026-10-22T23:40:32.867Z",
+          "durationMs": 4010,
+          "description": "总览：水在海洋、天空和陆地间循环（时长对齐 4010ms）",
+          "narrationText": "水在海洋、天空和陆地间不停移动。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "flow-steps",
+              "componentVersion": 1,
+              "durationMs": 4010,
+              "seed": 4102,
+              "background": "#101f34",
+              "params": {
+                "title": "水循环：蒸发、凝结、降水",
+                "steps": [
+                  {
+                    "label": "蒸发"
+                  },
+                  {
+                    "label": "凝结"
+                  },
+                  {
+                    "label": "降水"
+                  },
+                  {
+                    "label": "汇流"
+                  }
+                ],
+                "direction": "horizontal",
+                "boxColor": "#b4d8e4",
+                "arrowColor": "#f5b652",
+                "textColor": "#f3f5f7",
+                "enterMs": 1700
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "tts-duration-align",
+            "engineVersion": "1",
+            "parentVersionId": "8faa71c2-d954-44fc-9cf1-290eb602701c"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "464c5c5a-fbda-4826-b78f-6fca17b2eaae",
+          "at": "2026-10-22T23:37:48.260Z",
+          "actor": "human"
+        },
+        {
+          "kind": "submitted",
+          "versionId": "8faa71c2-d954-44fc-9cf1-290eb602701c",
+          "at": "2026-10-22T23:37:48.759Z",
+          "actor": "human"
+        },
+        {
+          "kind": "submitted",
+          "versionId": "c36dacab-7c3b-4cf8-ad00-a7415aabd247",
+          "at": "2026-10-22T23:40:32.867Z",
+          "actor": "ai"
+        }
+      ]
+    },
+    {
+      "shotId": "5a8bbea5-1b02-4673-b365-10d4ec7835eb",
+      "order": 2,
+      "locked": false,
+      "workingVersionId": "f39398f4-8a8b-493a-87ac-0366deb33cd0",
+      "contentVersions": [
+        {
+          "versionId": "f39398f4-8a8b-493a-87ac-0366deb33cd0",
+          "createdAt": "2026-10-22T23:37:48.260Z",
+          "durationMs": 4000,
+          "description": "蒸发：阳光加热海面，液态水变为水蒸气",
+          "narrationText": "阳光加热海面，水变成水蒸气。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "sketch-note",
+              "componentVersion": 1,
+              "durationMs": 4000,
+              "seed": 4103,
+              "background": "#101f34",
+              "params": {
+                "title": "第一步 · 蒸发",
+                "items": [
+                  {
+                    "text": "阳光加热海面",
+                    "emphasis": "下划线"
+                  },
+                  {
+                    "text": "液态水变成水蒸气",
+                    "emphasis": "圈"
+                  }
+                ],
+                "inkColor": "#f3f5f7",
+                "accentColor": "#f5b652",
+                "writeMs": 900,
+                "drawMs": 700,
+                "staggerMs": 500
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "f39398f4-8a8b-493a-87ac-0366deb33cd0",
+          "at": "2026-10-22T23:37:48.260Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "f70a26b9-1e28-44c1-9453-9f4e6c8af9d4",
+      "order": 3,
+      "locked": false,
+      "workingVersionId": "fa60b98e-c336-4ae2-aea4-aafb8fdba0c6",
+      "contentVersions": [
+        {
+          "versionId": "fa60b98e-c336-4ae2-aea4-aafb8fdba0c6",
+          "createdAt": "2026-10-22T23:37:48.260Z",
+          "durationMs": 4000,
+          "description": "凝结：上升的水蒸气遇冷形成云",
+          "narrationText": "水蒸气上升，遇冷凝结成云。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "sketch-note",
+              "componentVersion": 1,
+              "durationMs": 4000,
+              "seed": 4104,
+              "background": "#101f34",
+              "params": {
+                "title": "第二步 · 凝结",
+                "items": [
+                  {
+                    "text": "水蒸气向上升",
+                    "emphasis": "下划线"
+                  },
+                  {
+                    "text": "遇冷凝结成云",
+                    "emphasis": "圈"
+                  }
+                ],
+                "inkColor": "#f3f5f7",
+                "accentColor": "#f5b652",
+                "writeMs": 900,
+                "drawMs": 700,
+                "staggerMs": 500
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "fa60b98e-c336-4ae2-aea4-aafb8fdba0c6",
+          "at": "2026-10-22T23:37:48.260Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "865b8644-e315-4052-ba21-b0dda7058f38",
+      "order": 4,
+      "locked": false,
+      "workingVersionId": "17524e81-4543-42d4-9a98-8626f993564a",
+      "contentVersions": [
+        {
+          "versionId": "17524e81-4543-42d4-9a98-8626f993564a",
+          "createdAt": "2026-10-22T23:37:48.260Z",
+          "durationMs": 4000,
+          "description": "降水：云中水滴聚集并落下",
+          "narrationText": "云中水滴聚集，落下形成降水。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "line-drawing",
+              "componentVersion": 1,
+              "durationMs": 4000,
+              "seed": 4105,
+              "background": "#101f34",
+              "params": {
+                "paths": [
+                  "M 280 380 C 255 380 245 360 253 341 C 258 324 275 316 292 318 C 303 281 339 259 378 267 C 404 232 457 226 486 252 C 519 250 547 274 551 307 C 578 310 598 331 598 355 C 598 372 584 385 563 385 Z",
+                  "M 327 440 L 302 508 M 406 440 L 381 508 M 485 440 L 460 508 M 560 440 L 535 508",
+                  "M 260 603 C 348 580 444 580 532 603 C 610 624 689 624 766 603"
+                ],
+                "strokeColor": "#42a5a0",
+                "strokeWidth": 12,
+                "revealMs": 2100
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "17524e81-4543-42d4-9a98-8626f993564a",
+          "at": "2026-10-22T23:37:48.260Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "499ed8aa-da55-4a52-8a01-a4492b960caa",
+      "order": 5,
+      "locked": false,
+      "workingVersionId": "a368009a-02f4-4257-93bc-a224410dbfec",
+      "contentVersions": [
+        {
+          "versionId": "a368009a-02f4-4257-93bc-a224410dbfec",
+          "createdAt": "2026-10-22T23:37:48.260Z",
+          "durationMs": 4000,
+          "description": "汇流：雨水进入河流并回到海洋",
+          "narrationText": "雨水汇入河流，最终回到海洋。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "flow-diagram",
+              "componentVersion": 1,
+              "durationMs": 4000,
+              "seed": 4106,
+              "background": "#101f34",
+              "params": {
+                "title": "第三、四步 · 降水与汇流",
+                "nodes": [
+                  {
+                    "label": "降水",
+                    "x": 180,
+                    "y": 480,
+                    "kind": "box"
+                  },
+                  {
+                    "label": "河流",
+                    "x": 500,
+                    "y": 480,
+                    "kind": "box"
+                  },
+                  {
+                    "label": "海洋",
+                    "x": 820,
+                    "y": 480,
+                    "kind": "box"
+                  }
+                ],
+                "edges": [
+                  {
+                    "from": "降水",
+                    "to": "河流"
+                  },
+                  {
+                    "from": "河流",
+                    "to": "海洋"
+                  }
+                ],
+                "boxColor": "#b4d8e4",
+                "arrowColor": "#f5b652",
+                "textColor": "#f3f5f7",
+                "nodeTextColor": "#102033",
+                "enterMs": 800,
+                "drawMs": 1600
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "a368009a-02f4-4257-93bc-a224410dbfec",
+          "at": "2026-10-22T23:37:48.260Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "8146d208-0d68-488d-a145-45a9c672960d",
+      "order": 6,
+      "locked": false,
+      "workingVersionId": "1033a4e0-7933-4827-8750-1612938ad976",
+      "contentVersions": [
+        {
+          "versionId": "1033a4e0-7933-4827-8750-1612938ad976",
+          "createdAt": "2026-10-22T23:37:48.260Z",
+          "durationMs": 3000,
+          "description": "结语：点明水循环并邀请继续探索",
+          "narrationText": "这，就是水循环。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 3000,
+              "seed": 4107,
+              "background": "#101f34",
+              "params": {
+                "title": "水，循环不息",
+                "subtitle": "四步循环，生生不息",
+                "titleColor": "#f3f5f7",
+                "subtitleColor": "#b4d8e4",
+                "entrance": "fade-up",
+                "enterMs": 450
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "1033a4e0-7933-4827-8750-1612938ad976",
+          "at": "2026-10-22T23:37:48.260Z",
+          "actor": "human"
+        }
+      ]
+    }
+  ],
+  "renderRecords": [
+    {
+      "renderId": "ad7c9780-b6e5-48f7-8c18-e1711f980849",
+      "versionId": "5993c1c3-48b8-4525-ac74-8d69ebf1b198",
+      "contentDigest": "16a979d34e5555ec66ac16d5d62ca2f9ee3bfb9394388f4b96b924ba6ccaf6d7",
+      "engineId": "remotion",
+      "engineVersion": "7",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "0e7123bc-905d-4e49-86c0-56cd9b924ccb",
+        "versionId": "57df3d5a-3f69-4929-9f34-39b904eab72d",
+        "digest": "8a247940e670b70dd4b273a0ba82413eacb794fdcd6f444b2726f6d762049fbb"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "1de0e9b4-e3dd-4e9c-840f-fedef631fc5f",
+      "versionId": "c36dacab-7c3b-4cf8-ad00-a7415aabd247",
+      "contentDigest": "55f3d601f86d782654f2611c58f49dd8cf1adf5a2b37690ffa33533480cc61cf",
+      "engineId": "remotion",
+      "engineVersion": "7",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 96,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "0e7123bc-905d-4e49-86c0-56cd9b924ccb",
+        "versionId": "57df3d5a-3f69-4929-9f34-39b904eab72d",
+        "digest": "8a247940e670b70dd4b273a0ba82413eacb794fdcd6f444b2726f6d762049fbb"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "060ef78d-d41e-44f0-9e96-a22736fe994a",
+      "versionId": "f39398f4-8a8b-493a-87ac-0366deb33cd0",
+      "contentDigest": "b5d28fca513e5eeab42a8c709c72c34fa2290740260b6a9b1fbbceba0841f3b4",
+      "engineId": "remotion",
+      "engineVersion": "7",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 96,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "0e7123bc-905d-4e49-86c0-56cd9b924ccb",
+        "versionId": "57df3d5a-3f69-4929-9f34-39b904eab72d",
+        "digest": "8a247940e670b70dd4b273a0ba82413eacb794fdcd6f444b2726f6d762049fbb"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "2309f222-4c03-41ea-ad1c-8c6fe8bee378",
+      "versionId": "fa60b98e-c336-4ae2-aea4-aafb8fdba0c6",
+      "contentDigest": "0605760367d93698e7e663b86417fd7f2eae093643f97a81217703f57c46029f",
+      "engineId": "remotion",
+      "engineVersion": "7",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 96,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "0e7123bc-905d-4e49-86c0-56cd9b924ccb",
+        "versionId": "57df3d5a-3f69-4929-9f34-39b904eab72d",
+        "digest": "8a247940e670b70dd4b273a0ba82413eacb794fdcd6f444b2726f6d762049fbb"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "01915599-c9a6-4dae-b0b1-696eab36e619",
+      "versionId": "17524e81-4543-42d4-9a98-8626f993564a",
+      "contentDigest": "d5da2f68b13c7459cffe2725a9a62faaea11d2962f74bbd2d9d05b86b01894f2",
+      "engineId": "remotion",
+      "engineVersion": "7",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 96,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "0e7123bc-905d-4e49-86c0-56cd9b924ccb",
+        "versionId": "57df3d5a-3f69-4929-9f34-39b904eab72d",
+        "digest": "8a247940e670b70dd4b273a0ba82413eacb794fdcd6f444b2726f6d762049fbb"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "fd5cff8f-09fa-4f6a-a9bf-aabd44692ef1",
+      "versionId": "a368009a-02f4-4257-93bc-a224410dbfec",
+      "contentDigest": "22d17253a2c3be467191faee93951646669a0ece1c6e9b01ac102fbde5d24331",
+      "engineId": "remotion",
+      "engineVersion": "7",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 96,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "0e7123bc-905d-4e49-86c0-56cd9b924ccb",
+        "versionId": "57df3d5a-3f69-4929-9f34-39b904eab72d",
+        "digest": "8a247940e670b70dd4b273a0ba82413eacb794fdcd6f444b2726f6d762049fbb"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "422ca36b-e8db-46f0-bcf2-3441caf77da8",
+      "versionId": "1033a4e0-7933-4827-8750-1612938ad976",
+      "contentDigest": "5a6b1679bd24f35f726e352dcd89edc3e5e5900abc3e250d18ae6c087e6010ac",
+      "engineId": "remotion",
+      "engineVersion": "7",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "0e7123bc-905d-4e49-86c0-56cd9b924ccb",
+        "versionId": "57df3d5a-3f69-4929-9f34-39b904eab72d",
+        "digest": "8a247940e670b70dd4b273a0ba82413eacb794fdcd6f444b2726f6d762049fbb"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "72119152-97de-4acd-92a9-b7730d0a1e67",
+      "versionId": "5993c1c3-48b8-4525-ac74-8d69ebf1b198",
+      "contentDigest": "16a979d34e5555ec66ac16d5d62ca2f9ee3bfb9394388f4b96b924ba6ccaf6d7",
+      "engineId": "remotion",
+      "engineVersion": "7",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "0e7123bc-905d-4e49-86c0-56cd9b924ccb",
+        "versionId": "57df3d5a-3f69-4929-9f34-39b904eab72d",
+        "digest": "8a247940e670b70dd4b273a0ba82413eacb794fdcd6f444b2726f6d762049fbb"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    },
+    {
+      "renderId": "622f7013-d15f-4719-b9cf-f7921d53a9f4",
+      "versionId": "c36dacab-7c3b-4cf8-ad00-a7415aabd247",
+      "contentDigest": "55f3d601f86d782654f2611c58f49dd8cf1adf5a2b37690ffa33533480cc61cf",
+      "engineId": "remotion",
+      "engineVersion": "7",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 96,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "0e7123bc-905d-4e49-86c0-56cd9b924ccb",
+        "versionId": "57df3d5a-3f69-4929-9f34-39b904eab72d",
+        "digest": "8a247940e670b70dd4b273a0ba82413eacb794fdcd6f444b2726f6d762049fbb"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    },
+    {
+      "renderId": "7c0b8fc1-0261-42d9-9333-12a8c697fc05",
+      "versionId": "f39398f4-8a8b-493a-87ac-0366deb33cd0",
+      "contentDigest": "b5d28fca513e5eeab42a8c709c72c34fa2290740260b6a9b1fbbceba0841f3b4",
+      "engineId": "remotion",
+      "engineVersion": "7",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 96,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "0e7123bc-905d-4e49-86c0-56cd9b924ccb",
+        "versionId": "57df3d5a-3f69-4929-9f34-39b904eab72d",
+        "digest": "8a247940e670b70dd4b273a0ba82413eacb794fdcd6f444b2726f6d762049fbb"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    },
+    {
+      "renderId": "7204605f-1de5-4daf-b14e-bc8198728183",
+      "versionId": "fa60b98e-c336-4ae2-aea4-aafb8fdba0c6",
+      "contentDigest": "0605760367d93698e7e663b86417fd7f2eae093643f97a81217703f57c46029f",
+      "engineId": "remotion",
+      "engineVersion": "7",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 96,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "0e7123bc-905d-4e49-86c0-56cd9b924ccb",
+        "versionId": "57df3d5a-3f69-4929-9f34-39b904eab72d",
+        "digest": "8a247940e670b70dd4b273a0ba82413eacb794fdcd6f444b2726f6d762049fbb"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    },
+    {
+      "renderId": "2048e6ee-2b4e-4198-80d2-7f8f66343d70",
+      "versionId": "17524e81-4543-42d4-9a98-8626f993564a",
+      "contentDigest": "d5da2f68b13c7459cffe2725a9a62faaea11d2962f74bbd2d9d05b86b01894f2",
+      "engineId": "remotion",
+      "engineVersion": "7",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 96,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "0e7123bc-905d-4e49-86c0-56cd9b924ccb",
+        "versionId": "57df3d5a-3f69-4929-9f34-39b904eab72d",
+        "digest": "8a247940e670b70dd4b273a0ba82413eacb794fdcd6f444b2726f6d762049fbb"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    },
+    {
+      "renderId": "0d698073-d3bd-4323-9c71-2df97ab5c057",
+      "versionId": "a368009a-02f4-4257-93bc-a224410dbfec",
+      "contentDigest": "22d17253a2c3be467191faee93951646669a0ece1c6e9b01ac102fbde5d24331",
+      "engineId": "remotion",
+      "engineVersion": "7",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 96,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "0e7123bc-905d-4e49-86c0-56cd9b924ccb",
+        "versionId": "57df3d5a-3f69-4929-9f34-39b904eab72d",
+        "digest": "8a247940e670b70dd4b273a0ba82413eacb794fdcd6f444b2726f6d762049fbb"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    },
+    {
+      "renderId": "e099e690-7f56-4b25-9738-d3894d410656",
+      "versionId": "1033a4e0-7933-4827-8750-1612938ad976",
+      "contentDigest": "5a6b1679bd24f35f726e352dcd89edc3e5e5900abc3e250d18ae6c087e6010ac",
+      "engineId": "remotion",
+      "engineVersion": "7",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "0e7123bc-905d-4e49-86c0-56cd9b924ccb",
+        "versionId": "57df3d5a-3f69-4929-9f34-39b904eab72d",
+        "digest": "8a247940e670b70dd4b273a0ba82413eacb794fdcd6f444b2726f6d762049fbb"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    }
+  ],
+  "deliveries": [],
+  "savedVersion": 5,
+  "styleBibleRef": {
+    "bibleId": "0e7123bc-905d-4e49-86c0-56cd9b924ccb",
+    "versionId": "57df3d5a-3f69-4929-9f34-39b904eab72d",
+    "digest": "8a247940e670b70dd4b273a0ba82413eacb794fdcd6f444b2726f6d762049fbb"
+  }
+}

@@ -303,3 +303,26 @@ test("纯函数：同 spec 同帧双调 deepEqual", () => {
     flowDiagram.render(s, makeCtx({ frame: 13 })),
   );
 });
+
+test("节点字色可单独指定，旧 spec 仍沿用 textColor", () => {
+  const oldNode = flowDiagram.render(specWith(BASE) as never, makeCtx());
+  const newParams = { ...BASE, nodeTextColor: "#102033" };
+  flowDiagram.validateParams(newParams);
+  const newNode = flowDiagram.render(specWith(newParams) as never, makeCtx());
+  assert.equal(
+    collect(oldNode, "text").find((n) => n.text === "甲")?.attrs.fill,
+    BASE.textColor,
+  );
+  assert.equal(
+    collect(newNode, "text").find((n) => n.text === "甲")?.attrs.fill,
+    "#102033",
+  );
+  assert.equal(
+    collect(newNode, "text").find((n) => n.text === BASE.title)?.attrs.fill,
+    BASE.textColor,
+  );
+  assert.throws(
+    () => flowDiagram.validateParams({ ...BASE, nodeTextColor: "dark" }),
+    /nodeTextColor/,
+  );
+});

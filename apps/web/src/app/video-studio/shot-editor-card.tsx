@@ -16,6 +16,7 @@ import {
   layoutDraftFromSpec,
   layoutMergeDecision,
   previewLineOverride,
+  withoutLayoutForEdit,
 } from "./aspect-layout-edit";
 import {
   type CandidateSummary,
@@ -1588,10 +1589,10 @@ export function ShotEditorCard({
                 // 时长 + 图表/地图/流程/火柴人/手绘/加载数据——选中模板时已
                 // 预填该模板默认值）一次应用一并落库，不静默丢弃（终评 I1
                 // 合并语义）。
-                let baseSpec = editSpec;
+                let baseSpec = withoutLayoutForEdit(editSpec);
                 if (pendingTemplateId) {
                   const applied = resolveAnyTemplate(
-                    editSpec,
+                    baseSpec,
                     pendingTemplateId,
                   );
                   if (applied.error || !applied.spec) {

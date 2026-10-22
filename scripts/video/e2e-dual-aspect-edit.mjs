@@ -143,7 +143,12 @@ try {
 
   await chartShot.locator(".shot-edit-toggle").click();
   await chartShot.locator(".layout-label-step").fill("2");
-  await chartShot.locator(".layout-short-label-input").first().fill("Q1");
+  for (const index of [0, 2, 4, 6, 8, 11]) {
+    await chartShot
+      .locator(".layout-short-label-input")
+      .nth(index)
+      .fill(`Q${index + 1}`);
+  }
   const hints = await chartShot.locator(".layout-label-hints").innerText();
   assert.match(hints, /已隐藏/);
   assert.match(hints, /截断|已简写/);
@@ -163,9 +168,7 @@ try {
   // 上做——图表镜头有「选模板即预填数据草稿」的既有语义，还原下拉不复位
   // 草稿，不适合钉这条断言（见 ledger Ruling）。
   await textShot.locator(".shot-edit-toggle").click();
-  await textShot
-    .locator(".chart-template-select")
-    .selectOption("line-trend-8");
+  await textShot.locator(".chart-template-select").selectOption("line-trend-8");
   await textShot.locator(".chart-template-select").selectOption("");
   await textShot
     .locator(".shot-description-input")
@@ -194,9 +197,13 @@ try {
   assert.equal(textSpec.layout.landscape, undefined, "横版无覆写");
   const chartSpec = workingSpecOf(1);
   assert.equal(chartSpec.layout.portrait.labelStep, 2);
-  assert.deepEqual(chartSpec.layout.portrait.shortLabels, [
-    { index: 0, text: "Q1" },
-  ]);
+  assert.deepEqual(
+    chartSpec.layout.portrait.shortLabels,
+    [0, 2, 4, 6, 8, 11].map((index) => ({
+      index,
+      text: `Q${index + 1}`,
+    })),
+  );
 
   // 6) 刷新重开：覆写随内容版本持久化
   await page.reload({ waitUntil: "domcontentloaded" });
@@ -212,7 +219,7 @@ try {
     "验收标题",
   ]);
 
-  // 7) SVG 级独立生效：竖版两行/横版单行；标签竖版 7 个含 Q1、横版 12 个
+  // 7) SVG 级独立生效：竖版两行/横版单行；标签竖版 6 个含 Q1、横版 12 个
   const svgTexts = () =>
     page.evaluate(() =>
       [...document.querySelectorAll(".piece-preview .preview-canvas text")].map(
@@ -234,11 +241,11 @@ try {
 
   await parkPiecePreview(1, "portrait");
   texts = await svgTexts();
-  const labels = texts.filter((text) => text.includes("季度") || text === "Q1");
+  const labels = texts.filter((text) => /^Q\d+$/.test(text));
   assert.equal(
     labels.length,
-    7,
-    `竖版标签应 7 个（间隔 2 + 末点），实得 ${labels.length}`,
+    6,
+    `竖版标签应 6 个（末点优先、过近采样点让位），实得 ${labels.length}`,
   );
   assert.ok(labels.includes("Q1"), "短标签 Q1 生效");
   await parkPiecePreview(1, "landscape");

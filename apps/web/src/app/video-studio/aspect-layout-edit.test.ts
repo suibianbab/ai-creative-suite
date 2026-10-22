@@ -7,6 +7,7 @@ import {
   layoutDraftFromSpec,
   layoutMergeDecision,
   previewLineOverride,
+  withoutLayoutForEdit,
 } from "./aspect-layout-edit.js";
 import { buildChartRevisePatch } from "./chart-templates.js";
 import { buildRevisePatch } from "./shot-edit.js";
@@ -182,7 +183,7 @@ test("describeLineChartLabels：隐藏/截断/简写三类提示数据", () => {
   );
   assert.deepEqual(
     described.hidden.map((item) => item.index),
-    [1, 3, 5, 7, 9],
+    [1, 3, 5, 7, 9, 10],
   );
   assert.deepEqual(
     described.shortened.map((item) => [item.index, item.to]),
@@ -190,8 +191,8 @@ test("describeLineChartLabels：隐藏/截断/简写三类提示数据", () => {
   );
   assert.deepEqual(
     described.truncated.map((item) => item.index),
-    [10, 11],
-    "显示中的 ≥10 下标 7 字标签被截断（9 号已被步长隐藏）",
+    [11],
+    "末点仍显示且按旧规则截断，过近的 10 号让位",
   );
   const empty = describeLineChartLabels(points, undefined, "portrait");
   assert.deepEqual(empty.hidden, []);
@@ -283,4 +284,63 @@ test("buildChartRevisePatch 保留 spec.layout（图表数据编辑不清覆写�
   });
   assert.ok(result.spec);
   assert.deepEqual(result.spec.layout, { portrait: { labelStep: 2 } });
+});
+
+test("同次修改标题与换行覆写：只校验合并后的最终 spec", () => {
+  const old = textSpec({
+    portrait: { titleLines: ["双画幅预览", "与镜头级微调"] },
+  });
+  const draft = layoutDraftFromSpec(old);
+  assert.equal(draft.componentId, "text-animation");
+  if (draft.componentId !== "text-animation") return;
+  draft.portrait.titleLinesText = "新标题\n继续说明";
+  const revised = buildRevisePatch(
+    {
+      description: "镜头说明",
+      narrationText: "",
+      background: "#ffffff",
+      durationSeconds: 4,
+      title: "新标题继续说明",
+      subtitle: "",
+      templateAdvanced: false,
+    },
+    withoutLayoutForEdit(old),
+  );
+  assert.equal(revised.error, null);
+  const final = applyLayoutToSpec(revised.patch!.spec as SceneSpec, draft);
+  assert.ok(!("error" in final));
+  if ("error" in final) return;
+  assert.deepEqual(final.spec.layout?.portrait?.titleLines, [
+    "新标题",
+    "继续说明",
+  ]);
+  assert.equal(
+    (final.spec.params as { title: string }).title,
+    "新标题继续说明",
+  );
+});
+
+test("同次减少折线点数与清理短标签：只校验合并后的最终 spec", () => {
+  const old = lineSpec({
+    portrait: { shortLabels: [{ index: 11, text: "末" }] },
+  });
+  const draft = layoutDraftFromSpec(old);
+  assert.equal(draft.componentId, "line-chart");
+  if (draft.componentId !== "line-chart") return;
+  draft.portrait.shortLabels = { 0: "首" };
+  const chart = buildChartRevisePatch(withoutLayoutForEdit(old), {
+    title: "压力",
+    data: "第一点,1\n第二点,2",
+    value: "0",
+    prefix: "",
+    suffix: "",
+  });
+  assert.equal(chart.error, null);
+  const final = applyLayoutToSpec(chart.spec!, draft);
+  assert.ok(!("error" in final));
+  if ("error" in final) return;
+  assert.deepEqual(final.spec.layout?.portrait?.shortLabels, [
+    { index: 0, text: "首" },
+  ]);
+  assert.equal((final.spec.params as { points: unknown[] }).points.length, 2);
 });

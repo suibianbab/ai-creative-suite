@@ -18,18 +18,18 @@
 ## 二、人工审片（关键帧 [keyframes/](keyframes/)，与上节口径分离）
 
 - **竖版折线图，[覆写前](keyframes/before-portrait-line-chart.png)**：12 个轴标签全部渲染，`第10季度表…` 等长标签被既有 >6 字规则截断，相邻标签近乎相接——**能看清但拥挤，信息密度过高**。
-- **竖版折线图，[覆写后](keyframes/after-portrait-line-chart.png)**：`labelStep=2` + 首点短标签 `Q1`，可见标签 7 个（0/2/4/6/8/10/11 号），间距舒展、每个标签完整可读；折线、圆标、描画动效与标题不受影响。
+- **竖版折线图，[覆写后](keyframes/after-portrait-line-chart.png)**：`labelStep=2`，末点优先显示，过近的第 11 点标签让位；六个可见标签（0/2/4/6/8/11 号）由用户逐项简写为 `Q1/Q3/Q5/Q7/Q9/Q12`。文字清晰且互不重叠；折线、圆标、描画动效与标题不受影响。原始 12 个完整标签仍保存在项目数据中；简写只是该画幅的展示决定。
 - **横版折线图，[覆写前](keyframes/before-landscape-line-chart.png) / [覆写后](keyframes/after-landscape-line-chart.png)**：横版无覆写，两帧一致——12 个标签全显，间距充足。竖版覆写没有越界影响横版。
 - **竖版长标题**（见 e2e 产物 `before-portrait.png` / `after-portrait.png`）：覆写前自动两行均衡换行可用；覆写后按用户指定的 `双画幅预览与镜头级微调` / `验收标题` 两行呈现，行宽明显收窄、断句符合语义。
 
-人工结论：覆写达到本轮目标——竖版「过长标题只能接受自动换行」「密集标签只能接受截断」的两类可读性问题，现在可以按画幅定向修复，且横版画面零变化。
+人工结论：**这组经过逐项简写的样片**达到本轮可读性目标，横版画面零变化。仅设置 `labelStep` 而不简写长标签时，竖版仍可能出现极小字号；编辑时须检查预览并继续简写或减少可见标签。此结论不能外推到任意标签文案与点数。
 
 ## 三、证据链
 
 - 项目来源：浏览器 e2e（VID-036）真实编辑并导出，`export.video-project.json`；变体派生见 `make-stress-project.mjs`（同 id 同镜头，仅 `spec.layout` 有无；`styleBibleRef` 两变体一致剥离——渲染机无浏览器侧 Style Bible 存储，色板已烘进 spec 参数，不影响前后对比口径）。
 - 渲染：`node scripts/video/render-scene.mjs --project stress-{before,after}.video-project.json --out render-{before,after}`；干跑门按画幅各跑 216 帧（本轮新增能力），四条干跑全部通过后才进 Remotion。
 - 审计：`node audit-exports.mjs --record` → [export-audit.json](export-audit.json)（ffprobe 尺寸/帧率/时长、SHA-256、全片解码、渲染记录计数、关键帧落盘）。
-- 竖版覆写内容：镜头 1 `titleLines` 两行；镜头 2 `labelStep=2` + `shortLabels:[{index:0,text:"Q1"}]`——均为 `layout.portrait`，`layout.landscape` 不存在。
+- 竖版覆写内容：镜头 1 `titleLines` 两行；镜头 2 `labelStep=2` + 六个可见点的 `shortLabels`——均为 `layout.portrait`，`layout.landscape` 不存在。
 
 ## 复跑
 

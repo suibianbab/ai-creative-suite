@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "id": "0df3a542-cfae-4143-b956-4e7ba7a72a64",
+  "id": "18d4c8c8-14fa-4f46-8b4f-d412ef3875dd",
   "title": "季度销量 · 数据动画",
   "brief": {
     "sentence": "样片库：季度销量 · 数据动画。这是可编辑起点，请在发布前替换示例文案和素材。",
@@ -11,14 +11,14 @@
   },
   "shots": [
     {
-      "shotId": "d07cac1b-c025-4444-9e1d-75b8b89767c8",
+      "shotId": "a9d178eb-b888-47fc-a6de-72b28cb4d117",
       "order": 0,
       "locked": false,
-      "workingVersionId": "1402483a-29f1-409e-8c85-a1486a1d2184",
+      "workingVersionId": "292a5fef-d16e-403b-b517-803474f27c44",
       "contentVersions": [
         {
-          "versionId": "a64f7549-7477-4da3-acab-766a950683ca",
-          "createdAt": "2026-10-22T17:00:42.470Z",
+          "versionId": "7feae088-f680-4b97-9adb-e859d6247c48",
+          "createdAt": "2026-10-22T23:20:02.138Z",
           "durationMs": 2000,
           "description": "开场：介绍季度销量数据",
           "narrationText": "季度销量观察。",
@@ -47,8 +47,8 @@
           }
         },
         {
-          "versionId": "487f0faf-a4db-481c-b7c5-c04d6f7af3e3",
-          "createdAt": "2026-10-22T17:00:42.655Z",
+          "versionId": "a73cb428-823c-429f-91bf-ac222b82db21",
+          "createdAt": "2026-10-22T23:20:02.335Z",
           "durationMs": 2000,
           "description": "开场：介绍季度销量数据",
           "narrationText": "季度销量观察。",
@@ -74,12 +74,12 @@
           "provenance": {
             "engineId": "human-edit",
             "engineVersion": "1",
-            "parentVersionId": "a64f7549-7477-4da3-acab-766a950683ca"
+            "parentVersionId": "7feae088-f680-4b97-9adb-e859d6247c48"
           }
         },
         {
-          "versionId": "1402483a-29f1-409e-8c85-a1486a1d2184",
-          "createdAt": "2026-10-22T17:00:43.717Z",
+          "versionId": "df9df5e7-ca8e-428c-a4ad-fe8d7f430617",
+          "createdAt": "2026-10-22T23:20:03.658Z",
           "durationMs": 2000,
           "description": "开场：介绍季度销量数据",
           "narrationText": "季度销量观察。",
@@ -113,40 +113,85 @@
           "provenance": {
             "engineId": "human-edit",
             "engineVersion": "1",
-            "parentVersionId": "487f0faf-a4db-481c-b7c5-c04d6f7af3e3"
+            "parentVersionId": "a73cb428-823c-429f-91bf-ac222b82db21"
+          }
+        },
+        {
+          "versionId": "292a5fef-d16e-403b-b517-803474f27c44",
+          "createdAt": "2026-10-22T23:20:04.166Z",
+          "durationMs": 2000,
+          "description": "浏览模板后还原，覆写仍在",
+          "narrationText": "季度销量观察。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 2000,
+              "seed": 4201,
+              "background": "#122137",
+              "params": {
+                "title": "双画幅预览与镜头级微调验收标题",
+                "titleColor": "#f5f7fa",
+                "subtitleColor": "#afcde6",
+                "entrance": "fade-up",
+                "enterMs": 450,
+                "subtitle": "用数据看增长"
+              },
+              "layout": {
+                "portrait": {
+                  "titleLines": [
+                    "双画幅预览与镜头级微调",
+                    "验收标题"
+                  ]
+                }
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "human-edit",
+            "engineVersion": "1",
+            "parentVersionId": "df9df5e7-ca8e-428c-a4ad-fe8d7f430617"
           }
         }
       ],
       "events": [
         {
           "kind": "submitted",
-          "versionId": "a64f7549-7477-4da3-acab-766a950683ca",
-          "at": "2026-10-22T17:00:42.470Z",
+          "versionId": "7feae088-f680-4b97-9adb-e859d6247c48",
+          "at": "2026-10-22T23:20:02.138Z",
           "actor": "human"
         },
         {
           "kind": "submitted",
-          "versionId": "487f0faf-a4db-481c-b7c5-c04d6f7af3e3",
-          "at": "2026-10-22T17:00:42.655Z",
+          "versionId": "a73cb428-823c-429f-91bf-ac222b82db21",
+          "at": "2026-10-22T23:20:02.335Z",
           "actor": "human"
         },
         {
           "kind": "submitted",
-          "versionId": "1402483a-29f1-409e-8c85-a1486a1d2184",
-          "at": "2026-10-22T17:00:43.717Z",
+          "versionId": "df9df5e7-ca8e-428c-a4ad-fe8d7f430617",
+          "at": "2026-10-22T23:20:03.658Z",
+          "actor": "human"
+        },
+        {
+          "kind": "submitted",
+          "versionId": "292a5fef-d16e-403b-b517-803474f27c44",
+          "at": "2026-10-22T23:20:04.166Z",
           "actor": "human"
         }
       ]
     },
     {
-      "shotId": "018c8337-1962-4d9f-b6fb-a22ed11eab66",
+      "shotId": "6f2e048f-32f8-4252-81e7-872aa2691638",
       "order": 1,
       "locked": false,
-      "workingVersionId": "7ed991da-f0c9-4276-a5e4-22762a45853a",
+      "workingVersionId": "5fd7242a-9569-4f22-8dce-4ff451d83d0c",
       "contentVersions": [
         {
-          "versionId": "7703d347-df3d-4cc1-a3af-8c4e0f0f8356",
-          "createdAt": "2026-10-22T17:00:42.470Z",
+          "versionId": "29d8223d-bc95-464a-8af7-0f7c825c3bde",
+          "createdAt": "2026-10-22T23:20:02.138Z",
           "durationMs": 2800,
           "description": "柱状图对比四个季度",
           "narrationText": "第四季度达到最高。",
@@ -192,8 +237,8 @@
           }
         },
         {
-          "versionId": "5f78eeb2-e8e7-4015-b42e-33b2afedfa6c",
-          "createdAt": "2026-10-22T17:00:42.820Z",
+          "versionId": "6523a42f-f48a-40c7-a2a0-7ff3d8c27819",
+          "createdAt": "2026-10-22T23:20:02.519Z",
           "durationMs": 2800,
           "description": "柱状图对比四个季度",
           "narrationText": "第四季度达到最高。",
@@ -268,12 +313,12 @@
           "provenance": {
             "engineId": "human-edit",
             "engineVersion": "1",
-            "parentVersionId": "7703d347-df3d-4cc1-a3af-8c4e0f0f8356"
+            "parentVersionId": "29d8223d-bc95-464a-8af7-0f7c825c3bde"
           }
         },
         {
-          "versionId": "0e68d0b1-42e6-4912-89c2-78dbd125ab1e",
-          "createdAt": "2026-10-22T17:00:42.834Z",
+          "versionId": "e137ccf7-e5ae-4ca4-b34e-3520fc2dda71",
+          "createdAt": "2026-10-22T23:20:02.531Z",
           "durationMs": 2800,
           "description": "柱状图对比四个季度（人工修订）",
           "narrationText": "第四季度达到最高。",
@@ -348,12 +393,12 @@
           "provenance": {
             "engineId": "human-edit",
             "engineVersion": "1",
-            "parentVersionId": "5f78eeb2-e8e7-4015-b42e-33b2afedfa6c"
+            "parentVersionId": "6523a42f-f48a-40c7-a2a0-7ff3d8c27819"
           }
         },
         {
-          "versionId": "7ed991da-f0c9-4276-a5e4-22762a45853a",
-          "createdAt": "2026-10-22T17:00:43.867Z",
+          "versionId": "5fd7242a-9569-4f22-8dce-4ff451d83d0c",
+          "createdAt": "2026-10-22T23:20:03.902Z",
           "durationMs": 2800,
           "description": "柱状图对比四个季度（人工修订）",
           "narrationText": "第四季度达到最高。",
@@ -430,6 +475,26 @@
                     {
                       "index": 0,
                       "text": "Q1"
+                    },
+                    {
+                      "index": 2,
+                      "text": "Q3"
+                    },
+                    {
+                      "index": 4,
+                      "text": "Q5"
+                    },
+                    {
+                      "index": 6,
+                      "text": "Q7"
+                    },
+                    {
+                      "index": 8,
+                      "text": "Q9"
+                    },
+                    {
+                      "index": 11,
+                      "text": "Q12"
                     }
                   ]
                 }
@@ -439,46 +504,46 @@
           "provenance": {
             "engineId": "human-edit",
             "engineVersion": "1",
-            "parentVersionId": "0e68d0b1-42e6-4912-89c2-78dbd125ab1e"
+            "parentVersionId": "e137ccf7-e5ae-4ca4-b34e-3520fc2dda71"
           }
         }
       ],
       "events": [
         {
           "kind": "submitted",
-          "versionId": "7703d347-df3d-4cc1-a3af-8c4e0f0f8356",
-          "at": "2026-10-22T17:00:42.470Z",
+          "versionId": "29d8223d-bc95-464a-8af7-0f7c825c3bde",
+          "at": "2026-10-22T23:20:02.138Z",
           "actor": "human"
         },
         {
           "kind": "submitted",
-          "versionId": "5f78eeb2-e8e7-4015-b42e-33b2afedfa6c",
-          "at": "2026-10-22T17:00:42.820Z",
+          "versionId": "6523a42f-f48a-40c7-a2a0-7ff3d8c27819",
+          "at": "2026-10-22T23:20:02.519Z",
           "actor": "human"
         },
         {
           "kind": "submitted",
-          "versionId": "0e68d0b1-42e6-4912-89c2-78dbd125ab1e",
-          "at": "2026-10-22T17:00:42.834Z",
+          "versionId": "e137ccf7-e5ae-4ca4-b34e-3520fc2dda71",
+          "at": "2026-10-22T23:20:02.531Z",
           "actor": "human"
         },
         {
           "kind": "submitted",
-          "versionId": "7ed991da-f0c9-4276-a5e4-22762a45853a",
-          "at": "2026-10-22T17:00:43.867Z",
+          "versionId": "5fd7242a-9569-4f22-8dce-4ff451d83d0c",
+          "at": "2026-10-22T23:20:03.902Z",
           "actor": "human"
         }
       ]
     },
     {
-      "shotId": "67963e2c-a07c-4e04-a8dc-207e81165aa4",
+      "shotId": "b391db37-a570-48a3-8c3e-7ee9a6c4f4f6",
       "order": 2,
       "locked": false,
-      "workingVersionId": "69d59ffd-ca0d-4fb0-a419-8a4ed6f8477c",
+      "workingVersionId": "ac925bc0-d3cc-4799-9a69-64bebd243d9b",
       "contentVersions": [
         {
-          "versionId": "69d59ffd-ca0d-4fb0-a419-8a4ed6f8477c",
-          "createdAt": "2026-10-22T17:00:42.470Z",
+          "versionId": "ac925bc0-d3cc-4799-9a69-64bebd243d9b",
+          "createdAt": "2026-10-22T23:20:02.138Z",
           "durationMs": 2200,
           "description": "关键数字：四季度 82 单位",
           "narrationText": "关键数字是八十二。",
@@ -512,21 +577,21 @@
       "events": [
         {
           "kind": "submitted",
-          "versionId": "69d59ffd-ca0d-4fb0-a419-8a4ed6f8477c",
-          "at": "2026-10-22T17:00:42.470Z",
+          "versionId": "ac925bc0-d3cc-4799-9a69-64bebd243d9b",
+          "at": "2026-10-22T23:20:02.138Z",
           "actor": "human"
         }
       ]
     },
     {
-      "shotId": "cb43e84f-3d86-4762-9fed-ec8c81a26185",
+      "shotId": "570bd045-dfe4-413b-8a3f-f553bd9ef00b",
       "order": 3,
       "locked": false,
-      "workingVersionId": "c0198c8f-c143-4a10-ac02-f8c1f15176fa",
+      "workingVersionId": "d314387c-e192-4cd9-89b0-781ea893218e",
       "contentVersions": [
         {
-          "versionId": "c0198c8f-c143-4a10-ac02-f8c1f15176fa",
-          "createdAt": "2026-10-22T17:00:42.470Z",
+          "versionId": "d314387c-e192-4cd9-89b0-781ea893218e",
+          "createdAt": "2026-10-22T23:20:02.138Z",
           "durationMs": 2000,
           "description": "收尾：给出增长结论",
           "narrationText": "趋势清晰可见。",
@@ -558,8 +623,8 @@
       "events": [
         {
           "kind": "submitted",
-          "versionId": "c0198c8f-c143-4a10-ac02-f8c1f15176fa",
-          "at": "2026-10-22T17:00:42.470Z",
+          "versionId": "d314387c-e192-4cd9-89b0-781ea893218e",
+          "at": "2026-10-22T23:20:02.138Z",
           "actor": "human"
         }
       ]
@@ -567,9 +632,9 @@
   ],
   "renderRecords": [
     {
-      "renderId": "0875d57b-473b-4237-a201-d703a8475929",
-      "versionId": "1402483a-29f1-409e-8c85-a1486a1d2184",
-      "contentDigest": "1bef5381293c0133f47b93afd42a8eef58b15c855c1a35e3ec67789945bc6df9",
+      "renderId": "9873c969-d852-47ab-ae0b-626af5ba9278",
+      "versionId": "292a5fef-d16e-403b-b517-803474f27c44",
+      "contentDigest": "8b072e440bf5a4c74d9145059fa4fb8224fb86dceeedb2bdbca83bc5391132df",
       "engineId": "remotion",
       "engineVersion": "7",
       "rendererVersion": "4.0.534",
@@ -585,9 +650,9 @@
       "outputAssetRef": "render-after/landscape.mp4"
     },
     {
-      "renderId": "bc53c2a0-fe3d-4c01-bfb7-7fdf612ad632",
-      "versionId": "7ed991da-f0c9-4276-a5e4-22762a45853a",
-      "contentDigest": "c9f4b7da770b996c758da6547a6f4c71d76365c14ac09c1463d5ea6c79874844",
+      "renderId": "e5647799-1315-445c-811d-a8ae0948c399",
+      "versionId": "5fd7242a-9569-4f22-8dce-4ff451d83d0c",
+      "contentDigest": "f579b46646c26da90bc3aef048ab455bc310055b71eb0d67528f715a3360bd37",
       "engineId": "remotion",
       "engineVersion": "7",
       "rendererVersion": "4.0.534",
@@ -603,9 +668,9 @@
       "outputAssetRef": "render-after/landscape.mp4"
     },
     {
-      "renderId": "7d589c4e-91a0-41fd-a4e8-c4ed6beb6fa8",
-      "versionId": "69d59ffd-ca0d-4fb0-a419-8a4ed6f8477c",
-      "contentDigest": "52b57cfd14452d9effe96a0661ce6724a262c93402c34a6a288e51f36dca6454",
+      "renderId": "b8071a64-d464-4074-892d-afcee2fd7b5c",
+      "versionId": "ac925bc0-d3cc-4799-9a69-64bebd243d9b",
+      "contentDigest": "1fba10a09851fc5a1eb0ec350c8e80d1362a847c98b58e3405893c858d9b3f94",
       "engineId": "remotion",
       "engineVersion": "7",
       "rendererVersion": "4.0.534",
@@ -621,9 +686,9 @@
       "outputAssetRef": "render-after/landscape.mp4"
     },
     {
-      "renderId": "fbe703be-eeac-4a79-a0f0-91b2f5a095c8",
-      "versionId": "c0198c8f-c143-4a10-ac02-f8c1f15176fa",
-      "contentDigest": "22a87c0ee254e746e65b172549e5c4462c7d22636cf9d11455b6df0fd8c4b9ff",
+      "renderId": "0b0e739c-fa49-4656-923d-e841827c260f",
+      "versionId": "d314387c-e192-4cd9-89b0-781ea893218e",
+      "contentDigest": "9ed6cbe6adfbe62441015f17112ef2b36200fb30c71c0c8dff78bb9dbd05149b",
       "engineId": "remotion",
       "engineVersion": "7",
       "rendererVersion": "4.0.534",
@@ -639,9 +704,9 @@
       "outputAssetRef": "render-after/landscape.mp4"
     },
     {
-      "renderId": "9dfd11f0-fdbf-4e0f-aa95-66f2bc819a67",
-      "versionId": "1402483a-29f1-409e-8c85-a1486a1d2184",
-      "contentDigest": "1bef5381293c0133f47b93afd42a8eef58b15c855c1a35e3ec67789945bc6df9",
+      "renderId": "a93f39b0-f854-46a9-b616-1f187da298ae",
+      "versionId": "292a5fef-d16e-403b-b517-803474f27c44",
+      "contentDigest": "8b072e440bf5a4c74d9145059fa4fb8224fb86dceeedb2bdbca83bc5391132df",
       "engineId": "remotion",
       "engineVersion": "7",
       "rendererVersion": "4.0.534",
@@ -657,9 +722,9 @@
       "outputAssetRef": "render-after/portrait.mp4"
     },
     {
-      "renderId": "d1397189-c502-49a3-b4b8-75606117bc57",
-      "versionId": "7ed991da-f0c9-4276-a5e4-22762a45853a",
-      "contentDigest": "c9f4b7da770b996c758da6547a6f4c71d76365c14ac09c1463d5ea6c79874844",
+      "renderId": "3234a26e-fe00-4c3a-b047-9f88aac9d183",
+      "versionId": "5fd7242a-9569-4f22-8dce-4ff451d83d0c",
+      "contentDigest": "f579b46646c26da90bc3aef048ab455bc310055b71eb0d67528f715a3360bd37",
       "engineId": "remotion",
       "engineVersion": "7",
       "rendererVersion": "4.0.534",
@@ -675,9 +740,9 @@
       "outputAssetRef": "render-after/portrait.mp4"
     },
     {
-      "renderId": "7a5286aa-b36b-4a27-8037-64b872dc4ca4",
-      "versionId": "69d59ffd-ca0d-4fb0-a419-8a4ed6f8477c",
-      "contentDigest": "52b57cfd14452d9effe96a0661ce6724a262c93402c34a6a288e51f36dca6454",
+      "renderId": "b6730162-60b7-4d32-9614-b09ae46272e7",
+      "versionId": "ac925bc0-d3cc-4799-9a69-64bebd243d9b",
+      "contentDigest": "1fba10a09851fc5a1eb0ec350c8e80d1362a847c98b58e3405893c858d9b3f94",
       "engineId": "remotion",
       "engineVersion": "7",
       "rendererVersion": "4.0.534",
@@ -693,9 +758,9 @@
       "outputAssetRef": "render-after/portrait.mp4"
     },
     {
-      "renderId": "f9351c5a-b69c-4a06-9226-69920810a23b",
-      "versionId": "c0198c8f-c143-4a10-ac02-f8c1f15176fa",
-      "contentDigest": "22a87c0ee254e746e65b172549e5c4462c7d22636cf9d11455b6df0fd8c4b9ff",
+      "renderId": "dc8a8180-c384-4ab5-ae4a-a48e99c36a77",
+      "versionId": "d314387c-e192-4cd9-89b0-781ea893218e",
+      "contentDigest": "9ed6cbe6adfbe62441015f17112ef2b36200fb30c71c0c8dff78bb9dbd05149b",
       "engineId": "remotion",
       "engineVersion": "7",
       "rendererVersion": "4.0.534",
@@ -712,5 +777,5 @@
     }
   ],
   "deliveries": [],
-  "savedVersion": 5
+  "savedVersion": 6
 }

@@ -246,6 +246,14 @@ export function describeLineChartLabels(
 
 export const EMPTY_LAYOUT_DRAFTS = { text: EMPTY_TEXT, line: EMPTY_LINE };
 
+// Content and layout are edited as one final spec. Intermediate template/chart/
+// text builders validate their input, so the old layout must not be checked
+// against new title/point data before the replacement draft is attached.
+export function withoutLayoutForEdit(spec: SceneSpec): SceneSpec {
+  const { layout: _oldLayout, ...base } = spec;
+  return base;
+}
+
 // 应用修订时是否并入画幅覆写草稿（终评 Important#1 的决策收口）：
 // - 已选组件模板（pendingTemplateId 非空）→ 换装即新视觉基底，旧覆写舍弃
 //   （「浏览后改回保持当前组件」时 pendingTemplateId 归空 → 保留并入）。

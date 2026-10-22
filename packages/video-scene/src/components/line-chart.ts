@@ -47,6 +47,9 @@ export function lineChartLabelDisplay(
 ): LineChartLabelItem[] {
   const n = points.length;
   const step = override?.labelStep ?? 1;
+  // Keep the final point visible without squeezing it beside the last sampled
+  // point. A partial final interval replaces that sampled label.
+  const lastSampledBeforeEnd = Math.floor((n - 2) / step) * step;
   const shortByIndex = new Map(
     (override?.shortLabels ?? []).map((item) => [item.index, item.text]),
   );
@@ -69,7 +72,12 @@ export function lineChartLabelDisplay(
       show:
         label !== undefined &&
         label !== "" &&
-        (step <= 1 || index % step === 0 || index === n - 1),
+        (step <= 1 ||
+          index === n - 1 ||
+          (index % step === 0 &&
+            (index !== lastSampledBeforeEnd ||
+              n - 1 - lastSampledBeforeEnd >= step ||
+              index === 0))),
       text,
     };
   });
@@ -262,22 +270,29 @@ function renderPortrait(
   });
   const labelSlot = plotWidth / (n - 1);
   const labels: SvgNode[] = [];
-  for (const item of lineChartLabelDisplay(
-    params.points,
-    layoutFor(spec, ctx) as LineChartLayoutOverride | undefined,
-  )) {
-    if (!item.show) continue;
+  const override = layoutFor(spec, ctx) as LineChartLayoutOverride | undefined;
+  const visible = lineChartLabelDisplay(params.points, override).filter(
+    (item) => item.show,
+  );
+  for (const [visibleIndex, item] of visible.entries()) {
     const index = item.index;
+    const previous = visible[visibleIndex - 1];
+    const next = visible[visibleIndex + 1];
+    const gap = Math.min(
+      previous ? xs[index]! - xs[previous.index]! : Number.POSITIVE_INFINITY,
+      next ? xs[next.index]! - xs[index]! : Number.POSITIVE_INFINITY,
+    );
+    const labelWidth = override
+      ? gap * (index === 0 || index === n - 1 ? 0.5 : 0.9)
+      : index === 0 || index === n - 1
+        ? labelSlot * 1.7
+        : labelSlot * 0.9;
     labels.push({
       tag: "text",
       attrs: {
         x: xs[index]!,
         y: baseline + ctx.height * 0.048,
-        "font-size": fitFontSize(
-          ctx.width * 0.036,
-          item.text,
-          index === 0 || index === n - 1 ? labelSlot * 1.7 : labelSlot * 0.9,
-        ),
+        "font-size": fitFontSize(ctx.width * 0.036, item.text, labelWidth),
         fill: params.textColor,
         "text-anchor":
           index === 0 ? "start" : index === n - 1 ? "end" : "middle",

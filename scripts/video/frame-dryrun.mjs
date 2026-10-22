@@ -105,9 +105,7 @@ export async function buildProjectDryRunJobs(project, aspect = "landscape") {
   );
   const [width, height] = DIMENSIONS[aspect] ?? [];
   if (!width || !height) {
-    throw new Error(
-      `干跑画幅 ${aspect} 未知（仅支持 landscape | portrait）`,
-    );
+    throw new Error(`干跑画幅 ${aspect} 未知（仅支持 landscape | portrait）`);
   }
   const entries = [];
   project.shots.forEach((shot, index) => {

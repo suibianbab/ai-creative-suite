@@ -25,8 +25,8 @@ export const GALLERY_SAMPLES: ReadonlyArray<{
   {
     id: "stem",
     title: "水循环 · STEM 解说",
-    summary: "概念开场、四步流程、数据强调、收尾",
-    detail: "4 镜头 · 约 9 秒 · 可改文字、流程和配色",
+    summary: "水循环七镜头解说：蒸发、凝结、降水与汇流",
+    detail: "7 镜头 · 约 26 秒 · 双画幅、旁白字幕、可改文字与流程",
     poster: "/samples/p4-stem.svg",
   },
   {
@@ -109,16 +109,16 @@ function sampleShots(
   if (id === "stem")
     return [
       {
-        durationMs: 2000,
-        description: "开场：提出水循环主题",
-        narrationText: "水循环。",
-        source: text("水的旅程", "看见一滴水的循环", 2000, 4101),
+        durationMs: 3000,
+        description: "问题开场：一滴水会走过哪里",
+        narrationText: "一滴水，会走过哪里？",
+        source: text("一滴水的旅程", "水循环是怎样发生的？", 3000, 4101),
       },
       {
-        durationMs: 2500,
-        description: "以四步流程解释水循环",
-        narrationText: "蒸发、凝结、降水、汇流。",
-        source: spec("flow-steps", 2500, 4102, {
+        durationMs: 4000,
+        description: "总览：水在海洋、天空和陆地间循环",
+        narrationText: "水在海洋、天空和陆地间不停移动。",
+        source: spec("flow-steps", 4000, 4102, {
           title: "水循环的四个阶段",
           steps: [
             { label: "蒸发" },
@@ -130,29 +130,86 @@ function sampleShots(
           boxColor: "#dcebe1",
           arrowColor: "#2f6f4f",
           textColor: "#1b2c29",
-          enterMs: 1200,
+          enterMs: 1700,
         }),
       },
       {
-        durationMs: 2500,
-        description: "用数字强调地表水与大气持续交换",
-        narrationText: "循环从未停止。",
-        source: spec("number-counter", 2500, 4103, {
-          title: "持续循环",
-          value: 100,
-          prefix: "",
-          suffix: "%",
-          decimals: 0,
-          countMs: 1500,
-          numberColor: "#1b2c29",
-          accentColor: "#2f6f4f",
+        durationMs: 4000,
+        description: "蒸发：阳光加热海面，液态水变为水蒸气",
+        narrationText: "阳光加热海面，水变成水蒸气。",
+        source: spec("sketch-note", 4000, 4103, {
+          title: "第一步 · 蒸发",
+          items: [
+            { text: "阳光加热海面", emphasis: "下划线" },
+            { text: "液态水变成水蒸气", emphasis: "圈" },
+          ],
+          inkColor: "#f3f5f7",
+          accentColor: "#f5b652",
+          writeMs: 900,
+          drawMs: 700,
+          staggerMs: 500,
         }),
       },
       {
-        durationMs: 2000,
-        description: "收尾：回扣水的旅程",
-        narrationText: "一滴水，连接万物。",
-        source: text("一滴水，连接万物", "探索更多自然科学", 2000, 4104),
+        durationMs: 4000,
+        description: "凝结：上升的水蒸气遇冷形成云",
+        narrationText: "水蒸气上升，遇冷凝结成云。",
+        source: spec("sketch-note", 4000, 4104, {
+          title: "第二步 · 凝结",
+          items: [
+            { text: "水蒸气向上升", emphasis: "下划线" },
+            { text: "遇冷凝结成云", emphasis: "圈" },
+          ],
+          inkColor: "#f3f5f7",
+          accentColor: "#f5b652",
+          writeMs: 900,
+          drawMs: 700,
+          staggerMs: 500,
+        }),
+      },
+      {
+        durationMs: 4000,
+        description: "降水：云中水滴聚集并落下",
+        narrationText: "云中水滴聚集，落下形成降水。",
+        source: spec("line-drawing", 4000, 4105, {
+          paths: [
+            "M 280 380 C 255 380 245 360 253 341 C 258 324 275 316 292 318 C 303 281 339 259 378 267 C 404 232 457 226 486 252 C 519 250 547 274 551 307 C 578 310 598 331 598 355 C 598 372 584 385 563 385 Z",
+            "M 327 440 L 302 508 M 406 440 L 381 508 M 485 440 L 460 508 M 560 440 L 535 508",
+            "M 260 603 C 348 580 444 580 532 603 C 610 624 689 624 766 603",
+          ],
+          strokeColor: "#b4d8e4",
+          strokeWidth: 12,
+          revealMs: 2100,
+        }),
+      },
+      {
+        durationMs: 4000,
+        description: "汇流：雨水进入河流并回到海洋",
+        narrationText: "雨水汇入河流，最终回到海洋。",
+        source: spec("flow-diagram", 4000, 4106, {
+          title: "第三、四步 · 降水与汇流",
+          nodes: [
+            { label: "降水", x: 180, y: 480, kind: "box" },
+            { label: "河流", x: 500, y: 480, kind: "box" },
+            { label: "海洋", x: 820, y: 480, kind: "box" },
+          ],
+          edges: [
+            { from: "降水", to: "河流" },
+            { from: "河流", to: "海洋" },
+          ],
+          boxColor: "#42a5a0",
+          arrowColor: "#f5b652",
+          textColor: "#f3f5f7",
+          nodeTextColor: "#102033",
+          enterMs: 800,
+          drawMs: 1600,
+        }),
+      },
+      {
+        durationMs: 3000,
+        description: "结语：点明水循环并邀请继续探索",
+        narrationText: "这，就是水循环。",
+        source: text("水，循环不息", "四步循环，生生不息", 3000, 4107),
       },
     ];
   if (id === "data")

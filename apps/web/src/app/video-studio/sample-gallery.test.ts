@@ -34,7 +34,19 @@ test("三个样片生成独立、有效的项目；程序化样片引用独立 S
   const first = await createGallerySample("stem");
   const second = await createGallerySample("stem");
   assert.notEqual(first.project.id, second.project.id);
-  assert.equal(first.project.shots.length, 4);
+  assert.equal(first.project.shots.length, 7);
+  assert.equal(
+    first.project.shots.reduce(
+      (ms, shot) => ms + shot.contentVersions[0]!.durationMs,
+      0,
+    ),
+    26_000,
+  );
+  assert(
+    first.project.shots.every((shot) =>
+      Boolean(shot.contentVersions[0]?.narrationText),
+    ),
+  );
   assert.equal(first.project.brief.aspectTargets.length, 2);
   for (const id of ["stem", "data"] as const) {
     const { project, bible } = await createGallerySample(id);

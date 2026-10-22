@@ -17,6 +17,7 @@ From the repository root:
 | `pnpm qa:grounding` | Cross-domain real-image grounding quality against the live SAM+CLIP candidate service | `qa/fixtures/photocraft-grounding/` set, parts-candidates service on 127.0.0.1:4104 |
 | `pnpm qa:browser-image` | Real browser PhotoCraft entry, scope and mask-retouch regression plus region-difference report (IMG-057/058) | Chromium for `playwright-core`, web :3000 + tracked proxy :3100, bridge :4113 + tracked origin shim :4112, parts-candidates :4104 |
 | `pnpm qa:browser-video` | Video Studio Style Bible browser save/reopen (VID-029) and P4 three-sample gallery editing, media replacement, dual-MP4 exports (VID-030) | Chromium for `playwright-core`, web dev server at `http://localhost:3210` |
+| `node scripts/video/audit-stem-sample.mjs` | Audits the retained 26-second narrated STEM sample in both aspects (VID-037) | ffprobe and tracked sample artifacts; no TTS key |
 
 The runner executes cases sequentially and exits nonzero if any case fails or is blocked. `PASS` means that case's command exited successfully. `FAIL` means its assertion or process failed while required services were responsive. `BLOCKED` means a required file or service was unavailable before or after the command; it is **not** a pass. The runner checks PostgreSQL protocol response, RustFS health and Keycloak discovery rather than only checking whether tunnel ports listen.
 
