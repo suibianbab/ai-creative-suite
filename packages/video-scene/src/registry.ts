@@ -1,3 +1,4 @@
+import type { AspectLayoutContainer } from "./aspect-layout.js";
 import type { SvgNode } from "./svg.js";
 
 // 帧上下文由渲染器注入：组件是 (spec, ctx) → SvgNode 的纯函数。
@@ -15,6 +16,9 @@ export type SceneComponent = {
   componentId: string;
   version: number;
   validateParams(value: unknown): unknown;
+  // 可选：per-aspect 版式覆写的深度校验（spec.layout 存在时由
+  // validateSceneSpec 逐画幅调用；未实现而带 layout 的 spec 会被拒绝）。
+  validateLayout?(aspectValue: unknown, params: unknown): void;
   render(spec: SceneSpecLike, ctx: FrameContext): SvgNode;
 };
 
@@ -26,6 +30,8 @@ export type SceneSpecLike = {
   seed: number;
   background: string;
   params: unknown;
+  // 可选：每画幅版式覆写（缺省 = 自动布局，旧 spec 不受影响）。
+  layout?: AspectLayoutContainer;
 };
 
 export class UnknownComponentError extends Error {}

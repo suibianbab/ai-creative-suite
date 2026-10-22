@@ -67,5 +67,34 @@ export function validateSceneSpec(
     );
   }
   component.validateParams(value.params); // 组件级 params 校验，错误原样抛出
+  // 每画幅版式覆写（2026-10-23 brief §三B）：容器形状在此把关，字段形状
+  // 由组件 validateLayout 逐画幅校验；未实现 validateLayout 的组件明确拒绝
+  // （不静默忽略，防「覆写落库但画面不变」的假象）。
+  if (value.layout !== undefined) {
+    if (!isRecord(value.layout)) fail("layout 必须是对象");
+    const layout = value.layout as Record<string, unknown>;
+    const aspects: Array<"portrait" | "landscape"> = [];
+    if (layout.portrait !== undefined) aspects.push("portrait");
+    if (layout.landscape !== undefined) aspects.push("landscape");
+    const unknownKeys = Object.keys(layout).filter(
+      (key) => key !== "portrait" && key !== "landscape",
+    );
+    if (unknownKeys.length > 0) {
+      fail(
+        `layout 只允许 portrait/landscape 画幅键（发现 ${unknownKeys.join("/")}）`,
+      );
+    }
+    if (aspects.length === 0) fail("layout 至少覆盖一个画幅");
+    if (!component.validateLayout) {
+      fail(
+        `组件 ${value.componentId as string}@${value.componentVersion as number} 不支持 layout 覆写`,
+      );
+    }
+    for (const aspect of aspects) {
+      const aspectValue = layout[aspect];
+      if (!isRecord(aspectValue)) fail(`layout.${aspect} 必须是对象`);
+      component.validateLayout(aspectValue, value.params);
+    }
+  }
   return value as SceneSpec;
 }
