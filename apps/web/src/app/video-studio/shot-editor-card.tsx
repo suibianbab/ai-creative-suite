@@ -187,7 +187,8 @@ export type ShotEditorCardProps = {
     threeScene?: ThreeSceneSpec;
   }) => void;
   onRedo: (directive: string) => void;
-  onRollback: (versionId: string) => void;
+  // 成功返回 null；被统一选版本闸门拦下时返回用户可见错误。
+  onRollback: (versionId: string) => string | null;
   onToggleLock: (locked: boolean) => void;
   redoError: string | null;
   // P2.6-T7：媒体臂在线素材面板的「下载并应用」回调（返回成功消息）。
@@ -331,17 +332,9 @@ export function ShotEditorCard({
     setCompareError(null);
   }, [shot.workingVersionId]);
 
-  // 选用候选：换版本实际改变该镜时长，先走与编辑同源的零帧闸门，再移动
-  // 工作指针（rollback 自带 audit 留痕；锁定镜头按 ADR 0003 人工路径允许）。
+  // 两列面板与旧版“回滚到此版本”共享 page 的选版本闸门。
   const chooseCandidate = (summary: CandidateSummary) => {
-    const impact = describeDurationImpact(project, index, summary.durationMs);
-    const blocked = durationApplyError(impact);
-    if (blocked) {
-      setCompareError(blocked);
-      return;
-    }
-    setCompareError(null);
-    onRollback(summary.versionId);
+    setCompareError(onRollback(summary.versionId));
   };
 
   // working 版本变了（应用修订/重做/回滚后）→ 草稿重置到新工作版本。

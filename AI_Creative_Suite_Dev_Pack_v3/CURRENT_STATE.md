@@ -1,5 +1,9 @@
 # Current State v2
 
+## 2026-10-22 Video Studio B 复核整改：选版本双入口共用零帧闸门
+
+修复旧版「回滚到此版本」绕过对比面板零帧检查的问题。`version-selection.ts` 统一校验目标内容版本及 `describeDurationImpact` / `durationApplyError`，通过后才调用原有 `rollbackWorkingVersion`；两个按钮均走此路径。1ms 候选经两入口均被拒且工作版本、事件不变，锁定镜头合法切换及存量多零帧逐镜修复继续可用。实测 Web 247/247、Web typecheck、Biome 386 文件、QA 85 automated / 53 manual、VID-027 浏览器 7 步通过（控制台 error 0，TTS 0→0）。下方 B 原始交付数字保留为历史记录。
+
 ## 2026-10-22 Video Studio B 关键镜头双候选（候选对比面板 + 选用闸门 + e2e VID-027）
 
 `docs/superpowers/plans/2026-10-22-video-studio-dual-candidate.md` 四个任务完成（分支 `worktree-video-studio-b-dual-candidate`；Task 1 纯函数 `e6ba3c4`、Task 2 浏览器回归 `a52a86a`+`db3beed`、Task 3 镜头卡面板 `b782dcd`、Task 4 文档收口）。设计依据 `docs/superpowers/specs/2026-10-22-video-studio-dual-candidate-design.md`（决策由用户授权代定并在文中记录）。**能力**：有 ≥2 个内容版本的镜头在版本行出现「对比候选」，展开为两列并排——每列显示版本序号与事件推导状态（`deriveStatus`，草稿/候选/已批准）、拍法说明（复用 `ContentVersion.description`）、时长、以及「选它之后整片帧数 `before → after`」（直接复用 C 的 `describeDurationImpact`，与渲染同源，不另写帧数学）；默认对 = 当前工作版本 + 最新非工作版本，两列下拉互相排除，工作版本经修订/重做/回滚变化后回到默认对。**选用**：先过 `durationApplyError` 零帧闸门（新造零帧显示「无法应用：…」，文档不变；存量零帧按严格子集规则逐镜修复），再过既有 `rollbackWorkingVersion` 移动工作指针并追加 `audit`「回滚工作版本」；锁定镜头允许（ADR 0003 §1.3 人工路径），不产生 `approved`、不改变审批状态。面板固定标注「说明来自版本记录，不代表画面质量；选用只切换工作版本，不改变审批状态」。**零 schema**：不新增字段、事件类型或排序；候选即既有不可变内容版本。**明确不做**：不生成画面/缩略图、不调模型与 TTS、不新增「关键镜头」标记字段、不做 N 列对比、不新建编辑器/时间线。**回归**：`@acs/web` **244**（238+6）/ `@acs/video-document` **146** / `scripts/video` **152** 全绿，`typecheck` exit 0，biome **385** 文件 clean，`qa:validate` 85 automated / **53** manual；浏览器回归 `scripts/video/e2e-candidate-compare.mjs`（QA `VID-027`）7 步全 PASS：重做产生候选 → 两列对比与互斥 → 锁定下选用原拍法 → 保存/刷新/重开仍是 #1 且锁定保留 → 导出校验 working=#1、`lock-changed` + `audit 回滚工作版本`、无 `approved`、v2 → 零帧候选被「无法应用：」拦下且工作版本仍 2000ms；控制台 error 0。**零计费**：未运行 TTS、未传 `--narration`，`artifacts/tts-usage.jsonl` 0 → 0 行（本树内无该文件）。

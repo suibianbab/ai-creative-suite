@@ -6,7 +6,6 @@ import {
   type QuantizedTimeline,
   quantizeTimeline,
   reviseWorkingVersion,
-  rollbackWorkingVersion,
   ShotLockedError,
   setLocked,
   type VideoProject,
@@ -52,6 +51,7 @@ import {
   transitionsAfterEdit,
   transitionsDraftFromProject,
 } from "./transitions-draft";
+import { selectWorkingVersion } from "./version-selection";
 import "./video-studio.css";
 
 // 新项目从空镜头开始（validateVideoProject 允许 shots 为空数组）；
@@ -698,9 +698,9 @@ export default function VideoStudioPage() {
                     }}
                     onRollback={(versionId) => {
                       try {
-                        const next = rollbackWorkingVersion(
+                        const next = selectWorkingVersion(
                           document,
-                          shot.shotId,
+                          index,
                           versionId,
                         );
                         setEditor({
@@ -708,12 +708,15 @@ export default function VideoStudioPage() {
                           document: next,
                           message: `镜头 ${index + 1} 已回滚到所选版本`,
                         });
+                        return null;
                       } catch (error) {
+                        const message =
+                          error instanceof Error ? error.message : "回滚失败";
                         setEditor({
                           ...editor,
-                          message:
-                            error instanceof Error ? error.message : "回滚失败",
+                          message,
                         });
+                        return message;
                       }
                     }}
                     onToggleLock={(locked) => {

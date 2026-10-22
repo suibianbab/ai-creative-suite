@@ -419,6 +419,12 @@ if (!blockedError?.startsWith("无法应用："))
 const blockedMessage = await page.locator(".editor-message").textContent();
 if (blockedMessage?.includes("已回滚到所选版本"))
   fail("7 零帧候选拦截", `零帧候选仍被落库: ${blockedMessage}`);
+// 原有版本下拉也是选版本入口，必须与对比面板共用闸门。
+await blockedCard
+  .locator(".shot-version-select")
+  .selectOption(zeroCandidate.versionId);
+await blockedCard.locator(".shot-rollback").click();
+await waitForMessage("无法应用：", "7 旧版回滚入口拦截");
 const blockedExport = path.join(OUT_DIR, "blocked.video-project.json");
 const [blockedDownload] = await Promise.all([
   page.waitForEvent("download", { timeout: 15_000 }),
@@ -432,8 +438,10 @@ const blockedWorking = blockedExported.shots[0].contentVersions.find(
 );
 if (blockedWorking?.durationMs !== 2000)
   fail("7 零帧候选拦截", `工作版本时长 ${blockedWorking?.durationMs} ≠ 2000`);
+if (blockedExported.shots[0].events.length !== blockedShot.events.length)
+  fail("7 零帧候选拦截", "被拒后仍追加了事件");
 console.log(
-  `[e2e-candidate-compare] 7 PASS 零帧候选被拦：${blockedError?.trim()}（工作版本仍 2000ms）`,
+  `[e2e-candidate-compare] 7 PASS 对比与旧版回滚入口均拦截零帧候选：${blockedError?.trim()}（工作版本仍 2000ms）`,
 );
 
 // ============================== 收尾断言 ==============================

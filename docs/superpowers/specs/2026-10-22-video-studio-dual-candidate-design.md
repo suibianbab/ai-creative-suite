@@ -116,3 +116,7 @@ B 只补「两个候选并排看 → 选定 → 回到唯一工作版本」这�
 - UI：`shot-editor-card.tsx` 版本行新增「对比候选」，两列显示序号/状态/说明/时长/整片帧数；选用先过 `durationApplyError` 再走 `rollbackWorkingVersion`；工作版本变化后回到默认对。样式见 `video-studio.css` 的 `.shot-compare-*`。
 - 浏览器回归：`scripts/video/e2e-candidate-compare.mjs`（QA `VID-027`）7 步全 PASS——重做产生候选 → 两列对比与互斥 → 锁定下选用原拍法 → 保存/重开持久化 → 导出校验（working/#1、`lock-changed`、`audit 回滚工作版本`、无 `approved`、v2）→ 零帧候选被「无法应用：」拦下且工作版本仍 2000ms；控制台 error 0，TTS 台账 0 → 0。
 - 回归数字：`@acs/web` 244、`@acs/video-document` 146、`scripts/video` 152 全绿；`pnpm --filter @acs/web typecheck` exit 0；`biome check .` 385 文件 clean；`qa:validate` 85 automated / 53 manual。
+
+### 复核整改：双入口共用选版本闸门
+
+复核发现原有版本下拉的「回滚到此版本」会绕过对比面板的零帧检查。现由 `version-selection.ts` 在应用边界统一调用 `describeDurationImpact` / `durationApplyError`，通过后才执行原有 `rollbackWorkingVersion`；两个按钮共用该路径。锁定镜头人工选用、audit 留痕及存量零帧逐镜修复语义保留。回归增加 1ms 候选双入口拦截、工作指针和事件不变的断言。实测 Web 247/247、typecheck、Biome 386 文件、VID-027 浏览器 7 步通过。
