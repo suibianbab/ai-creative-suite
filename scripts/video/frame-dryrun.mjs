@@ -9,6 +9,7 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
 import { Worker } from "node:worker_threads";
+import { DIMENSIONS } from "./render-scene.props.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, "../..");
@@ -98,10 +99,16 @@ export function dryRunJobs(jobs, { budgetMs = DEFAULT_BUDGET_MS } = {}) {
 // 接入时显式改）。
 // P3-B Task 4：three 镜头与媒体同待遇——3D 画面由烘焙门禁（bake-three）覆盖，
 // 干跑不产 SVG 作业；帧图量化仍为其占位（span 与出片一致）。
-export async function buildProjectDryRunJobs(project) {
+export async function buildProjectDryRunJobs(project, aspect = "landscape") {
   const { quantizeTimeline } = await import(
     pathToFileURL(path.join(ROOT, "packages/video-document/dist/index.js")).href
   );
+  const [width, height] = DIMENSIONS[aspect] ?? [];
+  if (!width || !height) {
+    throw new Error(
+      `干跑画幅 ${aspect} 未知（仅支持 landscape | portrait）`,
+    );
+  }
   const entries = [];
   project.shots.forEach((shot, index) => {
     const version = shot.contentVersions.find(
@@ -121,7 +128,7 @@ export async function buildProjectDryRunJobs(project) {
     const sceneSource = entry.version.sceneSource;
     if (sceneSource.type === "spec") {
       jobs.push({
-        label: `${entry.label}（${span.frames} 帧）`,
+        label: `${entry.label}[${aspect}]（${span.frames} 帧）`,
         frames: span.frames,
         moduleUrl: SPEC_FRAME_RENDERER_URL,
         fn: "renderSpecFrame",
@@ -129,8 +136,8 @@ export async function buildProjectDryRunJobs(project) {
           spec: sceneSource.spec,
           fps: DRY_RUN_FPS,
           durationFrames: span.frames,
-          width: 1280,
-          height: 720,
+          width,
+          height,
         },
       });
     } else if (
@@ -154,11 +161,12 @@ if (isMain) {
     options: {
       project: { type: "string" },
       "budget-ms": { type: "string" },
+      aspect: { type: "string" },
     },
   });
   if (!values.project) {
     console.error(
-      "用法: node scripts/video/frame-dryrun.mjs --project <path.json> [--budget-ms 500]",
+      "用法: node scripts/video/frame-dryrun.mjs --project <path.json> [--budget-ms 500] [--aspect landscape|portrait]",
     );
     process.exit(1);
   }
@@ -174,9 +182,10 @@ if (isMain) {
     const project = validateVideoProject(
       JSON.parse(readFileSync(projectPath, "utf8")),
     );
-    const { jobs, timeline } = await buildProjectDryRunJobs(project);
+    const aspect = values.aspect ?? "landscape";
+    const { jobs, timeline } = await buildProjectDryRunJobs(project, aspect);
     console.log(
-      `[frame-dryrun] 干跑 ${timeline.totalFrames} 帧（预算 ${budgetMs}ms/帧）…`,
+      `[frame-dryrun] 干跑 ${timeline.totalFrames} 帧 × ${aspect}（预算 ${budgetMs}ms/帧）…`,
     );
     if (jobs.length === 0)
       console.log(

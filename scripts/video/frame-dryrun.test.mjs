@@ -205,3 +205,16 @@ test("干跑：three 与 media-clip 混排时作业数只计 spec 镜头", async
   assert.equal(jobs[0].frames, 24);
   assert.match(jobs[0].label, /镜头 1/);
 });
+
+// ── 双画幅（2026-10-23）：干跑门按画幅出作业，竖版专属布局问题不再漏检 ──
+test("干跑装配：aspect 参数化画布——横版 1280×720、竖版 720×1280", async () => {
+  const project = dryProject([workingShot("s1", "v1", 1000, SPEC)]);
+  const landscape = await buildProjectDryRunJobs(project);
+  assert.equal(landscape.jobs[0].args.width, 1280);
+  assert.equal(landscape.jobs[0].args.height, 720);
+  assert.match(landscape.jobs[0].label, /landscape/);
+  const portrait = await buildProjectDryRunJobs(project, "portrait");
+  assert.equal(portrait.jobs[0].args.width, 720);
+  assert.equal(portrait.jobs[0].args.height, 1280);
+  assert.match(portrait.jobs[0].label, /portrait/);
+});

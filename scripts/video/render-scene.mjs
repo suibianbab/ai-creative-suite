@@ -370,24 +370,28 @@ const contentDigests = shotEntries.map((entry) =>
 // 实际渲染用的浏览器：显式传了 Chrome 就记其版本，否则是 Remotion 自带 headless shell
 const browser = browserLabel(existsSync(CHROME) ? CHROME : "");
 
-// 3.5 逐帧干跑门禁（P2-A 补齐）：超时/抛错/超节点预算在出片前拦截
+// 3.5 逐帧干跑门禁（P2-A 补齐）：超时/抛错/超节点预算在出片前拦截。
+// 双画幅（2026-10-23）：按项目 aspectTargets 逐画幅干跑——竖版专属布局
+//（含 per-aspect layout 覆写）不再漏检到 Remotion 渲染期才炸。
 if (!values["skip-dryrun"]) {
   const budgetMs = values["budget-ms"]
     ? Number(values["budget-ms"])
     : DEFAULT_BUDGET_MS;
-  const { jobs } = await buildProjectDryRunJobs(project);
-  console.log(
-    `[render-scene] 干跑 ${totalFrames} 帧（预算 ${budgetMs}ms/帧）…`,
-  );
-  const dryRun = await dryRunJobs(jobs, { budgetMs });
-  if (!dryRun.ok) {
-    fail(
-      `逐帧干跑失败: ${dryRun.failures
-        .map((item) => `${item.label} 第 ${item.frame} 帧 ${item.reason}`)
-        .join("; ")}`,
+  for (const aspect of project.brief.aspectTargets) {
+    const { jobs } = await buildProjectDryRunJobs(project, aspect);
+    console.log(
+      `[render-scene] 干跑 ${totalFrames} 帧 × ${aspect}（预算 ${budgetMs}ms/帧）…`,
     );
+    const dryRun = await dryRunJobs(jobs, { budgetMs });
+    if (!dryRun.ok) {
+      fail(
+        `逐帧干跑失败（${aspect}）: ${dryRun.failures
+          .map((item) => `${item.label} 第 ${item.frame} 帧 ${item.reason}`)
+          .join("; ")}`,
+      );
+    }
+    console.log(`[render-scene] 干跑全部通过（${aspect}）`);
   }
-  console.log("[render-scene] 干跑全部通过");
 }
 
 // 3.6 P3-B Task 4：three 镜头烘焙（干跑之后、Remotion 之前，一次烘完所有画幅）。
