@@ -1,0 +1,576 @@
+{
+  "schemaVersion": 1,
+  "id": "1a0547f3-13b2-43d7-89e9-cb0de67a76a1",
+  "title": "季度销量 · 数据动画",
+  "brief": {
+    "sentence": "样片库：季度销量 · 数据动画。这是可编辑起点，请在发布前替换示例文案和素材。",
+    "aspectTargets": [
+      "landscape",
+      "portrait"
+    ]
+  },
+  "shots": [
+    {
+      "shotId": "f4edf464-50da-437e-8740-3a2118252a74",
+      "order": 0,
+      "locked": false,
+      "workingVersionId": "2e26f4e9-fbe0-49ef-b365-53cf5771be5b",
+      "contentVersions": [
+        {
+          "versionId": "40b22fdb-a8dc-4a47-b433-ce38282aa277",
+          "createdAt": "2026-10-22T16:59:47.040Z",
+          "durationMs": 2000,
+          "description": "开场：介绍季度销量数据",
+          "narrationText": "季度销量观察。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 2000,
+              "seed": 4201,
+              "background": "#122137",
+              "params": {
+                "title": "季度销量观察",
+                "subtitle": "用数据看增长",
+                "titleColor": "#f5f7fa",
+                "subtitleColor": "#afcde6",
+                "entrance": "fade-up",
+                "enterMs": 450
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        },
+        {
+          "versionId": "635995c0-ca72-4edc-b7d9-ba2f27c1c210",
+          "createdAt": "2026-10-22T16:59:47.272Z",
+          "durationMs": 2000,
+          "description": "开场：介绍季度销量数据",
+          "narrationText": "季度销量观察。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 2000,
+              "seed": 4201,
+              "background": "#122137",
+              "params": {
+                "title": "双画幅预览与镜头级微调验收标题",
+                "titleColor": "#f5f7fa",
+                "subtitleColor": "#afcde6",
+                "entrance": "fade-up",
+                "enterMs": 450,
+                "subtitle": "用数据看增长"
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "human-edit",
+            "engineVersion": "1",
+            "parentVersionId": "40b22fdb-a8dc-4a47-b433-ce38282aa277"
+          }
+        },
+        {
+          "versionId": "2e26f4e9-fbe0-49ef-b365-53cf5771be5b",
+          "createdAt": "2026-10-22T16:59:48.403Z",
+          "durationMs": 2000,
+          "description": "开场：介绍季度销量数据",
+          "narrationText": "季度销量观察。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 2000,
+              "seed": 4201,
+              "background": "#122137",
+              "params": {
+                "title": "双画幅预览与镜头级微调验收标题",
+                "titleColor": "#f5f7fa",
+                "subtitleColor": "#afcde6",
+                "entrance": "fade-up",
+                "enterMs": 450,
+                "subtitle": "用数据看增长"
+              },
+              "layout": {
+                "portrait": {
+                  "titleLines": [
+                    "双画幅预览与镜头级微调",
+                    "验收标题"
+                  ]
+                }
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "human-edit",
+            "engineVersion": "1",
+            "parentVersionId": "635995c0-ca72-4edc-b7d9-ba2f27c1c210"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "40b22fdb-a8dc-4a47-b433-ce38282aa277",
+          "at": "2026-10-22T16:59:47.040Z",
+          "actor": "human"
+        },
+        {
+          "kind": "submitted",
+          "versionId": "635995c0-ca72-4edc-b7d9-ba2f27c1c210",
+          "at": "2026-10-22T16:59:47.272Z",
+          "actor": "human"
+        },
+        {
+          "kind": "submitted",
+          "versionId": "2e26f4e9-fbe0-49ef-b365-53cf5771be5b",
+          "at": "2026-10-22T16:59:48.403Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "45729b07-61c1-40cb-8d40-a2d390e59735",
+      "order": 1,
+      "locked": false,
+      "workingVersionId": "fcaae991-f67b-4569-9670-010b41c3147f",
+      "contentVersions": [
+        {
+          "versionId": "14eb5b9c-08e9-463b-9119-6bcdbbd2ff10",
+          "createdAt": "2026-10-22T16:59:47.040Z",
+          "durationMs": 2800,
+          "description": "柱状图对比四个季度",
+          "narrationText": "第四季度达到最高。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "bar-chart",
+              "componentVersion": 1,
+              "durationMs": 2800,
+              "seed": 4202,
+              "background": "#122137",
+              "params": {
+                "title": "四季度销量对比",
+                "bars": [
+                  {
+                    "label": "一季度",
+                    "value": 32
+                  },
+                  {
+                    "label": "二季度",
+                    "value": 46
+                  },
+                  {
+                    "label": "三季度",
+                    "value": 58
+                  },
+                  {
+                    "label": "四季度",
+                    "value": 82
+                  }
+                ],
+                "barColor": "#4a9fdb",
+                "accentColor": "#ffbc60",
+                "textColor": "#f5f7fa",
+                "enterMs": 1400
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        },
+        {
+          "versionId": "d718c0d5-cc1e-42da-8983-c9ff43b6d0b4",
+          "createdAt": "2026-10-22T16:59:47.438Z",
+          "durationMs": 2800,
+          "description": "柱状图对比四个季度",
+          "narrationText": "第四季度达到最高。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "line-chart",
+              "componentVersion": 1,
+              "durationMs": 2800,
+              "seed": 4202,
+              "background": "#122137",
+              "params": {
+                "title": "十二个数据点压力测试",
+                "points": [
+                  {
+                    "label": "第1季度表现",
+                    "value": 9
+                  },
+                  {
+                    "label": "第2季度表现",
+                    "value": 18
+                  },
+                  {
+                    "label": "第3季度表现",
+                    "value": 27
+                  },
+                  {
+                    "label": "第4季度表现",
+                    "value": 36
+                  },
+                  {
+                    "label": "第5季度表现",
+                    "value": 45
+                  },
+                  {
+                    "label": "第6季度表现",
+                    "value": 54
+                  },
+                  {
+                    "label": "第7季度表现",
+                    "value": 63
+                  },
+                  {
+                    "label": "第8季度表现",
+                    "value": 72
+                  },
+                  {
+                    "label": "第9季度表现",
+                    "value": 81
+                  },
+                  {
+                    "label": "第10季度表现",
+                    "value": 90
+                  },
+                  {
+                    "label": "第11季度表现",
+                    "value": 99
+                  },
+                  {
+                    "label": "第12季度表现",
+                    "value": 108
+                  }
+                ],
+                "lineColor": "#2f6f4f",
+                "markerColor": "#d9822b",
+                "textColor": "#1b2c29",
+                "drawMs": 1600
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "human-edit",
+            "engineVersion": "1",
+            "parentVersionId": "14eb5b9c-08e9-463b-9119-6bcdbbd2ff10"
+          }
+        },
+        {
+          "versionId": "19b38897-802c-456c-8d9d-d7d3c2ec74fb",
+          "createdAt": "2026-10-22T16:59:47.452Z",
+          "durationMs": 2800,
+          "description": "柱状图对比四个季度（人工修订）",
+          "narrationText": "第四季度达到最高。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "line-chart",
+              "componentVersion": 1,
+              "durationMs": 2800,
+              "seed": 4202,
+              "background": "#122137",
+              "params": {
+                "title": "十二个数据点压力测试",
+                "points": [
+                  {
+                    "label": "第1季度表现",
+                    "value": 9
+                  },
+                  {
+                    "label": "第2季度表现",
+                    "value": 18
+                  },
+                  {
+                    "label": "第3季度表现",
+                    "value": 27
+                  },
+                  {
+                    "label": "第4季度表现",
+                    "value": 36
+                  },
+                  {
+                    "label": "第5季度表现",
+                    "value": 45
+                  },
+                  {
+                    "label": "第6季度表现",
+                    "value": 54
+                  },
+                  {
+                    "label": "第7季度表现",
+                    "value": 63
+                  },
+                  {
+                    "label": "第8季度表现",
+                    "value": 72
+                  },
+                  {
+                    "label": "第9季度表现",
+                    "value": 81
+                  },
+                  {
+                    "label": "第10季度表现",
+                    "value": 90
+                  },
+                  {
+                    "label": "第11季度表现",
+                    "value": 99
+                  },
+                  {
+                    "label": "第12季度表现",
+                    "value": 108
+                  }
+                ],
+                "lineColor": "#4a9fdb",
+                "markerColor": "#ffbc60",
+                "textColor": "#f5f7fa",
+                "drawMs": 1600
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "human-edit",
+            "engineVersion": "1",
+            "parentVersionId": "d718c0d5-cc1e-42da-8983-c9ff43b6d0b4"
+          }
+        },
+        {
+          "versionId": "fcaae991-f67b-4569-9670-010b41c3147f",
+          "createdAt": "2026-10-22T16:59:48.553Z",
+          "durationMs": 2800,
+          "description": "柱状图对比四个季度（人工修订）",
+          "narrationText": "第四季度达到最高。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "line-chart",
+              "componentVersion": 1,
+              "durationMs": 2800,
+              "seed": 4202,
+              "background": "#122137",
+              "params": {
+                "title": "十二个数据点压力测试",
+                "points": [
+                  {
+                    "label": "第1季度表现",
+                    "value": 9
+                  },
+                  {
+                    "label": "第2季度表现",
+                    "value": 18
+                  },
+                  {
+                    "label": "第3季度表现",
+                    "value": 27
+                  },
+                  {
+                    "label": "第4季度表现",
+                    "value": 36
+                  },
+                  {
+                    "label": "第5季度表现",
+                    "value": 45
+                  },
+                  {
+                    "label": "第6季度表现",
+                    "value": 54
+                  },
+                  {
+                    "label": "第7季度表现",
+                    "value": 63
+                  },
+                  {
+                    "label": "第8季度表现",
+                    "value": 72
+                  },
+                  {
+                    "label": "第9季度表现",
+                    "value": 81
+                  },
+                  {
+                    "label": "第10季度表现",
+                    "value": 90
+                  },
+                  {
+                    "label": "第11季度表现",
+                    "value": 99
+                  },
+                  {
+                    "label": "第12季度表现",
+                    "value": 108
+                  }
+                ],
+                "lineColor": "#4a9fdb",
+                "markerColor": "#ffbc60",
+                "textColor": "#f5f7fa",
+                "drawMs": 1600
+              },
+              "layout": {
+                "portrait": {
+                  "labelStep": 2,
+                  "shortLabels": [
+                    {
+                      "index": 0,
+                      "text": "Q1"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "human-edit",
+            "engineVersion": "1",
+            "parentVersionId": "19b38897-802c-456c-8d9d-d7d3c2ec74fb"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "14eb5b9c-08e9-463b-9119-6bcdbbd2ff10",
+          "at": "2026-10-22T16:59:47.040Z",
+          "actor": "human"
+        },
+        {
+          "kind": "submitted",
+          "versionId": "d718c0d5-cc1e-42da-8983-c9ff43b6d0b4",
+          "at": "2026-10-22T16:59:47.438Z",
+          "actor": "human"
+        },
+        {
+          "kind": "submitted",
+          "versionId": "19b38897-802c-456c-8d9d-d7d3c2ec74fb",
+          "at": "2026-10-22T16:59:47.452Z",
+          "actor": "human"
+        },
+        {
+          "kind": "submitted",
+          "versionId": "fcaae991-f67b-4569-9670-010b41c3147f",
+          "at": "2026-10-22T16:59:48.553Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "23fdf9c2-bfb7-481d-8f72-87c50a735eef",
+      "order": 2,
+      "locked": false,
+      "workingVersionId": "44a8d9e4-0ce5-4faa-ae7d-1b6a17ecfba6",
+      "contentVersions": [
+        {
+          "versionId": "44a8d9e4-0ce5-4faa-ae7d-1b6a17ecfba6",
+          "createdAt": "2026-10-22T16:59:47.040Z",
+          "durationMs": 2200,
+          "description": "关键数字：四季度 82 单位",
+          "narrationText": "关键数字是八十二。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "number-counter",
+              "componentVersion": 1,
+              "durationMs": 2200,
+              "seed": 4203,
+              "background": "#122137",
+              "params": {
+                "title": "四季度销量",
+                "value": 82,
+                "prefix": "",
+                "suffix": " 单位",
+                "decimals": 0,
+                "countMs": 1400,
+                "numberColor": "#f5f7fa",
+                "accentColor": "#ffbc60"
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "44a8d9e4-0ce5-4faa-ae7d-1b6a17ecfba6",
+          "at": "2026-10-22T16:59:47.040Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "43706be5-f8a7-441e-bfae-3e6dfcb1ede3",
+      "order": 3,
+      "locked": false,
+      "workingVersionId": "66aaf936-6684-4674-bdc8-9f2a760479b4",
+      "contentVersions": [
+        {
+          "versionId": "66aaf936-6684-4674-bdc8-9f2a760479b4",
+          "createdAt": "2026-10-22T16:59:47.040Z",
+          "durationMs": 2000,
+          "description": "收尾：给出增长结论",
+          "narrationText": "趋势清晰可见。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 2000,
+              "seed": 4204,
+              "background": "#122137",
+              "params": {
+                "title": "增长，清晰可见",
+                "subtitle": "替换为你的真实数据",
+                "titleColor": "#f5f7fa",
+                "subtitleColor": "#afcde6",
+                "entrance": "fade-up",
+                "enterMs": 450
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "66aaf936-6684-4674-bdc8-9f2a760479b4",
+          "at": "2026-10-22T16:59:47.040Z",
+          "actor": "human"
+        }
+      ]
+    }
+  ],
+  "renderRecords": [],
+  "deliveries": [],
+  "savedVersion": 4,
+  "styleBibleRef": {
+    "bibleId": "139acd2d-f31c-4221-ab5f-e19debf003c3",
+    "versionId": "63db1465-654d-44cb-be30-516a3d8bbcb2",
+    "digest": "60c74e073c3696521f5aa453ca6de46ecec26632dde8644bebce3f204ddbf24c"
+  }
+}
