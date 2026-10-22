@@ -815,18 +815,23 @@ export function validateVideoProject(value: unknown): VideoProject {
     ) {
       fail(`${field}.frameMap must be an array of positive integers`);
     }
-    // —— P3-A 交互 HTML 交付：可选字段，仅在存在时校验（旧记录形状不变）——
-    if (delivery.kind !== undefined && delivery.kind !== "interactive-html") {
-      fail(`${field}.kind 须为 interactive-html`);
+    // 已知交付类型都须指向具体产物；旧五键记录仍按原形状读取。
+    if (
+      delivery.kind !== undefined &&
+      delivery.kind !== "interactive-html" &&
+      delivery.kind !== "gif" &&
+      delivery.kind !== "shot-svg"
+    ) {
+      fail(`${field}.kind 须为 interactive-html、gif 或 shot-svg`);
     }
     // kind 一出现就要求「产物名 + 摘要」齐全：只写 kind 的记录无法定位具体
     // 产物，等于伪完整交付（P3-A 修复 Minor 1）。旧五键记录仍合法。
-    if (delivery.kind === "interactive-html") {
+    if (delivery.kind !== undefined) {
       if (delivery.outputRef === undefined) {
-        fail(`${field}.outputRef is required when kind is "interactive-html"`);
+        fail(`${field}.outputRef is required when kind is present`);
       }
       if (delivery.digest === undefined) {
-        fail(`${field}.digest is required when kind is "interactive-html"`);
+        fail(`${field}.digest is required when kind is present`);
       }
     }
     if (delivery.outputRef !== undefined) {

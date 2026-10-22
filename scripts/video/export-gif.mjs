@@ -3,11 +3,13 @@
 // ffmpeg palettegen/paletteuse 转码，DeliveryRecord 落档（deliveries 首次写入）。
 // 用法: node scripts/video/export-gif.mjs --project <path.json> [--aspect landscape|portrait] [--out <dir>] [--fps 12] [--colors 128] [--width 480]
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { randomUUID } from "node:crypto";
+import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
-import { appendDelivery } from "./delivery.mjs";
+import { appendDelivery, commitDeliveryFiles } from "./delivery.mjs";
+import { sha256File } from "./sha256-file.mjs";
 
 // 测试与共享方从本模块取交付追加器（计划 Interfaces 约定）。
 export { appendDelivery };
@@ -83,8 +85,7 @@ export function buildGifFilter({ fps, width, colors }) {
 // —— CLI 主路径（纯逻辑以上，测试只碰纯逻辑；直接运行才执行） ——
 
 function fail(message) {
-  console.error(`[export-gif] ${message}`);
-  process.exit(1);
+  throw new Error(message);
 }
 
 async function main() {
@@ -149,69 +150,89 @@ async function main() {
   const outDir = path.resolve(values.out ?? path.dirname(projectPath));
   mkdirSync(outDir, { recursive: true });
   const gifPath = path.join(outDir, `${aspect}.gif`);
-  const transcode = spawnSync(
-    "ffmpeg",
-    [
-      "-y",
-      "-v",
-      "error",
-      "-i",
-      videoPath,
-      "-filter_complex",
-      buildGifFilter({ fps, width, colors }),
-      "-map",
-      "[out]",
-      "-loop",
-      "0",
-      gifPath,
-    ],
-    { encoding: "utf8", timeout: 600_000 },
-  );
-  if (transcode.status !== 0)
-    fail(`ffmpeg 转码失败:\n${transcode.stderr ?? ""}`);
+  const stagedGifPath = path.join(outDir, `.${aspect}.${randomUUID()}.tmp.gif`);
+  try {
+    const transcode = spawnSync(
+      "ffmpeg",
+      [
+        "-y",
+        "-v",
+        "error",
+        "-i",
+        videoPath,
+        "-filter_complex",
+        buildGifFilter({ fps, width, colors }),
+        "-map",
+        "[out]",
+        "-loop",
+        "0",
+        stagedGifPath,
+      ],
+      { encoding: "utf8", timeout: 600_000 },
+    );
+    if (transcode.status !== 0)
+      fail(`ffmpeg 转码失败:\n${transcode.stderr ?? ""}`);
 
-  // ffprobe 门禁：codec/宽度/时长（GIF 帧计时取整允许 0.2s 容差）
-  const probe = spawnSync(
-    "ffprobe",
-    [
-      "-v",
-      "error",
-      "-select_streams",
-      "v:0",
-      "-show_entries",
-      "stream=codec_name,width",
-      "-show_entries",
-      "format=duration",
-      "-of",
-      "json",
-      gifPath,
-    ],
-    { encoding: "utf8", timeout: 120_000 },
-  );
-  if (probe.status !== 0) fail(`ffprobe 失败: ${probe.stderr}`);
-  const metadata = JSON.parse(probe.stdout);
-  const stream = metadata.streams?.[0];
-  const totalFrames = block.records.reduce(
-    (sum, record) => sum + record.frames,
-    0,
-  );
-  const expectedSeconds = totalFrames / RENDER_FPS;
-  const durationSeconds = Number(metadata.format?.duration ?? 0);
-  if (stream?.codec_name !== "gif" || stream?.width !== width)
-    fail(`GIF 元数据不符: ${JSON.stringify(metadata)}（期望 gif/${width} 宽）`);
-  if (Math.abs(durationSeconds - expectedSeconds) > 0.2)
-    fail(`GIF 时长 ${durationSeconds}s 与源 ${expectedSeconds}s 偏差超 0.2s`);
+    // ffprobe 门禁：codec/宽度/时长（GIF 帧计时取整允许 0.2s 容差）
+    const probe = spawnSync(
+      "ffprobe",
+      [
+        "-v",
+        "error",
+        "-select_streams",
+        "v:0",
+        "-show_entries",
+        "stream=codec_name,width",
+        "-show_entries",
+        "format=duration",
+        "-of",
+        "json",
+        stagedGifPath,
+      ],
+      { encoding: "utf8", timeout: 120_000 },
+    );
+    if (probe.status !== 0) fail(`ffprobe 失败: ${probe.stderr}`);
+    const metadata = JSON.parse(probe.stdout);
+    const stream = metadata.streams?.[0];
+    const totalFrames = block.records.reduce(
+      (sum, record) => sum + record.frames,
+      0,
+    );
+    const expectedSeconds = totalFrames / RENDER_FPS;
+    const durationSeconds = Number(metadata.format?.duration ?? 0);
+    if (stream?.codec_name !== "gif" || stream?.width !== width)
+      fail(
+        `GIF 元数据不符: ${JSON.stringify(metadata)}（期望 gif/${width} 宽）`,
+      );
+    if (Math.abs(durationSeconds - expectedSeconds) > 0.2)
+      fail(`GIF 时长 ${durationSeconds}s 与源 ${expectedSeconds}s 偏差超 0.2s`);
 
-  const { project: next, delivery } = appendDelivery(project, {
-    versionIds: block.records.map((record) => record.versionId),
-    renderIds: block.records.map((record) => record.renderId),
-    frameMap,
-  });
-  writeFileSync(projectPath, `${JSON.stringify(next, null, 2)}\n`);
-  console.log(
-    `[export-gif] 完成: ${gifPath}（${expectedSeconds.toFixed(1)}s @${fps}fps, ${width}px 宽）; DeliveryRecord ${delivery.deliveryId.slice(0, 8)} 已回写 ${path.basename(projectPath)} (savedVersion=${next.savedVersion})`,
-  );
+    const digest = await sha256File(stagedGifPath);
+    const { project: next, delivery } = appendDelivery(project, {
+      versionIds: block.records.map((record) => record.versionId),
+      renderIds: block.records.map((record) => record.renderId),
+      frameMap,
+      kind: "gif",
+      outputRef: path.basename(gifPath),
+      digest,
+    });
+    commitDeliveryFiles({
+      stagedOutputPath: stagedGifPath,
+      outputPath: gifPath,
+      projectPath,
+      nextProject: next,
+    });
+    console.log(
+      `[export-gif] 完成: ${gifPath}（${expectedSeconds.toFixed(1)}s @${fps}fps, ${width}px 宽）; DeliveryRecord ${delivery.deliveryId.slice(0, 8)} 已回写 ${path.basename(projectPath)} (savedVersion=${next.savedVersion})`,
+    );
+  } finally {
+    rmSync(stagedGifPath, { force: true });
+  }
 }
 
 const isMain = import.meta.url === pathToFileURL(process.argv[1] ?? "").href;
-if (isMain) await main();
+if (isMain)
+  await main().catch((error) => {
+    console.error(`[export-gif] ${error.message}`);
+    process.exitCode = 1;
+  });

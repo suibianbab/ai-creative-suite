@@ -16,7 +16,8 @@ const ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   "../..",
 );
-const OUT_DIR = path.join(ROOT, "artifacts/video-studio-export");
+// 回归产物写入 gitignored .tools，避免重跑改写入库的历史证据 JSON。
+const OUT_DIR = path.join(ROOT, ".tools/video-studio-export-e2e");
 const LEDGER = path.join(ROOT, "artifacts/tts-usage.jsonl");
 const BASELINE = path.join(
   ROOT,
@@ -48,6 +49,21 @@ function run(step, args) {
   if (result.status !== 0)
     fail(step, `${result.stdout ?? ""}\n${result.stderr ?? ""}`);
   return result.stdout ?? "";
+}
+function runFailure(step, args, expected) {
+  const result = spawnSync(process.execPath, args, {
+    cwd: ROOT,
+    encoding: "utf8",
+    timeout: 600_000,
+  });
+  if (
+    result.status === 0 ||
+    !`${result.stdout}${result.stderr}`.includes(expected)
+  )
+    fail(
+      step,
+      `预期失败「${expected}」未出现：${result.stdout}\n${result.stderr}`,
+    );
 }
 
 mkdirSync(OUT_DIR, { recursive: true });
@@ -87,6 +103,12 @@ if (JSON.stringify(d0.frameMap) !== JSON.stringify([24, 37, 24, 24]))
   fail("export-gif", `frameMap ${JSON.stringify(d0.frameMap)}`);
 const gif = path.join(OUT_DIR, "landscape.gif");
 if (!existsSync(gif)) fail("export-gif", "GIF 未落盘");
+if (
+  d0.kind !== "gif" ||
+  d0.outputRef !== path.basename(gif) ||
+  d0.digest !== sha256(gif)
+)
+  fail("export-gif", "交付类型、产物文件名或实测 SHA-256 不符");
 // ffprobe 元数据门禁在 CLI 内部已做；此处再独立复核一次 codec/宽度
 const probe = JSON.parse(
   spawnSync(
@@ -173,6 +195,62 @@ if (
   JSON.stringify(afterSvg.deliveries[1].frameMap) !== "[37]"
 )
   fail("SVG 动画交付", JSON.stringify(afterSvg.deliveries[1]));
+for (const [deliveryIndex, filename] of [
+  [1, "shot-2-animated-12fps.svg"],
+  [2, "shot-3-frame-24.svg"],
+]) {
+  const delivery = afterSvg.deliveries[deliveryIndex];
+  if (
+    delivery.kind !== "shot-svg" ||
+    delivery.outputRef !== filename ||
+    delivery.digest !== sha256(path.join(OUT_DIR, filename))
+  )
+    fail("SVG 交付", `第 ${deliveryIndex} 条文件名或实测 SHA-256 不符`);
+}
+
+// 失败路径必须维持已存在的交付记录和产物：GIF 在 ffmpeg 阶段失败，SVG
+// 在帧号校验阶段失败。回写阶段失败的恢复由 delivery.test.mjs 单独注入验证。
+const projectBeforeFailure = readFileSync(project);
+const gifBeforeFailure = sha256(gif);
+const svgBeforeFailure = sha256(
+  path.join(OUT_DIR, "shot-2-animated-12fps.svg"),
+);
+runFailure(
+  "GIF 转码失败不落账",
+  [
+    path.join(ROOT, "scripts/video/export-gif.mjs"),
+    "--project",
+    project,
+    "--aspect",
+    "landscape",
+    "--out",
+    OUT_DIR,
+    "--colors",
+    "0",
+  ],
+  "ffmpeg 转码失败",
+);
+runFailure(
+  "SVG 帧号失败不落账",
+  [
+    path.join(ROOT, "scripts/video/export-shot-svg.mjs"),
+    "--project",
+    project,
+    "--shot",
+    "2",
+    "--frame",
+    "999999",
+    "--out",
+    OUT_DIR,
+  ],
+  "越界",
+);
+if (
+  !readFileSync(project).equals(projectBeforeFailure) ||
+  sha256(gif) !== gifBeforeFailure ||
+  sha256(path.join(OUT_DIR, "shot-2-animated-12fps.svg")) !== svgBeforeFailure
+)
+  fail("失败不落账", "项目或既有产物在失败导出后发生变化");
 
 // 5. SVG 双跑逐字节一致
 copyFileSync(project, projectCopy);

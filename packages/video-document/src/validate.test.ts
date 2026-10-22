@@ -841,6 +841,38 @@ test("有 outputRef+digest 但无 kind → 通过（固定既有放行行为）"
   assert.equal(validateVideoProject(project).deliveries.length, 1);
 });
 
+test("E0：GIF 与单镜 SVG 的产物名和摘要齐全时可读取", () => {
+  for (const [kind, outputRef] of [
+    ["gif", "landscape.gif"],
+    ["shot-svg", "shot-2-animated-12fps.svg"],
+  ] as const) {
+    const project = baseWithDelivery();
+    project.deliveries[0]!.kind = kind;
+    project.deliveries[0]!.outputRef = outputRef;
+    project.deliveries[0]!.digest = "a".repeat(64);
+    assert.equal(validateVideoProject(project).deliveries[0]!.kind, kind);
+  }
+});
+
+test("E0：GIF 与单镜 SVG 有 kind 却缺产物名或摘要时拒绝", () => {
+  for (const kind of ["gif", "shot-svg"] as const) {
+    const withoutRef = baseWithDelivery();
+    withoutRef.deliveries[0]!.kind = kind;
+    withoutRef.deliveries[0]!.digest = "a".repeat(64);
+    assert.throws(
+      () => validateVideoProject(withoutRef),
+      /deliveries\[0\]\.outputRef/,
+    );
+    const withoutDigest = baseWithDelivery();
+    withoutDigest.deliveries[0]!.kind = kind;
+    withoutDigest.deliveries[0]!.outputRef = "output.gif";
+    assert.throws(
+      () => validateVideoProject(withoutDigest),
+      /deliveries\[0\]\.digest/,
+    );
+  }
+});
+
 // —— P3-B Task 1：three 场景源与 3D 渲染证据（文档契约层）——
 const THREE_VERSION_ID = "0b0b13a2-6c63-4d3d-9a52-a70f6a3b5001";
 const THREE_SHOT_ID = "0b0b13a2-6c63-4d3d-9a52-a70f6a3b5002";

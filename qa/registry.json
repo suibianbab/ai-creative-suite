@@ -2194,13 +2194,15 @@
         "Run export-gif --aspect landscape and independently re-probe the GIF with ffprobe (codec=gif, width=480)",
         "Re-run export-gif on a copy of the project and compare both GIFs byte-for-byte via SHA-256",
         "Run export-shot-svg --shot 2 --fps 12 (text-animation 3100ms) and count @keyframes segments, then --shot 3 --frame 24 (basic-shapes) and check for animation styles; re-run the animated export for a byte-for-byte comparison",
-        "Run one more static export to confirm appendDelivery keeps the document valid after every delivery append, and diff the billing ledger line count"
+        "Run one more static export to confirm appendDelivery keeps the document valid after every delivery append, and diff the billing ledger line count",
+        "Check each GIF/SVG DeliveryRecord kind, outputRef basename and digest against the actual exported file SHA-256; force GIF ffmpeg failure and SVG invalid-frame failure, then assert project bytes and existing outputs stay unchanged"
       ],
       "passCriteria": [
         "e2e exits 0: GIF ffprobe metadata matches (gif codec, requested width, duration within 0.2s) and DeliveryRecord lands with 4 real renderIds and exact-integer frameMap [24,37,24,24]",
         "SVG animated export yields exactly 37 keyframe segments for the 74-frame shot at 12fps; static export contains no @keyframes; SVG deliveries carry empty renderIds (direct scene-tree output) with frameMap [37]/[1]",
         "GIF and SVG double runs are byte-identical (same MP4 source, same ffmpeg, seeded scene render)",
-        "Billing ledger line count is unchanged (zero TTS synthesis in this cut) and every delivery append passes validateVideoProject on the mutated document"
+        "Billing ledger line count is unchanged (zero TTS synthesis in this cut) and every delivery append passes validateVideoProject on the mutated document",
+        "GIF and SVG delivery digests match exported bytes; failed exports append no successful delivery and preserve the previous artifact"
       ]
     },
     {

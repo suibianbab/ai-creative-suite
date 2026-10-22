@@ -1,5 +1,9 @@
 # Current State v2
 
+## 2026-10-22 Video Studio E0：GIF / SVG 交付记录补齐
+
+`DeliveryRecord` 新增 `gif` / `shot-svg` 类型；两条导出链路落实际产物文件名 `outputRef` 与文件字节 SHA-256 `digest`。旧五键交付记录仍可读取，不迁移。暂存产物、先校验落账，再提交产物与项目；项目回写失败则恢复旧产物或删除新产物。`VID-015` 实际渲染/转码/导出回归同时核对记录哈希及失败不落账；详见 `docs/VIDEO_STUDIO_E0_DELIVERY_RECORDS_2026-10-22.md`。
+
 ## 2026-10-22 Video Studio B 复核整改：选版本双入口共用零帧闸门
 
 修复旧版「回滚到此版本」绕过对比面板零帧检查的问题。`version-selection.ts` 统一校验目标内容版本及 `describeDurationImpact` / `durationApplyError`，通过后才调用原有 `rollbackWorkingVersion`；两个按钮均走此路径。1ms 候选经两入口均被拒且工作版本、事件不变，锁定镜头合法切换及存量多零帧逐镜修复继续可用。实测 Web 247/247、Web typecheck、Biome 386 文件、QA 85 automated / 53 manual、VID-027 浏览器 7 步通过（控制台 error 0，TTS 0→0）。下方 B 原始交付数字保留为历史记录。

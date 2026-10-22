@@ -3,11 +3,12 @@
 // 默认 12）出 CSS 翻页册；--frame <0 基> 出静态单帧。DeliveryRecord 落档
 // （renderIds 为空数组——SVG 直出，不派生自任何 MP4 渲染）。
 // 用法: node scripts/video/export-shot-svg.mjs --project <path.json> --shot <1 基序号> [--fps 12 | --frame 24] [--aspect landscape|portrait] [--out <dir>]
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { createHash, randomUUID } from "node:crypto";
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
-import { appendDelivery } from "./delivery.mjs";
+import { appendDelivery, commitDeliveryFiles } from "./delivery.mjs";
 import { buildAnimatedSvg, buildStaticSvg } from "./svg-serialize.mjs";
 
 const RENDER_FPS = 24;
@@ -58,8 +59,7 @@ export function sampledFrameCount(durationFrames, fps, renderFps = RENDER_FPS) {
 // —— CLI 主路径（纯逻辑以上，测试只碰纯逻辑；直接运行才执行） ——
 
 function fail(message) {
-  console.error(`[export-shot-svg] ${message}`);
-  process.exit(1);
+  throw new Error(message);
 }
 
 async function main() {
@@ -165,20 +165,42 @@ async function main() {
   } catch (error) {
     fail(error.message);
   }
-  writeFileSync(svgPath, result.svg);
-
-  const { project: next, delivery } = appendDelivery(project, {
-    versionIds: [version.versionId],
-    renderIds: [],
-    frameMap: [
-      values.frame !== undefined ? 1 : sampledFrameCount(durationFrames, fps),
-    ],
-  });
-  writeFileSync(projectPath, `${JSON.stringify(next, null, 2)}\n`);
-  console.log(
-    `[export-shot-svg] 完成: ${svgPath}（${result.totalNodes} 节点）; DeliveryRecord ${delivery.deliveryId.slice(0, 8)} 已回写 (savedVersion=${next.savedVersion})`,
+  const stagedSvgPath = path.join(
+    outDir,
+    `.${path.basename(svgPath)}.${randomUUID()}.tmp.svg`,
   );
+  try {
+    writeFileSync(stagedSvgPath, result.svg);
+    const digest = createHash("sha256")
+      .update(readFileSync(stagedSvgPath))
+      .digest("hex");
+    const { project: next, delivery } = appendDelivery(project, {
+      versionIds: [version.versionId],
+      renderIds: [],
+      frameMap: [
+        values.frame !== undefined ? 1 : sampledFrameCount(durationFrames, fps),
+      ],
+      kind: "shot-svg",
+      outputRef: path.basename(svgPath),
+      digest,
+    });
+    commitDeliveryFiles({
+      stagedOutputPath: stagedSvgPath,
+      outputPath: svgPath,
+      projectPath,
+      nextProject: next,
+    });
+    console.log(
+      `[export-shot-svg] 完成: ${svgPath}（${result.totalNodes} 节点）; DeliveryRecord ${delivery.deliveryId.slice(0, 8)} 已回写 (savedVersion=${next.savedVersion})`,
+    );
+  } finally {
+    rmSync(stagedSvgPath, { force: true });
+  }
 }
 
 const isMain = import.meta.url === pathToFileURL(process.argv[1] ?? "").href;
-if (isMain) await main();
+if (isMain)
+  await main().catch((error) => {
+    console.error(`[export-shot-svg] ${error.message}`);
+    process.exitCode = 1;
+  });

@@ -109,9 +109,9 @@ export type DeliveryRecord = {
   versionIds: string[];
   renderIds: string[];
   frameMap: number[];
-  // P3-A 交互 HTML 交付（可选）：旧记录无此三字段，保持字节形状不变。
-  kind?: "interactive-html";
-  outputRef?: string; // 产物相对路径（如 index.html），不得含 .. 与路径分隔符
+  // 交付产物元数据：旧记录无此三字段，读取时保持原形状。
+  kind?: "interactive-html" | "gif" | "shot-svg";
+  outputRef?: string; // 产物文件名（如 index.html），不得含 .. 与路径分隔符
   digest?: string; // 产物 sha256（64 位小写十六进制）
 };
 
