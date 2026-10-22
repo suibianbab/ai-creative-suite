@@ -41,6 +41,7 @@ const probe = (name) => {
 const source = validateVideoProject(read("source-video-project.json"));
 const land = validateVideoProject(read("handoff-landscape.json"));
 const port = validateVideoProject(read("handoff-portrait.json"));
+const browserRoundtrip = validateVideoProject(read("browser-roundtrip.json"));
 const manifest = read("bridge-manifest.json");
 const changes = read("edit-diff.json");
 const native = read("data-motion-edited.ecproj");
@@ -49,6 +50,7 @@ assert.equal(native.schema, 2);
 assert.equal(digest("data-motion-edited.ecproj"), manifest.nativeSource.sha256);
 assert.equal(source.id, land.id);
 assert.equal(source.id, port.id);
+assert.equal(source.id, browserRoundtrip.id);
 assert.equal(source.shots.length, 4);
 for (let i = 0; i < source.shots.length; i++) {
   assert.deepEqual(
@@ -58,6 +60,10 @@ for (let i = 0; i < source.shots.length; i++) {
   assert.deepEqual(
     port.shots[i].contentVersions[0],
     source.shots[i].contentVersions[0],
+  );
+  assert.deepEqual(
+    browserRoundtrip.shots[i].contentVersions,
+    land.shots[i].contentVersions,
   );
 }
 assert.deepEqual(
@@ -161,6 +167,7 @@ if (process.env.EFFECTCRAFT_CLI) {
 const report = {
   pass: true,
   nativeReopenVerified,
+  browserRoundtripVerified: true,
   projectId: source.id,
   shotCount: 4,
   durationMs: 12000,

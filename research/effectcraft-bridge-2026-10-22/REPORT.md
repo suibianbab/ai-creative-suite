@@ -23,6 +23,7 @@
 3. [edit-shot4.jsx](edit-shot4.jsx) 从保存的工程重开，仅将第 4 镜头横竖两个合成标题改为“增长，始终可见”，另存 [最终原生工程](data-motion-edited.ecproj)。8 个合成在 2.2 秒抽帧的 [SHA 比对](edit-diff.json) 显示：只有 `L_04`、`P_04` 变化，其余 6 个完全相同。最终工程又在桌面 EffectCraft 0.14.0 打开，真实 [时间线截图](effectcraft-ui-timeline-shot4.png) 和 [合成截图](effectcraft-ui-composition-shot4.png) 可见修改后的标题。桌面编辑控件的人工点按效率未测；本轮编辑通过 EffectCraft 官方 CLI/脚本完成。
 4. 从最终原生工程渲染 8 个 3 秒、24 fps 片段（[片段摘要](clip-digests.json)），调用现有 `scripts/video/media-ingest.mjs` 导入隔离素材仓。用 [handoff.mjs](handoff.mjs) 给原镜头追加原生 `editor-binding` 与横、竖视频 `media-clip` 内容版本，写 [映射与摘要](bridge-manifest.json)。横竖出片分别选择对应工作版本，但项目 ID、镜头 ID、顺序和时长同源。`editor-binding.assetId` 指向原生文件摘要；具体合成名仍由桥接清单映射。
 5. 现有 `render-scene.mjs` 完整跑过每版 288 帧干跑及媒体摘要核验，回写每版 4 条 `RenderRecord`，输出 [横版视频](video-studio-landscape/landscape.mp4) 与 [竖版视频](video-studio-portrait/portrait.mp4)。两版均 12.000 秒、24 fps，分别为 1280×720、720×1280；详见 [QA 结果](qa-result.json)。
+6. [browser-handoff.mjs](browser-handoff.mjs) 在真实 Chromium 中将横版回传项目导入 Video Studio、播放素材镜头、导出 [往返 JSON](browser-roundtrip.json)。往返后四镜头全部内容版本，包括 `editor-binding` 与 `media-clip`，均未丢失。[页面截图](browser-handoff.png) 显示时间线、素材和视频预览。首次使用隔离素材仓时，Web 服务的默认仓没有对应文件，预览明确提示“素材缺失”；把同一批片段经既有 `media-ingest.mjs` 导入 Web 服务的素材仓后，媒体路由返回 200 且预览正常。这说明跨机器回传须同时迁移视频字节，不能只传 JSON 账本。
 
 **风格规范边界：**原始数据样片引用 Style Bible，但现有 `verifyProjectStyleBible` 会正确拒绝“外部媒体画面受本地颜色/灯光规则保证”的声明。两份回传出片快照因此没有 `styleBibleRef`；源分镜及独立风格文件仍保留作人工设计依据。第一次出片尝试在该检查处明确失败，移除无法兑现的保证后出片通过。未来若做正式桥，需定义外部编辑器的风格检查方式。
 
@@ -40,7 +41,7 @@
 
 ## 接入缺口与本轮决策
 
-- `SceneSource.editor-binding` 目前只有 `engineId`、`engineVersion`、`assetId`，没有原生工程内 `compId`；本轮用 [bridge-manifest.json](bridge-manifest.json) 保存镜头到合成的映射。真正迁移/协作时需把映射纳入可验证的资产契约。
+- `SceneSource.editor-binding` 目前只有 `engineId`、`engineVersion`、`assetId`，没有原生工程内 `compId`；本轮用 [bridge-manifest.json](bridge-manifest.json) 保存镜头到合成的映射。浏览器 JSON 往返能保留该记录，但 UI 尚不能从它直接启动 EffectCraft。真正迁移/协作时需把映射和原生工程文件纳入可验证的资产契约。
 - 一个镜头当前只有一个 `workingVersionId`，无法在同一保存态自动为横竖画幅选择不同媒体。验证中使用**同一项目 ID 和同一镜头链**的两份出片快照；这是现有契约缺口，并非正式用户工作流。不应以两套平行时间线解决。
 - 原生 `.ecproj` 还没有进入 Video Studio 的二进制素材仓及下载/恢复流程。本轮 `editor-binding` 保存摘要和外部清单，能复核本机文件，不能宣称跨机器一键重开。
 - `Style Bible` 对外部媒体的质量保证、原生工程版本关联、出片任务状态和失败清理都需要单独契约验证。
@@ -48,7 +49,7 @@
 
 ## QA 与复跑
 
-- 自动用例 `VID-031`：运行 `node research/effectcraft-bridge-2026-10-22/qa-bridge.mjs`；实际结果 PASS，检验项目/镜头身份、原生摘要、单镜差分、8 段片长与尺寸、两版 12 秒整片和渲染记录。
+- 自动用例 `VID-031`：运行 `node research/effectcraft-bridge-2026-10-22/qa-bridge.mjs`；实际结果 PASS，检验项目/镜头身份、原生摘要、单镜差分、浏览器往返保留版本、8 段片长与尺寸、两版 12 秒整片和渲染记录。实际浏览器回归命令为 `node research/effectcraft-bridge-2026-10-22/browser-handoff.mjs`；须先启动 Web 服务并把八段片导入该服务使用的素材仓。浏览器脚本默认把临时输出写入忽略的 `.tools/`；用 `--record` 才更新本目录入库证据。
 - 人工用例 `VID-032`：检查桌面工程、[横版并排图](comparison-landscape.png)、[竖版并排图](comparison-portrait.png)及两条整片，重点看文字裁切、柱值和镜头边界。本轮人工检查了每镜 4 个时间点（共 16 帧/画幅）及 4 个并排代表帧；两个 MP4 还通过全片解码。未进行多人主观评分。
 - `node scripts/qa/run-regression.mjs validate`：89 个自动、54 个人工用例登记有效。`pnpm exec biome check research/effectcraft-bridge-2026-10-22 qa/registry.json`：24 文件通过。系统 `pnpm` 为 v9，与项目要求 v11.19.0 不符，所以没有把 `pnpm qa:validate` 的失败当作代码缺陷；直接运行 QA 脚本成功。
 - 若重建原生样片：下载并校验固定发布包，将 `effectcraft-cli.exe` 路径放入 `$cli`，依次运行 `node node_modules/.pnpm/tsx@4.23.15/node_modules/tsx/dist/cli.mjs research/effectcraft-bridge-2026-10-22/create-project.mts`、`& $cli script research/effectcraft-bridge-2026-10-22/build.jsx --save-as research/effectcraft-bridge-2026-10-22/data-motion.ecproj`、`& $cli script research/effectcraft-bridge-2026-10-22/edit-shot4.jsx research/effectcraft-bridge-2026-10-22/data-motion.ecproj --save-as research/effectcraft-bridge-2026-10-22/data-motion-edited.ecproj`。重新生成素材资产 UUID 会改变项目 JSON 和视频文件 SHA，应对新生成的清单重新对账，不把旧哈希硬套到新运行。

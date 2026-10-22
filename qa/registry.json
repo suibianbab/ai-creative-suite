@@ -1413,11 +1413,13 @@
       "requiresFiles": [
         "research/effectcraft-bridge-2026-10-22/data-motion-edited.ecproj",
         "research/effectcraft-bridge-2026-10-22/bridge-manifest.json",
+        "research/effectcraft-bridge-2026-10-22/browser-roundtrip.json",
         "research/effectcraft-bridge-2026-10-22/video-studio-landscape/landscape.mp4",
         "research/effectcraft-bridge-2026-10-22/video-studio-portrait/portrait.mp4"
       ],
       "checks": [
         "One VideoProject ID and four shot IDs survive source, landscape and portrait handoff snapshots",
+        "Browser import/export retains native editor-binding and media-clip content versions",
         "Saved native .ecproj and eight rendered clips match recorded SHA-256 and dimensions",
         "Single-shot edit changes only L_04 and P_04 comparison frames",
         "Existing Video Studio export returns 12-second 24 fps 1280x720 and 720x1280 videos with four render records each"

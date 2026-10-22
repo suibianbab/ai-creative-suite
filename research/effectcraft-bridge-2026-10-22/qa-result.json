@@ -1,6 +1,7 @@
 {
   "pass": true,
   "nativeReopenVerified": true,
+  "browserRoundtripVerified": true,
   "projectId": "7a7935aa-9349-496a-9c25-42d2af41ec3d",
   "shotCount": 4,
   "durationMs": 12000,
