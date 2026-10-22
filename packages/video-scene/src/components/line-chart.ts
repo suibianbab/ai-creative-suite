@@ -64,8 +64,11 @@ export function lineChartLabelDisplay(
     return {
       index,
       label,
+      // 旧口径 `if (!point.label) return` 同时跳过 undefined 与 ""——
+      // show 判定保持同口径，空字符串标签不渲染（旧 spec 逐字节不变）。
       show:
         label !== undefined &&
+        label !== "" &&
         (step <= 1 || index % step === 0 || index === n - 1),
       text,
     };

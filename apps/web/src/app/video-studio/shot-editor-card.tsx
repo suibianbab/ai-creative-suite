@@ -12,9 +12,9 @@ import { useEffect, useMemo, useState } from "react";
 import {
   applyLayoutToSpec,
   describeLineChartLabels,
-  EMPTY_LAYOUT_DRAFTS,
   type LayoutEditDraft,
   layoutDraftFromSpec,
+  layoutMergeDecision,
   previewLineOverride,
 } from "./aspect-layout-edit";
 import {
@@ -441,27 +441,6 @@ export function ShotEditorCard({
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps -- 依赖收紧是有意的（见上注）
   }, [shot.workingVersionId]);
-
-  // 换模板 = 换视觉基底：旧画幅覆写不再适用 → 草稿清空（应用链还有
-  // componentId 兜底，家族换走时静默不并入 layout）。
-  useEffect(() => {
-    if (pendingTemplateId === "") return;
-    setLayoutError(null);
-    setLayoutDraft((current) => {
-      if (!current) return current;
-      return current.componentId === "text-animation"
-        ? {
-            componentId: "text-animation",
-            portrait: { ...EMPTY_LAYOUT_DRAFTS.text },
-            landscape: { ...EMPTY_LAYOUT_DRAFTS.text },
-          }
-        : {
-            componentId: "line-chart",
-            portrait: { ...EMPTY_LAYOUT_DRAFTS.line },
-            landscape: { ...EMPTY_LAYOUT_DRAFTS.line },
-          };
-    });
-  }, [pendingTemplateId]);
 
   // 覆写草稿的单字段更新（联合类型按画幅分桶，计算键展开需窄化辅助）。
   const updateLayoutField = (
@@ -1184,8 +1163,17 @@ export function ShotEditorCard({
                     </>
                   ) : null}
                   {layoutDraft && editSpec ? (
-                    <fieldset className="aspect-layout-fieldset">
+                    <fieldset
+                      className="aspect-layout-fieldset"
+                      disabled={pendingTemplateId !== ""}
+                    >
                       <legend>画幅微调（另一画幅保持自动布局）</legend>
+                      {pendingTemplateId !== "" ? (
+                        <p className="aspect-layout-hint">
+                          已选新组件模板：应用后旧画幅覆写将被舍弃（新视觉
+                          基底）。改回「保持当前组件」可继续沿用下方覆写。
+                        </p>
+                      ) : null}
                       <div className="aspect-layout-tabs">
                         <button
                           type="button"
@@ -1728,8 +1716,9 @@ export function ShotEditorCard({
                   return;
                 }
                 // 画幅微调并入（2026-10-23）：在最终 spec（含模板/图表链产物）
-                // 上应用 layout 草稿；换模板换家族时静默不并入（草稿已清空，
-                // 此处是兜底）。错误显示在画幅微调区块内，不落库。
+                // 上应用 layout 草稿。已选模板（换装 = 新视觉基底）或家族换走
+                // 时不并入（layoutMergeDecision）；「浏览模板后还原」不影响并入。
+                // 错误显示在画幅微调区块内，不落库。
                 let reviseSpec: unknown = patch.spec;
                 if (layoutDraft) {
                   const finalSpec =
@@ -1738,7 +1727,11 @@ export function ShotEditorCard({
                     finalSpec &&
                     (finalSpec.componentId === "text-animation" ||
                       finalSpec.componentId === "line-chart") &&
-                    finalSpec.componentId === layoutDraft.componentId
+                    layoutMergeDecision({
+                      pendingTemplateId,
+                      draftComponentId: layoutDraft.componentId,
+                      finalComponentId: finalSpec.componentId,
+                    })
                   ) {
                     const appliedLayout = applyLayoutToSpec(
                       finalSpec,

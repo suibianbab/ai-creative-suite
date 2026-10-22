@@ -159,6 +159,30 @@ test("覆写只影响目标画幅：另一画幅标签与无 layout 一致", () 
   );
 });
 
+test("空字符串标签不渲染文本节点（与旧渲染逐字节同口径）", () => {
+  // 终评 Minor#3 升格修复：旧代码 `if (!point.label) return` 跳过 "" 标签，
+  // 覆写改造后 show 判定不得让 "" 混入（空 <text> 会破坏旧 spec 逐字节不变）。
+  const points = [
+    { label: "", value: 1 },
+    { label: "Q2", value: 2 },
+    { label: undefined, value: 3 },
+  ];
+  const display = lineChartLabelDisplay(points, undefined);
+  assert.deepEqual(
+    display.map((item) => item.show),
+    [false, true, false],
+  );
+  for (const ctx of [makeCtx(), makeCtx({ width: 720, height: 1280 })]) {
+    const node = lineChart.render(specWith({ title: "压力", points }), ctx);
+    const texts = labelNodes(node);
+    assert.deepEqual(
+      texts.map((item) => item.text),
+      ["Q2"],
+      `画幅 ${ctx.width}x${ctx.height} 只应有 Q2 一个标签`,
+    );
+  }
+});
+
 test("validateLayout：合法通过，非法边界拒绝", () => {
   const check = (
     layout: unknown,

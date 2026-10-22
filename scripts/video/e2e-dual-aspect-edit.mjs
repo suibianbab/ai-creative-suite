@@ -6,8 +6,8 @@
 // 产物：before-portrait(-chart).png / after-portrait.png / after-landscape.png /
 // export.video-project.json，落在 artifacts/video-studio-dual-aspect-edit-2026-10-23/。
 import assert from "node:assert/strict";
-import { fileURLToPath, pathToFileURL } from "node:url";
 import path from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { chromium } from "playwright-core";
 
 const ROOT = path.resolve(
@@ -27,9 +27,7 @@ const LINE_DATA = Array.from(
 ).join("\n");
 
 const { quantizeTimeline } = await import(
-  pathToFileURL(
-    path.join(ROOT, "packages/video-document/dist/index.js"),
-  ).href
+  pathToFileURL(path.join(ROOT, "packages/video-document/dist/index.js")).href
 );
 
 const browser = await chromium.launch({ headless: true });
@@ -53,7 +51,9 @@ try {
     ]);
     const file = path.join(OUT, `${name}.video-project.json`);
     await download.saveAs(file);
-    return JSON.parse(await import("node:fs").then((fs) => fs.readFileSync(file, "utf8")));
+    return JSON.parse(
+      await import("node:fs").then((fs) => fs.readFileSync(file, "utf8")),
+    );
   };
 
   await page.goto(`${BASE_URL}/video-studio`, {
@@ -101,8 +101,9 @@ try {
   const parkPiecePreview = async (shotIndex, aspect) => {
     const piece = page.locator(".piece-preview");
     await piece.scrollIntoViewIfNeeded();
-    const target = piece
-      .getByRole("button", { name: aspect === "portrait" ? "竖版" : "横版" });
+    const target = piece.getByRole("button", {
+      name: aspect === "portrait" ? "竖版" : "横版",
+    });
     await target.click();
     await page.waitForFunction(
       (viewBox) =>
@@ -122,12 +123,12 @@ try {
   };
 
   // 3) 覆写前：竖版检查截图（文字镜头 + 折线镜头）
-  await (
-    await parkPiecePreview(0, "portrait")
-  ).screenshot({ path: path.join(OUT, "before-portrait.png") });
-  await (
-    await parkPiecePreview(1, "portrait")
-  ).screenshot({ path: path.join(OUT, "before-portrait-chart.png") });
+  await (await parkPiecePreview(0, "portrait")).screenshot({
+    path: path.join(OUT, "before-portrait.png"),
+  });
+  await (await parkPiecePreview(1, "portrait")).screenshot({
+    path: path.join(OUT, "before-portrait-chart.png"),
+  });
 
   // 4) 画幅微调：标题两行 + 折线标签间隔/短标签
   await textShot.locator(".shot-edit-toggle").click();
@@ -153,6 +154,24 @@ try {
     "标签覆写不应报错",
   );
   await chartShot.locator(".shot-edit-toggle").click();
+  await page.locator(".editor-save").click();
+  await page
+    .locator(".editor-message", { hasText: "已保存" })
+    .waitFor({ timeout: 20_000 });
+
+  // 4b) 浏览模板后还原（终评 Important#1）：覆写不得被静默丢弃。在文字镜头
+  // 上做——图表镜头有「选模板即预填数据草稿」的既有语义，还原下拉不复位
+  // 草稿，不适合钉这条断言（见 ledger Ruling）。
+  await textShot.locator(".shot-edit-toggle").click();
+  await textShot
+    .locator(".chart-template-select")
+    .selectOption("line-trend-8");
+  await textShot.locator(".chart-template-select").selectOption("");
+  await textShot
+    .locator(".shot-description-input")
+    .fill("浏览模板后还原，覆写仍在");
+  await textShot.locator(".shot-apply").click();
+  await textShot.locator(".shot-edit-toggle").click();
   await page.locator(".editor-save").click();
   await page
     .locator(".editor-message", { hasText: "已保存" })
@@ -188,41 +207,39 @@ try {
   const reopenedText = reopened.shots[0].contentVersions.find(
     (candidate) => candidate.versionId === reopened.shots[0].workingVersionId,
   );
-  assert.deepEqual(
-    reopenedText.sceneSource.spec.layout.portrait.titleLines,
-    ["双画幅预览与镜头级微调", "验收标题"],
-  );
+  assert.deepEqual(reopenedText.sceneSource.spec.layout.portrait.titleLines, [
+    "双画幅预览与镜头级微调",
+    "验收标题",
+  ]);
 
   // 7) SVG 级独立生效：竖版两行/横版单行；标签竖版 7 个含 Q1、横版 12 个
   const svgTexts = () =>
     page.evaluate(() =>
-      [
-        ...document.querySelectorAll(".piece-preview .preview-canvas text"),
-      ].map((node) => node.textContent ?? ""),
+      [...document.querySelectorAll(".piece-preview .preview-canvas text")].map(
+        (node) => node.textContent ?? "",
+      ),
     );
   await parkPiecePreview(0, "portrait");
   let texts = await svgTexts();
   assert.ok(texts.includes("双画幅预览与镜头级微调"), "竖版标题第 1 行");
   assert.ok(texts.includes("验收标题"), "竖版标题第 2 行");
-  assert.ok(
-    !texts.includes(LONG_TITLE),
-    "竖版不应出现未换行的整条标题",
-  );
+  assert.ok(!texts.includes(LONG_TITLE), "竖版不应出现未换行的整条标题");
   await page.locator(".piece-preview").screenshot({
     path: path.join(OUT, "after-portrait.png"),
   });
 
   await parkPiecePreview(0, "landscape");
   texts = await svgTexts();
-  assert.ok(
-    texts.includes(LONG_TITLE),
-    "横版仍是自动单行（竖版覆写不越界）",
-  );
+  assert.ok(texts.includes(LONG_TITLE), "横版仍是自动单行（竖版覆写不越界）");
 
   await parkPiecePreview(1, "portrait");
   texts = await svgTexts();
   const labels = texts.filter((text) => text.includes("季度") || text === "Q1");
-  assert.equal(labels.length, 7, `竖版标签应 7 个（间隔 2 + 末点），实得 ${labels.length}`);
+  assert.equal(
+    labels.length,
+    7,
+    `竖版标签应 7 个（间隔 2 + 末点），实得 ${labels.length}`,
+  );
   assert.ok(labels.includes("Q1"), "短标签 Q1 生效");
   await parkPiecePreview(1, "landscape");
   texts = await svgTexts();

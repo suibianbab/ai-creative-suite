@@ -246,6 +246,21 @@ export function describeLineChartLabels(
 
 export const EMPTY_LAYOUT_DRAFTS = { text: EMPTY_TEXT, line: EMPTY_LINE };
 
+// 应用修订时是否并入画幅覆写草稿（终评 Important#1 的决策收口）：
+// - 已选组件模板（pendingTemplateId 非空）→ 换装即新视觉基底，旧覆写舍弃
+//   （「浏览后改回保持当前组件」时 pendingTemplateId 归空 → 保留并入）。
+// - 最终 spec 与草稿不同组件（家族换走）→ 不并入。
+export function layoutMergeDecision(input: {
+  pendingTemplateId: string;
+  draftComponentId: string;
+  finalComponentId: string;
+}): boolean {
+  return (
+    input.pendingTemplateId === "" &&
+    input.draftComponentId === input.finalComponentId
+  );
+}
+
 // 折线图草稿的即时提示视图（输入中的非法值不提示，等 apply 时才报错）。
 export function previewLineOverride(
   fields: LineChartOverrideFields,

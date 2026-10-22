@@ -5,6 +5,7 @@ import {
   applyLayoutToSpec,
   describeLineChartLabels,
   layoutDraftFromSpec,
+  layoutMergeDecision,
   previewLineOverride,
 } from "./aspect-layout-edit.js";
 import { buildChartRevisePatch } from "./chart-templates.js";
@@ -213,6 +214,38 @@ test("previewLineOverride：草稿字段的即时提示视图（非法输入静�
     previewLineOverride({ labelStepText: "abc", shortLabels: {} }, 12),
     undefined,
     "输入中的非法间隔不提示",
+  );
+});
+
+test("layoutMergeDecision：换模板丢弃覆写；浏览后还原（pendingTemplateId 归空）保留", () => {
+  // Issue 1（终评 Important#1）：选中模板又改回「保持当前组件」时，
+  // pendingTemplateId 归空 → 既有覆写必须原样并入下一次应用，不得静默丢。
+  assert.equal(
+    layoutMergeDecision({
+      pendingTemplateId: "",
+      draftComponentId: "line-chart",
+      finalComponentId: "line-chart",
+    }),
+    true,
+    "未选模板 + 同组件 → 并入",
+  );
+  assert.equal(
+    layoutMergeDecision({
+      pendingTemplateId: "line-trend-8",
+      draftComponentId: "line-chart",
+      finalComponentId: "line-chart",
+    }),
+    false,
+    "已选模板（应用即换装）→ 舍弃旧覆写",
+  );
+  assert.equal(
+    layoutMergeDecision({
+      pendingTemplateId: "",
+      draftComponentId: "line-chart",
+      finalComponentId: "bar-chart",
+    }),
+    false,
+    "家族不符 → 不并入",
   );
 });
 
