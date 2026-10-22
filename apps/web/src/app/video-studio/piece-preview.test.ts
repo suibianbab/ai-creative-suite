@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { mapGlobalFrame, quantizeTimeline } from "@acs/video-document";
-import { advanceGlobalFrame, shotCanvasContext } from "./piece-preview.js";
+import {
+  advanceGlobalFrame,
+  shotCanvasContext,
+  singleShotSpanFrames,
+} from "./piece-preview.js";
 
 // 整片预览的纯推进逻辑：rAF 的 dt 折算帧增量后调用，跨镜头边界推进正确、
 // 到尾回零循环、负增量钳零——播放循环永不越界（评审关注 #3）。
@@ -57,4 +61,19 @@ test("shotCanvasContext：24fps + 量化 span 帧数（非 30fps/非 ceil 重算
     frames: timeline.shots[1]!.frames,
   });
   assert.equal(second.durationFrames, 39);
+});
+
+// 双画幅预览（2026-10-23 brief §三A）：单镜预览也必须用出片同口径的
+// 24fps 量化帧数（与 remotion root.tsx sceneCalculateMetadata 同推导），
+// 不再沿用 30fps/ceil——否则单镜所见与整片/出片不一致。
+test("singleShotSpanFrames：单镜量化帧数与整片/出片同口径", () => {
+  assert.equal(singleShotSpanFrames(1600), 38, "量化（ceil 会得 39）");
+  assert.equal(singleShotSpanFrames(1000), 24);
+  assert.equal(singleShotSpanFrames(1500), 36);
+  assert.equal(singleShotSpanFrames(200), 5, "200ms → round(4.8)=5");
+});
+
+test("singleShotSpanFrames：非法时长沿 quantizeTimeline 的抛错口径", () => {
+  assert.throws(() => singleShotSpanFrames(0), /frames|正整数/);
+  assert.throws(() => singleShotSpanFrames(-100), /frames|正整数/);
 });

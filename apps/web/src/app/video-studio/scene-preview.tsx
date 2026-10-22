@@ -1,8 +1,11 @@
 "use client";
 
 import {
+  type AspectTarget,
   activeSubtitleCue,
   buildSubtitleCues,
+  EXPORT_DIMENSIONS,
+  EXPORT_FPS,
   type MediaAsset,
   mapGlobalFrame,
   type QuantizedTimeline,
@@ -15,17 +18,29 @@ import {
   reactSvgAttrs,
   type SceneSpec,
   type SvgNode,
+  safeFrameRect,
   seededRandom,
   validateSceneSpec,
 } from "@acs/video-scene";
-import { createElement, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type CSSProperties,
+  createElement,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { mediaSrcUrl } from "./media-assets";
 import {
   mediaClipCss,
   mediaSeekTargetSec,
   shouldSeekVideo,
 } from "./media-preview";
-import { advanceGlobalFrame, shotCanvasContext } from "./piece-preview";
+import {
+  advanceGlobalFrame,
+  shotCanvasContext,
+  singleShotSpanFrames,
+} from "./piece-preview";
 import { previewTransitionWindows } from "./transitions-draft";
 
 // SvgNode 数据树 → React 元素（自 remotion-engine 同名渲染器复制，web 不依赖
@@ -37,20 +52,19 @@ export function SvgTree({ node }: { node: SvgNode }) {
   return createElement(node.tag, reactSvgAttrs(node.attrs), children);
 }
 
-const FPS = 30;
-const PIECE_FPS = 24; // 整片预览与出片同帧率（量化 spans 即 24fps 帧图）
-const PREVIEW_WIDTH = 640;
-const PREVIEW_HEIGHT = 360;
+// 双画幅预览（2026-10-23 brief §三A）：预览画布坐标与出片一致
+// （EXPORT_DIMENSIONS 的 1280×720 / 720×1280，24fps），显示尺寸只由 CSS 缩放。
+const [LANDSCAPE_W, LANDSCAPE_H] = EXPORT_DIMENSIONS.landscape;
 
 // 静态帧画布：validate → render → 节点预算 → SVG。单镜头预览与整片预览共用。
-// fps/durationFrames 可覆盖：整片预览必须传 24fps + 量化 span 帧数（与出片一致），
-// 单镜头预览沿用 P0 默认 30fps（另行收口）。
+// fps/durationFrames 可覆盖：单镜与整片预览都必须传 24fps + 量化 span 帧数
+// （与出片一致）；默认值即横版出片坐标。
 export function SpecCanvas({
   spec,
   frame,
-  width = PREVIEW_WIDTH,
-  height = PREVIEW_HEIGHT,
-  fps = FPS,
+  width = LANDSCAPE_W,
+  height = LANDSCAPE_H,
+  fps = EXPORT_FPS,
   durationFrames,
 }: {
   spec: SceneSpec;
@@ -93,14 +107,104 @@ export function SpecCanvas({
   );
 }
 
+// 画幅切换 + 安全区辅助线开关（brief §三A）：仅存在于预览 DOM，
+// 永不进入导出路径（渲染 CLI 不经过这些组件）。
+function PreviewAspectControls({
+  aspect,
+  onAspectChange,
+  showSafeGuide,
+  onSafeGuideChange,
+}: {
+  aspect: AspectTarget;
+  onAspectChange: (aspect: AspectTarget) => void;
+  showSafeGuide: boolean;
+  onSafeGuideChange: (show: boolean) => void;
+}) {
+  return (
+    <span className="preview-aspect-controls">
+      <button
+        type="button"
+        className={`preview-aspect-toggle${aspect === "landscape" ? " is-active" : ""}`}
+        aria-pressed={aspect === "landscape"}
+        onClick={() => onAspectChange("landscape")}
+      >
+        横版
+      </button>
+      <button
+        type="button"
+        className={`preview-aspect-toggle${aspect === "portrait" ? " is-active" : ""}`}
+        aria-pressed={aspect === "portrait"}
+        onClick={() => onAspectChange("portrait")}
+      >
+        竖版
+      </button>
+      <label className="safe-guide-toggle">
+        <input
+          type="checkbox"
+          checked={showSafeGuide}
+          onChange={(event) => onSafeGuideChange(event.target.checked)}
+        />
+        安全区
+      </label>
+    </span>
+  );
+}
+
+// 安全区辅助线：与组件布局同一 10% 口径（safeFrameRect），按画布比例换算成
+// 百分比定位——显示缩放不影响其与内容的相对关系。仅预览检查用。
+function SafeGuideOverlay({
+  width,
+  height,
+}: {
+  width: number;
+  height: number;
+}) {
+  const rect = safeFrameRect(width, height);
+  return (
+    <div
+      className="safe-guide"
+      aria-hidden="true"
+      style={{
+        left: `${(rect.x / width) * 100}%`,
+        top: `${(rect.y / height) * 100}%`,
+        width: `${(rect.width / width) * 100}%`,
+        height: `${(rect.height / height) * 100}%`,
+      }}
+    >
+      <span className="safe-guide-label">安全区（仅预览）</span>
+    </div>
+  );
+}
+
+// 出片画布尺寸（aspect → width/height），供舞台包裹与 SpecCanvas/MediaStage。
+function stageDimensions(aspect: AspectTarget) {
+  const [width, height] = EXPORT_DIMENSIONS[aspect];
+  return { width, height };
+}
+
+// 预览舞台：宽度显式 min(100%, 72vh×宽高比)（竖版限高、横版满列），
+// 高度由 aspect-ratio 推导——不依赖 grid 拉伸（.piece-stage 带
+// container-type:inline-size，auto 边距下 fit-content 会塌成 0）。
+function stageStyle(aspect: AspectTarget) {
+  const { width, height } = stageDimensions(aspect);
+  const ratio = (width / height).toFixed(4);
+  return {
+    aspectRatio: `${width} / ${height}`,
+    width: `min(100%, calc(72vh * ${ratio}))`,
+  } as CSSProperties;
+}
+
 // 帧预览：rAF 只驱动预览时钟（performance.now 算 dt → 推进帧号），
 // 组件本身仍然只吃 frame——与渲染路径同一份 (spec, ctx) 契约。
+// 24fps + 量化帧数与出片同口径（singleShotSpanFrames）。
 export function ScenePreview({ spec }: { spec: SceneSpec }) {
+  const [aspect, setAspect] = useState<AspectTarget>("landscape");
+  const [showSafeGuide, setShowSafeGuide] = useState(false);
   const validated = useMemo(
     () => validateSceneSpec(spec, defaultRegistry),
     [spec],
   );
-  const durationFrames = Math.ceil((validated.durationMs / 1000) * FPS);
+  const durationFrames = singleShotSpanFrames(validated.durationMs);
   const [frame, setFrame] = useState(0);
   const [playing, setPlaying] = useState(true);
   const rafRef = useRef(0);
@@ -113,7 +217,7 @@ export function ScenePreview({ spec }: { spec: SceneSpec }) {
       const deltaMs = timestamp - lastTsRef.current;
       lastTsRef.current = timestamp;
       setFrame((current) => {
-        const next = current + (deltaMs / 1000) * FPS;
+        const next = current + (deltaMs / 1000) * EXPORT_FPS;
         return next >= durationFrames ? 0 : next; // 预览循环播放
       });
       rafRef.current = requestAnimationFrame(tick);
@@ -123,10 +227,23 @@ export function ScenePreview({ spec }: { spec: SceneSpec }) {
   }, [playing, durationFrames]);
 
   const clampedFrame = Math.min(frame, durationFrames - 1);
+  const stage = stageDimensions(aspect);
 
   return (
     <div className="preview-box">
-      <SpecCanvas spec={spec} frame={clampedFrame} />
+      <div className="piece-stage" style={stageStyle(aspect)}>
+        <SpecCanvas
+          spec={spec}
+          frame={clampedFrame}
+          width={stage.width}
+          height={stage.height}
+          fps={EXPORT_FPS}
+          durationFrames={durationFrames}
+        />
+        {showSafeGuide ? (
+          <SafeGuideOverlay width={stage.width} height={stage.height} />
+        ) : null}
+      </div>
       <div className="preview-controls">
         <button
           type="button"
@@ -150,6 +267,12 @@ export function ScenePreview({ spec }: { spec: SceneSpec }) {
         <span className="preview-frame">
           第 {Math.floor(clampedFrame) + 1} / {durationFrames} 帧
         </span>
+        <PreviewAspectControls
+          aspect={aspect}
+          onAspectChange={setAspect}
+          showSafeGuide={showSafeGuide}
+          onSafeGuideChange={setShowSafeGuide}
+        />
       </div>
     </div>
   );
@@ -191,17 +314,23 @@ function MediaStage({
   asset,
   item,
   localFrame,
+  stageWidth,
+  stageHeight,
 }: {
   asset: MediaAsset | undefined;
   item: Extract<TimelinePreviewItem, { kind: "media" }>;
   localFrame: number;
+  // 舞台 = 出片画布坐标（与 MediaClipLayer 的 useVideoConfig 同源口径），
+  // cover 裁切/contain 留边才与导出一致。
+  stageWidth: number;
+  stageHeight: number;
 }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [failed, setFailed] = useState(false);
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !asset || failed) return;
-    const targetSec = mediaSeekTargetSec(item.inMs, localFrame, PIECE_FPS);
+    const targetSec = mediaSeekTargetSec(item.inMs, localFrame, EXPORT_FPS);
     if (shouldSeekVideo(video.currentTime, targetSec)) {
       video.currentTime = targetSec;
     }
@@ -223,8 +352,8 @@ function MediaStage({
   const css = mediaClipCss(
     asset.original.width,
     asset.original.height,
-    PREVIEW_WIDTH,
-    PREVIEW_HEIGHT,
+    stageWidth,
+    stageHeight,
     item.fit,
     item.focalX,
   );
@@ -257,6 +386,8 @@ export function TimelinePreview({
 }) {
   const [frame, setFrame] = useState(0);
   const [playing, setPlaying] = useState(true);
+  const [aspect, setAspect] = useState<AspectTarget>("landscape");
+  const [showSafeGuide, setShowSafeGuide] = useState(false);
   const rafRef = useRef(0);
   const lastTsRef = useRef(0);
   const totalFrames = timeline.totalFrames;
@@ -272,7 +403,7 @@ export function TimelinePreview({
       const deltaMs = timestamp - lastTsRef.current;
       lastTsRef.current = timestamp;
       setFrame((current) =>
-        advanceGlobalFrame(current, (deltaMs / 1000) * PIECE_FPS, totalFrames),
+        advanceGlobalFrame(current, (deltaMs / 1000) * EXPORT_FPS, totalFrames),
       );
       rafRef.current = requestAnimationFrame(tick);
     };
@@ -313,22 +444,35 @@ export function TimelinePreview({
       narrationText: activeNarration,
       spanMs: activeSpanMs,
     });
-    return activeSubtitleCue(cues, (mapping.localFrame / PIECE_FPS) * 1000);
+    return activeSubtitleCue(cues, (mapping.localFrame / EXPORT_FPS) * 1000);
   }, [activeNarration, activeSpanMs, mapping.localFrame]);
 
   // P1 转场：与出片同斜率同 split（共享 helper）；无转场恒 0 不渲染。
   // span 不足/相邻合计借空等装配拒绝在此降级：无叠层 + 告警标记（spec 错误
   // 表：预览告警；CLI 出片路径仍大声失败），不炸整个工作台页面。
   const { windows: transitionWindows, warning: transitionWarning } =
-    previewTransitionWindows(transitions, timeline.shots, PIECE_FPS);
+    previewTransitionWindows(transitions, timeline.shots, EXPORT_FPS);
   const overlayOpacity = transitionOverlayAt(
     transitionWindows,
     Math.floor(frame),
   );
 
+  const stage = stageDimensions(aspect);
+  // 字幕近似层的比例参数与出片 TimelineScene 同口径：字号 = 画布高 ×
+  // （横版 5% / 竖版 4.5%）换算为 cqw；底距恒 8% 高。药丸内边距随字号等比。
+  const subtitleCqw =
+    (Math.round(stage.height * (aspect === "portrait" ? 0.045 : 0.05)) /
+      stage.width) *
+    100;
+  const stageVars = {
+    ...stageStyle(aspect),
+    "--stage-h-ratio": `${stage.height / stage.width}`,
+    "--sub-cqw": `${subtitleCqw}`,
+  } as CSSProperties;
+
   return (
     <div className="preview-box piece-preview">
-      <div className="piece-stage">
+      <div className="piece-stage" style={stageVars}>
         {active ? (
           "spec" in active ? (
             activeContext ? (
@@ -336,6 +480,8 @@ export function TimelinePreview({
                 key={mapping.shotIndex}
                 spec={active.spec}
                 frame={mapping.localFrame}
+                width={stage.width}
+                height={stage.height}
                 fps={activeContext.fps}
                 durationFrames={activeContext.durationFrames}
               />
@@ -346,6 +492,8 @@ export function TimelinePreview({
               asset={assetsById.get(active.assetId)}
               item={active}
               localFrame={mapping.localFrame}
+              stageWidth={stage.width}
+              stageHeight={stage.height}
             />
           ) : (
             <div
@@ -368,6 +516,9 @@ export function TimelinePreview({
           <div className="preview-subtitle" aria-hidden="true">
             <span>{activeCue.text}</span>
           </div>
+        ) : null}
+        {showSafeGuide ? (
+          <SafeGuideOverlay width={stage.width} height={stage.height} />
         ) : null}
       </div>
       {transitionWarning ? (
@@ -399,6 +550,12 @@ export function TimelinePreview({
           第 {Math.min(Math.floor(frame), totalFrames - 1) + 1} / {totalFrames}{" "}
           帧 · 镜头 {mapping.shotIndex + 1}
         </span>
+        <PreviewAspectControls
+          aspect={aspect}
+          onAspectChange={setAspect}
+          showSafeGuide={showSafeGuide}
+          onSafeGuideChange={setShowSafeGuide}
+        />
         {items.some((item) =>
           "spec" in item
             ? item.narrationText !== undefined

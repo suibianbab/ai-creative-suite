@@ -1,5 +1,14 @@
 // 整片预览的纯推进逻辑（可单测）：rAF 的 dt 折算成帧增量后调用。
 // 到尾回零循环（与单镜头预览同语义），负增量钳零——播放循环永不越界。
+
+import { quantizeTimeline } from "@acs/video-document";
+
+// 单镜预览的量化帧数（2026-10-23 双画幅预览）：与出片同推导——
+// quantizeTimeline([durationMs], 24)（remotion root.tsx 的
+// sceneCalculateMetadata 同口径），不再 30fps/ceil 重算。
+export function singleShotSpanFrames(durationMs: number): number {
+  return quantizeTimeline([durationMs], 24).shots[0]!.frames;
+}
 export function advanceGlobalFrame(
   current: number,
   deltaFrames: number,

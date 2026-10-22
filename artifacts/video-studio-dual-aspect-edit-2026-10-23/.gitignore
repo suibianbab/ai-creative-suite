@@ -1,0 +1,11 @@
+# 本目录证据全量入库（对冲根 .gitignore 的 artifacts/** 忽略）；
+# 只排除可再生的中间产物。对齐 artifacts/video-aspect-layout-2026-10-22 惯例。
+*
+!*/
+!.gitignore
+!*.md
+!*.json
+!*.mjs
+!*.png
+!*.mp4
+probe-full.png

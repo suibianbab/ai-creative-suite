@@ -416,10 +416,75 @@
   display: block;
 }
 
-/* 整片预览舞台：字幕层定位容器（宽度容器查询，药丸随画幅等比缩放） */
+/* 双画幅预览舞台（2026-10-23）：aspect-ratio/maxWidth 由组件按画幅内联给定
+ * （竖版限 72vh 高防止撑破布局），子层全部 100% 填充——显示尺寸只在此缩放，
+ * 画布坐标恒为出片尺寸。字幕比例变量默认横版值，竖版由内联覆盖。 */
 .piece-stage {
   position: relative;
   container-type: inline-size;
+  margin-inline: auto;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.piece-stage .preview-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+/* 安全区辅助线：10% 内缩虚线框 + 角标，仅预览检查，不进导出 */
+.safe-guide {
+  position: absolute;
+  border: 1px dashed rgba(214, 69, 46, 0.65);
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.safe-guide-label {
+  position: absolute;
+  top: 4px;
+  left: 6px;
+  font-size: 11px;
+  color: rgba(214, 69, 46, 0.85);
+  background: rgba(255, 255, 255, 0.72);
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+
+/* 画幅切换 + 安全区开关（预览控制行内） */
+.preview-aspect-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.preview-aspect-toggle {
+  border: 1px solid #cadbd1;
+  border-radius: 8px;
+  background: #fff;
+  color: #1b2c29;
+  padding: 6px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.preview-aspect-toggle:hover {
+  background: #ecf5ee;
+}
+
+.preview-aspect-toggle.is-active {
+  background: #173f3b;
+  border-color: #173f3b;
+  color: #fff;
+}
+
+.safe-guide-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: #1b2c29;
+  cursor: pointer;
 }
 
 /* P2.5-T3 媒体镜头预览：<video> 舞台 + 缺失占位（灰底居中，不炸页） */
@@ -528,13 +593,14 @@
   font-size: 12px;
 }
 
-/* 字幕近似层：与出片同构（半透明深色药丸衬白字，比例取 engine 换算：
- * 画布高 = 56.25cqw → 字号 5%高=2.8cqw、底距 8%高=4.5cqw） */
+/* 字幕近似层：与出片同构（半透明深色药丸衬白字）。比例经画幅变量换算：
+ * 字号 = 画布高 ×（横版 5% / 竖版 4.5%，--sub-cqw 由组件内联）、底距恒
+ * 8% 高（--stage-h-ratio × 8cqw）；药丸圆角与内边距随字号等比。 */
 .preview-subtitle {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 4.5cqw;
+  bottom: calc(var(--stage-h-ratio, 0.5625) * 8 * 1cqw);
   display: flex;
   justify-content: center;
   pointer-events: none;
@@ -542,11 +608,12 @@
 
 .preview-subtitle > span {
   background: rgba(27, 25, 23, 0.55);
-  border-radius: 1cqw;
-  padding: 0.45cqw 1.25cqw;
+  border-radius: calc(var(--sub-cqw, 2.8125) * 0.36 * 1cqw);
+  padding: calc(var(--sub-cqw, 2.8125) * 0.16 * 1cqw)
+    calc(var(--sub-cqw, 2.8125) * 0.45 * 1cqw);
   color: #fff;
   font-weight: 600;
-  font-size: 2.8cqw;
+  font-size: calc(var(--sub-cqw, 2.8125) * 1cqw);
   line-height: 1.35;
   white-space: nowrap;
 }
@@ -555,6 +622,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 /* 预览字幕是均匀近似（无字级时间戳），出片才按字级——必须标注，不能
