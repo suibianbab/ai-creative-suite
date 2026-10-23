@@ -1562,6 +1562,20 @@
       ]
     },
     {
+      "id": "VID-043",
+      "tier": "browser-video",
+      "title": "Dual-theme gallery extension samples full browser chain",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/e2e-gallery-extensions.mjs"],
+      "requiresPorts": [3210],
+      "checks": [
+        "Create the renovation and appliance projects from the new gallery cards, each with five shots and a linked Style Bible",
+        "Edit a composition title and one annotation, save via the editor save action, reopen after reload, and roll the shot back to the gallery version",
+        "Assert the template prefill semantics hint is visible and both aspect previews switch with correct canvas viewBox",
+        "The run writes to .tools by default and reports browser console errors"
+      ]
+    },
+    {
       "id": "VID-025",
       "tier": "integration",
       "title": "Video Studio P3-B three 镜头预烘焙出片与确定性",
