@@ -1,5 +1,9 @@
 # Current State v2
 
+## 2026-10-23 Video Studio 多元素复核修复与可复用模板（待分支复核）
+
+在 `video-studio/dual-aspect-edit` 分支修复 `codex-fix-video-studio-multielement-review-findings-2026-10-23.md` 的 F1–F6，并将多元素镜头扩为三种可编辑模板：四步流程、线描解说、内嵌图片解说。仍使用 `explainer-composition@1`、SceneSpec 和既有镜头内容版本；无新项目模型。非 STEM 的客厅改造四镜头和图片变体完成浏览器保存重开、回滚、双画幅预览及实际 MP4 出片。旧 STEM 样片横竖 MP4 重渲染 SHA-256 与基线完全相同；无 `nodeTextColor` 的旧流程图经真实渲染 API 成功出片。详见 `docs/VIDEO_STUDIO_MULTIELEMENT_COMPOSITION_2026-10-23.md` 与 `artifacts/video-studio-composition-templates-2026-10-23/REPORT.md`。尚未合并或推送 main。
+
 ## 2026-10-23 Video Studio 双画幅复核整改与 STEM 多元素编排（待分支复核）
 
 在 `video-studio/dual-aspect-edit` 分支按 `artifacts/codex-fix-video-studio-dual-aspect-review-findings-2026-10-23.md` 修复 P1–P6：折线首末标签宽度、缩点草稿与短标签同步、未标注点提示、流程节点 Style Bible 对比度、文字字号钳制去重与死导出清理。新增注册组件 `explainer-composition@1`，在原 SceneSpec、镜头内容版本、Style Bible、预览及 Remotion 链路内组合标题、现有流程/线描与 1–3 条标注；STEM 样片升级镜头 2/5。浏览器修改→保存重开→回滚、双画幅有声 MP4 与逐镜人工抽帧已验证；上一版 STEM 项目用新代码重渲染，横竖 MP4 与原文件逐字节相同。证据与限制见 `docs/VIDEO_STUDIO_MULTIELEMENT_COMPOSITION_2026-10-23.md`、`artifacts/video-studio-multielement-2026-10-23/REPORT.md`。本轮仅开发分支，尚未合并或推送 main。

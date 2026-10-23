@@ -1,0 +1,11 @@
+{
+  "pass": true,
+  "projectId": "b0ceed5d-ca43-44ae-bf80-a549073c9445",
+  "shots": 4,
+  "aspects": [
+    "landscape",
+    "portrait"
+  ],
+  "rollbackChecked": true,
+  "consoleErrors": []
+}

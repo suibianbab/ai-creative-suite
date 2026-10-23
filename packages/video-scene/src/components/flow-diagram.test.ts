@@ -326,3 +326,16 @@ test("节点字色可单独指定，旧 spec 仍沿用 textColor", () => {
     /nodeTextColor/,
   );
 });
+
+test("旧版无 nodeTextColor 的低对比节点由渲染器兜底为可读字色", () => {
+  const old = { ...BASE, boxColor: "#102033", textColor: "#102033" };
+  const node = flowDiagram.render(specWith(old) as never, makeCtx());
+  assert.equal(
+    collect(node, "text").find((part) => part.text === "甲")?.attrs.fill,
+    "#ffffff",
+  );
+  assert.equal(
+    collect(node, "text").find((part) => part.text === old.title)?.attrs.fill,
+    old.textColor,
+  );
+});

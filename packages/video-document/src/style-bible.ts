@@ -246,7 +246,20 @@ export function workingStyleIssues(
       continue;
     }
     const spec = working.sceneSource.spec as Record<string, unknown>;
-    if (canonicalJson(spec) !== canonicalJson(styleSceneSpec(spec, version)))
+    const expected = styleSceneSpec(spec, version);
+    // Old flow-diagram versions predate nodeTextColor. A newly derived
+    // readable label color is not a user palette edit, so it cannot make an
+    // otherwise matching immutable working version fail export.
+    if (
+      spec.componentId === "flow-diagram" &&
+      record(spec.params) &&
+      spec.params.nodeTextColor === undefined &&
+      record(expected.params)
+    ) {
+      const { nodeTextColor: _derived, ...legacyParams } = expected.params;
+      expected.params = legacyParams;
+    }
+    if (canonicalJson(spec) !== canonicalJson(expected))
       issues.push(`镜头 ${index + 1} 工作画面偏离 Style Bible 调色板`);
   }
   return issues;

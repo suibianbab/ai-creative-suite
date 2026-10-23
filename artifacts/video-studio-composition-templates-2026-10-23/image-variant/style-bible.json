@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "3cbaa149-23c3-4378-a037-9c8310bce3d3",
+  "currentVersionId": "a17b400a-4f02-4ae3-90b2-dfb5430d39c1",
+  "versions": [
+    {
+      "versionId": "a17b400a-4f02-4ae3-90b2-dfb5430d39c1",
+      "createdAt": "2026-10-23T08:23:17.403Z",
+      "name": "深蓝数据",
+      "palette": {
+        "background": "#122137",
+        "foreground": "#f5f7fa",
+        "secondary": "#afcde6",
+        "accent": "#ffbc60",
+        "object": "#4a9fdb"
+      },
+      "fontFamily": "NotoSansSC",
+      "lightingPreset": "orbit3d-fixed-soft-studio"
+    }
+  ]
+}

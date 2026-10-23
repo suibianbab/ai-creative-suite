@@ -1,0 +1,108 @@
+{
+  "generatedAt": "2026-10-23T08:20:28.861Z",
+  "projectId": "b0ceed5d-ca43-44ae-bf80-a549073c9445",
+  "remotion": "4.0.534",
+  "browser": "Google Chrome 155.0.8059.41",
+  "fontDigests": {
+    "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+  },
+  "styleBibleRef": {
+    "bibleId": "06702e0c-6a70-42fa-9d9c-d0258b715a89",
+    "versionId": "3dea2655-d7bc-4efb-969f-57f896163cf7",
+    "digest": "e0fa845c13b3fb7fa83913103ed2b6dac071588fedb1d11ff42dea50b5bcc186"
+  },
+  "aspects": {
+    "landscape": {
+      "registryVersion": 8,
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "frames": 216,
+      "output": "landscape.mp4",
+      "frameMap": [
+        {
+          "shotIndex": 0,
+          "shotId": "2fa1dce4-05bc-4714-812e-ed6740d37b66",
+          "versionId": "eb8624c0-3527-426a-8a8b-376ded0f6516",
+          "componentId": "text-animation",
+          "startFrame": 0,
+          "frames": 48,
+          "contentDigest": "f87fc7c8bb1abb3860dc4844f1a8c52bc4ea8b2a6f4642b89cedbf6f3dd95d33"
+        },
+        {
+          "shotIndex": 1,
+          "shotId": "2412bed6-1065-45b2-886c-ec793b25bf61",
+          "versionId": "10231adb-1a35-41dc-86eb-7db7e82db7f3",
+          "componentId": "explainer-composition",
+          "startFrame": 48,
+          "frames": 67,
+          "contentDigest": "9dd4951d5268ef1877af99bd262d089940faf1b11cad7c1b3602814231856213"
+        },
+        {
+          "shotIndex": 2,
+          "shotId": "fc5b0b32-a7c5-413c-9286-917634e6e8c4",
+          "versionId": "36e244b9-f15c-4b6f-9df2-f2b55f8a61b8",
+          "componentId": "explainer-composition",
+          "startFrame": 115,
+          "frames": 53,
+          "contentDigest": "e9a343ab6d768130fb17aea7d911f33580989e8a14613b41420381902ffe5e8b"
+        },
+        {
+          "shotIndex": 3,
+          "shotId": "50512bb4-09bf-4349-9b29-3f258db2b3d3",
+          "versionId": "e7ae5852-f182-49cb-9155-ac6dcced6108",
+          "componentId": "text-animation",
+          "startFrame": 168,
+          "frames": 48,
+          "contentDigest": "48da2fa2b362d2003f6ec76b0ca773ca34a454710e7b2db9d87ba009f77cd32c"
+        }
+      ]
+    },
+    "portrait": {
+      "registryVersion": 8,
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "frames": 216,
+      "output": "portrait.mp4",
+      "frameMap": [
+        {
+          "shotIndex": 0,
+          "shotId": "2fa1dce4-05bc-4714-812e-ed6740d37b66",
+          "versionId": "eb8624c0-3527-426a-8a8b-376ded0f6516",
+          "componentId": "text-animation",
+          "startFrame": 0,
+          "frames": 48,
+          "contentDigest": "f87fc7c8bb1abb3860dc4844f1a8c52bc4ea8b2a6f4642b89cedbf6f3dd95d33"
+        },
+        {
+          "shotIndex": 1,
+          "shotId": "2412bed6-1065-45b2-886c-ec793b25bf61",
+          "versionId": "10231adb-1a35-41dc-86eb-7db7e82db7f3",
+          "componentId": "explainer-composition",
+          "startFrame": 48,
+          "frames": 67,
+          "contentDigest": "9dd4951d5268ef1877af99bd262d089940faf1b11cad7c1b3602814231856213"
+        },
+        {
+          "shotIndex": 2,
+          "shotId": "fc5b0b32-a7c5-413c-9286-917634e6e8c4",
+          "versionId": "36e244b9-f15c-4b6f-9df2-f2b55f8a61b8",
+          "componentId": "explainer-composition",
+          "startFrame": 115,
+          "frames": 53,
+          "contentDigest": "e9a343ab6d768130fb17aea7d911f33580989e8a14613b41420381902ffe5e8b"
+        },
+        {
+          "shotIndex": 3,
+          "shotId": "50512bb4-09bf-4349-9b29-3f258db2b3d3",
+          "versionId": "e7ae5852-f182-49cb-9155-ac6dcced6108",
+          "componentId": "text-animation",
+          "startFrame": 168,
+          "frames": 48,
+          "contentDigest": "48da2fa2b362d2003f6ec76b0ca773ca34a454710e7b2db9d87ba009f77cd32c"
+        }
+      ]
+    }
+  }
+}

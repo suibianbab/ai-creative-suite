@@ -388,3 +388,44 @@ test("草稿从 12 点减到 6 点：旧末点短标签自动移除且仍能应�
   const applied = applyLayoutToSpec(parsed.spec!, reconciled.draft);
   assert.ok(!("error" in applied));
 });
+
+test("模板浏览后还原：8 点草稿与旧 12 点短标签在应用前同源清理", () => {
+  const old = lineSpec({
+    portrait: { shortLabels: [{ index: 11, text: "末" }] },
+  });
+  const templateDraft = {
+    title: "压力",
+    data: Array.from({ length: 8 }, (_, i) => `第${i + 1}点,${i + 1}`).join(
+      "\n",
+    ),
+    value: "",
+    prefix: "",
+    suffix: "",
+  };
+  const chart = buildChartRevisePatch(withoutLayoutForEdit(old), templateDraft);
+  assert.equal(chart.error, null);
+  const result = reconcileLineLayoutDraft(
+    layoutDraftFromSpec(old),
+    (chart.spec!.params as { points: unknown[] }).points.length,
+  );
+  assert.equal(result.removed, 1);
+  assert.ok(result.draft);
+  const applied = applyLayoutToSpec(chart.spec!, result.draft!);
+  assert.ok(!("error" in applied));
+});
+
+test("清空的越界短标签不计入已移除的有效覆写", () => {
+  const draft = layoutDraftFromSpec(lineSpec());
+  if (draft.componentId !== "line-chart") return;
+  draft.portrait.shortLabels = { 10: "", 11: "" };
+  draft.portrait.labelStepText = "2";
+  draft.landscape.labelStepText = "3";
+  const result = reconcileLineLayoutDraft(draft, 6);
+  assert.equal(result.removed, 0);
+  assert.deepEqual(
+    result.draft && result.draft.componentId === "line-chart"
+      ? result.draft.portrait.shortLabels
+      : null,
+    {},
+  );
+});

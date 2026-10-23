@@ -25,7 +25,8 @@ export type ExplainerParams = {
   diagramEnterMs: number;
   diagram:
     | { kind: "flow"; steps: Array<{ label: string }> }
-    | { kind: "drawing"; paths: string[] };
+    | { kind: "drawing"; paths: string[] }
+    | { kind: "image"; src: string };
   annotations: Array<{
     text: string;
     x: number;
@@ -36,6 +37,25 @@ export type ExplainerParams = {
 };
 
 const HEX = /^#[0-9a-fA-F]{6}$/;
+function validEmbeddedImage(src: unknown): src is string {
+  if (typeof src !== "string" || src.length > 180 * 1024) return false;
+  const match =
+    /^data:image\/(png|jpeg|webp);base64,([A-Za-z0-9+/]+={0,2})$/.exec(src);
+  if (!match) return false;
+  try {
+    const header = atob(match[2]!.slice(0, 40));
+    if (match[1] === "png") return header.startsWith("\x89PNG\r\n\x1a\n");
+    if (match[1] === "jpeg")
+      return (
+        header.charCodeAt(0) === 0xff &&
+        header.charCodeAt(1) === 0xd8 &&
+        header.charCodeAt(2) === 0xff
+      );
+    return header.startsWith("RIFF") && header.slice(8, 12) === "WEBP";
+  } catch {
+    return false;
+  }
+}
 function record(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -97,8 +117,16 @@ function validateParams(value: unknown): ExplainerParams {
       strokeWidth: 10,
       revealMs: 1500,
     });
+  } else if (value.diagram.kind === "image") {
+    // Self-contained raster only: no network dependency or SVG script surface.
+    if (!validEmbeddedImage(value.diagram.src))
+      throw new Error(
+        "explainer-composition 图片须为不超过 180 KiB 的内嵌 PNG/JPEG/WebP",
+      );
   } else
-    throw new Error("explainer-composition diagram.kind 仅支持 flow/drawing");
+    throw new Error(
+      "explainer-composition diagram.kind 仅支持 flow/drawing/image",
+    );
   if (
     !Array.isArray(value.annotations) ||
     value.annotations.length < 1 ||
@@ -112,9 +140,12 @@ function validateParams(value: unknown): ExplainerParams {
       annotation.text.length < 1 ||
       annotation.text.length > 20 ||
       !integer(annotation.x, 150, 850) ||
-      !integer(annotation.y, 650, 900) ||
+      !integer(annotation.y, 650, 800) ||
       (annotation.portraitY !== undefined &&
-        !integer(annotation.portraitY, 800, 1600)) ||
+        !integer(annotation.portraitY, 800, 1450)) ||
+      (annotation.portraitY === undefined &&
+        typeof annotation.y === "number" &&
+        annotation.y + 400 > 1450) ||
       !integer(annotation.enterMs, 0, 3500)
     )
       throw new Error(
@@ -132,7 +163,7 @@ function render(spec: SceneSpecLike, ctx: FrameContext): SvgNode {
     Math.floor(((tMs - p.diagramEnterMs) * ctx.fps) / 1000),
   );
   const childCtx = { ...ctx, frame: childFrame };
-  const diagramSpec: SceneSpecLike =
+  const diagramSpec: SceneSpecLike | null =
     p.diagram.kind === "flow"
       ? {
           ...spec,
@@ -147,21 +178,26 @@ function render(spec: SceneSpecLike, ctx: FrameContext): SvgNode {
             enterMs: 700,
           },
         }
-      : {
-          ...spec,
-          componentId: "line-drawing",
-          params: {
-            paths: p.diagram.paths,
-            strokeColor: p.strokeColor,
-            strokeWidth: 10,
-            revealMs: 1500,
-          },
-        };
-  const diagram = (p.diagram.kind === "flow" ? flowSteps : lineDrawing).render(
-    diagramSpec,
-    childCtx,
-  );
-  const diagramChildren = diagram.children?.[1]?.children ?? [];
+      : p.diagram.kind === "drawing"
+        ? {
+            ...spec,
+            componentId: "line-drawing",
+            params: {
+              paths: p.diagram.paths,
+              strokeColor: p.strokeColor,
+              strokeWidth: 10,
+              revealMs: 1500,
+            },
+          }
+        : null;
+  const diagram = diagramSpec
+    ? (p.diagram.kind === "flow" ? flowSteps : lineDrawing).render(
+        diagramSpec,
+        childCtx,
+      )
+    : null;
+  const diagramChildren = diagram?.children?.[1]?.children ?? [];
+  const flowStepCount = p.diagram.kind === "flow" ? p.diagram.steps.length : 0;
   const reused =
     p.diagram.kind === "flow"
       ? diagramChildren.slice(1).map((node) =>
@@ -170,12 +206,33 @@ function render(spec: SceneSpecLike, ctx: FrameContext): SvgNode {
                 ...node,
                 attrs: {
                   ...node.attrs,
-                  "font-size": Math.max(30, Number(node.attrs["font-size"])),
+                  "font-size": Math.max(
+                    Number(node.attrs["font-size"]),
+                    fitFontSize(
+                      30,
+                      node.text ?? "",
+                      Math.min((720 / (flowStepCount - 1)) * 0.72, 240) * 0.8,
+                    ),
+                  ),
                 },
               }
             : node,
         )
-      : diagramChildren;
+      : p.diagram.kind === "image"
+        ? [
+            {
+              tag: "image",
+              attrs: {
+                href: p.diagram.src,
+                x: 160,
+                y: 300,
+                width: 680,
+                height: 420,
+                preserveAspectRatio: "xMidYMid meet",
+              },
+            },
+          ]
+        : diagramChildren;
   const portrait = ctx.height > ctx.width;
   const diagramY =
     p.diagramOffsetY + (portrait ? (p.diagram.kind === "flow" ? 300 : 260) : 0);

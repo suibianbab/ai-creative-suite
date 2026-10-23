@@ -6,6 +6,7 @@
 // 产物：before-portrait(-chart).png / after-portrait.png / after-landscape.png /
 // export.video-project.json，落在 artifacts/video-studio-dual-aspect-edit-2026-10-23/。
 import assert from "node:assert/strict";
+import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { chromium } from "playwright-core";
@@ -16,8 +17,9 @@ const ROOT = path.resolve(
 );
 const OUT = path.join(
   ROOT,
-  "artifacts/video-studio-dual-aspect-edit-2026-10-23",
+  process.env.DUAL_ASPECT_EVIDENCE_DIR ?? ".tools/video-dual-aspect-edit-e2e",
 );
+mkdirSync(OUT, { recursive: true });
 const BASE_URL = process.env.BASE_URL ?? "http://127.0.0.1:3210";
 const LONG_TITLE = "双画幅预览与镜头级微调验收标题";
 const TITLE_LINES = "双画幅预览与镜头级微调\n验收标题";
@@ -280,6 +282,49 @@ try {
   assert.equal(shrunkSpec.params.points.length, 6);
   assert(
     shrunkSpec.layout.portrait.shortLabels.every((item) => item.index < 6),
+  );
+
+  // F2: a template prefill changes point count while a saved short label
+  // still refers to point 12. Browsing back must never leave an invisible
+  // stale index that blocks Apply.
+  await chartShot.locator(".chart-data-input").fill(LINE_DATA);
+  await chartShot.locator(".layout-short-label-input").nth(11).fill("末点");
+  const versionCountBefore = await chartShot
+    .locator(".shot-version-select option")
+    .count();
+  await chartShot.locator(".shot-apply").click();
+  await chartShot
+    .locator(".shot-version-select option")
+    .nth(versionCountBefore)
+    .waitFor({ state: "attached" });
+  await chartShot
+    .locator(".chart-template-select")
+    .selectOption("line-trend-8");
+  assert.equal(
+    (await chartShot.locator(".chart-data-input").inputValue()).split("\n")
+      .length,
+    8,
+  );
+  await chartShot.locator(".chart-template-select").selectOption("");
+  assert.equal(
+    (await chartShot.locator(".chart-data-input").inputValue()).split("\n")
+      .length,
+    8,
+  );
+  await chartShot.locator(".shot-apply").click();
+  assert.equal(await chartShot.locator(".layout-edit-error").count(), 0);
+  assert.equal(await chartShot.locator(".chart-edit-error").count(), 0);
+  assert.equal(await chartShot.locator(".shot-edit-error").count(), 0);
+  const browsed = await exportProject("template-browse-revert");
+  const browsedShot = browsed.shots[1];
+  const browsedSpec = browsedShot.contentVersions.find(
+    (version) => version.versionId === browsedShot.workingVersionId,
+  ).sceneSource.spec;
+  assert.equal(browsedSpec.params.points.length, 8);
+  assert(
+    browsedSpec.layout?.portrait?.shortLabels?.every(
+      (item) => item.index < 8,
+    ) ?? true,
   );
 
   assert.deepEqual(errors, []);

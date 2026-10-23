@@ -35,6 +35,11 @@ import {
   isChartComponentId,
   parseLineChartPoints,
 } from "./chart-templates";
+import {
+  applyCompositionDraft,
+  applyCompositionTemplate,
+  COMPOSITION_TEMPLATES,
+} from "./composition-templates";
 import { describeDurationImpact, durationApplyError } from "./duration-impact";
 import {
   applyFlowTemplate,
@@ -176,6 +181,8 @@ function resolveAnyTemplate(
   if (sketch.spec) return { spec: sketch.spec, error: null };
   const loading = applyLoadingTemplate(spec, templateId);
   if (loading.spec) return { spec: loading.spec, error: null };
+  const composition = applyCompositionTemplate(spec, templateId);
+  if (composition.spec) return { spec: composition.spec, error: null };
   return { spec: null, error: flow.error ?? map.error ?? chart.error };
 }
 
@@ -323,6 +330,7 @@ export function ShotEditorCard({
         ? structuredClone(spec.params as ExplainerParams)
         : null,
     );
+  const [compositionError, setCompositionError] = useState<string | null>(null);
   // 双画幅版式覆写（2026-10-23 brief §三B）：仅 text-animation / line-chart
   // 出「画幅微调」区块；草稿随工作版本重置，换模板 = 新视觉基底 → 清空。
   const layoutEditable =
@@ -449,6 +457,7 @@ export function ShotEditorCard({
         ? structuredClone(nextSpec.params as ExplainerParams)
         : null,
     );
+    setCompositionError(null);
     setLayoutError(null);
     setLayoutNotice(null);
     setLayoutAspect("portrait");
@@ -666,7 +675,8 @@ export function ShotEditorCard({
               时，value 停在本族条目（mediaTemplateSelectValue /
               threeTemplateSelectValue）。 */}
           <label className="shot-edit-field">
-            组件模板（图表 / 地图 / 流程 / 火柴人 / 手绘 / 加载 / 媒体 / 3D）
+            组件模板（图表 / 地图 / 流程 / 多元素 / 火柴人 / 手绘 / 加载 / 媒体
+            / 3D）
             <select
               className="chart-template-select"
               value={threeTemplateSelectValue(
@@ -685,6 +695,7 @@ export function ShotEditorCard({
                 setStickError(null);
                 setSketchError(null);
                 setLoadingError(null);
+                setCompositionError(null);
                 if (!templateId) return;
                 // 3D：只切换编辑臂，应用时按当前工作版本时长生成 three 场景源
                 if (templateId === THREE_TEMPLATE_ID) return;
@@ -696,7 +707,10 @@ export function ShotEditorCard({
                   setMediaWarnings([]);
                   return;
                 }
-                const applied = resolveAnyTemplate(editSpec, templateId);
+                const applied = resolveAnyTemplate(
+                  withoutLayoutForEdit(editSpec),
+                  templateId,
+                );
                 if (applied.error || !applied.spec) {
                   setChartError(applied.error ?? "模板无效");
                   return;
@@ -704,6 +718,21 @@ export function ShotEditorCard({
                 // 选中即预填该模板数据到编辑字段（应用时才落文档）
                 if (isChartComponentId(applied.spec.componentId)) {
                   setChartDraft(draftChartFromSpec(applied.spec));
+                  if (applied.spec.componentId === "line-chart") {
+                    const points = (
+                      applied.spec.params as { points: unknown[] }
+                    ).points.length;
+                    const reconciled = reconcileLineLayoutDraft(
+                      layoutDraft,
+                      points,
+                    );
+                    setLayoutDraft(reconciled.draft);
+                    setLayoutNotice(
+                      reconciled.removed > 0
+                        ? `点数变化后，已移除 ${reconciled.removed} 项超范围画幅覆写`
+                        : null,
+                    );
+                  }
                 } else if (isMapComponentId(applied.spec.componentId)) {
                   setMapDraft(draftMapFromSpec(applied.spec));
                 } else if (isFlowComponentId(applied.spec.componentId)) {
@@ -714,6 +743,13 @@ export function ShotEditorCard({
                   setSketchDraft(draftSketchFromSpec(applied.spec));
                 } else if (isLoadingComponentId(applied.spec.componentId)) {
                   setLoadingDraft(draftLoadingFromSpec(applied.spec));
+                } else if (
+                  applied.spec.componentId === "explainer-composition"
+                ) {
+                  setCompositionDraft(
+                    structuredClone(applied.spec.params as ExplainerParams),
+                  );
+                  setDraft({ ...draft, background: applied.spec.background });
                 }
               }}
             >
@@ -734,6 +770,13 @@ export function ShotEditorCard({
               </optgroup>
               <optgroup label="流程">
                 {FLOW_TEMPLATES.map((template) => (
+                  <option key={template.templateId} value={template.templateId}>
+                    {template.label}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="多元素镜头">
+                {COMPOSITION_TEMPLATES.map((template) => (
                   <option key={template.templateId} value={template.templateId}>
                     {template.label}
                   </option>
@@ -1059,13 +1102,18 @@ export function ShotEditorCard({
                       ) : null}
                     </>
                   ) : null}
-                  {editSpec.componentId === "explainer-composition" &&
+                  {(pendingTemplateId.startsWith("composition-") ||
+                    (editSpec.componentId === "explainer-composition" &&
+                      !pendingTemplateId)) &&
                   compositionDraft ? (
-                    <fieldset
-                      className="composition-edit-fieldset"
-                      disabled={pendingTemplateId !== ""}
-                    >
+                    <fieldset className="composition-edit-fieldset">
                       <legend>多元素编排（标题、图示、标注）</legend>
+                      <p className="shot-template-note">
+                        {COMPOSITION_TEMPLATES.find(
+                          (item) => item.templateId === pendingTemplateId,
+                        )?.description ?? "可继续修改已保存的多元素镜头。"}
+                        标注横版 y≤800、竖版 y≤1450；字幕区域不允许放置标注。
+                      </p>
                       <label className="shot-edit-field">
                         标题
                         <input
@@ -1080,6 +1128,101 @@ export function ShotEditorCard({
                           }
                         />
                       </label>
+                      <p className="shot-template-note">
+                        图示类型：
+                        {compositionDraft.diagram.kind === "flow"
+                          ? "流程"
+                          : compositionDraft.diagram.kind === "drawing"
+                            ? "线描"
+                            : "图片"}
+                        。切换模板可换图示类型。
+                      </p>
+                      {compositionDraft.diagram.kind === "flow" ? (
+                        <label className="shot-edit-field">
+                          流程步骤（每行一个，2–8 项）
+                          <textarea
+                            className="composition-flow-steps"
+                            rows={5}
+                            value={compositionDraft.diagram.steps
+                              .map((step) => step.label)
+                              .join("\n")}
+                            onChange={(event) =>
+                              setCompositionDraft({
+                                ...compositionDraft,
+                                diagram: {
+                                  kind: "flow",
+                                  steps: event.target.value
+                                    .split(/\r?\n/)
+                                    .map((label) => ({ label })),
+                                },
+                              })
+                            }
+                          />
+                        </label>
+                      ) : compositionDraft.diagram.kind === "drawing" ? (
+                        <label className="shot-edit-field">
+                          线描路径（每行一条 SVG path，沿用 line-drawing 校验）
+                          <textarea
+                            className="composition-drawing-paths"
+                            rows={5}
+                            value={compositionDraft.diagram.paths.join("\n")}
+                            onChange={(event) =>
+                              setCompositionDraft({
+                                ...compositionDraft,
+                                diagram: {
+                                  kind: "drawing",
+                                  paths: event.target.value
+                                    .split(/\r?\n/)
+                                    .filter(Boolean),
+                                },
+                              })
+                            }
+                          />
+                        </label>
+                      ) : (
+                        <label className="shot-edit-field">
+                          图片（PNG/JPEG/WebP，≤120 KiB，内嵌后离线可用）
+                          <input
+                            className="composition-image-input"
+                            type="file"
+                            accept="image/png,image/jpeg,image/webp"
+                            onChange={(event) => {
+                              const file = event.target.files?.[0];
+                              if (!file) return;
+                              if (
+                                ![
+                                  "image/png",
+                                  "image/jpeg",
+                                  "image/webp",
+                                ].includes(file.type) ||
+                                file.size > 120 * 1024
+                              ) {
+                                setCompositionError(
+                                  "图片须为不超过 120 KiB 的 PNG/JPEG/WebP",
+                                );
+                                return;
+                              }
+                              const reader = new FileReader();
+                              reader.onload = () => {
+                                if (typeof reader.result !== "string") return;
+                                setCompositionDraft((current) =>
+                                  current
+                                    ? {
+                                        ...current,
+                                        diagram: {
+                                          kind: "image",
+                                          src: reader.result as string,
+                                        },
+                                      }
+                                    : null,
+                                );
+                                setCompositionError(null);
+                              };
+                              reader.readAsDataURL(file);
+                            }}
+                          />
+                        </label>
+                      )}
                       {(
                         [
                           "titleY",
@@ -1184,6 +1327,47 @@ export function ShotEditorCard({
                           </div>
                         ),
                       )}
+                      <div className="composition-annotation-actions">
+                        <button
+                          type="button"
+                          disabled={compositionDraft.annotations.length >= 3}
+                          onClick={() =>
+                            setCompositionDraft({
+                              ...compositionDraft,
+                              annotations: [
+                                ...compositionDraft.annotations,
+                                {
+                                  text: "新标注",
+                                  x: 500,
+                                  y: 780,
+                                  portraitY: 1250,
+                                  enterMs: 2200,
+                                },
+                              ],
+                            })
+                          }
+                        >
+                          添加标注
+                        </button>
+                        <button
+                          type="button"
+                          disabled={compositionDraft.annotations.length <= 1}
+                          onClick={() =>
+                            setCompositionDraft({
+                              ...compositionDraft,
+                              annotations: compositionDraft.annotations.slice(
+                                0,
+                                -1,
+                              ),
+                            })
+                          }
+                        >
+                          移除末条标注
+                        </button>
+                      </div>
+                      {compositionError ? (
+                        <p className="shot-edit-error">{compositionError}</p>
+                      ) : null}
                     </fieldset>
                   ) : null}
                   {isStickComponentId(editSpec.componentId) ? (
@@ -1883,35 +2067,24 @@ export function ShotEditorCard({
                   setLoadingError(loadingResult.error ?? "加载数据无效");
                   return;
                 }
-                const composedSpec =
-                  (
-                    loadingResult?.spec ??
-                    sketchResult?.spec ??
-                    stickResult?.spec ??
-                    flowResult?.spec ??
-                    mapResult?.spec ??
-                    chartResult?.spec ??
-                    baseSpec
-                  ).componentId === "explainer-composition" &&
-                  compositionDraft &&
-                  !pendingTemplateId
-                    ? {
-                        ...(loadingResult?.spec ??
-                          sketchResult?.spec ??
-                          stickResult?.spec ??
-                          flowResult?.spec ??
-                          mapResult?.spec ??
-                          chartResult?.spec ??
-                          baseSpec),
-                        params: compositionDraft,
-                      }
-                    : (loadingResult?.spec ??
-                      sketchResult?.spec ??
-                      stickResult?.spec ??
-                      flowResult?.spec ??
-                      mapResult?.spec ??
-                      chartResult?.spec ??
-                      baseSpec);
+                const resolvedBase =
+                  loadingResult?.spec ??
+                  sketchResult?.spec ??
+                  stickResult?.spec ??
+                  flowResult?.spec ??
+                  mapResult?.spec ??
+                  chartResult?.spec ??
+                  baseSpec;
+                const compositionResult =
+                  resolvedBase.componentId === "explainer-composition" &&
+                  compositionDraft
+                    ? applyCompositionDraft(resolvedBase, compositionDraft)
+                    : null;
+                if (compositionResult?.error) {
+                  setCompositionError(compositionResult.error);
+                  return;
+                }
+                const composedSpec = compositionResult?.spec ?? resolvedBase;
                 const { patch, error } = buildRevisePatch(draft, composedSpec);
                 if (error || !patch) {
                   setEditError(error ?? "草稿无效");
@@ -1935,9 +2108,17 @@ export function ShotEditorCard({
                       finalComponentId: finalSpec.componentId,
                     })
                   ) {
+                    const reconciled =
+                      finalSpec.componentId === "line-chart"
+                        ? reconcileLineLayoutDraft(
+                            layoutDraft,
+                            (finalSpec.params as { points: unknown[] }).points
+                              .length,
+                          )
+                        : { draft: layoutDraft, removed: 0 };
                     const appliedLayout = applyLayoutToSpec(
                       finalSpec,
-                      layoutDraft,
+                      reconciled.draft ?? layoutDraft,
                     );
                     if ("error" in appliedLayout) {
                       setLayoutError(appliedLayout.error);

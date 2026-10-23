@@ -254,3 +254,44 @@ test("流程节点文字在深浅 Style Bible 下与节点底色保持对比，�
   assert.equal(legacy.nodeTextColor, "#ffffff");
   assert.deepEqual(source, before);
 });
+
+test("旧流程图无 nodeTextColor 时仅豁免自动派生字段，其他风格偏离仍拒绝", () => {
+  const dark = structuredClone(bible.versions[0]!);
+  dark.palette.secondary = "#102033";
+  dark.palette.foreground = "#102033";
+  const source = sample();
+  const working = source.shots[0]!.contentVersions[0]!;
+  const legacy = {
+    specVersion: 1,
+    componentId: "flow-diagram",
+    componentVersion: 1,
+    durationMs: 1000,
+    seed: 1,
+    background: dark.palette.background,
+    params: {
+      title: "审批",
+      nodes: [
+        { label: "提交", x: 250, y: 500, kind: "box" },
+        { label: "通过", x: 750, y: 500, kind: "box" },
+      ],
+      edges: [{ from: "提交", to: "通过" }],
+      boxColor: dark.palette.secondary,
+      arrowColor: dark.palette.accent,
+      textColor: dark.palette.foreground,
+      enterMs: 400,
+      drawMs: 400,
+    },
+  };
+  working.sceneSource = { type: "spec", spec: legacy };
+  assert.deepEqual(workingStyleIssues(source, dark), [
+    "镜头 2 工作画面偏离 Style Bible 调色板",
+  ]);
+  source.shots = [source.shots[0]!];
+  assert.deepEqual(workingStyleIssues(source, dark), []);
+  assert.equal(
+    (legacy.params as Record<string, unknown>).nodeTextColor,
+    undefined,
+  );
+  legacy.params.boxColor = "#ff0000";
+  assert.match(workingStyleIssues(source, dark).join(""), /偏离/);
+});

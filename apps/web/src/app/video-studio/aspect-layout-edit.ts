@@ -74,9 +74,9 @@ export function reconcileLineLayoutDraft(
     fields: LineChartOverrideFields,
   ): LineChartOverrideFields => {
     const shortLabels = Object.fromEntries(
-      Object.entries(fields.shortLabels).filter(([index]) => {
+      Object.entries(fields.shortLabels).filter(([index, text]) => {
         const keep = Number(index) < points;
-        if (!keep) removed += 1;
+        if (!keep && text.trim() !== "") removed += 1;
         return keep;
       }),
     );

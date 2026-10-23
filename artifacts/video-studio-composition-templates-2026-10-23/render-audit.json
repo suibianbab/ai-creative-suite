@@ -1,0 +1,20 @@
+{
+  "pass": true,
+  "projectId": "b0ceed5d-ca43-44ae-bf80-a549073c9445",
+  "shots": 4,
+  "renderRecords": 8,
+  "outputs": [
+    {
+      "aspect": "landscape",
+      "frames": 216,
+      "sha256": "40c38a7c2c9292167b8872600eeb458922919ad231a8ba4237af517f2f94fd0d"
+    },
+    {
+      "aspect": "portrait",
+      "frames": 216,
+      "sha256": "7c96fd713f3573e07d45ce0637472bb4be21241645d805bca22c031c7eaccf74"
+    }
+  ],
+  "imageVariantRendered": true,
+  "visualReview": "See REPORT.md; sampled frames do not prove commercial finish."
+}

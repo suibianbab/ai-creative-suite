@@ -1,0 +1,752 @@
+{
+  "schemaVersion": 1,
+  "id": "b0ceed5d-ca43-44ae-bf80-a549073c9445",
+  "title": "季度销量 · 数据动画",
+  "brief": {
+    "sentence": "样片库：季度销量 · 数据动画。这是可编辑起点，请在发布前替换示例文案和素材。",
+    "aspectTargets": [
+      "landscape",
+      "portrait"
+    ]
+  },
+  "shots": [
+    {
+      "shotId": "2fa1dce4-05bc-4714-812e-ed6740d37b66",
+      "order": 0,
+      "locked": false,
+      "workingVersionId": "eb8624c0-3527-426a-8a8b-376ded0f6516",
+      "contentVersions": [
+        {
+          "versionId": "7a7b9785-c8bf-4a8d-87e5-3fcd671beab1",
+          "createdAt": "2026-10-23T08:19:39.760Z",
+          "durationMs": 2000,
+          "description": "开场：介绍季度销量数据",
+          "narrationText": "季度销量观察。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 2000,
+              "seed": 4201,
+              "background": "#122137",
+              "params": {
+                "title": "季度销量观察",
+                "subtitle": "用数据看增长",
+                "titleColor": "#f5f7fa",
+                "subtitleColor": "#afcde6",
+                "entrance": "fade-up",
+                "enterMs": 450
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        },
+        {
+          "versionId": "eb8624c0-3527-426a-8a8b-376ded0f6516",
+          "createdAt": "2026-10-23T08:19:40.191Z",
+          "durationMs": 2000,
+          "description": "开场：介绍季度销量数据",
+          "narrationText": "为家打造更舒适的客厅。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 2000,
+              "seed": 4201,
+              "background": "#122137",
+              "params": {
+                "title": "让客厅焕然一新",
+                "titleColor": "#f5f7fa",
+                "subtitleColor": "#afcde6",
+                "entrance": "fade-up",
+                "enterMs": 450,
+                "subtitle": "从想法到舒适空间"
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "human-edit",
+            "engineVersion": "1",
+            "parentVersionId": "7a7b9785-c8bf-4a8d-87e5-3fcd671beab1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "7a7b9785-c8bf-4a8d-87e5-3fcd671beab1",
+          "at": "2026-10-23T08:19:39.760Z",
+          "actor": "human"
+        },
+        {
+          "kind": "submitted",
+          "versionId": "eb8624c0-3527-426a-8a8b-376ded0f6516",
+          "at": "2026-10-23T08:19:40.191Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "2412bed6-1065-45b2-886c-ec793b25bf61",
+      "order": 1,
+      "locked": false,
+      "workingVersionId": "10231adb-1a35-41dc-86eb-7db7e82db7f3",
+      "contentVersions": [
+        {
+          "versionId": "dd5c1d6d-4e6d-4680-a4f9-2034b7a45f9a",
+          "createdAt": "2026-10-23T08:19:39.760Z",
+          "durationMs": 2800,
+          "description": "柱状图对比四个季度",
+          "narrationText": "第四季度达到最高。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "bar-chart",
+              "componentVersion": 1,
+              "durationMs": 2800,
+              "seed": 4202,
+              "background": "#122137",
+              "params": {
+                "title": "四季度销量对比",
+                "bars": [
+                  {
+                    "label": "一季度",
+                    "value": 32
+                  },
+                  {
+                    "label": "二季度",
+                    "value": 46
+                  },
+                  {
+                    "label": "三季度",
+                    "value": 58
+                  },
+                  {
+                    "label": "四季度",
+                    "value": 82
+                  }
+                ],
+                "barColor": "#4a9fdb",
+                "accentColor": "#ffbc60",
+                "textColor": "#f5f7fa",
+                "enterMs": 1400
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        },
+        {
+          "versionId": "02351008-c6f0-44fe-9c1f-0be8f2476b65",
+          "createdAt": "2026-10-23T08:19:40.622Z",
+          "durationMs": 2800,
+          "description": "柱状图对比四个季度",
+          "narrationText": "量房，选材，施工，验收，四步完成客厅改造。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "explainer-composition",
+              "componentVersion": 1,
+              "durationMs": 2800,
+              "seed": 4202,
+              "background": "#102033",
+              "params": {
+                "titleColor": "#ffffff",
+                "textColor": "#ffffff",
+                "boxColor": "#3268d9",
+                "arrowColor": "#8ec5ff",
+                "strokeColor": "#8ec5ff",
+                "titleY": 145,
+                "titleEnterMs": 0,
+                "diagramOffsetX": 0,
+                "diagramOffsetY": -40,
+                "diagramEnterMs": 500,
+                "title": "客厅改造四步",
+                "diagram": {
+                  "kind": "flow",
+                  "steps": [
+                    {
+                      "label": "量房"
+                    },
+                    {
+                      "label": "选材"
+                    },
+                    {
+                      "label": "施工"
+                    },
+                    {
+                      "label": "验收"
+                    }
+                  ]
+                },
+                "annotations": [
+                  {
+                    "text": "从空间需求出发",
+                    "x": 500,
+                    "y": 700,
+                    "portraitY": 1260,
+                    "enterMs": 1500
+                  },
+                  {
+                    "text": "每阶段确认成果",
+                    "x": 500,
+                    "y": 780,
+                    "portraitY": 1380,
+                    "enterMs": 1900
+                  }
+                ]
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "human-edit",
+            "engineVersion": "1",
+            "parentVersionId": "dd5c1d6d-4e6d-4680-a4f9-2034b7a45f9a"
+          }
+        },
+        {
+          "versionId": "10231adb-1a35-41dc-86eb-7db7e82db7f3",
+          "createdAt": "2026-10-23T08:19:40.636Z",
+          "durationMs": 2800,
+          "description": "柱状图对比四个季度（人工修订）",
+          "narrationText": "量房，选材，施工，验收，四步完成客厅改造。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "explainer-composition",
+              "componentVersion": 1,
+              "durationMs": 2800,
+              "seed": 4202,
+              "background": "#122137",
+              "params": {
+                "titleColor": "#f5f7fa",
+                "textColor": "#f5f7fa",
+                "boxColor": "#afcde6",
+                "arrowColor": "#ffbc60",
+                "strokeColor": "#4a9fdb",
+                "titleY": 145,
+                "titleEnterMs": 0,
+                "diagramOffsetX": 0,
+                "diagramOffsetY": -40,
+                "diagramEnterMs": 500,
+                "title": "客厅改造四步",
+                "diagram": {
+                  "kind": "flow",
+                  "steps": [
+                    {
+                      "label": "量房"
+                    },
+                    {
+                      "label": "选材"
+                    },
+                    {
+                      "label": "施工"
+                    },
+                    {
+                      "label": "验收"
+                    }
+                  ]
+                },
+                "annotations": [
+                  {
+                    "text": "从空间需求出发",
+                    "x": 500,
+                    "y": 700,
+                    "portraitY": 1260,
+                    "enterMs": 1500
+                  },
+                  {
+                    "text": "每阶段确认成果",
+                    "x": 500,
+                    "y": 780,
+                    "portraitY": 1380,
+                    "enterMs": 1900
+                  }
+                ]
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "human-edit",
+            "engineVersion": "1",
+            "parentVersionId": "02351008-c6f0-44fe-9c1f-0be8f2476b65"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "dd5c1d6d-4e6d-4680-a4f9-2034b7a45f9a",
+          "at": "2026-10-23T08:19:39.760Z",
+          "actor": "human"
+        },
+        {
+          "kind": "submitted",
+          "versionId": "02351008-c6f0-44fe-9c1f-0be8f2476b65",
+          "at": "2026-10-23T08:19:40.622Z",
+          "actor": "human"
+        },
+        {
+          "kind": "submitted",
+          "versionId": "10231adb-1a35-41dc-86eb-7db7e82db7f3",
+          "at": "2026-10-23T08:19:40.636Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "fc5b0b32-a7c5-413c-9286-917634e6e8c4",
+      "order": 2,
+      "locked": false,
+      "workingVersionId": "36e244b9-f15c-4b6f-9df2-f2b55f8a61b8",
+      "contentVersions": [
+        {
+          "versionId": "fcc10ec0-ab29-460a-a87a-73ca2bb8ad97",
+          "createdAt": "2026-10-23T08:19:39.760Z",
+          "durationMs": 2200,
+          "description": "关键数字：四季度 82 单位",
+          "narrationText": "关键数字是八十二。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "number-counter",
+              "componentVersion": 1,
+              "durationMs": 2200,
+              "seed": 4203,
+              "background": "#122137",
+              "params": {
+                "title": "四季度销量",
+                "value": 82,
+                "prefix": "",
+                "suffix": " 单位",
+                "decimals": 0,
+                "countMs": 1400,
+                "numberColor": "#f5f7fa",
+                "accentColor": "#ffbc60"
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        },
+        {
+          "versionId": "e5a53c08-7db3-4c60-aedb-e0d69ab63ef5",
+          "createdAt": "2026-10-23T08:19:40.805Z",
+          "durationMs": 2200,
+          "description": "关键数字：四季度 82 单位",
+          "narrationText": "家具与通道合理布局，空间更从容。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "explainer-composition",
+              "componentVersion": 1,
+              "durationMs": 2200,
+              "seed": 4203,
+              "background": "#102033",
+              "params": {
+                "titleColor": "#ffffff",
+                "textColor": "#ffffff",
+                "boxColor": "#3268d9",
+                "arrowColor": "#8ec5ff",
+                "strokeColor": "#8ec5ff",
+                "titleY": 145,
+                "titleEnterMs": 0,
+                "diagramOffsetX": 0,
+                "diagramOffsetY": 20,
+                "diagramEnterMs": 500,
+                "title": "客厅动线示意",
+                "diagram": {
+                  "kind": "drawing",
+                  "paths": [
+                    "M 190 280 L 810 280 L 810 650 L 190 650 Z",
+                    "M 250 340 L 450 340 L 450 430 L 250 430 Z",
+                    "M 500 470 L 620 470 L 620 560 L 500 560 Z"
+                  ]
+                },
+                "annotations": [
+                  {
+                    "text": "留出舒适通道",
+                    "x": 500,
+                    "y": 780,
+                    "portraitY": 1250,
+                    "enterMs": 1200
+                  }
+                ]
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "human-edit",
+            "engineVersion": "1",
+            "parentVersionId": "fcc10ec0-ab29-460a-a87a-73ca2bb8ad97"
+          }
+        },
+        {
+          "versionId": "36e244b9-f15c-4b6f-9df2-f2b55f8a61b8",
+          "createdAt": "2026-10-23T08:19:40.820Z",
+          "durationMs": 2200,
+          "description": "关键数字：四季度 82 单位（人工修订）",
+          "narrationText": "家具与通道合理布局，空间更从容。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "explainer-composition",
+              "componentVersion": 1,
+              "durationMs": 2200,
+              "seed": 4203,
+              "background": "#122137",
+              "params": {
+                "titleColor": "#f5f7fa",
+                "textColor": "#f5f7fa",
+                "boxColor": "#afcde6",
+                "arrowColor": "#ffbc60",
+                "strokeColor": "#4a9fdb",
+                "titleY": 145,
+                "titleEnterMs": 0,
+                "diagramOffsetX": 0,
+                "diagramOffsetY": 20,
+                "diagramEnterMs": 500,
+                "title": "客厅动线示意",
+                "diagram": {
+                  "kind": "drawing",
+                  "paths": [
+                    "M 190 280 L 810 280 L 810 650 L 190 650 Z",
+                    "M 250 340 L 450 340 L 450 430 L 250 430 Z",
+                    "M 500 470 L 620 470 L 620 560 L 500 560 Z"
+                  ]
+                },
+                "annotations": [
+                  {
+                    "text": "留出舒适通道",
+                    "x": 500,
+                    "y": 780,
+                    "portraitY": 1250,
+                    "enterMs": 1200
+                  }
+                ]
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "human-edit",
+            "engineVersion": "1",
+            "parentVersionId": "e5a53c08-7db3-4c60-aedb-e0d69ab63ef5"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "fcc10ec0-ab29-460a-a87a-73ca2bb8ad97",
+          "at": "2026-10-23T08:19:39.760Z",
+          "actor": "human"
+        },
+        {
+          "kind": "submitted",
+          "versionId": "e5a53c08-7db3-4c60-aedb-e0d69ab63ef5",
+          "at": "2026-10-23T08:19:40.805Z",
+          "actor": "human"
+        },
+        {
+          "kind": "submitted",
+          "versionId": "36e244b9-f15c-4b6f-9df2-f2b55f8a61b8",
+          "at": "2026-10-23T08:19:40.820Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "50512bb4-09bf-4349-9b29-3f258db2b3d3",
+      "order": 3,
+      "locked": false,
+      "workingVersionId": "e7ae5852-f182-49cb-9155-ac6dcced6108",
+      "contentVersions": [
+        {
+          "versionId": "cc230ab5-00a2-4b02-a626-fa3d5a5dc4db",
+          "createdAt": "2026-10-23T08:19:39.760Z",
+          "durationMs": 2000,
+          "description": "收尾：给出增长结论",
+          "narrationText": "趋势清晰可见。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 2000,
+              "seed": 4204,
+              "background": "#122137",
+              "params": {
+                "title": "增长，清晰可见",
+                "subtitle": "替换为你的真实数据",
+                "titleColor": "#f5f7fa",
+                "subtitleColor": "#afcde6",
+                "entrance": "fade-up",
+                "enterMs": 450
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        },
+        {
+          "versionId": "e7ae5852-f182-49cb-9155-ac6dcced6108",
+          "createdAt": "2026-10-23T08:19:40.373Z",
+          "durationMs": 2000,
+          "description": "收尾：给出增长结论",
+          "narrationText": "理想客厅，从清晰方案开始。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 2000,
+              "seed": 4204,
+              "background": "#122137",
+              "params": {
+                "title": "理想客厅，即刻实现",
+                "titleColor": "#f5f7fa",
+                "subtitleColor": "#afcde6",
+                "entrance": "fade-up",
+                "enterMs": 450,
+                "subtitle": "每一步都有清晰方案"
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "human-edit",
+            "engineVersion": "1",
+            "parentVersionId": "cc230ab5-00a2-4b02-a626-fa3d5a5dc4db"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "cc230ab5-00a2-4b02-a626-fa3d5a5dc4db",
+          "at": "2026-10-23T08:19:39.760Z",
+          "actor": "human"
+        },
+        {
+          "kind": "submitted",
+          "versionId": "e7ae5852-f182-49cb-9155-ac6dcced6108",
+          "at": "2026-10-23T08:19:40.373Z",
+          "actor": "human"
+        }
+      ]
+    }
+  ],
+  "renderRecords": [
+    {
+      "renderId": "0a0d0ced-8685-4034-b949-20288c916b56",
+      "versionId": "eb8624c0-3527-426a-8a8b-376ded0f6516",
+      "contentDigest": "f87fc7c8bb1abb3860dc4844f1a8c52bc4ea8b2a6f4642b89cedbf6f3dd95d33",
+      "engineId": "remotion",
+      "engineVersion": "8",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 48,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "06702e0c-6a70-42fa-9d9c-d0258b715a89",
+        "versionId": "3dea2655-d7bc-4efb-969f-57f896163cf7",
+        "digest": "e0fa845c13b3fb7fa83913103ed2b6dac071588fedb1d11ff42dea50b5bcc186"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "6b9e87ed-2307-47f8-93c5-c6bb771337c0",
+      "versionId": "10231adb-1a35-41dc-86eb-7db7e82db7f3",
+      "contentDigest": "9dd4951d5268ef1877af99bd262d089940faf1b11cad7c1b3602814231856213",
+      "engineId": "remotion",
+      "engineVersion": "8",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 67,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "06702e0c-6a70-42fa-9d9c-d0258b715a89",
+        "versionId": "3dea2655-d7bc-4efb-969f-57f896163cf7",
+        "digest": "e0fa845c13b3fb7fa83913103ed2b6dac071588fedb1d11ff42dea50b5bcc186"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "ae425fe1-1ec2-4488-adb4-05f97573ddbc",
+      "versionId": "36e244b9-f15c-4b6f-9df2-f2b55f8a61b8",
+      "contentDigest": "e9a343ab6d768130fb17aea7d911f33580989e8a14613b41420381902ffe5e8b",
+      "engineId": "remotion",
+      "engineVersion": "8",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 53,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "06702e0c-6a70-42fa-9d9c-d0258b715a89",
+        "versionId": "3dea2655-d7bc-4efb-969f-57f896163cf7",
+        "digest": "e0fa845c13b3fb7fa83913103ed2b6dac071588fedb1d11ff42dea50b5bcc186"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "b7904754-761b-44b4-bcd4-7163f88c5005",
+      "versionId": "e7ae5852-f182-49cb-9155-ac6dcced6108",
+      "contentDigest": "48da2fa2b362d2003f6ec76b0ca773ca34a454710e7b2db9d87ba009f77cd32c",
+      "engineId": "remotion",
+      "engineVersion": "8",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 48,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "06702e0c-6a70-42fa-9d9c-d0258b715a89",
+        "versionId": "3dea2655-d7bc-4efb-969f-57f896163cf7",
+        "digest": "e0fa845c13b3fb7fa83913103ed2b6dac071588fedb1d11ff42dea50b5bcc186"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "23e4e07c-e05d-4a78-b11a-54c1510d091a",
+      "versionId": "eb8624c0-3527-426a-8a8b-376ded0f6516",
+      "contentDigest": "f87fc7c8bb1abb3860dc4844f1a8c52bc4ea8b2a6f4642b89cedbf6f3dd95d33",
+      "engineId": "remotion",
+      "engineVersion": "8",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 48,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "06702e0c-6a70-42fa-9d9c-d0258b715a89",
+        "versionId": "3dea2655-d7bc-4efb-969f-57f896163cf7",
+        "digest": "e0fa845c13b3fb7fa83913103ed2b6dac071588fedb1d11ff42dea50b5bcc186"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    },
+    {
+      "renderId": "4aa7a07c-4e94-40c7-96d5-3f2c7f17d0ee",
+      "versionId": "10231adb-1a35-41dc-86eb-7db7e82db7f3",
+      "contentDigest": "9dd4951d5268ef1877af99bd262d089940faf1b11cad7c1b3602814231856213",
+      "engineId": "remotion",
+      "engineVersion": "8",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 67,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "06702e0c-6a70-42fa-9d9c-d0258b715a89",
+        "versionId": "3dea2655-d7bc-4efb-969f-57f896163cf7",
+        "digest": "e0fa845c13b3fb7fa83913103ed2b6dac071588fedb1d11ff42dea50b5bcc186"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    },
+    {
+      "renderId": "d79e1181-6b88-48d9-971b-3c04fe2ac434",
+      "versionId": "36e244b9-f15c-4b6f-9df2-f2b55f8a61b8",
+      "contentDigest": "e9a343ab6d768130fb17aea7d911f33580989e8a14613b41420381902ffe5e8b",
+      "engineId": "remotion",
+      "engineVersion": "8",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 53,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "06702e0c-6a70-42fa-9d9c-d0258b715a89",
+        "versionId": "3dea2655-d7bc-4efb-969f-57f896163cf7",
+        "digest": "e0fa845c13b3fb7fa83913103ed2b6dac071588fedb1d11ff42dea50b5bcc186"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    },
+    {
+      "renderId": "7126e4ee-7377-424e-80d8-b99654ce0e20",
+      "versionId": "e7ae5852-f182-49cb-9155-ac6dcced6108",
+      "contentDigest": "48da2fa2b362d2003f6ec76b0ca773ca34a454710e7b2db9d87ba009f77cd32c",
+      "engineId": "remotion",
+      "engineVersion": "8",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 48,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "06702e0c-6a70-42fa-9d9c-d0258b715a89",
+        "versionId": "3dea2655-d7bc-4efb-969f-57f896163cf7",
+        "digest": "e0fa845c13b3fb7fa83913103ed2b6dac071588fedb1d11ff42dea50b5bcc186"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    }
+  ],
+  "deliveries": [],
+  "savedVersion": 4,
+  "styleBibleRef": {
+    "bibleId": "06702e0c-6a70-42fa-9d9c-d0258b715a89",
+    "versionId": "3dea2655-d7bc-4efb-969f-57f896163cf7",
+    "digest": "e0fa845c13b3fb7fa83913103ed2b6dac071588fedb1d11ff42dea50b5bcc186"
+  }
+}

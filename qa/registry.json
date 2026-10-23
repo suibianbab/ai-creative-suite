@@ -1515,6 +1515,53 @@
       ]
     },
     {
+      "id": "VID-040",
+      "tier": "browser-video",
+      "title": "Reusable multi-element templates in a non-STEM interior project",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/e2e-composition-templates.mjs"],
+      "requiresPorts": [3210],
+      "checks": [
+        "Choose flow and drawing composition templates in the real browser, edit their content and bounded timing, save and reopen the same project",
+        "Check landscape and portrait SVG preview, image template local raster upload, and immutable version rollback",
+        "The run writes to .tools by default and reports browser console errors"
+      ]
+    },
+    {
+      "id": "VID-041",
+      "tier": "integration",
+      "title": "Non-STEM composition template dual-aspect MP4 audit",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/audit-composition-templates.mjs"],
+      "requiresPorts": [],
+      "requiresFiles": [
+        "artifacts/video-studio-composition-templates-2026-10-23/interior.video-project.json",
+        "artifacts/video-studio-composition-templates-2026-10-23/render/landscape.mp4",
+        "artifacts/video-studio-composition-templates-2026-10-23/render/portrait.mp4",
+        "artifacts/video-studio-composition-templates-2026-10-23/image-variant/render/landscape.mp4",
+        "artifacts/video-studio-composition-templates-2026-10-23/image-variant/render/portrait.mp4"
+      ],
+      "checks": [
+        "Four-shot non-STEM project renders 216 frames at 24 fps for each aspect with 8 persisted render records",
+        "An uploaded local bitmap embedded in a separate image-template variant also renders in both aspects",
+        "H.264 dimensions, frame map, and eight retained mid-shot PNGs are verified",
+        "Visual quality remains a separate manual review recorded in REPORT.md"
+      ]
+    },
+    {
+      "id": "VID-042",
+      "tier": "browser-video",
+      "title": "Legacy flow-diagram without nodeTextColor renders through the API",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/verify-legacy-flow-style.mjs"],
+      "requiresPorts": [3210],
+      "checks": [
+        "A legacy Style Bible project with low-contrast flow-diagram colors and no nodeTextColor receives HTTP 200 rather than 400",
+        "The real render API returns two MP4 downloads and two render records without rewriting the old scene spec",
+        "Flow-diagram unit tests independently assert readable node text fill on the box color"
+      ]
+    },
+    {
       "id": "VID-025",
       "tier": "integration",
       "title": "Video Studio P3-B three 镜头预烘焙出片与确定性",
