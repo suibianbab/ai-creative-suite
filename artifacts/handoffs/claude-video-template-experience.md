@@ -2,7 +2,7 @@
 
 - **分支**：`claude/video-template-experience`（基线 `main@d5470be`，交付 HEAD 见下方提交范围）
 - **Worktree 绝对路径**：`D:\codex\animate\.claude\worktrees\video-template-experience`
-- **提交范围**：`d5470be..HEAD`（6 个提交：计划/交接单 → renovation 样片 → appliance 样片 → 预填提示 → e2e+VID-043 → 出片+审计+VID-044）；实现计划见 `docs/superpowers/plans/2026-10-23-video-template-experience.md`
+- **提交范围**：`d5470be..19a3c7a`（8 个提交：计划/交接单 → renovation 样片 → appliance 样片 → 预填提示 → e2e+VID-043 → 出片+审计+VID-044 → 终审修复轮）；实现计划见 `docs/superpowers/plans/2026-10-23-video-template-experience.md`
 - **交叉审核**（任务单 §4.3）：本线完成后请 Codex 审「模板入口、草稿状态、版本保存、双画幅视觉与回归」；我审 Codex 线的「包契约、内容寻址、路径安全、失败原子性与恢复出片」。
 
 ## 交付状态（2026-10-24 收口）
