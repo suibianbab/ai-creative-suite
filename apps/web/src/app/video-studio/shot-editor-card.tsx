@@ -39,6 +39,8 @@ import {
   applyCompositionDraft,
   applyCompositionTemplate,
   COMPOSITION_TEMPLATES,
+  compositionReviseDraft,
+  isCompositionTemplateId,
 } from "./composition-templates";
 import { describeDurationImpact, durationApplyError } from "./duration-impact";
 import {
@@ -185,9 +187,15 @@ function resolveAnyTemplate(
   if (composition.spec) return { spec: composition.spec, error: null };
   return {
     spec: null,
-    error: templateId.startsWith("composition-")
+    error: isCompositionTemplateId(templateId)
       ? composition.error
-      : (flow.error ?? map.error ?? chart.error ?? composition.error),
+      : (chart.error ??
+        flow.error ??
+        map.error ??
+        stick.error ??
+        sketch.error ??
+        loading.error ??
+        composition.error),
   };
 }
 
@@ -269,6 +277,7 @@ export function ShotEditorCard({
           templateAdvanced: false,
         },
   );
+  const [backgroundTouched, setBackgroundTouched] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
   const [directive, setDirective] = useState("");
   const [selectedVersion, setSelectedVersion] = useState(shot.workingVersionId);
@@ -418,6 +427,7 @@ export function ShotEditorCard({
       setEditError(null);
     }
     setPendingTemplateId("");
+    setBackgroundTouched(false);
     setMediaDraft(draftMediaFromVersion(nextWorking, mediaAssets).draft);
     setMediaError(null);
     setMediaWarnings([]);
@@ -834,9 +844,10 @@ export function ShotEditorCard({
                   <input
                     className="shot-bg-input"
                     value={draft.background}
-                    onChange={(event) =>
-                      setDraft({ ...draft, background: event.target.value })
-                    }
+                    onChange={(event) => {
+                      setDraft({ ...draft, background: event.target.value });
+                      setBackgroundTouched(true);
+                    }}
                   />
                 </label>
               )}
@@ -1106,7 +1117,7 @@ export function ShotEditorCard({
                       ) : null}
                     </>
                   ) : null}
-                  {(pendingTemplateId.startsWith("composition-") ||
+                  {(isCompositionTemplateId(pendingTemplateId) ||
                     (editSpec.componentId === "explainer-composition" &&
                       !pendingTemplateId)) &&
                   compositionDraft ? (
@@ -2094,11 +2105,12 @@ export function ShotEditorCard({
                 // Browsing a template leaves the shared background draft alone.
                 // On actual composition Apply, take the template's default only
                 // when the user has not independently changed the color field.
-                const reviseDraft =
-                  pendingTemplateId.startsWith("composition-") &&
-                  draft.background === editSpec.background
-                    ? { ...draft, background: composedSpec.background }
-                    : draft;
+                const reviseDraft = compositionReviseDraft(
+                  pendingTemplateId,
+                  draft,
+                  composedSpec,
+                  backgroundTouched,
+                );
                 const { patch, error } = buildRevisePatch(
                   reviseDraft,
                   composedSpec,
@@ -2133,13 +2145,12 @@ export function ShotEditorCard({
                               .length,
                           )
                         : { draft: layoutDraft, removed: 0 };
-                    if (!reconciled.draft) {
-                      setLayoutError("画幅草稿与最终组件不一致");
-                      return;
-                    }
+                    // layoutMergeDecision above keeps the draft and final
+                    // component in the same family; reconciliation cannot
+                    // return null on this path.
                     const appliedLayout = applyLayoutToSpec(
                       finalSpec,
-                      reconciled.draft,
+                      reconciled.draft!,
                     );
                     if ("error" in appliedLayout) {
                       setLayoutError(appliedLayout.error);

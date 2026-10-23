@@ -61,3 +61,11 @@ node scripts/video/audit-composition-templates.mjs
 最终验证：video-scene 179/179、video-document 158/158、web 276/276；全工作区 typecheck、Biome 426 文件、QA 注册表 97 自动/53 手工。浏览器双画幅编辑、STEM、组合模板三链通过；旧流程图真实 API 出片通过。把旧 STEM 项目复制到 `.tools/composition-third-compat/`，用当前代码和原 Style Bible/旁白重新生成横竖 MP4，SHA-256 依次为 `F0CC0E151DFB524DA153E55802E8BC24E81C48C610876F3092AEF695CBE8150F`、`CEE7C159CFBCFEFE69C63DA0F9FFBD9F87663C9BECBD5C4CB529E7780F6C6CC8`，与留样逐字节相同。
 
 本机安装 pnpm v9 与项目要求 v11 不一致，正常根 `node_modules` 重装遇在用的 Next 原生模块文件锁；在忽略的 `.tools/isolated-*` 安装了同锁文件依赖并用包内链接执行验证。代码、lockfile 与真实出片验证独立于这种本机安装路径；换环境时用项目声明的 pnpm v11 正常安装即可。请复核 G1 的“手改背景”分支，以及 G4 接受边界收紧是否符合团队发布策略。
+
+## 第四轮增量复核（R1–R6）
+
+来源：`artifacts/codex-fix-video-studio-composition-review-findings-r4-2026-10-23.md`。R1 保留已接受的“选中模板即播种草稿、还原下拉不复位”行为，设计文档说明用户影响与规避方式；浏览器脚本在已有组合镜头上断言浏览线描模板→还原→应用后，标题和图示变为线描模板默认值。原“浏览还原背景不变”测试增加注释，明确只检验文字镜头背景隔离。
+
+R2/R3 将实际应用时的背景交接提取到纯函数，增加未手改、手改后又改回原色、其它模板族三种单测。背景输入框用 touched 状态记录用户动作，切换工作版本时重置。R4 的组合族前缀判定统一为 `isCompositionTemplateId`。R5 删除同族合并路径上不可达的空草稿分支，保留契约注释。R6 将非组合模板的错误回退改为实际解析顺序 chart→flow→map→stick→sketch→loading→composition；第四轮清单中写的 chart→map→flow 与代码顺序不同，以代码路径为准。
+
+验证：video-scene 179/179、video-document 158/158、web 277/277；全工作区 typecheck、QA 注册表 97 自动/53 手工；组合模板、双画幅编辑、STEM 三条浏览器链均通过。旧 STEM 项目从留存 JSON 复制到 `.tools/composition-fourth-compat/`，在当前代码重渲横竖版，SHA-256 为 `F0CC0E151DFB524DA153E55802E8BC24E81C48C610876F3092AEF695CBE8150F`、`CEE7C159CFBCFEFE69C63DA0F9FFBD9F87663C9BECBD5C4CB529E7780F6C6CC8`，与第三轮基线逐字节一致。输出留在忽略目录，不覆盖原样片。

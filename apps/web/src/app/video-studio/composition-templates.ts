@@ -5,6 +5,26 @@ import {
   validateSceneSpec,
 } from "@acs/video-scene";
 import { applySceneTemplate } from "./apply-template";
+import type { ShotEditDraft } from "./shot-edit";
+
+const COMPOSITION_TEMPLATE_PREFIX = "composition-";
+
+export function isCompositionTemplateId(templateId: string): boolean {
+  return templateId.startsWith(COMPOSITION_TEMPLATE_PREFIX);
+}
+
+// Template browsing never writes the shared background field. Only the Apply
+// action hands off the template background, and a user edit always wins.
+export function compositionReviseDraft(
+  templateId: string,
+  draft: ShotEditDraft,
+  composedSpec: SceneSpec,
+  backgroundTouched: boolean,
+): ShotEditDraft {
+  return isCompositionTemplateId(templateId) && !backgroundTouched
+    ? { ...draft, background: composedSpec.background }
+    : draft;
+}
 
 type CompositionTemplate = {
   templateId: string;

@@ -51,8 +51,9 @@ try {
   await page.locator(".shot-card").first().waitFor({ timeout: 45_000 });
   const before = await exportProject("before");
   const cards = page.locator(".shot-card");
-  // G1: browsing a composition template and returning to the current
-  // component must not persist the template's dark background.
+  // G1: on this text-animation shot, browsing a composition template and
+  // returning must not persist its dark background. This does not test the
+  // composition draft on an existing composition shot (covered below).
   const browseCard = cards.nth(0);
   const originalSpec = working(before.shots[0]).sceneSource.spec;
   await browseCard.locator(".shot-edit-toggle").click();
@@ -260,6 +261,39 @@ try {
     rolled.shots[1].contentVersions.length,
     reopened.shots[1].contentVersions.length,
   );
+  // Accepted prefill semantics: on an existing composition shot, browsing
+  // another composition template seeds its editor draft. Returning the
+  // dropdown to the current component does not undo that seeded content.
+  await second
+    .locator(".shot-version-select")
+    .selectOption(reopened.shots[1].workingVersionId);
+  await second.locator(".shot-rollback").click();
+  await second.locator(".shot-edit-toggle").click();
+  await second
+    .locator(".chart-template-select")
+    .selectOption("composition-drawing");
+  await second.locator(".chart-template-select").selectOption("");
+  assert.equal(
+    await second.locator(".composition-title-input").inputValue(),
+    "结构示意",
+  );
+  const prefillVersionCount = await second
+    .locator(".shot-version-select option")
+    .count();
+  await second.locator(".shot-apply").click();
+  await second
+    .locator(".shot-version-select option")
+    .nth(prefillVersionCount)
+    .waitFor({ state: "attached" });
+  const prefillResult = await exportProject("composition-prefill-ruling");
+  assert.equal(
+    working(prefillResult.shots[1]).sceneSource.spec.params.title,
+    "结构示意",
+  );
+  assert.equal(
+    working(prefillResult.shots[1]).sceneSource.spec.params.diagram.kind,
+    "drawing",
+  );
   assert.deepEqual(errors, []);
   writeFileSync(
     path.join(out, "browser-report.json"),
@@ -270,6 +304,7 @@ try {
         shots: 4,
         aspects: ["landscape", "portrait"],
         rollbackChecked: true,
+        compositionPrefillRulingChecked: true,
         consoleErrors: errors,
       },
       null,
