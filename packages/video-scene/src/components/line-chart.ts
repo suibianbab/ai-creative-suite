@@ -282,11 +282,12 @@ function renderPortrait(
       previous ? xs[index]! - xs[previous.index]! : Number.POSITIVE_INFINITY,
       next ? xs[next.index]! - xs[index]! : Number.POSITIVE_INFINITY,
     );
-    const labelWidth = override
-      ? gap * (index === 0 || index === n - 1 ? 0.5 : 0.9)
-      : index === 0 || index === n - 1
+    const labelWidth =
+      index === 0 || index === n - 1
         ? labelSlot * 1.7
-        : labelSlot * 0.9;
+        : override?.labelStep !== undefined || override?.shortLabels?.length
+          ? gap * 0.9
+          : labelSlot * 0.9;
     labels.push({
       tag: "text",
       attrs: {

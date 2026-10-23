@@ -63,6 +63,41 @@ export function layoutDraftFromSpec(spec: SceneSpec): LayoutEditDraft {
   };
 }
 
+export function reconcileLineLayoutDraft(
+  draft: LayoutEditDraft | null,
+  points: number,
+): { draft: LayoutEditDraft | null; removed: number } {
+  if (!draft || draft.componentId !== "line-chart")
+    return { draft, removed: 0 };
+  let removed = 0;
+  const reconcile = (
+    fields: LineChartOverrideFields,
+  ): LineChartOverrideFields => {
+    const shortLabels = Object.fromEntries(
+      Object.entries(fields.shortLabels).filter(([index]) => {
+        const keep = Number(index) < points;
+        if (!keep) removed += 1;
+        return keep;
+      }),
+    );
+    const labelStepText =
+      fields.labelStepText.trim() !== "" &&
+      Number(fields.labelStepText) > points
+        ? ""
+        : fields.labelStepText;
+    if (labelStepText !== fields.labelStepText) removed += 1;
+    return { labelStepText, shortLabels };
+  };
+  return {
+    draft: {
+      componentId: "line-chart",
+      portrait: reconcile(draft.portrait),
+      landscape: reconcile(draft.landscape),
+    },
+    removed,
+  };
+}
+
 function textFieldsFrom(
   value: Record<string, unknown> | undefined,
 ): TextOverrideFields {
@@ -150,6 +185,9 @@ function buildLineAspect(
   const entries = Object.entries(fields.shortLabels)
     .filter(([, text]) => text.trim() !== "")
     .map(([index, text]) => ({ index: Number(index), text }));
+  if (entries.some((entry) => entry.index < 0 || entry.index >= points)) {
+    return { value: null, error: `短标签序号须在 1–${points} 之间` };
+  }
   if (entries.length > 0) value.shortLabels = entries;
   return { value, error: null };
 }
@@ -231,10 +269,11 @@ export function describeLineChartLabels(
   const shortened: Array<{ index: number; from: string; to: string }> = [];
   for (const item of display) {
     const label = item.label ?? "";
-    if (!item.show) {
+    if (!item.show && label !== "") {
       hidden.push({ index: item.index, label });
       continue;
     }
+    if (!item.show) continue;
     if (shortByIndex.has(item.index)) {
       shortened.push({ index: item.index, from: label, to: item.text });
     } else if (item.text !== label) {
@@ -243,8 +282,6 @@ export function describeLineChartLabels(
   }
   return { hidden, truncated, shortened };
 }
-
-export const EMPTY_LAYOUT_DRAFTS = { text: EMPTY_TEXT, line: EMPTY_LINE };
 
 // Content and layout are edited as one final spec. Intermediate template/chart/
 // text builders validate their input, so the old layout must not be checked

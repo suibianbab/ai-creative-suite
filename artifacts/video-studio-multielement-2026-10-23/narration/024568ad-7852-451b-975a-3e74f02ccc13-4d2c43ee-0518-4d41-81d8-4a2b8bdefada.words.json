@@ -1,0 +1,106 @@
+{
+  "requestId": "0316c4b9-c2c7-9fce-8c4e-7f32ee5c2fa8",
+  "model": "cosyvoice-v3-flash",
+  "voice": "longanyang",
+  "usage": {
+    "characters": 24
+  },
+  "sentences": [
+    {
+      "index": 0,
+      "words": [
+        {
+          "end_time": 640,
+          "begin_time": 320,
+          "end_index": 1,
+          "begin_index": 0,
+          "text": "水"
+        },
+        {
+          "end_time": 760,
+          "begin_time": 640,
+          "end_index": 2,
+          "begin_index": 1,
+          "text": "蒸"
+        },
+        {
+          "end_time": 960,
+          "begin_time": 800,
+          "end_index": 3,
+          "begin_index": 2,
+          "text": "气"
+        },
+        {
+          "end_time": 1120,
+          "begin_time": 960,
+          "end_index": 4,
+          "begin_index": 3,
+          "text": "上"
+        },
+        {
+          "end_time": 1360,
+          "begin_time": 1160,
+          "end_index": 5,
+          "begin_index": 4,
+          "text": "升"
+        },
+        {
+          "end_time": 1640,
+          "begin_time": 1400,
+          "end_index": 6,
+          "begin_index": 5,
+          "text": "，"
+        },
+        {
+          "end_time": 1840,
+          "begin_time": 1640,
+          "end_index": 7,
+          "begin_index": 6,
+          "text": "遇"
+        },
+        {
+          "end_time": 2000,
+          "begin_time": 1840,
+          "end_index": 8,
+          "begin_index": 7,
+          "text": "冷"
+        },
+        {
+          "end_time": 2240,
+          "begin_time": 2040,
+          "end_index": 9,
+          "begin_index": 8,
+          "text": "凝"
+        },
+        {
+          "end_time": 2440,
+          "begin_time": 2280,
+          "end_index": 10,
+          "begin_index": 9,
+          "text": "结"
+        },
+        {
+          "end_time": 2600,
+          "begin_time": 2440,
+          "end_index": 11,
+          "begin_index": 10,
+          "text": "成"
+        },
+        {
+          "end_time": 2800,
+          "begin_time": 2600,
+          "end_index": 12,
+          "begin_index": 11,
+          "text": "云"
+        },
+        {
+          "end_time": 3240,
+          "begin_time": 2840,
+          "end_index": 13,
+          "begin_index": 12,
+          "text": "。"
+        }
+      ]
+    }
+  ]
+}

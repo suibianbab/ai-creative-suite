@@ -1,8 +1,10 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
+  applyStyleBible,
   type MediaAsset,
   resolveStyleBibleRef,
+  type StyleBibleVersion,
   validateVideoProject,
   workingStyleIssues,
 } from "@acs/video-document";
@@ -75,5 +77,71 @@ test("产品样片必须有真实素材，两个商品镜头引用同一不可�
     assert.equal(source?.type, "media-clip");
     if (source?.type === "media-clip")
       assert.equal(source.mediaAssetId, exampleAsset.assetId);
+  }
+});
+
+test("多元素 STEM 镜头切换深浅 Style Bible 后仍可校验且流程文字有对比", async () => {
+  const { project, bible } = await createGallerySample("stem");
+  assert(bible);
+  const ratio = (a: string, b: string) => {
+    const l = (hex: string) => {
+      const channel = [1, 3, 5].map((offset) => {
+        const raw = Number.parseInt(hex.slice(offset, offset + 2), 16) / 255;
+        return raw <= 0.04045 ? raw / 12.92 : ((raw + 0.055) / 1.055) ** 2.4;
+      });
+      return channel[0]! * 0.2126 + channel[1]! * 0.7152 + channel[2]! * 0.0722;
+    };
+    const x = l(a);
+    const y = l(b);
+    return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
+  };
+  for (const palette of [
+    {
+      background: "#101820",
+      foreground: "#f3f5f7",
+      secondary: "#102033",
+      accent: "#f5b652",
+      object: "#42a5a0",
+    },
+    {
+      background: "#ffffff",
+      foreground: "#102033",
+      secondary: "#f0f5ff",
+      accent: "#3268d9",
+      object: "#42a5a0",
+    },
+  ]) {
+    const version: StyleBibleVersion = {
+      ...bible.versions[0]!,
+      versionId: crypto.randomUUID(),
+      palette,
+    };
+    const changed = structuredClone(bible);
+    changed.versions.push(version);
+    changed.currentVersionId = version.versionId;
+    const restyled = await applyStyleBible(project, changed, version.versionId);
+    validateVideoProject(restyled);
+    assert.deepEqual(workingStyleIssues(restyled, version), []);
+    for (const index of [1, 4]) {
+      const shot = restyled.shots[index]!;
+      const current = shot.contentVersions.find(
+        (item) => item.versionId === shot.workingVersionId,
+      )!;
+      assert.equal(current.sceneSource.type, "spec");
+      if (current.sceneSource.type !== "spec") continue;
+      const scene = validateSceneSpec(
+        current.sceneSource.spec,
+        defaultRegistry,
+      );
+      const params = scene.params as {
+        titleColor: string;
+        boxColor: string;
+        textColor: string;
+      };
+      assert.ok(ratio(params.titleColor, palette.background) >= 4.5);
+      assert.ok(ratio(params.textColor, palette.background) >= 4.5);
+      if (index === 1)
+        assert.ok(ratio(params.textColor, params.boxColor) >= 4.5);
+    }
   }
 });

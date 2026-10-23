@@ -1484,6 +1484,37 @@
       ]
     },
     {
+      "id": "VID-038",
+      "tier": "browser-video",
+      "title": "Video Studio STEM two-shot multi-element edit, reload, dual-preview and rollback",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/e2e-multielement-stem.mjs"],
+      "requiresPorts": [3210],
+      "checks": [
+        "Edit title, annotation, diagram position and timing in shots 2 and 5 via the real browser, then save and reopen",
+        "Both landscape and portrait SVG previews show the edited content; the old shot version remains available for rollback",
+        "Narration text stays unchanged and browser console has no errors"
+      ]
+    },
+    {
+      "id": "VID-039",
+      "tier": "integration",
+      "title": "Video Studio multi-element narrated STEM dual-aspect render audit",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/audit-multielement-stem.mjs"],
+      "requiresPorts": [],
+      "requiresFiles": [
+        "artifacts/video-studio-multielement-2026-10-23/edited.video-project.json",
+        "artifacts/video-studio-multielement-2026-10-23/render/landscape.mp4",
+        "artifacts/video-studio-multielement-2026-10-23/render/portrait.mp4"
+      ],
+      "checks": [
+        "Both final MP4s are 24 fps H.264 with expected dimensions and AAC tracks across seven narrated shots",
+        "Subtitle cues cover seven shots, the output ledger has fourteen entries and before/after keyframes exist for shots 2 and 5",
+        "This numerical audit does not claim commercial visual quality; keyframes require separate human review"
+      ]
+    },
+    {
       "id": "VID-025",
       "tier": "integration",
       "title": "Video Studio P3-B three 镜头预烘焙出片与确定性",

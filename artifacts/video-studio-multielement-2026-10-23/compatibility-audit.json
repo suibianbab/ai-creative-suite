@@ -1,0 +1,12 @@
+{
+  "method": "Copy the retained legacy STEM project to .tools/stem-old-compat/project.json, render with current code and original Style Bible/WAV, then compare SHA-256 of complete MP4 files with retained prior outputs on this machine.",
+  "oldProjectReadAndRendered": true,
+  "landscape": {
+    "byteIdentical": true,
+    "sha256": "f0cc0e151dfb524da153e55802e8bc24e81c48c610876f3092aef695cbe8150f"
+  },
+  "portrait": {
+    "byteIdentical": true,
+    "sha256": "cee7c159cfbcfefe69c63da0f9ffbd9f87663c9becbd5c4cb529e7780f6c6cc8"
+  }
+}

@@ -1,5 +1,7 @@
 # Video Studio 双画幅预览与镜头级画幅微调（2026-10-23）
 
+> 2026-10-23 后续复核整改 P1–P6 与多元素 STEM 样片见 [多元素编排记录](VIDEO_STUDIO_MULTIELEMENT_COMPOSITION_2026-10-23.md)；下文数字是该阶段原始交付快照。
+
 对应交接单：`artifacts/video-studio-next-dual-aspect-edit-brief.md`（2026-10-22，基于 main `226a488`）。
 实施计划：`docs/superpowers/plans/2026-10-23-video-studio-dual-aspect-edit.md`。分支 `video-studio/dual-aspect-edit`（9+ 提交）。
 

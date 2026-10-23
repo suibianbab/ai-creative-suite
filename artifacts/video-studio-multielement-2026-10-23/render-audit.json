@@ -1,0 +1,20 @@
+{
+  "pass": true,
+  "shots": 7,
+  "durationMs": 26010,
+  "narratedShots": 7,
+  "subtitleShots": 7,
+  "renderRecords": 14,
+  "outputs": [
+    {
+      "aspect": "landscape",
+      "duration": 26.005,
+      "sha256": "f95130cea57f4dd0411e3f4e393c6c01bffeb9e742de5a6fa70d26b800517230"
+    },
+    {
+      "aspect": "portrait",
+      "duration": 26.005,
+      "sha256": "4866f0bf9428f82d91f8b80c7884bba0c48666c9db6b9415482ed07347fdd445"
+    }
+  ]
+}

@@ -195,6 +195,29 @@ test("覆写只影响目标画幅：另一画幅标签与无 layout 一致", () 
   );
 });
 
+test("空 portrait 桶与无 layout 全树相同；仅改中间短标签不缩小首末字", () => {
+  const ctx = makeCtx({ width: 720, height: 1280, frame: 48 });
+  const plain = specWith({ title: "压力", points: LONG_POINTS });
+  const empty = specWith(
+    { title: "压力", points: LONG_POINTS },
+    { portrait: {} },
+  );
+  assert.deepEqual(lineChart.render(empty, ctx), lineChart.render(plain, ctx));
+  const middleOnly = specWith(
+    { title: "压力", points: LONG_POINTS },
+    { portrait: { shortLabels: [{ index: 5, text: "Q6" }] } },
+  );
+  const baseline = labelNodes(lineChart.render(plain, ctx));
+  const revised = labelNodes(lineChart.render(middleOnly, ctx));
+  for (const index of [0, 11]) {
+    assert.equal(
+      revised[index]?.attrs["font-size"],
+      baseline[index]?.attrs["font-size"],
+    );
+    assert.ok(Number(revised[index]?.attrs["font-size"]) >= 12);
+  }
+});
+
 test("空字符串标签不渲染文本节点（与旧渲染逐字节同口径）", () => {
   // 终评 Minor#3 升格修复：旧代码 `if (!point.label) return` 跳过 "" 标签，
   // 覆写改造后 show 判定不得让 "" 混入（空 <text> 会破坏旧 spec 逐字节不变）。

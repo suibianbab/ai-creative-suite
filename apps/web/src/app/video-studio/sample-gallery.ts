@@ -118,19 +118,36 @@ function sampleShots(
         durationMs: 4000,
         description: "总览：水在海洋、天空和陆地间循环",
         narrationText: "水在海洋、天空和陆地间不停移动。",
-        source: spec("flow-steps", 4000, 4102, {
+        source: spec("explainer-composition", 4000, 4102, {
           title: "水循环的四个阶段",
-          steps: [
-            { label: "蒸发" },
-            { label: "凝结" },
-            { label: "降水" },
-            { label: "汇流" },
-          ],
-          direction: "horizontal",
+          titleColor: "#f3f5f7",
+          textColor: "#f3f5f7",
           boxColor: "#dcebe1",
           arrowColor: "#2f6f4f",
-          textColor: "#1b2c29",
-          enterMs: 1700,
+          strokeColor: "#42a5a0",
+          titleY: 145,
+          titleEnterMs: 0,
+          diagramOffsetX: 0,
+          diagramOffsetY: -75,
+          diagramEnterMs: 450,
+          diagram: {
+            kind: "flow",
+            steps: [
+              { label: "蒸发" },
+              { label: "凝结" },
+              { label: "降水" },
+              { label: "汇流" },
+            ],
+          },
+          annotations: [
+            {
+              text: "海洋 → 天空 → 陆地 → 海洋",
+              x: 500,
+              y: 740,
+              portraitY: 1265,
+              enterMs: 2200,
+            },
+          ],
         }),
       },
       {
@@ -171,15 +188,42 @@ function sampleShots(
         durationMs: 4000,
         description: "降水：云中水滴聚集并落下",
         narrationText: "云中水滴聚集，落下形成降水。",
-        source: spec("line-drawing", 4000, 4105, {
-          paths: [
-            "M 280 380 C 255 380 245 360 253 341 C 258 324 275 316 292 318 C 303 281 339 259 378 267 C 404 232 457 226 486 252 C 519 250 547 274 551 307 C 578 310 598 331 598 355 C 598 372 584 385 563 385 Z",
-            "M 327 440 L 302 508 M 406 440 L 381 508 M 485 440 L 460 508 M 560 440 L 535 508",
-            "M 260 603 C 348 580 444 580 532 603 C 610 624 689 624 766 603",
-          ],
+        source: spec("explainer-composition", 4000, 4105, {
+          title: "第三步 · 降水",
+          titleColor: "#f3f5f7",
+          textColor: "#f3f5f7",
+          boxColor: "#dcebe1",
+          arrowColor: "#f5b652",
           strokeColor: "#b4d8e4",
-          strokeWidth: 12,
-          revealMs: 2100,
+          titleY: 145,
+          titleEnterMs: 0,
+          diagramOffsetX: 0,
+          diagramOffsetY: 20,
+          diagramEnterMs: 450,
+          diagram: {
+            kind: "drawing",
+            paths: [
+              "M 280 380 C 255 380 245 360 253 341 C 258 324 275 316 292 318 C 303 281 339 259 378 267 C 404 232 457 226 486 252 C 519 250 547 274 551 307 C 578 310 598 331 598 355 C 598 372 584 385 563 385 Z",
+              "M 327 440 L 302 508 M 406 440 L 381 508 M 485 440 L 460 508 M 560 440 L 535 508",
+              "M 260 603 C 348 580 444 580 532 603 C 610 624 689 624 766 603",
+            ],
+          },
+          annotations: [
+            {
+              text: "云中水滴聚集",
+              x: 500,
+              y: 725,
+              portraitY: 1125,
+              enterMs: 1800,
+            },
+            {
+              text: "落下形成降水",
+              x: 500,
+              y: 780,
+              portraitY: 1180,
+              enterMs: 2500,
+            },
+          ],
         }),
       },
       {

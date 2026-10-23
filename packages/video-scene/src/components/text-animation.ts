@@ -106,6 +106,19 @@ function validateLayout(aspectValue: unknown, params: unknown): void {
 // 标题行 + 字号：无覆写 = 既有自动口径逐字节不变；有覆写时 titleLines
 // 替换行表、titleScale 缩放，最后统一按最宽行钳到 maxWidth——缩放永不
 // 撑破安全文字宽（brief §三B「受控范围内调整字号」）。
+function clampTitleSize(
+  lines: string[],
+  preferredSize: number,
+  maxWidth: number,
+  scale: number | undefined,
+): number {
+  const widest = Math.max(...lines.map((line) => emUnits(line) || 1));
+  const fit = maxWidth / widest;
+  let fontSize = Math.min(preferredSize, fit);
+  if (scale) fontSize = Math.min(fontSize * scale, fit);
+  return fontSize;
+}
+
 function resolveTitle(
   title: string,
   preferredSize: number,
@@ -116,15 +129,15 @@ function resolveTitle(
   const auto = fitWrappedText(title, preferredSize, maxWidth, maxLines);
   if (!override) return auto;
   const lines = override.titleLines ?? auto.lines;
-  const widest = Math.max(...lines.map((line) => emUnits(line) || 1));
-  const fit = maxWidth / widest;
-  let fontSize = Math.min(
-    override.titleLines ? preferredSize : auto.fontSize,
-    fit,
-  );
-  if (override.titleScale)
-    fontSize = Math.min(fontSize * override.titleScale, fit);
-  return { lines, fontSize };
+  return {
+    lines,
+    fontSize: clampTitleSize(
+      lines,
+      override.titleLines ? preferredSize : auto.fontSize,
+      maxWidth,
+      override.titleScale,
+    ),
+  };
 }
 
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
@@ -365,20 +378,19 @@ function render(spec: SceneSpecLike, ctx: FrameContext): SvgNode {
   } else {
     // 覆写块：行表（titleLines 或自动单行）、字号（含 scale + 宽钳）、
     // 块中心 = 画布中心 + verticalOffset×height；副标题挂在块下方。
-    const baseSize = fitFontSize(
-      ctx.height / 8,
-      params.title,
-      ctx.width * TEXT_SAFE_WIDTH,
-    );
     const lines = override.titleLines ?? [params.title];
-    const widest = Math.max(...lines.map((line) => emUnits(line) || 1));
-    const fit = (ctx.width * TEXT_SAFE_WIDTH) / widest;
-    let titleSize = Math.min(
-      override.titleLines ? ctx.height / 8 : baseSize,
-      fit,
+    const titleSize = clampTitleSize(
+      lines,
+      override.titleLines
+        ? ctx.height / 8
+        : fitFontSize(
+            ctx.height / 8,
+            params.title,
+            ctx.width * TEXT_SAFE_WIDTH,
+          ),
+      ctx.width * TEXT_SAFE_WIDTH,
+      override.titleScale,
     );
-    if (override.titleScale)
-      titleSize = Math.min(titleSize * override.titleScale, fit);
     const subtitleSize = fitFontSize(
       ctx.height / 14,
       params.subtitle ?? "",

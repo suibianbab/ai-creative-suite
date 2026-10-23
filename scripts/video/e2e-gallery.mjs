@@ -103,7 +103,12 @@ async function runSample(sampleId, position) {
         : `${sampleId.toUpperCase()} 自定义标题`,
     );
     if (sampleId === "stem")
-      await editShot(page, 1, ".flow-title-input", "水循环：蒸发、凝结、降水");
+      await editShot(
+        page,
+        1,
+        ".composition-title-input",
+        "水循环：蒸发、凝结、降水",
+      );
     if (sampleId === "data")
       await editShot(page, 1, ".chart-title-input", "季度销量对比");
     if (sampleId === "product") {

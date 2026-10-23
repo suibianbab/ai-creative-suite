@@ -192,6 +192,31 @@ function parseDataLine(
   return { label, value };
 }
 
+export function parseLineChartPoints(
+  data: string,
+): { points: LinePoint[]; error: null } | { points: null; error: string } {
+  const lines = data
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+  const points: LinePoint[] = [];
+  for (let i = 0; i < lines.length; i += 1) {
+    const parsed = parseDataLine(lines[i]!);
+    if (!parsed) {
+      return {
+        points: null,
+        error: `第 ${i + 1} 行：数值 或 标签,数值 格式不符（数值 0..1e12）`,
+      };
+    }
+    points.push(
+      parsed.label === null
+        ? { value: parsed.value }
+        : { label: parsed.label, value: parsed.value },
+    );
+  }
+  return { points, error: null };
+}
+
 export function buildChartRevisePatch(
   spec: SceneSpec,
   draft: ChartEditDraft,
@@ -222,25 +247,12 @@ export function buildChartRevisePatch(
       bars,
     };
   } else if (spec.componentId === "line-chart") {
-    const points: LinePoint[] = [];
-    for (let i = 0; i < lines.length; i += 1) {
-      const parsed = parseDataLine(lines[i]!);
-      if (!parsed) {
-        return {
-          spec: null,
-          error: `第 ${i + 1} 行：数值 或 标签,数值 格式不符（数值 0..1e12）`,
-        };
-      }
-      points.push(
-        parsed.label === null
-          ? { value: parsed.value }
-          : { label: parsed.label, value: parsed.value },
-      );
-    }
+    const parsed = parseLineChartPoints(draft.data);
+    if (parsed.error) return { spec: null, error: parsed.error };
     params = {
       ...(spec.params as Record<string, unknown>),
       title: draft.title,
-      points,
+      points: parsed.points,
     };
   } else {
     if (draft.value.trim() === "") {

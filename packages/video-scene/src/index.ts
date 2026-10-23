@@ -1,6 +1,7 @@
 export * from "./aspect-layout.js";
 export * from "./components/bar-chart.js";
 export * from "./components/basic-shapes.js";
+export * from "./components/explainer-composition.js";
 export { flowDiagram } from "./components/flow-diagram.js";
 export { flowSteps } from "./components/flow-steps.js";
 export * from "./components/line-chart.js";

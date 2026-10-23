@@ -259,6 +259,29 @@ try {
     path: path.join(OUT, "after-landscape.png"),
   });
 
+  // P2 回归：同一次草稿将 12 点缩成 6 点，面板即时同步点数并清掉
+  // 原先 #12 的短标签；用户无需知道旧索引即可直接应用。
+  await chartShot.locator(".shot-edit-toggle").click();
+  await chartShot
+    .locator(".chart-data-input")
+    .fill(LINE_DATA.split("\n").slice(0, 6).join("\n"));
+  assert.equal(await chartShot.locator(".layout-short-label-row").count(), 6);
+  assert.match(
+    await chartShot.locator(".aspect-layout-hint").first().innerText(),
+    /已移除 3 项/,
+  );
+  await chartShot.locator(".shot-apply").click();
+  assert.equal(await chartShot.locator(".layout-edit-error").count(), 0);
+  const shrunk = await exportProject("shrunk-to-six");
+  const shrunkShot = shrunk.shots[1];
+  const shrunkSpec = shrunkShot.contentVersions.find(
+    (version) => version.versionId === shrunkShot.workingVersionId,
+  ).sceneSource.spec;
+  assert.equal(shrunkSpec.params.points.length, 6);
+  assert(
+    shrunkSpec.layout.portrait.shortLabels.every((item) => item.index < 6),
+  );
+
   assert.deepEqual(errors, []);
   console.log("E2E DUAL-ASPECT EDIT PASS");
 } finally {

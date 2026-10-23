@@ -7,6 +7,7 @@ import {
   layoutDraftFromSpec,
   layoutMergeDecision,
   previewLineOverride,
+  reconcileLineLayoutDraft,
   withoutLayoutForEdit,
 } from "./aspect-layout-edit.js";
 import { buildChartRevisePatch } from "./chart-templates.js";
@@ -218,6 +219,27 @@ test("previewLineOverride：草稿字段的即时提示视图（非法输入静�
   );
 });
 
+test("稀疏标注点不冒充按间隔隐藏", () => {
+  const points = [
+    { label: "首", value: 1 },
+    { value: 2 },
+    { label: "", value: 3 },
+    { label: "末", value: 4 },
+  ];
+  assert.deepEqual(
+    describeLineChartLabels({ points }, undefined, "portrait").hidden,
+    [],
+  );
+  assert.deepEqual(
+    describeLineChartLabels(
+      { points },
+      { portrait: { labelStep: 2 } },
+      "portrait",
+    ).hidden,
+    [],
+  );
+});
+
 test("layoutMergeDecision：换模板丢弃覆写；浏览后还原（pendingTemplateId 归空）保留", () => {
   // Issue 1（终评 Important#1）：选中模板又改回「保持当前组件」时，
   // pendingTemplateId 归空 → 既有覆写必须原样并入下一次应用，不得静默丢。
@@ -343,4 +365,26 @@ test("同次减少折线点数与清理短标签：只校验合并后的最终 s
     { index: 0, text: "首" },
   ]);
   assert.equal((final.spec.params as { points: unknown[] }).points.length, 2);
+});
+
+test("草稿从 12 点减到 6 点：旧末点短标签自动移除且仍能应用", () => {
+  const old = lineSpec({
+    portrait: { labelStep: 12, shortLabels: [{ index: 11, text: "末" }] },
+  });
+  const parsed = buildChartRevisePatch(withoutLayoutForEdit(old), {
+    title: "压力",
+    data: "甲,1\n乙,2\n丙,3\n丁,4\n戊,5\n己,6",
+    value: "",
+    prefix: "",
+    suffix: "",
+  });
+  assert.equal(parsed.error, null);
+  const reconciled = reconcileLineLayoutDraft(layoutDraftFromSpec(old), 6);
+  assert.equal(reconciled.removed, 2);
+  assert.equal(reconciled.draft?.componentId, "line-chart");
+  if (reconciled.draft?.componentId !== "line-chart") return;
+  assert.deepEqual(reconciled.draft.portrait.shortLabels, {});
+  assert.equal(reconciled.draft.portrait.labelStepText, "");
+  const applied = applyLayoutToSpec(parsed.spec!, reconciled.draft);
+  assert.ok(!("error" in applied));
 });

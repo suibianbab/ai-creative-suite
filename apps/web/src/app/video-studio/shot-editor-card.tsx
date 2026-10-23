@@ -7,7 +7,7 @@ import type {
   ThreeSceneSpec,
   VideoProject,
 } from "@acs/video-document";
-import type { SceneSpec } from "@acs/video-scene";
+import type { ExplainerParams, SceneSpec } from "@acs/video-scene";
 import { useEffect, useMemo, useState } from "react";
 import {
   applyLayoutToSpec,
@@ -16,6 +16,7 @@ import {
   layoutDraftFromSpec,
   layoutMergeDecision,
   previewLineOverride,
+  reconcileLineLayoutDraft,
   withoutLayoutForEdit,
 } from "./aspect-layout-edit";
 import {
@@ -32,6 +33,7 @@ import {
   type ChartEditDraft,
   draftChartFromSpec,
   isChartComponentId,
+  parseLineChartPoints,
 } from "./chart-templates";
 import { describeDurationImpact, durationApplyError } from "./duration-impact";
 import {
@@ -315,6 +317,12 @@ export function ShotEditorCard({
       : EMPTY_LOADING_DRAFT,
   );
   const [loadingError, setLoadingError] = useState<string | null>(null);
+  const [compositionDraft, setCompositionDraft] =
+    useState<ExplainerParams | null>(() =>
+      spec?.componentId === "explainer-composition"
+        ? structuredClone(spec.params as ExplainerParams)
+        : null,
+    );
   // 双画幅版式覆写（2026-10-23 brief §三B）：仅 text-animation / line-chart
   // 出「画幅微调」区块；草稿随工作版本重置，换模板 = 新视觉基底 → 清空。
   const layoutEditable =
@@ -328,6 +336,11 @@ export function ShotEditorCard({
     "portrait",
   );
   const [layoutError, setLayoutError] = useState<string | null>(null);
+  const [layoutNotice, setLayoutNotice] = useState<string | null>(null);
+  const lineDraftPoints =
+    editSpec?.componentId === "line-chart"
+      ? parseLineChartPoints(chartDraft.data).points
+      : null;
   // P2.5-T3 媒体草稿（第七族）：素材/入出点/fit/注视点/原声，校验与预警全走
   // media-clip-templates.ts 纯逻辑，非法草稿不回调。
   const [mediaDraft, setMediaDraft] = useState<MediaEditDraft | null>(
@@ -431,7 +444,13 @@ export function ShotEditorCard({
         ? draftLoadingFromSpec(nextSpec)
         : EMPTY_LOADING_DRAFT,
     );
+    setCompositionDraft(
+      nextSpec?.componentId === "explainer-composition"
+        ? structuredClone(nextSpec.params as ExplainerParams)
+        : null,
+    );
     setLayoutError(null);
+    setLayoutNotice(null);
     setLayoutAspect("portrait");
     setLayoutDraft(
       nextSpec &&
@@ -929,12 +948,31 @@ export function ShotEditorCard({
                             className="chart-data-input"
                             rows={6}
                             value={chartDraft.data}
-                            onChange={(event) =>
+                            onChange={(event) => {
+                              const data = event.target.value;
                               setChartDraft({
                                 ...chartDraft,
-                                data: event.target.value,
-                              })
-                            }
+                                data,
+                              });
+                              if (editSpec.componentId === "line-chart") {
+                                const parsed = parseLineChartPoints(data);
+                                if (
+                                  parsed.points &&
+                                  parsed.points.length >= 2
+                                ) {
+                                  const next = reconcileLineLayoutDraft(
+                                    layoutDraft,
+                                    parsed.points.length,
+                                  );
+                                  setLayoutDraft(next.draft);
+                                  setLayoutNotice(
+                                    next.removed > 0
+                                      ? `点数变化后，已移除 ${next.removed} 项超范围画幅覆写`
+                                      : null,
+                                  );
+                                }
+                              }
+                            }}
                           />
                         </label>
                       )}
@@ -1020,6 +1058,133 @@ export function ShotEditorCard({
                         <p className="flow-edit-error">{flowError}</p>
                       ) : null}
                     </>
+                  ) : null}
+                  {editSpec.componentId === "explainer-composition" &&
+                  compositionDraft ? (
+                    <fieldset
+                      className="composition-edit-fieldset"
+                      disabled={pendingTemplateId !== ""}
+                    >
+                      <legend>多元素编排（标题、图示、标注）</legend>
+                      <label className="shot-edit-field">
+                        标题
+                        <input
+                          className="composition-title-input"
+                          maxLength={32}
+                          value={compositionDraft.title}
+                          onChange={(event) =>
+                            setCompositionDraft({
+                              ...compositionDraft,
+                              title: event.target.value,
+                            })
+                          }
+                        />
+                      </label>
+                      {(
+                        [
+                          "titleY",
+                          "titleEnterMs",
+                          "diagramOffsetX",
+                          "diagramOffsetY",
+                          "diagramEnterMs",
+                        ] as const
+                      ).map((field) => (
+                        <label className="shot-edit-field" key={field}>
+                          {
+                            {
+                              titleY: "标题纵向位置",
+                              titleEnterMs: "标题入场毫秒",
+                              diagramOffsetX: "图示横向偏移",
+                              diagramOffsetY: "图示纵向偏移",
+                              diagramEnterMs: "图示入场毫秒",
+                            }[field]
+                          }
+                          <input
+                            className={`composition-${field}-input`}
+                            type="number"
+                            value={compositionDraft[field]}
+                            onChange={(event) =>
+                              setCompositionDraft({
+                                ...compositionDraft,
+                                [field]: Number(event.target.value),
+                              })
+                            }
+                          />
+                        </label>
+                      ))}
+                      {compositionDraft.annotations.map(
+                        (annotation, annotationIndex) => (
+                          <div
+                            className="composition-annotation-row"
+                            key={annotationIndex}
+                          >
+                            <label className="shot-edit-field">
+                              标注 {annotationIndex + 1}
+                              <input
+                                className={`composition-annotation-${annotationIndex}-text`}
+                                maxLength={20}
+                                value={annotation.text}
+                                onChange={(event) =>
+                                  setCompositionDraft({
+                                    ...compositionDraft,
+                                    annotations:
+                                      compositionDraft.annotations.map(
+                                        (item, index) =>
+                                          index === annotationIndex
+                                            ? {
+                                                ...item,
+                                                text: event.target.value,
+                                              }
+                                            : item,
+                                      ),
+                                  })
+                                }
+                              />
+                            </label>
+                            {(["x", "y", "portraitY", "enterMs"] as const).map(
+                              (field) => (
+                                <label className="shot-edit-field" key={field}>
+                                  {
+                                    {
+                                      x: "横向位置",
+                                      y: "横版纵向位置",
+                                      portraitY: "竖版纵向位置（可空）",
+                                      enterMs: "入场毫秒",
+                                    }[field]
+                                  }
+                                  <input
+                                    className={`composition-annotation-${annotationIndex}-${field}`}
+                                    type="number"
+                                    value={annotation[field] ?? ""}
+                                    onChange={(event) =>
+                                      setCompositionDraft({
+                                        ...compositionDraft,
+                                        annotations:
+                                          compositionDraft.annotations.map(
+                                            (item, index) =>
+                                              index === annotationIndex
+                                                ? {
+                                                    ...item,
+                                                    [field]:
+                                                      field === "portraitY" &&
+                                                      event.target.value === ""
+                                                        ? undefined
+                                                        : Number(
+                                                            event.target.value,
+                                                          ),
+                                                  }
+                                                : item,
+                                          ),
+                                      })
+                                    }
+                                  />
+                                </label>
+                              ),
+                            )}
+                          </div>
+                        ),
+                      )}
+                    </fieldset>
                   ) : null}
                   {isStickComponentId(editSpec.componentId) ? (
                     <>
@@ -1169,6 +1334,9 @@ export function ShotEditorCard({
                       disabled={pendingTemplateId !== ""}
                     >
                       <legend>画幅微调（另一画幅保持自动布局）</legend>
+                      {layoutNotice ? (
+                        <p className="aspect-layout-hint">{layoutNotice}</p>
+                      ) : null}
                       {pendingTemplateId !== "" ? (
                         <p className="aspect-layout-hint">
                           已选新组件模板：应用后旧画幅覆写将被舍弃（新视觉
@@ -1260,18 +1428,23 @@ export function ShotEditorCard({
                               逐项短标签（留空 = 原样；≤12 字）
                             </p>
                             {(
+                              lineDraftPoints ??
                               (
                                 editSpec.params as {
-                                  points?: Array<{ label?: string }>;
+                                  points?: Array<{
+                                    label?: string;
+                                    value: number;
+                                  }>;
                                 }
-                              ).points ?? []
+                              ).points ??
+                              []
                             ).map((point, pointIndex) => (
                               <label
                                 key={pointIndex}
                                 className="layout-short-label-row"
                               >
                                 <span>
-                                  {point.label ?? `#${pointIndex + 1}`}
+                                  {point.label || `#${pointIndex + 1}`}
                                 </span>
                                 <input
                                   className="layout-short-label-input"
@@ -1298,16 +1471,24 @@ export function ShotEditorCard({
                             const preview = previewLineOverride(
                               layoutDraft[layoutAspect],
                               (
+                                lineDraftPoints ??
                                 (editSpec.params as { points?: unknown[] })
-                                  .points ?? []
+                                  .points ??
+                                []
                               ).length,
                             );
                             const hints = describeLineChartLabels(
-                              editSpec.params as {
-                                points: Array<{
-                                  label?: string;
-                                  value: number;
-                                }>;
+                              {
+                                points:
+                                  lineDraftPoints ??
+                                  (
+                                    editSpec.params as {
+                                      points: Array<{
+                                        label?: string;
+                                        value: number;
+                                      }>;
+                                    }
+                                  ).points,
                               },
                               preview ? { [layoutAspect]: preview } : undefined,
                               layoutAspect,
@@ -1702,16 +1883,36 @@ export function ShotEditorCard({
                   setLoadingError(loadingResult.error ?? "加载数据无效");
                   return;
                 }
-                const { patch, error } = buildRevisePatch(
-                  draft,
-                  loadingResult?.spec ??
+                const composedSpec =
+                  (
+                    loadingResult?.spec ??
                     sketchResult?.spec ??
                     stickResult?.spec ??
                     flowResult?.spec ??
                     mapResult?.spec ??
                     chartResult?.spec ??
-                    baseSpec,
-                );
+                    baseSpec
+                  ).componentId === "explainer-composition" &&
+                  compositionDraft &&
+                  !pendingTemplateId
+                    ? {
+                        ...(loadingResult?.spec ??
+                          sketchResult?.spec ??
+                          stickResult?.spec ??
+                          flowResult?.spec ??
+                          mapResult?.spec ??
+                          chartResult?.spec ??
+                          baseSpec),
+                        params: compositionDraft,
+                      }
+                    : (loadingResult?.spec ??
+                      sketchResult?.spec ??
+                      stickResult?.spec ??
+                      flowResult?.spec ??
+                      mapResult?.spec ??
+                      chartResult?.spec ??
+                      baseSpec);
+                const { patch, error } = buildRevisePatch(draft, composedSpec);
                 if (error || !patch) {
                   setEditError(error ?? "草稿无效");
                   return;
@@ -1760,6 +1961,7 @@ export function ShotEditorCard({
                 setSketchError(null);
                 setLoadingError(null);
                 setLayoutError(null);
+                setLayoutNotice(null);
                 const attached = attachDescription(
                   { ...patch, spec: reviseSpec },
                   draft.description,
@@ -1789,6 +1991,7 @@ export function ShotEditorCard({
                 );
                 setEditError(null);
                 setLayoutError(null);
+                setLayoutNotice(null);
                 setLayoutDraft(
                   editSpec && layoutEditable
                     ? layoutDraftFromSpec(editSpec)

@@ -1,5 +1,6 @@
 import { barChart } from "./components/bar-chart.js";
 import { basicShapes } from "./components/basic-shapes.js";
+import { explainerComposition } from "./components/explainer-composition.js";
 import { flowDiagram } from "./components/flow-diagram.js";
 import { flowSteps } from "./components/flow-steps.js";
 import { lineChart } from "./components/line-chart.js";
@@ -39,6 +40,7 @@ export const defaultRegistry: SceneRegistry = createRegistry(
     sketchNote,
     loadingDots,
     loadingProgress,
+    explainerComposition,
   ],
-  7,
+  8,
 );

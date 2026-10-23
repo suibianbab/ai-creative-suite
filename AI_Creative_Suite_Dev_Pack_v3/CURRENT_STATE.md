@@ -1,5 +1,9 @@
 # Current State v2
 
+## 2026-10-23 Video Studio 双画幅复核整改与 STEM 多元素编排（待分支复核）
+
+在 `video-studio/dual-aspect-edit` 分支按 `artifacts/codex-fix-video-studio-dual-aspect-review-findings-2026-10-23.md` 修复 P1–P6：折线首末标签宽度、缩点草稿与短标签同步、未标注点提示、流程节点 Style Bible 对比度、文字字号钳制去重与死导出清理。新增注册组件 `explainer-composition@1`，在原 SceneSpec、镜头内容版本、Style Bible、预览及 Remotion 链路内组合标题、现有流程/线描与 1–3 条标注；STEM 样片升级镜头 2/5。浏览器修改→保存重开→回滚、双画幅有声 MP4 与逐镜人工抽帧已验证；上一版 STEM 项目用新代码重渲染，横竖 MP4 与原文件逐字节相同。证据与限制见 `docs/VIDEO_STUDIO_MULTIELEMENT_COMPOSITION_2026-10-23.md`、`artifacts/video-studio-multielement-2026-10-23/REPORT.md`。本轮仅开发分支，尚未合并或推送 main。
+
 ## 2026-10-22 Video Studio P4 第一阶段：三类可编辑样片与本地双画幅直出
 
 工作台新增 STEM、数据动画、简短产品展示样片入口；复制为独立项目后，沿用原镜头卡、时间线、场景组件及素材仓编辑。STEM/数据样片引用独立 Style Bible；产品样片以仓库自有合成帽图制作短片，通过原素材导入接口入账，可替换商品镜头。新增本地开发环境的双画幅 MP4 直出与下载，渲染记录回写项目。`VID-030` 覆盖三个样片的真实浏览器创建、编辑、保存重开及横竖版出片；视觉检查发现并修复 `flow-steps` 浅色卡片的标签对比度问题。样片质量定位为基础演示，非商业广告精修；正式环境渲染服务、PDF／大纲导出与 F 项未纳入本轮。详见 `docs/VIDEO_STUDIO_P4_GALLERY_2026-10-22.md`。

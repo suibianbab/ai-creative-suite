@@ -218,3 +218,39 @@ test("3D 主体与强调轴使用同一风格版本的对象色和强调色", ()
     zoom: 1,
   });
 });
+
+test("流程节点文字在深浅 Style Bible 下与节点底色保持对比，旧源不被改写", () => {
+  const source = {
+    componentId: "flow-diagram",
+    background: "#ffffff",
+    params: {
+      boxColor: "#eeeeee",
+      textColor: "#111111",
+      nodeTextColor: "#102033",
+    },
+  };
+  const before = structuredClone(source);
+  const dark = structuredClone(bible.versions[0]!);
+  dark.palette.secondary = "#102033";
+  dark.palette.foreground = "#102033";
+  const darkResult = styleSceneSpec(source, dark).params as Record<
+    string,
+    string
+  >;
+  assert.equal(darkResult.nodeTextColor, "#ffffff");
+  assert.equal(darkResult.boxColor, "#102033");
+  const light = structuredClone(bible.versions[0]!);
+  light.palette.secondary = "#f0f5ff";
+  light.palette.foreground = "#102033";
+  const lightResult = styleSceneSpec(source, light).params as Record<
+    string,
+    string
+  >;
+  assert.equal(lightResult.nodeTextColor, "#102033");
+  const legacy = styleSceneSpec(
+    { ...source, params: { boxColor: "#eeeeee", textColor: "#111111" } },
+    dark,
+  ).params as Record<string, string>;
+  assert.equal(legacy.nodeTextColor, "#ffffff");
+  assert.deepEqual(source, before);
+});
