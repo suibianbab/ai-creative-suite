@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import type { FrameContext } from "../registry.js";
 import type { SvgNode } from "../svg.js";
-import { flowSteps } from "./flow-steps.js";
+import { flowStepLabelMaxWidth, flowSteps } from "./flow-steps.js";
 
 // collect 为各组件测试私有惯例（bar/line/map 同款），不跨文件共享
 function collect(node: SvgNode, tag: string, out: SvgNode[] = []): SvgNode[] {
@@ -40,6 +40,31 @@ function makeCtx(overrides: Partial<FrameContext> = {}): FrameContext {
     ...overrides,
   } as FrameContext;
 }
+
+test("共享流程标签宽度与实际盒几何联动", () => {
+  for (const direction of ["horizontal", "vertical"] as const) {
+    for (const count of [2, 4, 8]) {
+      const params = {
+        ...BASE,
+        direction,
+        steps: Array.from({ length: count }, (_, index) => ({
+          label: `步${index}`,
+        })),
+      };
+      const boxes = collect(
+        flowSteps.render(specWith(params), makeCtx()),
+        "rect",
+      ).filter((node) => node.attrs.fill === BASE.boxColor);
+      assert.equal(boxes.length, count);
+      for (const box of boxes) {
+        assert.equal(
+          flowStepLabelMaxWidth(count, direction),
+          Number(box.attrs.width) * 0.8,
+        );
+      }
+    }
+  }
+});
 
 test("校验表：越界输入逐项拒绝", () => {
   const cases: Array<[unknown, RegExp]> = [

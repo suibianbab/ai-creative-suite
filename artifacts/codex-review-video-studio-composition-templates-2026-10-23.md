@@ -47,3 +47,17 @@ node scripts/video/audit-composition-templates.mjs
 4. 三模板选用、再次编辑、回滚与旧项目导入是否共用原版本链，能否避免“看起来预览成功但保存失败”。
 5. 对照抽帧做独立视觉检查：字幕重叠、标签溢出、图像裁切、竖版留白与整体审美；不要把自动通过等同于商业成片。
 6. 比较基线留存 MP4 哈希，确认兼容性复渲确实来自当前代码。
+
+## 第三轮增量复核（G1–G8）
+
+来源：`artifacts/codex-fix-video-studio-composition-review-findings-2026-10-23.md`。请只看本轮相对 `eb88327` 的增量。
+
+- G1：去除组合模板选择时对共享 `draft.background` 的写入；实际应用时，在用户未手改背景的条件下，向 `buildRevisePatch` 传模板默认背景。已有 Style Bible 的样片会按其背景 `#122137` 自动重映射，模板原始默认 `#102033` 另由单测核对。浏览器增加“浏览→还原→只改时长”背景不变，以及真正选用模板后正确生成组合镜头的断言。
+- G2：`flowStepLabelMaxWidth` 从 flow-steps 真实常量得出；组件与 explainer 共用。测试把函数结果对照实际 SVG 盒宽，涵盖横竖 2/4/8 步。
+- G3：`@acs/shared` 新增 WCAG 相对亮度/对比与可读前景，Style Bible、flow-steps 和旧 flow-diagram 共用。测试覆盖 `#757575`/`#767676` 临界两侧；包依赖与 lockfile 已更新。
+- G4：接受未合并分支内标注边界收紧，明确旧分支实验项目可能需改坐标；见设计文档第三轮节。通用坏 spec 的预览错误 UI 不纳入本轮。
+- G5–G8：组合模板错误优先返回本族消息；删永不触发的校验；尺寸膨胀关系在两侧标明；布局草稿为 null 时明确报错并停止，而非用旧草稿回退。
+
+最终验证：video-scene 179/179、video-document 158/158、web 276/276；全工作区 typecheck、Biome 426 文件、QA 注册表 97 自动/53 手工。浏览器双画幅编辑、STEM、组合模板三链通过；旧流程图真实 API 出片通过。把旧 STEM 项目复制到 `.tools/composition-third-compat/`，用当前代码和原 Style Bible/旁白重新生成横竖 MP4，SHA-256 依次为 `F0CC0E151DFB524DA153E55802E8BC24E81C48C610876F3092AEF695CBE8150F`、`CEE7C159CFBCFEFE69C63DA0F9FFBD9F87663C9BECBD5C4CB529E7780F6C6CC8`，与留样逐字节相同。
+
+本机安装 pnpm v9 与项目要求 v11 不一致，正常根 `node_modules` 重装遇在用的 Next 原生模块文件锁；在忽略的 `.tools/isolated-*` 安装了同锁文件依赖并用包内链接执行验证。代码、lockfile 与真实出片验证独立于这种本机安装路径；换环境时用项目声明的 pnpm v11 正常安装即可。请复核 G1 的“手改背景”分支，以及 G4 接受边界收紧是否符合团队发布策略。

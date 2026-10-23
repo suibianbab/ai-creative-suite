@@ -9,6 +9,7 @@ import {
   type ExplainerParams,
   explainerComposition,
 } from "./explainer-composition.js";
+import { flowStepLabelMaxWidth } from "./flow-steps.js";
 
 const params: ExplainerParams = {
   title: "水循环的四个阶段",
@@ -156,11 +157,14 @@ test("8 步长标签始终装在流程盒宽的 80% 内", () => {
       explainerComposition.render(long, ctx(width!, height!)),
     ).filter((node) => node.text?.startsWith("处理阶段"));
     assert.equal(labels.length, 8);
-    const boxWidth = height! > width! ? 280 : Math.min((720 / 7) * 0.72, 240);
+    const maxWidth = flowStepLabelMaxWidth(
+      8,
+      height! > width! ? "vertical" : "horizontal",
+    );
     for (const label of labels) {
       assert.ok(
         Number(label.attrs["font-size"]) * emUnits(label.text!) <=
-          boxWidth * 0.8 + 0.001,
+          maxWidth + 0.001,
       );
     }
   }

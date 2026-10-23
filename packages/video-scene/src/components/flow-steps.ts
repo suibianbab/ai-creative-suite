@@ -1,3 +1,4 @@
+import { readableTextColor } from "@acs/shared";
 import { clamp01, easeOutCubic } from "../easing.js";
 import type {
   FrameContext,
@@ -45,6 +46,20 @@ const ARROW_MS = 240;
 const ARROWHEAD_MS = 160;
 const ARROW_GAP = 10;
 const MAX_STEPS = 8;
+
+export function flowStepLabelMaxWidth(
+  stepCount: number,
+  direction: "horizontal" | "vertical",
+): number {
+  const boxWidth =
+    direction === "horizontal"
+      ? Math.min(
+          ((H_RIGHT - H_LEFT) / (stepCount - 1)) * BOX_RATIO,
+          H_BOX_W_CAP,
+        )
+      : V_BOX_W;
+  return boxWidth * 0.8;
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -104,27 +119,9 @@ function validateParams(value: unknown): FlowStepsParams {
 
 function render(spec: SceneSpecLike, ctx: FrameContext): SvgNode {
   const params = spec.params as FlowStepsParams;
-  // Style Bible can independently map boxColor and textColor to two light roles.
-  // Keep the title color, but give labels a legible fill on their own boxes.
-  const luminance = (hex: string): number => {
-    const rgb = [1, 3, 5].map(
-      (offset) => Number.parseInt(hex.slice(offset, offset + 2), 16) / 255,
-    );
-    const linear = rgb.map((value) =>
-      value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4,
-    );
-    return 0.2126 * linear[0]! + 0.7152 * linear[1]! + 0.0722 * linear[2]!;
-  };
-  const boxLum = luminance(params.boxColor);
-  const textLum = luminance(params.textColor);
-  const ratio =
-    (Math.max(boxLum, textLum) + 0.05) / (Math.min(boxLum, textLum) + 0.05);
-  const labelColor =
-    ratio >= 4.5
-      ? params.textColor
-      : (boxLum + 0.05) / 0.05 >= 1.05 / (boxLum + 0.05)
-        ? "#000000"
-        : "#ffffff";
+  // Style Bible can map box and text independently. Share the same contrast
+  // rule as flow-diagram and Style Bible validation.
+  const labelColor = readableTextColor(params.textColor, params.boxColor);
   const tMs = (ctx.frame / ctx.fps) * 1000;
   const n = params.steps.length;
   const horizontal = params.direction === "horizontal";
@@ -142,7 +139,11 @@ function render(spec: SceneSpecLike, ctx: FrameContext): SvgNode {
     const appear = easeOutCubic(clamp01((tMs - delay) / params.enterMs));
     const cx = horizontal ? H_LEFT + i * slot : MID_X;
     const cy = horizontal ? MID_Y : V_TOP + i * slot;
-    const fontSize = fitFontSize(22, step.label, boxW * 0.8);
+    const fontSize = fitFontSize(
+      22,
+      step.label,
+      flowStepLabelMaxWidth(n, params.direction),
+    );
     boxes.push({
       tag: "rect",
       attrs: {

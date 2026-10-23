@@ -1,3 +1,4 @@
+import { readableTextColor } from "@acs/shared";
 import { clamp01, easeOutCubic } from "../easing.js";
 import type {
   FrameContext,
@@ -55,28 +56,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function isHexColor(value: unknown): value is string {
   return typeof value === "string" && HEX_COLOR.test(value);
-}
-
-function readableLegacyNodeColor(text: string, box: string): string {
-  const luminance = (hex: string): number => {
-    const channels = [1, 3, 5].map((offset) => {
-      const value = Number.parseInt(hex.slice(offset, offset + 2), 16) / 255;
-      return value <= 0.04045
-        ? value / 12.92
-        : ((value + 0.055) / 1.055) ** 2.4;
-    });
-    return (
-      channels[0]! * 0.2126 + channels[1]! * 0.7152 + channels[2]! * 0.0722
-    );
-  };
-  const boxLum = luminance(box);
-  const textLum = luminance(text);
-  if (
-    (Math.max(boxLum, textLum) + 0.05) / (Math.min(boxLum, textLum) + 0.05) >=
-    4.5
-  )
-    return text;
-  return boxLum > 0.179 ? "#000000" : "#ffffff";
 }
 
 function validateParams(value: unknown): FlowDiagramParams {
@@ -234,7 +213,7 @@ function render(spec: SceneSpecLike, ctx: FrameContext): SvgNode {
             "font-size": fontSize,
             fill:
               params.nodeTextColor ??
-              readableLegacyNodeColor(params.textColor, params.boxColor),
+              readableTextColor(params.textColor, params.boxColor),
             "text-anchor": "middle",
           },
           text: node.label,

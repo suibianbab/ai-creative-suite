@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { readableTextColor } from "@acs/shared";
 import { reviseWorkingVersion } from "./operations.js";
 import {
   applyStyleBible,
@@ -253,6 +254,23 @@ test("流程节点文字在深浅 Style Bible 下与节点底色保持对比，�
   ).params as Record<string, string>;
   assert.equal(legacy.nodeTextColor, "#ffffff");
   assert.deepEqual(source, before);
+});
+
+test("Style Bible 节点文字与共享可读色规则一致，含黑白临界附近", () => {
+  for (const boxColor of ["#102033", "#757575", "#767676", "#f0f5ff"]) {
+    const version = structuredClone(bible.versions[0]!);
+    version.palette.secondary = boxColor;
+    version.palette.foreground = boxColor;
+    const result = styleSceneSpec(
+      {
+        componentId: "flow-diagram",
+        background: "#ffffff",
+        params: { boxColor: "#ffffff", textColor: "#ffffff" },
+      },
+      version,
+    ).params as Record<string, string>;
+    assert.equal(result.nodeTextColor, readableTextColor(boxColor, boxColor));
+  }
 });
 
 test("旧流程图无 nodeTextColor 时仅豁免自动派生字段，其他风格偏离仍拒绝", () => {

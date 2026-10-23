@@ -182,6 +182,10 @@ importers:
         version: 5.9.3
 
   packages/video-document:
+    dependencies:
+      '@acs/shared':
+        specifier: workspace:*
+        version: link:../shared
     devDependencies:
       '@types/node':
         specifier: ^22.15.0
@@ -191,6 +195,10 @@ importers:
         version: 5.9.3
 
   packages/video-scene:
+    dependencies:
+      '@acs/shared':
+        specifier: workspace:*
+        version: link:../shared
     devDependencies:
       '@types/node':
         specifier: ^22.15.0

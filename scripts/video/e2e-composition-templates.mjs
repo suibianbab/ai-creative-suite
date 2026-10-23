@@ -51,6 +51,36 @@ try {
   await page.locator(".shot-card").first().waitFor({ timeout: 45_000 });
   const before = await exportProject("before");
   const cards = page.locator(".shot-card");
+  // G1: browsing a composition template and returning to the current
+  // component must not persist the template's dark background.
+  const browseCard = cards.nth(0);
+  const originalSpec = working(before.shots[0]).sceneSource.spec;
+  await browseCard.locator(".shot-edit-toggle").click();
+  await browseCard
+    .locator(".chart-template-select")
+    .selectOption("composition-process-4");
+  await browseCard.locator(".chart-template-select").selectOption("");
+  await browseCard
+    .locator(".shot-duration-input")
+    .fill(String(originalSpec.durationMs / 1000 + 0.5));
+  const beforeVersionCount = await browseCard
+    .locator(".shot-version-select option")
+    .count();
+  await browseCard.locator(".shot-apply").click();
+  await browseCard
+    .locator(".shot-version-select option")
+    .nth(beforeVersionCount)
+    .waitFor({ state: "attached" });
+  const afterBrowse = await exportProject("after-template-browse");
+  assert.equal(
+    working(afterBrowse.shots[0]).sceneSource.spec.background,
+    originalSpec.background,
+  );
+  assert.equal(
+    working(afterBrowse.shots[0]).sceneSource.spec.componentId,
+    originalSpec.componentId,
+  );
+  await browseCard.locator(".shot-edit-toggle").click();
   const texts = [
     [0, "让客厅焕然一新", "从想法到舒适空间", "为家打造更舒适的客厅。"],
     [
@@ -87,8 +117,20 @@ try {
   await process
     .locator(".shot-narration-input")
     .fill("量房，选材，施工，验收，四步完成客厅改造。");
+  const processVersionCount = await process
+    .locator(".shot-version-select option")
+    .count();
   await process.locator(".shot-apply").click();
+  await process
+    .locator(".shot-version-select option")
+    .nth(processVersionCount)
+    .waitFor({ state: "attached" });
   assert.equal(await process.locator(".shot-edit-error").count(), 0);
+  const appliedProcess = await exportProject("applied-process-template");
+  assert.equal(
+    working(appliedProcess.shots[1]).sceneSource.spec.background,
+    "#122137", // linked sample Style Bible remaps the template's #102033
+  );
   await process.locator(".shot-edit-toggle").click();
   const drawing = cards.nth(2);
   await drawing.locator(".shot-edit-toggle").click();

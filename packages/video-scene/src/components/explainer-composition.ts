@@ -6,7 +6,7 @@ import type {
 } from "../registry.js";
 import type { SvgNode } from "../svg.js";
 import { fitFontSize } from "../text-width.js";
-import { flowSteps } from "./flow-steps.js";
+import { flowStepLabelMaxWidth, flowSteps } from "./flow-steps.js";
 import { lineDrawing } from "./line-drawing.js";
 
 // A bounded title + registered diagram + annotation composition. Positions use
@@ -38,6 +38,8 @@ export type ExplainerParams = {
 
 const HEX = /^#[0-9a-fA-F]{6}$/;
 function validEmbeddedImage(src: unknown): src is string {
+  // Editor accepts at most 120 KiB binary: base64 expands to 160 KiB plus
+  // a short data URL prefix. 180 KiB leaves framing room for imported specs.
   if (typeof src !== "string" || src.length > 180 * 1024) return false;
   const match =
     /^data:image\/(png|jpeg|webp);base64,([A-Za-z0-9+/]+={0,2})$/.exec(src);
@@ -143,9 +145,6 @@ function validateParams(value: unknown): ExplainerParams {
       !integer(annotation.y, 650, 800) ||
       (annotation.portraitY !== undefined &&
         !integer(annotation.portraitY, 800, 1450)) ||
-      (annotation.portraitY === undefined &&
-        typeof annotation.y === "number" &&
-        annotation.y + 400 > 1450) ||
       !integer(annotation.enterMs, 0, 3500)
     )
       throw new Error(
@@ -211,7 +210,10 @@ function render(spec: SceneSpecLike, ctx: FrameContext): SvgNode {
                     fitFontSize(
                       30,
                       node.text ?? "",
-                      Math.min((720 / (flowStepCount - 1)) * 0.72, 240) * 0.8,
+                      flowStepLabelMaxWidth(
+                        flowStepCount,
+                        ctx.height > ctx.width ? "vertical" : "horizontal",
+                      ),
                     ),
                   ),
                 },

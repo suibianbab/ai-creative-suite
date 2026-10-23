@@ -33,6 +33,7 @@ test("多元素模板是有界 SceneSpec 预填，可替换题材并再次编辑
     const applied = applyCompositionTemplate(base, template.templateId);
     assert.ok(applied.spec, applied.error ?? "template failed");
     assert.equal(applied.spec!.componentId, "explainer-composition");
+    assert.equal(applied.spec!.background, "#102033");
     assert.equal(applied.spec!.seed, base.seed);
     validateSceneSpec(applied.spec, defaultRegistry);
     const draft = structuredClone(applied.spec!.params as ExplainerParams);

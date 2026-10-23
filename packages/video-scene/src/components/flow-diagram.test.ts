@@ -1,8 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { readableTextColor } from "@acs/shared";
 import type { FrameContext } from "../registry.js";
 import type { SvgNode } from "../svg.js";
 import { flowDiagram } from "./flow-diagram.js";
+import { flowSteps } from "./flow-steps.js";
 
 // collect 为各组件测试私有惯例（bar/line/map 同款），不跨文件共享
 function collect(node: SvgNode, tag: string, out: SvgNode[] = []): SvgNode[] {
@@ -44,6 +46,38 @@ function makeCtx(overrides: Partial<FrameContext> = {}): FrameContext {
     ...overrides,
   } as FrameContext;
 }
+
+test("两种流程渲染与共享可读色规则一致，含临界附近底色", () => {
+  for (const boxColor of ["#102033", "#757575", "#767676", "#f0f5ff"]) {
+    const textColor = boxColor;
+    const expected = readableTextColor(textColor, boxColor);
+    const diagramText = collect(
+      flowDiagram.render(specWith({ ...BASE, boxColor, textColor }), makeCtx()),
+      "text",
+    ).find((node) => node.text === "甲");
+    assert.equal(diagramText?.attrs.fill, expected);
+    const stepsText = collect(
+      flowSteps.render(
+        {
+          ...specWith({}),
+          componentId: "flow-steps",
+          params: {
+            title: "",
+            steps: [{ label: "甲" }, { label: "乙" }],
+            direction: "horizontal",
+            boxColor,
+            arrowColor: BASE.arrowColor,
+            textColor,
+            enterMs: 200,
+          },
+        },
+        makeCtx(),
+      ),
+      "text",
+    ).find((node) => node.text === "甲");
+    assert.equal(stepsText?.attrs.fill, expected);
+  }
+});
 
 test("校验表：越界输入逐项拒绝", () => {
   const cases: Array<[unknown, RegExp]> = [

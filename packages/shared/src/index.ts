@@ -1,4 +1,5 @@
 export const PRODUCT_TYPES = ["IMAGE", "MOTION", "INTERIOR"] as const;
+export * from "./color-contrast.js";
 export type ProductType = (typeof PRODUCT_TYPES)[number];
 
 export const DEPLOYMENT_MODES = ["CLOUD", "ENTERPRISE", "AIRGAP"] as const;

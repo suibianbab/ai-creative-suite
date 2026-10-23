@@ -1,3 +1,4 @@
+import { contrastRatio, readableTextColor } from "@acs/shared";
 import { canonicalJson } from "./canonical-json.js";
 import { reviseWorkingVersion } from "./operations.js";
 import type {
@@ -163,31 +164,6 @@ function recolor(
   );
 }
 
-function luminance(hex: string): number {
-  const channels = [1, 3, 5].map((offset) => {
-    const value = Number.parseInt(hex.slice(offset, offset + 2), 16) / 255;
-    return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
-  });
-  return channels[0]! * 0.2126 + channels[1]! * 0.7152 + channels[2]! * 0.0722;
-}
-
-function contrastRatio(textColor: string, boxColor: string): number {
-  const text = luminance(textColor);
-  const box = luminance(boxColor);
-  return (Math.max(text, box) + 0.05) / (Math.min(text, box) + 0.05);
-}
-
-function readableNodeText(
-  candidate: string,
-  foreground: string,
-  boxColor: string,
-): string {
-  if (contrastRatio(candidate, boxColor) >= 4.5) return candidate;
-  if (contrastRatio(foreground, boxColor) >= 4.5) return foreground;
-  const box = luminance(boxColor);
-  return box > 0.179 ? "#000000" : "#ffffff";
-}
-
 export function styleSceneSpec(
   spec: Record<string, unknown>,
   version: StyleBibleVersion,
@@ -201,16 +177,15 @@ export function styleSceneSpec(
   ) {
     const existing = params.nodeTextColor;
     if (typeof existing === "string" && HEX.test(existing)) {
-      params.nodeTextColor = readableNodeText(
+      params.nodeTextColor = readableTextColor(
         existing,
-        version.palette.foreground,
         params.boxColor,
+        version.palette.foreground,
       );
     } else if (
       contrastRatio(version.palette.foreground, params.boxColor) < 4.5
     ) {
-      params.nodeTextColor = readableNodeText(
-        version.palette.foreground,
+      params.nodeTextColor = readableTextColor(
         version.palette.foreground,
         params.boxColor,
       );

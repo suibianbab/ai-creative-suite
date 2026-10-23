@@ -183,7 +183,12 @@ function resolveAnyTemplate(
   if (loading.spec) return { spec: loading.spec, error: null };
   const composition = applyCompositionTemplate(spec, templateId);
   if (composition.spec) return { spec: composition.spec, error: null };
-  return { spec: null, error: flow.error ?? map.error ?? chart.error };
+  return {
+    spec: null,
+    error: templateId.startsWith("composition-")
+      ? composition.error
+      : (flow.error ?? map.error ?? chart.error ?? composition.error),
+  };
 }
 
 export type ShotEditorCardProps = {
@@ -749,7 +754,6 @@ export function ShotEditorCard({
                   setCompositionDraft(
                     structuredClone(applied.spec.params as ExplainerParams),
                   );
-                  setDraft({ ...draft, background: applied.spec.background });
                 }
               }}
             >
@@ -1195,6 +1199,8 @@ export function ShotEditorCard({
                                   "image/jpeg",
                                   "image/webp",
                                 ].includes(file.type) ||
+                                // 120 KiB binary -> at most 160 KiB base64
+                                // plus data URL prefix, below scene's 180 KiB cap.
                                 file.size > 120 * 1024
                               ) {
                                 setCompositionError(
@@ -2085,7 +2091,18 @@ export function ShotEditorCard({
                   return;
                 }
                 const composedSpec = compositionResult?.spec ?? resolvedBase;
-                const { patch, error } = buildRevisePatch(draft, composedSpec);
+                // Browsing a template leaves the shared background draft alone.
+                // On actual composition Apply, take the template's default only
+                // when the user has not independently changed the color field.
+                const reviseDraft =
+                  pendingTemplateId.startsWith("composition-") &&
+                  draft.background === editSpec.background
+                    ? { ...draft, background: composedSpec.background }
+                    : draft;
+                const { patch, error } = buildRevisePatch(
+                  reviseDraft,
+                  composedSpec,
+                );
                 if (error || !patch) {
                   setEditError(error ?? "草稿无效");
                   return;
@@ -2116,9 +2133,13 @@ export function ShotEditorCard({
                               .length,
                           )
                         : { draft: layoutDraft, removed: 0 };
+                    if (!reconciled.draft) {
+                      setLayoutError("画幅草稿与最终组件不一致");
+                      return;
+                    }
                     const appliedLayout = applyLayoutToSpec(
                       finalSpec,
-                      reconciled.draft ?? layoutDraft,
+                      reconciled.draft,
                     );
                     if ("error" in appliedLayout) {
                       setLayoutError(appliedLayout.error);

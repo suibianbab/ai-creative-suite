@@ -37,7 +37,7 @@ export const COMPOSITION_TEMPLATES: readonly CompositionTemplate[] = [
     templateId: "composition-process-4",
     componentId: "explainer-composition",
     label: "多元素 · 四步说明",
-    description: "标题＋四步流程＋两条注释；可替换成任意行业的四阶段说明。",
+    description: "默认深色背景；标题＋四步流程＋两条注释，可替换为任意行业。",
     params: {
       ...shared,
       title: "项目实施步骤",
@@ -66,7 +66,8 @@ export const COMPOSITION_TEMPLATES: readonly CompositionTemplate[] = [
     templateId: "composition-drawing",
     componentId: "explainer-composition",
     label: "多元素 · 线描解说",
-    description: "标题＋现有线描组件＋标注；可编辑 SVG 路径数据。",
+    description:
+      "默认深色背景；标题＋现有线描组件＋标注，可编辑 SVG 路径数据。",
     params: {
       ...shared,
       title: "结构示意",
@@ -88,7 +89,7 @@ export const COMPOSITION_TEMPLATES: readonly CompositionTemplate[] = [
     templateId: "composition-image",
     componentId: "explainer-composition",
     label: "多元素 · 图片解说",
-    description: "标题＋本地上传的内嵌图片＋标注；选中后请替换占位图。",
+    description: "默认深色背景；标题＋本地上传图片＋标注，须替换占位图。",
     params: {
       ...shared,
       title: "图片说明",

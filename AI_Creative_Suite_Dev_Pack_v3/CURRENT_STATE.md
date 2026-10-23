@@ -1,5 +1,9 @@
 # Current State v2
 
+## 2026-10-23 Video Studio 组合模板第三轮复核整改（待分支复核）
+
+在 `video-studio/dual-aspect-edit` 分支按组合模板审核清单处理 G1–G8：修复浏览模板后静默改变背景；流程标签几何与节点文字对比统一为共享规则；清理错误消息、死校验和草稿回退；明确上传尺寸配对。G4 决定接受本未合并分支的标注安全区边界收紧，并在设计文档说明兼容范围。浏览器“浏览→还原→应用”与真正应用模板均已验证；scene 179、document 158、web 276 项通过，typecheck、Biome、QA 注册表、双画幅浏览器与旧流程图 API 通过；旧 STEM 样片当前代码重渲的两个 MP4 与留存文件逐字节一致。详见 `docs/VIDEO_STUDIO_MULTIELEMENT_COMPOSITION_2026-10-23.md` 和 `artifacts/codex-review-video-studio-composition-templates-2026-10-23.md`。未合并或推送 main。
+
 ## 2026-10-23 Video Studio 多元素复核修复与可复用模板（待分支复核）
 
 在 `video-studio/dual-aspect-edit` 分支修复 `codex-fix-video-studio-multielement-review-findings-2026-10-23.md` 的 F1–F6，并将多元素镜头扩为三种可编辑模板：四步流程、线描解说、内嵌图片解说。仍使用 `explainer-composition@1`、SceneSpec 和既有镜头内容版本；无新项目模型。非 STEM 的客厅改造四镜头和图片变体完成浏览器保存重开、回滚、双画幅预览及实际 MP4 出片。旧 STEM 样片横竖 MP4 重渲染 SHA-256 与基线完全相同；无 `nodeTextColor` 的旧流程图经真实渲染 API 成功出片。详见 `docs/VIDEO_STUDIO_MULTIELEMENT_COMPOSITION_2026-10-23.md` 与 `artifacts/video-studio-composition-templates-2026-10-23/REPORT.md`。尚未合并或推送 main。
