@@ -31,7 +31,7 @@ const exampleAsset: MediaAsset = {
 test("三个样片生成独立、有效的项目；程序化样片引用独立 Style Bible", async () => {
   assert.deepEqual(
     GALLERY_SAMPLES.map((item) => item.id),
-    ["stem", "data", "product"],
+    ["stem", "data", "product", "renovation"],
   );
   const first = await createGallerySample("stem");
   const second = await createGallerySample("stem");
@@ -78,6 +78,39 @@ test("产品样片必须有真实素材，两个商品镜头引用同一不可�
     if (source?.type === "media-clip")
       assert.equal(source.mediaAssetId, exampleAsset.assetId);
   }
+});
+
+test("家装方案样片：五镜头、挂独立暖木 bible、流程与线描图示齐备", async () => {
+  const { project, bible } = await createGallerySample("renovation");
+  assert(bible);
+  validateVideoProject(project);
+  assert.equal(project.shots.length, 5);
+  assert.equal(
+    project.shots.reduce(
+      (ms, shot) => ms + shot.contentVersions[0]!.durationMs,
+      0,
+    ),
+    16_000,
+  );
+  assert(
+    project.shots.every((shot) =>
+      Boolean(shot.contentVersions[0]?.narrationText),
+    ),
+  );
+  assert.equal(project.brief.aspectTargets.length, 2);
+  const version = await resolveStyleBibleRef(project.styleBibleRef!, bible);
+  assert.deepEqual(workingStyleIssues(project, version), []);
+  const kinds: string[] = [];
+  for (const shot of project.shots) {
+    const source = shot.contentVersions[0]?.sceneSource;
+    assert.equal(source?.type, "spec");
+    if (source?.type === "spec") {
+      const scene = validateSceneSpec(source.spec, defaultRegistry);
+      if (scene.componentId === "explainer-composition")
+        kinds.push((scene.params as { diagram: { kind: string } }).diagram.kind);
+    }
+  }
+  assert.deepEqual(kinds, ["flow", "drawing"]);
 });
 
 test("多元素 STEM 镜头切换深浅 Style Bible 后仍可校验且流程文字有对比", async () => {
