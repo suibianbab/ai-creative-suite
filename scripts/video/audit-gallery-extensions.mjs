@@ -15,22 +15,39 @@ const root = path.resolve(
   "../..",
 );
 const out = path.join(root, "artifacts/video-template-experience-2026-10-23");
-const THEMES = [
-  { name: "renovation", durationMs: 16_000 },
-  { name: "appliance", durationMs: 16_500 },
-];
-const working = (shot) =>
-  shot.contentVersions.find(
-    (version) => version.versionId === shot.workingVersionId,
-  );
+const browser = JSON.parse(
+  readFileSync(path.join(out, "browser-report.json"), "utf8"),
+);
+const THEMES = ["renovation", "appliance"];
 const themes = [];
-for (const theme of THEMES) {
-  const dir = path.join(out, theme.name);
-  const project = JSON.parse(readFileSync(path.join(dir, "project.json"), "utf8"));
+for (const name of THEMES) {
+  const dir = path.join(out, name);
+  const project = JSON.parse(
+    readFileSync(path.join(dir, "project.json"), "utf8"),
+  );
   const manifest = JSON.parse(
     readFileSync(path.join(dir, "render/render-manifest.json"), "utf8"),
   );
-  assert(existsSync(path.join(dir, `${theme.name}.style-bible.json`)));
+  // Derive the expected total from the audited artifact itself, not literals:
+  // working-version durations and the render frame map must agree.
+  const durationMs = project.shots.reduce((ms, shot) => {
+    const version = shot.contentVersions.find(
+      (item) => item.versionId === shot.workingVersionId,
+    );
+    return ms + (version ? version.durationMs : 0);
+  }, 0);
+  for (const aspect of ["landscape", "portrait"]) {
+    assert.equal(
+      manifest.aspects[aspect].frameMap.reduce((sum, s) => sum + s.frames, 0),
+      (durationMs / 1000) * 24,
+      `${name} ${aspect} frameMap total`,
+    );
+  }
+  // The rendered project must be the one the browser chain edited and saved.
+  const browserTheme = browser.themes.find((item) => item.name === name);
+  assert.ok(browserTheme, `${name} missing from browser-report`);
+  assert.equal(project.id, browserTheme.projectId);
+  assert(existsSync(path.join(dir, `${name}.style-bible.json`)));
   assert.equal(project.shots.length, 5);
   // render-scene appends one record per shot per aspect: 5 × 2 = 10.
   assert.equal(project.renderRecords.length, 10);
@@ -63,8 +80,8 @@ for (const theme of THEMES) {
     assert.equal(stream.r_frame_rate, "24/1");
     assert.equal(
       Number(stream.nb_frames),
-      (theme.durationMs / 1000) * 24,
-      `${theme.name} ${aspect} frame count`,
+      (durationMs / 1000) * 24,
+      `${name} ${aspect} frame count`,
     );
     assert.equal(manifest.aspects[aspect].frameMap.length, 5);
     outputs.push({
@@ -74,8 +91,9 @@ for (const theme of THEMES) {
     });
   }
   themes.push({
-    name: theme.name,
+    name,
     projectId: project.id,
+    durationMs,
     shots: 5,
     renderRecords: project.renderRecords.length,
     outputs,
@@ -84,8 +102,7 @@ for (const theme of THEMES) {
 const report = {
   pass: true,
   themes,
-  visualReview:
-    "See REPORT.md; sampled frames do not prove commercial finish.",
+  visualReview: "See REPORT.md; sampled frames do not prove commercial finish.",
 };
 writeFileSync(
   path.join(out, "render-audit.json"),

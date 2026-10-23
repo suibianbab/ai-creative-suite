@@ -21,7 +21,7 @@
 
 ## 人工视觉检查（抽帧级）
 
-逐镜中段帧共 20 张 + 4 张接片逐项检查：无标注/图示与文字重叠、无文字截断或被画幅裁断、背景对比充足、双画幅各自成立（竖版流程为纵向堆叠、数字镜头居中）。已知限制：竖版纯文字镜头上下留白偏大（与既有样片同类的版式取舍，非本轮回归）；renovation 镜 3 拆改线为实线渲染（line-drawing 无虚线参数，语义由标注文字补足）。抽帧检查不代表逐帧商业验收。
+抽帧分两层：逐镜中段帧（布局/图示检查，20 张 + 4 接片）与**标注可见晚帧**（本线样片的标注 enterMs 均晚于镜头中点，中段帧拍不到标注——晚帧按各镜最晚 enterMs+900ms 抽取，3 个含标注镜头 × 双画幅共 6 张 + 2 张晚帧接片）。两层合计：无标注/图示与文字重叠、无文字截断或被画幅裁断、背景对比充足、双画幅各自成立（竖版流程为纵向堆叠、数字镜头居中、标注与流程间距充足）。已知限制：竖版纯文字镜头上下留白偏大（与既有样片同类的版式取舍，非本轮回归）；renovation 镜 3 拆改线为实线渲染（line-drawing 无虚线参数，语义由标注文字补足）。抽帧检查不代表逐帧商业验收。
 
 ## 门禁
 
@@ -34,8 +34,8 @@
 ## 复跑
 
 ```text
-BASE_URL=http://127.0.0.1:3212 node scripts/video/e2e-gallery-extensions.mjs   # 需本 worktree web
-node scripts/video/audit-gallery-extensions.mjs                                # 需先出片
+BASE_URL=http://127.0.0.1:<本 worktree web 端口> node scripts/video/e2e-gallery-extensions.mjs   # 例 3212；注册表 VID-043 默认 3210
+node scripts/video/audit-gallery-extensions.mjs                                                 # 需先出片
 ```
 
 出片命令见 `render-manifest.json` 同目录日志；重跑 e2e 会生成新项目 ID，重渲染须以新的项目 JSON 为源。

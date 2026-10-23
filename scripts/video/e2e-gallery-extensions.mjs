@@ -119,7 +119,9 @@ try {
       page.waitForEvent("download"),
       page.getByRole("button", { name: "导出风格规范 JSON" }).click(),
     ]);
-    await bibleDownload.saveAs(path.join(out, `${theme.name}.style-bible.json`));
+    await bibleDownload.saveAs(
+      path.join(out, `${theme.name}.style-bible.json`),
+    );
     const edited = await exportProject(`${theme.name}-edited`);
     assert.equal(
       working(edited.shots[1]).sceneSource.spec.params.title,
@@ -164,17 +166,15 @@ try {
       await preview
         .locator(".preview-frame", { hasText: "镜头 2" })
         .waitFor({ timeout: 5000 });
-      await preview
-        .locator(".piece-stage")
-        .screenshot({
-          path: path.join(out, `${theme.name}-${aspect}-shot2.png`),
-        });
+      await preview.locator(".piece-stage").screenshot({
+        path: path.join(out, `${theme.name}-${aspect}-shot2.png`),
+      });
     }
 
     // Roll the flow shot back to its gallery version.
-    await flowCard.locator(".shot-version-select").selectOption(
-      before.shots[1].workingVersionId,
-    );
+    await flowCard
+      .locator(".shot-version-select")
+      .selectOption(before.shots[1].workingVersionId);
     await flowCard.locator(".shot-rollback").click();
     const rolled = await exportProject(`${theme.name}-rollback-check`);
     assert.equal(
@@ -200,4 +200,6 @@ try {
 report.errors = errors;
 writeFileSync(path.join(out, "browser-report.json"), JSON.stringify(report));
 assert.deepEqual(errors, [], `console/page errors: ${errors.join(" | ")}`);
-console.log(`gallery-extensions e2e: ${report.themes.length} themes OK → ${out}`);
+console.log(
+  `gallery-extensions e2e: ${report.themes.length} themes OK → ${out}`,
+);

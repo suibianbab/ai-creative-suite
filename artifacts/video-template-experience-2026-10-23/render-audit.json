@@ -4,6 +4,7 @@
     {
       "name": "renovation",
       "projectId": "8afbfafa-068b-47ad-8d0d-1448fa386af5",
+      "durationMs": 16000,
       "shots": 5,
       "renderRecords": 10,
       "outputs": [
@@ -22,6 +23,7 @@
     {
       "name": "appliance",
       "projectId": "a15e19d3-7f6d-4b4c-bfdc-fd097ff7d1a1",
+      "durationMs": 16500,
       "shots": 5,
       "renderRecords": 10,
       "outputs": [
