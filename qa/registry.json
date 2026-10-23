@@ -1576,6 +1576,25 @@
       ]
     },
     {
+      "id": "VID-044",
+      "tier": "integration",
+      "title": "Dual-theme gallery extension dual-aspect MP4 audit",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/audit-gallery-extensions.mjs"],
+      "requiresPorts": [],
+      "requiresFiles": [
+        "artifacts/video-template-experience-2026-10-23/renovation/render/landscape.mp4",
+        "artifacts/video-template-experience-2026-10-23/renovation/render/portrait.mp4",
+        "artifacts/video-template-experience-2026-10-23/appliance/render/landscape.mp4",
+        "artifacts/video-template-experience-2026-10-23/appliance/render/portrait.mp4"
+      ],
+      "checks": [
+        "Both gallery extension projects render dual-aspect H.264 MP4s at 24 fps with frame counts matching total duration",
+        "Render records are appended to the retained project JSONs and SHA-256 digests are recorded",
+        "Visual quality remains a separate sampled-frame review recorded in REPORT.md"
+      ]
+    },
+    {
       "id": "VID-025",
       "tier": "integration",
       "title": "Video Studio P3-B three 镜头预烘焙出片与确定性",

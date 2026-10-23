@@ -114,6 +114,12 @@ try {
       .getByText("已保存", { exact: false })
       .first()
       .waitFor({ timeout: 10_000 });
+    // The CLI renderer resolves styleBibleRef against the exported bible JSON.
+    const [bibleDownload] = await Promise.all([
+      page.waitForEvent("download"),
+      page.getByRole("button", { name: "导出风格规范 JSON" }).click(),
+    ]);
+    await bibleDownload.saveAs(path.join(out, `${theme.name}.style-bible.json`));
     const edited = await exportProject(`${theme.name}-edited`);
     assert.equal(
       working(edited.shots[1]).sceneSource.spec.params.title,

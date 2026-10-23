@@ -1,0 +1,594 @@
+{
+  "schemaVersion": 1,
+  "id": "a15e19d3-7f6d-4b4c-bfdc-fd097ff7d1a1",
+  "title": "换滤芯四步 · 设备操作",
+  "brief": {
+    "sentence": "样片库：换滤芯四步 · 设备操作。这是可编辑起点，请在发布前替换示例文案和素材。",
+    "aspectTargets": [
+      "landscape",
+      "portrait"
+    ]
+  },
+  "shots": [
+    {
+      "shotId": "333317d5-aee6-420b-b97c-69d77b528c9a",
+      "order": 0,
+      "locked": false,
+      "workingVersionId": "bbe77e14-416b-4535-a273-82400776c955",
+      "contentVersions": [
+        {
+          "versionId": "bbe77e14-416b-4535-a273-82400776c955",
+          "createdAt": "2026-10-23T16:12:15.103Z",
+          "durationMs": 3500,
+          "description": "开场：点明维护目标",
+          "narrationText": "换滤芯，只需四步。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 3500,
+              "seed": 4501,
+              "background": "#141a22",
+              "params": {
+                "title": "换滤芯只需四步",
+                "subtitle": "咖啡机维护指南",
+                "titleColor": "#eef3f8",
+                "subtitleColor": "#c3d4e6",
+                "entrance": "fade-up",
+                "enterMs": 450
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "bbe77e14-416b-4535-a273-82400776c955",
+          "at": "2026-10-23T16:12:15.103Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "9557e23d-d73f-440d-8eb2-6a596f6009aa",
+      "order": 1,
+      "locked": false,
+      "workingVersionId": "4ca752b3-c128-419e-8e7a-decf49b51fd3",
+      "contentVersions": [
+        {
+          "versionId": "12676182-2fcf-47d5-8290-efecc0a549b4",
+          "createdAt": "2026-10-23T16:12:15.103Z",
+          "durationMs": 4000,
+          "description": "操作：维护四步流程",
+          "narrationText": "断电、开盖、更换、复位，一步不乱。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "explainer-composition",
+              "componentVersion": 1,
+              "durationMs": 4000,
+              "seed": 4502,
+              "background": "#141a22",
+              "params": {
+                "title": "维护四步",
+                "titleColor": "#eef3f8",
+                "textColor": "#eef3f8",
+                "boxColor": "#c3d4e6",
+                "arrowColor": "#4aa3d9",
+                "strokeColor": "#5b7fa6",
+                "titleY": 145,
+                "titleEnterMs": 0,
+                "diagramOffsetX": 0,
+                "diagramOffsetY": -75,
+                "diagramEnterMs": 450,
+                "diagram": {
+                  "kind": "flow",
+                  "steps": [
+                    {
+                      "label": "断电"
+                    },
+                    {
+                      "label": "开盖"
+                    },
+                    {
+                      "label": "更换"
+                    },
+                    {
+                      "label": "复位"
+                    }
+                  ]
+                },
+                "annotations": [
+                  {
+                    "text": "热水排空后再操作",
+                    "x": 500,
+                    "y": 730,
+                    "portraitY": 1250,
+                    "enterMs": 2200
+                  }
+                ]
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        },
+        {
+          "versionId": "4ca752b3-c128-419e-8e7a-decf49b51fd3",
+          "createdAt": "2026-10-23T16:12:15.388Z",
+          "durationMs": 4000,
+          "description": "操作：维护四步流程",
+          "narrationText": "断电、开盖、更换、复位，一步不乱。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "explainer-composition",
+              "componentVersion": 1,
+              "durationMs": 4000,
+              "seed": 4502,
+              "background": "#141a22",
+              "params": {
+                "title": "滤芯更换四步",
+                "titleColor": "#eef3f8",
+                "textColor": "#eef3f8",
+                "boxColor": "#c3d4e6",
+                "arrowColor": "#4aa3d9",
+                "strokeColor": "#5b7fa6",
+                "titleY": 145,
+                "titleEnterMs": 0,
+                "diagramOffsetX": 0,
+                "diagramOffsetY": -75,
+                "diagramEnterMs": 450,
+                "diagram": {
+                  "kind": "flow",
+                  "steps": [
+                    {
+                      "label": "断电"
+                    },
+                    {
+                      "label": "开盖"
+                    },
+                    {
+                      "label": "更换"
+                    },
+                    {
+                      "label": "复位"
+                    }
+                  ]
+                },
+                "annotations": [
+                  {
+                    "text": "断电后等待十分钟",
+                    "x": 500,
+                    "y": 730,
+                    "portraitY": 1250,
+                    "enterMs": 2200
+                  }
+                ]
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "human-edit",
+            "engineVersion": "1",
+            "parentVersionId": "12676182-2fcf-47d5-8290-efecc0a549b4"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "12676182-2fcf-47d5-8290-efecc0a549b4",
+          "at": "2026-10-23T16:12:15.103Z",
+          "actor": "human"
+        },
+        {
+          "kind": "submitted",
+          "versionId": "4ca752b3-c128-419e-8e7a-decf49b51fd3",
+          "at": "2026-10-23T16:12:15.388Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "53d70b98-f041-449e-989a-b12e6415f327",
+      "order": 2,
+      "locked": false,
+      "workingVersionId": "d6f56fd7-38d3-4098-a7bb-164a26b3bd19",
+      "contentVersions": [
+        {
+          "versionId": "d6f56fd7-38d3-4098-a7bb-164a26b3bd19",
+          "createdAt": "2026-10-23T16:12:15.103Z",
+          "durationMs": 3000,
+          "description": "安全：两条操作提醒",
+          "narrationText": "只用原厂滤芯，先断电再开盖。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "sketch-note",
+              "componentVersion": 1,
+              "durationMs": 3000,
+              "seed": 4503,
+              "background": "#141a22",
+              "params": {
+                "title": "安全提醒",
+                "items": [
+                  {
+                    "text": "只用原厂滤芯",
+                    "emphasis": "下划线"
+                  },
+                  {
+                    "text": "先断电再开盖",
+                    "emphasis": "圈"
+                  }
+                ],
+                "inkColor": "#eef3f8",
+                "accentColor": "#4aa3d9",
+                "writeMs": 900,
+                "drawMs": 700,
+                "staggerMs": 500
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "d6f56fd7-38d3-4098-a7bb-164a26b3bd19",
+          "at": "2026-10-23T16:12:15.103Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "65c94b54-54f7-41fb-9414-dde2b09fcd0c",
+      "order": 3,
+      "locked": false,
+      "workingVersionId": "dea3dc3a-c27b-4e76-af00-c6a5cf71ea9e",
+      "contentVersions": [
+        {
+          "versionId": "dea3dc3a-c27b-4e76-af00-c6a5cf71ea9e",
+          "createdAt": "2026-10-23T16:12:15.103Z",
+          "durationMs": 2500,
+          "description": "参数：滤芯更换周期",
+          "narrationText": "滤芯每九十天更换一次。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "number-counter",
+              "componentVersion": 1,
+              "durationMs": 2500,
+              "seed": 4504,
+              "background": "#141a22",
+              "params": {
+                "title": "滤芯更换周期",
+                "value": 90,
+                "prefix": "",
+                "suffix": " 天",
+                "decimals": 0,
+                "countMs": 1400,
+                "numberColor": "#eef3f8",
+                "accentColor": "#4aa3d9"
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "dea3dc3a-c27b-4e76-af00-c6a5cf71ea9e",
+          "at": "2026-10-23T16:12:15.103Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "e8f2ac82-0657-4426-98da-c413b340a378",
+      "order": 4,
+      "locked": false,
+      "workingVersionId": "67bff9c3-3bd4-42f6-991f-fb569b34a46f",
+      "contentVersions": [
+        {
+          "versionId": "67bff9c3-3bd4-42f6-991f-fb569b34a46f",
+          "createdAt": "2026-10-23T16:12:15.103Z",
+          "durationMs": 3500,
+          "description": "收尾：维护的价值",
+          "narrationText": "维护到位，风味常在。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 3500,
+              "seed": 4505,
+              "background": "#141a22",
+              "params": {
+                "title": "维护到位，风味常在",
+                "subtitle": "到期自动提醒更省心",
+                "titleColor": "#eef3f8",
+                "subtitleColor": "#c3d4e6",
+                "entrance": "fade-up",
+                "enterMs": 450
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "67bff9c3-3bd4-42f6-991f-fb569b34a46f",
+          "at": "2026-10-23T16:12:15.103Z",
+          "actor": "human"
+        }
+      ]
+    }
+  ],
+  "renderRecords": [
+    {
+      "renderId": "61a0c591-b03e-4283-b8ea-9f6eefe7f52e",
+      "versionId": "bbe77e14-416b-4535-a273-82400776c955",
+      "contentDigest": "76fb47e8f6a0825355d2ed54748287c12b694d87e20775163bb538b29efcfda0",
+      "engineId": "remotion",
+      "engineVersion": "8",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 84,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "384b7552-2b59-4b40-8e28-7fb8305e5103",
+        "versionId": "2f5abe68-9ca4-4522-a842-cb569df16703",
+        "digest": "3221073c7451ae69ad47472eb250e62fb45f75d499a535aab4da9b11928dca76"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "05a2b28d-2182-492d-8661-98898d30f483",
+      "versionId": "4ca752b3-c128-419e-8e7a-decf49b51fd3",
+      "contentDigest": "414cfc3a262c1f2bc1173548728675d9f979e24d151ceb7fd4850a21f7cc361e",
+      "engineId": "remotion",
+      "engineVersion": "8",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 96,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "384b7552-2b59-4b40-8e28-7fb8305e5103",
+        "versionId": "2f5abe68-9ca4-4522-a842-cb569df16703",
+        "digest": "3221073c7451ae69ad47472eb250e62fb45f75d499a535aab4da9b11928dca76"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "fa56b8a4-7072-4bdb-b904-c0bf3423b0f6",
+      "versionId": "d6f56fd7-38d3-4098-a7bb-164a26b3bd19",
+      "contentDigest": "f37b7582d167d331139edfe5297d229a6b910f75e8ae475e3b71706e5e0eb635",
+      "engineId": "remotion",
+      "engineVersion": "8",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "384b7552-2b59-4b40-8e28-7fb8305e5103",
+        "versionId": "2f5abe68-9ca4-4522-a842-cb569df16703",
+        "digest": "3221073c7451ae69ad47472eb250e62fb45f75d499a535aab4da9b11928dca76"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "651422eb-1bdd-4440-8890-08469e073687",
+      "versionId": "dea3dc3a-c27b-4e76-af00-c6a5cf71ea9e",
+      "contentDigest": "0f31ba9200501def70be1527b2ee7de545c688bb7224644bcb894d8fd69343a3",
+      "engineId": "remotion",
+      "engineVersion": "8",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 60,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "384b7552-2b59-4b40-8e28-7fb8305e5103",
+        "versionId": "2f5abe68-9ca4-4522-a842-cb569df16703",
+        "digest": "3221073c7451ae69ad47472eb250e62fb45f75d499a535aab4da9b11928dca76"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "2008ed1d-7583-4f2d-8e81-76f26a407280",
+      "versionId": "67bff9c3-3bd4-42f6-991f-fb569b34a46f",
+      "contentDigest": "aa53696336e48bed1bf347e00e23d9fc4a15f0952448203d92f30339a92f988b",
+      "engineId": "remotion",
+      "engineVersion": "8",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 84,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "384b7552-2b59-4b40-8e28-7fb8305e5103",
+        "versionId": "2f5abe68-9ca4-4522-a842-cb569df16703",
+        "digest": "3221073c7451ae69ad47472eb250e62fb45f75d499a535aab4da9b11928dca76"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "ec585a80-9b23-4b71-8558-1c3ce2990c04",
+      "versionId": "bbe77e14-416b-4535-a273-82400776c955",
+      "contentDigest": "76fb47e8f6a0825355d2ed54748287c12b694d87e20775163bb538b29efcfda0",
+      "engineId": "remotion",
+      "engineVersion": "8",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 84,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "384b7552-2b59-4b40-8e28-7fb8305e5103",
+        "versionId": "2f5abe68-9ca4-4522-a842-cb569df16703",
+        "digest": "3221073c7451ae69ad47472eb250e62fb45f75d499a535aab4da9b11928dca76"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    },
+    {
+      "renderId": "31af1bf3-0abf-469d-ba4b-2e2f7783572d",
+      "versionId": "4ca752b3-c128-419e-8e7a-decf49b51fd3",
+      "contentDigest": "414cfc3a262c1f2bc1173548728675d9f979e24d151ceb7fd4850a21f7cc361e",
+      "engineId": "remotion",
+      "engineVersion": "8",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 96,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "384b7552-2b59-4b40-8e28-7fb8305e5103",
+        "versionId": "2f5abe68-9ca4-4522-a842-cb569df16703",
+        "digest": "3221073c7451ae69ad47472eb250e62fb45f75d499a535aab4da9b11928dca76"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    },
+    {
+      "renderId": "2212d52f-f76d-4f49-93d9-1d7e82863084",
+      "versionId": "d6f56fd7-38d3-4098-a7bb-164a26b3bd19",
+      "contentDigest": "f37b7582d167d331139edfe5297d229a6b910f75e8ae475e3b71706e5e0eb635",
+      "engineId": "remotion",
+      "engineVersion": "8",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "384b7552-2b59-4b40-8e28-7fb8305e5103",
+        "versionId": "2f5abe68-9ca4-4522-a842-cb569df16703",
+        "digest": "3221073c7451ae69ad47472eb250e62fb45f75d499a535aab4da9b11928dca76"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    },
+    {
+      "renderId": "9f6994b6-b380-42a2-a661-634ebe32daff",
+      "versionId": "dea3dc3a-c27b-4e76-af00-c6a5cf71ea9e",
+      "contentDigest": "0f31ba9200501def70be1527b2ee7de545c688bb7224644bcb894d8fd69343a3",
+      "engineId": "remotion",
+      "engineVersion": "8",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 60,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "384b7552-2b59-4b40-8e28-7fb8305e5103",
+        "versionId": "2f5abe68-9ca4-4522-a842-cb569df16703",
+        "digest": "3221073c7451ae69ad47472eb250e62fb45f75d499a535aab4da9b11928dca76"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    },
+    {
+      "renderId": "19e18351-6885-41c2-b5f7-cc9bcd9052cd",
+      "versionId": "67bff9c3-3bd4-42f6-991f-fb569b34a46f",
+      "contentDigest": "aa53696336e48bed1bf347e00e23d9fc4a15f0952448203d92f30339a92f988b",
+      "engineId": "remotion",
+      "engineVersion": "8",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 84,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "384b7552-2b59-4b40-8e28-7fb8305e5103",
+        "versionId": "2f5abe68-9ca4-4522-a842-cb569df16703",
+        "digest": "3221073c7451ae69ad47472eb250e62fb45f75d499a535aab4da9b11928dca76"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    }
+  ],
+  "deliveries": [],
+  "savedVersion": 4,
+  "styleBibleRef": {
+    "bibleId": "384b7552-2b59-4b40-8e28-7fb8305e5103",
+    "versionId": "2f5abe68-9ca4-4522-a842-cb569df16703",
+    "digest": "3221073c7451ae69ad47472eb250e62fb45f75d499a535aab4da9b11928dca76"
+  }
+}
