@@ -1562,6 +1562,24 @@
       ]
     },
     {
+      "id": "VID-043",
+      "tier": "integration",
+      "title": "Portable VideoProject package across independent media stores",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/e2e-portable-project.mjs"],
+      "requiresPorts": [],
+      "requiresFiles": [
+        "artifacts/video-studio-composition-templates-2026-10-23/interior.video-project.json",
+        "artifacts/video-studio-composition-templates-2026-10-23/interior.style-bible.json",
+        "artifacts/video-studio-composition-templates-2026-10-23/render/landscape.mp4"
+      ],
+      "checks": [
+        "Pack, verify, and restore the same project bytes and media SHA-256 into a separate content-addressed store",
+        "Render landscape and portrait MP4s from the restored Style Bible project and a separate active-media project; confirm dimensions and media assetDigests",
+        "Reject an active media working shot with Style Bible at pack time, as required by the current style contract; keep outputs in ignored .tools"
+      ]
+    },
+    {
       "id": "VID-025",
       "tier": "integration",
       "title": "Video Studio P3-B three 镜头预烘焙出片与确定性",
