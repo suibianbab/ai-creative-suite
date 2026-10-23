@@ -1,6 +1,6 @@
 # Video Studio 可移植项目包：CLI 契约与互审入口
 
-基线 `main@d5470be`；实现分支 `codex/video-portable-package`。本任务对应 `D:/codex/animate/docs/VIDEO_STUDIO_CODEX_CLAUDE_PARALLEL_PLAN_2026-10-23.md` 第 3 节。Claude 可先审本契约，重点看资产边界、内容寻址恢复和失败处理；Codex 同时继续独立实现与验证。本文件不是项目 schema 变更提案。
+基线 `main@d5470be`；实现分支 `codex/video-portable-package`；代码增量 `d5470be..22010d1`。本任务对应 `D:/codex/animate/docs/VIDEO_STUDIO_CODEX_CLAUDE_PARALLEL_PLAN_2026-10-23.md` 第 3 节。Claude 可先审本契约，重点看资产边界、内容寻址恢复和失败处理；Codex 同时继续独立实现与验证。本文件不是项目 schema 变更提案。
 
 ## 现有事实
 
