@@ -1,11 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { VideoProject } from "@acs/video-document";
-import { defaultRegistry } from "@acs/video-scene";
-import {
-  approvalStatus,
-  renderApprovalFrames,
-} from "./frame-approval";
+import { defaultRegistry, type SceneSpec } from "@acs/video-scene";
+import { approvalStatus, renderApprovalFrames } from "./frame-approval";
 
 const SPEC = {
   specVersion: 1 as const,
@@ -141,18 +138,20 @@ test("approvalStatus：镜头被删或确认为旧 spec 参数时失效；spec �
 
   const mutated = project();
   await confirm(mutated);
-  mutated.shots[0]!.contentVersions[0]!.sceneSource.spec.params.title =
-    "改过的标题";
+  const mutatedSpec = (
+    mutated.shots[0]!.contentVersions[0]!.sceneSource as {
+      type: "spec";
+      spec: SceneSpec;
+    }
+  ).spec;
+  (mutatedSpec.params as { title: string }).title = "改过的标题";
   const drift = await approvalStatus(mutated);
   assert.equal(drift.valid, false);
   assert.match(drift.reasons.join(""), /画面/);
   // 即便 spec 已不可渲染，status 也以原因返回而非抛错。
-  mutated.shots[0]!.contentVersions[0]!.sceneSource.spec.componentId =
-    "no-such-component";
+  mutatedSpec.componentId = "no-such-component";
   const broken = await approvalStatus(mutated);
   assert.equal(broken.valid, false);
   assert.ok(broken.reasons.length > 0);
-  assert.throws(() =>
-    defaultRegistry.get("no-such-component", 1),
-  );
+  assert.throws(() => defaultRegistry.get("no-such-component", 1));
 });

@@ -1723,3 +1723,107 @@
   color: #b3261e;
   font-size: 11px;
 }
+
+/* W2 风格代表帧确认面板与派生说明。 */
+.frame-approval-panel {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid #d6e2db;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.frame-approval-panel h3 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.frame-approval-panel p {
+  margin: 0;
+  color: #587068;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.approval-shot-field {
+  display: grid;
+  gap: 4px;
+  color: #405851;
+  font-size: 12px;
+}
+
+.approval-shot-field select,
+.approval-generate,
+.approval-confirm {
+  padding: 8px 12px;
+  border: 1px solid #d6e2db;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.approval-generate,
+.approval-confirm {
+  border: 0;
+  background: #173f3b;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  width: fit-content;
+}
+
+.approval-generate:disabled,
+.approval-confirm:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.approval-frames {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.approval-frame {
+  border: 1px solid #d6e2db;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.approval-frame svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.approval-status {
+  font-size: 12px;
+}
+
+.approval-status.is-valid {
+  color: #2f6f4f;
+}
+
+.approval-status.is-stale {
+  color: #b3261e;
+}
+
+.approval-message {
+  color: #b3261e;
+  font-size: 12px;
+}
+
+.derive-note-field {
+  display: grid;
+  gap: 4px;
+  color: #405851;
+  font-size: 12px;
+}
+
+.derive-note-field input {
+  padding: 7px 9px;
+  border: 1px solid #d6e2db;
+  border-radius: 7px;
+  font-size: 12px;
+}

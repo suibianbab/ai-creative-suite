@@ -5,8 +5,8 @@ import type { StyleFrameApproval, VideoProject } from "@acs/video-document";
 import {
   defaultRegistry,
   type SceneSpec,
-  serializeSvgNode,
   type SvgNode,
+  serializeSvgNode,
 } from "@acs/video-scene";
 
 export type ApprovalFrame = {
@@ -95,7 +95,9 @@ async function frameReason(
   if (!working || working.sceneSource.type !== "spec")
     return "镜头不再是可渲染 spec，确认失效";
   try {
-    const frames = await renderApprovalFrames(working.sceneSource.spec);
+    const frames = await renderApprovalFrames(
+      working.sceneSource.spec as SceneSpec,
+    );
     for (const expected of approval.frames) {
       const actual = frames.find((frame) => frame.aspect === expected.aspect);
       if (!actual || actual.sha256 !== expected.svgSha256)

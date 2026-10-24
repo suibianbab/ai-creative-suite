@@ -22,6 +22,8 @@ import {
   describeStoryboardAppend,
   storyboardConfirmLines,
 } from "./apply-plan";
+import { approvalStatus } from "./frame-approval";
+import { FrameApprovalPanel } from "./frame-approval-panel";
 import {
   importPortableVideoProject,
   importVideoProject,
@@ -198,6 +200,17 @@ export default function VideoStudioPage() {
 
   const renderFromWorkbench = async (state: EditorState, narrated = false) => {
     const project = state.document;
+    // W2 导出闸门：已启用代表帧确认的项目，任何确认失效即阻断导出，
+    // 并给出失效原因；未启用（无确认记录）的项目不受影响。
+    const approval = await approvalStatus(project);
+    if (!approval.valid) {
+      setEditor({
+        ...state,
+        busy: false,
+        message: `代表帧确认已失效，未导出：${approval.reasons.join("；")}`,
+      });
+      return;
+    }
     setEditor({
       ...state,
       busy: true,
@@ -636,6 +649,17 @@ export default function VideoStudioPage() {
               setEditor({ ...editor, document: next, message: note })
             }
           />
+
+          {/* W2 风格代表帧确认：链接风格的项目导出前先确认双画幅代表帧，
+              内容或风格变化后确认失效并阻断导出（见 renderFromWorkbench）。 */}
+          {document.styleBibleRef ? (
+            <FrameApprovalPanel
+              project={document}
+              onApply={(next, note) =>
+                setEditor({ ...editor, document: next, message: note })
+              }
+            />
+          ) : null}
 
           {/* P2.5-T3 U4/X1：素材面板——上传入账本 + 逐条列出（含同内容提示）。
               挂在标题下方、规划器上方：先有素材，才有媒体镜头可编辑。 */}
