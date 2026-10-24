@@ -1,5 +1,6 @@
 import {
   resolveStyleBibleRef,
+  styleConfirmationStatus,
   validateStyleBible,
   validateVideoProject,
   workingStyleIssues,
@@ -55,6 +56,11 @@ export async function POST(request: Request) {
       const version = await resolveStyleBibleRef(project.styleBibleRef, bible);
       const issues = workingStyleIssues(project, version);
       if (issues.length) throw new Error(issues.join("；"));
+      // W2 风格代表帧门禁：确认绑定内容+风格版本快照，任一变更后旧确认
+      // 不能放行新导出（有效性由派生比较得出，见 style-confirmation.ts）。
+      const confirmation = await styleConfirmationStatus(project);
+      if (!confirmation.valid)
+        throw new Error(`风格代表帧确认未生效：${confirmation.reason}`);
     }
   } catch (error) {
     return Response.json(
