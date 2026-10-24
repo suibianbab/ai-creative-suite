@@ -156,22 +156,27 @@ export async function renderLocalProject(
     rmSync(dir, { recursive: true, force: true });
     throw error;
   }
-  const rendered = JSON.parse(
-    readFileSync(projectFile, "utf8"),
-  ) as VideoProject;
-  const downloads = await Promise.all(
-    (["landscape", "portrait"] as const).map(async (aspect) => {
-      const file = renderOutputPath(jobId, aspect);
-      const bytes = statSync(file).size;
-      if (bytes < 1000) throw new Error(`${aspect} 出片为空`);
-      const digest = await sha256File(file);
-      return {
-        aspect,
-        url: `/api/video/render/${jobId}/${aspect}`,
-        digest,
-        bytes,
-      };
-    }),
-  );
-  return { project: rendered, alignedProject, downloads };
+  try {
+    const rendered = JSON.parse(
+      readFileSync(projectFile, "utf8"),
+    ) as VideoProject;
+    const downloads = await Promise.all(
+      (["landscape", "portrait"] as const).map(async (aspect) => {
+        const file = renderOutputPath(jobId, aspect);
+        const bytes = statSync(file).size;
+        if (bytes < 1000) throw new Error(`${aspect} 出片为空`);
+        const digest = await sha256File(file);
+        return {
+          aspect,
+          url: `/api/video/render/${jobId}/${aspect}`,
+          digest,
+          bytes,
+        };
+      }),
+    );
+    return { project: rendered, alignedProject, downloads };
+  } catch (error) {
+    rmSync(dir, { recursive: true, force: true });
+    throw error;
+  }
 }
