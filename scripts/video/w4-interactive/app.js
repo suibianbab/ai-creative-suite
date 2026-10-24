@@ -1,13 +1,31 @@
-// W4 交互样片的运行时入口：一主体（演示立方体）、一交互（点击拆解/合拢），
-// 外加拖拽转动（状态变化之一为拆解）。零网络依赖；由 esbuild 打成单 IIFE
-// 内联进自包含 HTML。
+// W4 交互样片的运行时入口：一主体（演示立方体）、一交互（双击/双触/回车
+// 拆解），外加拖拽转动。零网络依赖；由 esbuild 打成单 IIFE 内联进自包含
+// HTML。C3 修复与增强：单指 pointerId 追踪（第二指不劫持）、touchCancel
+// 结束拖转并恢复自动旋转、spins 在更新基准前累计（修复恒 0）、双击/双触
+// 统一走 pointerdown 检测（不依赖 dblclick 合成）、键盘（方向键转动、
+// 回车/空格拆解）与 aria-live 状态播报。
 import * as THREE from "three";
 
 export function createApp(container, options = {}) {
-  const state = { exploded: false, spins: 0 };
+  const state = {
+    exploded: false,
+    spins: 0,
+    get dragging() {
+      return dragging;
+    },
+    get rotationY() {
+      return group.rotation.y;
+    },
+  };
   const renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setSize(container.clientWidth, container.clientHeight);
   container.appendChild(renderer.domElement);
+  // 屏幕阅读器状态播报（视觉隐藏；页面样式含 .w4-status 剪裁规则）。
+  const status = document.createElement("span");
+  status.className = "w4-status";
+  status.setAttribute("role", "status");
+  status.setAttribute("aria-live", "polite");
+  container.appendChild(status);
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(options.background ?? "#101820");
   const camera = new THREE.PerspectiveCamera(
@@ -49,25 +67,15 @@ export function createApp(container, options = {}) {
   scene.add(key);
 
   let dragging = false;
+  let activePointerId = null;
   let lastX = 0;
   let lastY = 0;
-  const onDown = (event) => {
-    dragging = true;
-    lastX = event.clientX;
-    lastY = event.clientY;
-  };
-  const onMove = (event) => {
-    if (!dragging) return;
-    group.rotation.y += (event.clientX - lastX) * 0.01;
-    group.rotation.x += (event.clientY - lastY) * 0.01;
-    lastX = event.clientX;
-    lastY = event.clientY;
-    state.spins += Math.abs(event.clientX - lastX) * 0.01;
-    container.dataset.rotated = "true";
-  };
-  const onUp = () => {
-    dragging = false;
-  };
+  let lastTapAt = -Infinity;
+  let lastTapX = 0;
+  let lastTapY = 0;
+  const DOUBLE_TAP_MS = 350;
+  const DOUBLE_TAP_RADIUS = 40;
+
   const toggle = () => {
     state.exploded = !state.exploded;
     const spread = state.exploded ? 1.5 : 0;
@@ -75,11 +83,84 @@ export function createApp(container, options = {}) {
     core.position.set(-spread, -spread, -spread);
     shellOut.position.set(spread * 0.8, spread * 0.8, spread * 0.8);
     container.dataset.exploded = String(state.exploded);
+    status.textContent = state.exploded ? "已拆解" : "已合拢";
+    container.dispatchEvent(
+      new CustomEvent("w4:state", {
+        detail: { exploded: state.exploded },
+      }),
+    );
+  };
+
+  const onDown = (event) => {
+    // 单指追踪：已有活动指针时，后来的指针（第二指）不劫持拖转。
+    if (activePointerId !== null) return;
+    activePointerId = event.pointerId;
+    dragging = true;
+    lastX = event.clientX;
+    lastY = event.clientY;
+    // 双击/双触统一检测：鼠标连击与触摸双触都表现为两次 pointerdown。
+    // 一对完成即复位到 -Infinity（0 不行：页面加载后 350ms 内的首击会与
+    // 「纪元 0」配对，连击三下会翻转三次——旧 e2e 截图快时实测触发）。
+    const now = performance.now();
+    const paired =
+      now - lastTapAt <= DOUBLE_TAP_MS &&
+      Math.hypot(event.clientX - lastTapX, event.clientY - lastTapY) <=
+        DOUBLE_TAP_RADIUS;
+    if (paired) toggle();
+    lastTapAt = paired ? -Infinity : now;
+    lastTapX = event.clientX;
+    lastTapY = event.clientY;
+  };
+  const onMove = (event) => {
+    if (!dragging || event.pointerId !== activePointerId) return;
+    const dx = event.clientX - lastX;
+    const dy = event.clientY - lastY;
+    group.rotation.y += dx * 0.01;
+    group.rotation.x += dy * 0.01;
+    // 先取增量再更新基准（修复旧实现恒加 0 的顺序缺陷）。
+    state.spins += Math.abs(dx) * 0.01;
+    lastX = event.clientX;
+    lastY = event.clientY;
+    container.dataset.rotated = "true";
+  };
+  const endDrag = (event) => {
+    if (event.pointerId !== activePointerId) return;
+    dragging = false;
+    activePointerId = null;
+  };
+  const onKey = (event) => {
+    if (event.altKey || event.ctrlKey || event.metaKey) return;
+    const step = 0.12;
+    let handled = true;
+    let rotated = false;
+    if (event.key === "ArrowLeft") {
+      group.rotation.y -= step;
+      rotated = true;
+    } else if (event.key === "ArrowRight") {
+      group.rotation.y += step;
+      rotated = true;
+    } else if (event.key === "ArrowUp") {
+      group.rotation.x -= step;
+      rotated = true;
+    } else if (event.key === "ArrowDown") {
+      group.rotation.x += step;
+      rotated = true;
+    } else if (event.key === "Enter" || event.key === " ") toggle();
+    else handled = false;
+    if (handled) {
+      event.preventDefault();
+      if (rotated) {
+        container.dataset.rotated = "true";
+        status.textContent = "已转动";
+      }
+    }
   };
   container.addEventListener("pointerdown", onDown);
   window.addEventListener("pointermove", onMove);
-  window.addEventListener("pointerup", onUp);
-  container.addEventListener("dblclick", toggle);
+  window.addEventListener("pointerup", endDrag);
+  // 触摸被滚动手势/系统手势接管时恢复自动旋转，不让拖转卡死。
+  window.addEventListener("pointercancel", endDrag);
+  container.addEventListener("keydown", onKey);
 
   let raf = 0;
   let frames = 0;
@@ -97,8 +178,10 @@ export function createApp(container, options = {}) {
       renderer.dispose();
       container.removeEventListener("pointerdown", onDown);
       window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
-      container.removeEventListener("dblclick", toggle);
+      window.removeEventListener("pointerup", endDrag);
+      window.removeEventListener("pointercancel", endDrag);
+      container.removeEventListener("keydown", onKey);
+      status.remove();
       renderer.domElement.remove();
     },
     framesRendered: () => frames,

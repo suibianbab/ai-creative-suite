@@ -44,19 +44,25 @@ const html = `<!doctype html>
 <style>
   body { margin: 0; background: #101820; color: #eef3f8; font-family: sans-serif; }
   #stage { width: 100vw; height: 88vh; touch-action: none; cursor: grab; }
+  #stage:focus-visible { outline: 3px solid #e8b04b; outline-offset: -3px; }
+  .w4-status { position: absolute; width: 1px; height: 1px; margin: -1px;
+    clip: rect(0 0 0 0); clip-path: inset(50%); overflow: hidden; white-space: nowrap; }
   #hint { padding: 12px 16px; font-size: 14px; color: #9fb2c4; }
   #state { color: #e8b04b; font-weight: 700; }
 </style>
 </head>
 <body>
-<div id="stage" data-exploded="false" data-rotated="false"></div>
-<p id="hint">拖拽转动主体；双击切换 <span id="state">合拢</span>/拆解状态。</p>
+<div id="stage" role="group" tabindex="0"
+  aria-label="3D 演示主体：拖拽或方向键转动，双击、回车或空格拆解"
+  data-exploded="false" data-rotated="false"></div>
+<p id="hint">拖拽或方向键转动主体；双击、回车或空格切换 <span id="state">合拢</span>/拆解状态。</p>
 <script>${bundle}</script>
 <script>
   const app = W4App.createApp(document.getElementById("stage"));
+  window.app = app;
   const stateLabel = document.getElementById("state");
-  document.getElementById("stage").addEventListener("dblclick", () => {
-    stateLabel.textContent = app.state.exploded ? "拆解" : "合拢";
+  document.getElementById("stage").addEventListener("w4:state", (event) => {
+    stateLabel.textContent = event.detail.exploded ? "拆解" : "合拢";
   });
 </script>
 </body>
