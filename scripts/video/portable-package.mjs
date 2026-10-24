@@ -11,6 +11,7 @@ import {
   readFile,
   rename,
   rm,
+  rmdir,
   unlink,
   writeFile,
 } from "node:fs/promises";
@@ -38,6 +39,7 @@ const FORMAT = "acs-video-portable";
 const PROJECT_FILE = "project.video-project.json";
 const STYLE_FILE = "style-bible.json";
 const SHA = /^[0-9a-f]{64}$/;
+const MAX_MEDIA_FILES = 1000;
 const comparePath = (a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0);
 
 function fail(message) {
@@ -62,6 +64,41 @@ async function exists(file) {
     if (error.code === "ENOENT") return false;
     throw error;
   }
+}
+
+async function ensureDirectory(dir, created) {
+  const first = await mkdir(dir, { recursive: true });
+  if (!first) return;
+  let current = path.resolve(dir);
+  const firstCreated = path.resolve(first);
+  if (!within(firstCreated, current))
+    fail(`创建目录返回异常路径：${firstCreated}`);
+  for (;;) {
+    created.push(current);
+    if (current === firstCreated) break;
+    const parent = path.dirname(current);
+    if (parent === current) fail(`无法确定新建目录边界：${dir}`);
+    current = parent;
+  }
+}
+
+async function removeCreatedDirectories(created) {
+  const failures = [];
+  for (const dir of [...new Set(created)].sort((a, b) => b.length - a.length)) {
+    try {
+      await rmdir(dir);
+    } catch (error) {
+      if (!["ENOENT", "ENOTEMPTY", "EEXIST"].includes(error.code))
+        failures.push(error);
+    }
+  }
+  return failures;
+}
+
+function throwAfterCleanup(error, failures) {
+  if (failures.length)
+    throw new AggregateError([error, ...failures], error.message);
+  throw error;
 }
 
 async function regularFile(file, label) {
@@ -201,8 +238,8 @@ export async function packPortableProject({
 }) {
   if (!path.isAbsolute(storeRoot)) fail("媒体仓路径须为绝对路径");
   const project = await readProject(projectFile);
-  await readBible(styleBibleFile, project);
   const media = mediaFiles(project);
+  await readBible(styleBibleFile, project);
   for (const entry of media) {
     const source = originalPath(storeRoot, path.basename(entry.path));
     const info = await regularFile(source, "媒体原件");
@@ -213,9 +250,11 @@ export async function packPortableProject({
       fail(`媒体原件与账本不符：${entry.path}`);
   }
   if (await exists(out)) fail(`输出目录已存在：${out}`);
-  await mkdir(path.dirname(out), { recursive: true });
-  const temp = await mkdtemp(path.join(path.dirname(out), ".acs-video-pack-"));
+  const createdDirs = [];
+  let temp;
   try {
+    await ensureDirectory(path.dirname(out), createdDirs);
+    temp = await mkdtemp(path.join(path.dirname(out), ".acs-video-pack-"));
     const entries = [];
     const projectTarget = path.join(temp, PROJECT_FILE);
     await copyFile(projectFile, projectTarget);
@@ -251,8 +290,16 @@ export async function packPortableProject({
     await rename(temp, out);
     return manifest;
   } catch (error) {
-    await rm(temp, { recursive: true, force: true });
-    throw error;
+    const failures = [];
+    if (temp) {
+      try {
+        await rm(temp, { recursive: true, force: true });
+      } catch (cleanupError) {
+        failures.push(cleanupError);
+      }
+    }
+    failures.push(...(await removeCreatedDirectories(createdDirs)));
+    throwAfterCleanup(error, failures);
   }
 }
 
@@ -272,10 +319,11 @@ export async function verifyPortableBundle(bundle) {
     manifest.format !== FORMAT ||
     manifest.formatVersion !== 1 ||
     typeof manifest.projectId !== "string" ||
-    !Array.isArray(manifest.files) ||
-    manifest.files.length > 1002
+    !Array.isArray(manifest.files)
   )
     fail("manifest 格式无效或版本不支持");
+  if (manifest.files.length > MAX_MEDIA_FILES + 2)
+    fail(`manifest 超过包格式 v1 上限（${MAX_MEDIA_FILES} 个独立原件）`);
   const listed = new Map();
   for (const entry of manifest.files) {
     safeEntry(entry);
@@ -348,6 +396,8 @@ export async function restorePortableBundle({ bundle, storeRoot, out }) {
   if (!path.isAbsolute(storeRoot)) fail("目标媒体仓路径须为绝对路径");
   if (within(bundle, out) || within(bundle, storeRoot))
     fail("恢复输出和目标媒体仓不能位于原项目包内部");
+  if (within(out, storeRoot) || within(storeRoot, out))
+    fail("恢复输出与目标媒体仓不能互相包含");
   const verified = await verifyPortableBundle(bundle);
   if (await exists(out)) fail(`恢复输出目录已存在：${out}`);
   const media = mediaFiles(verified.project);
@@ -366,13 +416,15 @@ export async function restorePortableBundle({ bundle, storeRoot, out }) {
     )
       fail(`目标仓同键文件与项目摘要冲突：${entry.path}`);
   }
-  await mkdir(originalDir, { recursive: true });
-  await mkdir(path.dirname(out), { recursive: true });
-  const tempOut = await mkdtemp(
-    path.join(path.dirname(out), ".acs-video-restore-"),
-  );
+  const createdDirs = [];
+  let tempOut;
   const created = [];
   try {
+    if (media.length) await ensureDirectory(originalDir, createdDirs);
+    await ensureDirectory(path.dirname(out), createdDirs);
+    tempOut = await mkdtemp(
+      path.join(path.dirname(out), ".acs-video-restore-"),
+    );
     for (const entry of media) {
       const destination = originalPath(storeRoot, path.basename(entry.path));
       if (await exists(destination)) continue;
@@ -406,8 +458,33 @@ export async function restorePortableBundle({ bundle, storeRoot, out }) {
       path.join(bundle, PROJECT_FILE),
       path.join(tempOut, PROJECT_FILE),
     );
-    if (verified.styleBibleFile)
+    const projectCopy = await fileEntry(
+      path.join(tempOut, PROJECT_FILE),
+      PROJECT_FILE,
+    );
+    const projectListed = verified.manifest.files.find(
+      (item) => item.path === PROJECT_FILE,
+    );
+    if (
+      projectCopy.bytes !== projectListed.bytes ||
+      projectCopy.sha256 !== projectListed.sha256
+    )
+      fail("恢复时项目文件发生变化");
+    if (verified.styleBibleFile) {
       await copyFile(verified.styleBibleFile, path.join(tempOut, STYLE_FILE));
+      const styleCopy = await fileEntry(
+        path.join(tempOut, STYLE_FILE),
+        STYLE_FILE,
+      );
+      const styleListed = verified.manifest.files.find(
+        (item) => item.path === STYLE_FILE,
+      );
+      if (
+        styleCopy.bytes !== styleListed.bytes ||
+        styleCopy.sha256 !== styleListed.sha256
+      )
+        fail("恢复时 Style Bible 文件发生变化");
+    }
     if (await exists(out)) fail(`恢复输出目录已存在：${out}`);
     await rename(tempOut, out);
     return {
@@ -418,8 +495,22 @@ export async function restorePortableBundle({ bundle, storeRoot, out }) {
       installedMedia: created.length,
     };
   } catch (error) {
-    await rm(tempOut, { recursive: true, force: true });
-    for (const file of created.reverse()) await unlink(file);
-    throw error;
+    const failures = [];
+    if (tempOut) {
+      try {
+        await rm(tempOut, { recursive: true, force: true });
+      } catch (cleanupError) {
+        failures.push(cleanupError);
+      }
+    }
+    for (const file of created.reverse()) {
+      try {
+        await unlink(file);
+      } catch (cleanupError) {
+        if (cleanupError.code !== "ENOENT") failures.push(cleanupError);
+      }
+    }
+    failures.push(...(await removeCreatedDirectories(createdDirs)));
+    throwAfterCleanup(error, failures);
   }
 }

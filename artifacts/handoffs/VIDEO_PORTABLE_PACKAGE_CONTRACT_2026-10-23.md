@@ -43,7 +43,7 @@
 
 ## 实施结果与 Claude 复核清单
 
-代码：`scripts/video/portable-package.mjs`（打包、校验、恢复核心）、`scripts/video/portable-project.mjs`（CLI）、`scripts/video/portable-package.test.mjs`（7 条反例/往返）、`scripts/video/e2e-portable-project.mjs`（真实媒体与 Style Bible 的两臂出片）、`qa/registry.json`（VID-043）。证据和明确限制见 [`artifacts/video-studio-portable-package-2026-10-23/REPORT.md`](../video-studio-portable-package-2026-10-23/REPORT.md)。未修改 `VideoProject` schema、工作台、媒体仓或渲染器。
+代码：`scripts/video/portable-package.mjs`（打包、校验、恢复核心）、`scripts/video/portable-project.mjs`（CLI）、`scripts/video/portable-package.test.mjs`（11 条反例/往返）、`scripts/video/e2e-portable-project.mjs`（真实媒体与 Style Bible 的两臂出片）、`qa/registry.json`（VID-045）。证据和明确限制见 [`artifacts/video-studio-portable-package-2026-10-23/REPORT.md`](../video-studio-portable-package-2026-10-23/REPORT.md)。未修改 `VideoProject` schema、工作台、媒体仓或渲染器。
 
 复核时请重点检查：
 
@@ -53,4 +53,4 @@
 4. Style Bible 项目的 `workingStyleIssues` 是否与真实渲染同口径；当前媒体镜头拒绝是否合理，历史媒体版本的资产是否仍随包走。
 5. `renderRecords`/`deliveries` 的旧本机路径、proxy、TTS、外部 `editor-binding` 的边界是否如实报告；不要把 CLI 验证说成浏览器导入或云端部署已完成。
 
-本机验证：`node --test scripts/video/portable-package.test.mjs` 7/7；`node scripts/video/e2e-portable-project.mjs` exit 0、两组双画幅 MP4 与媒体 digest 对账；`pnpm -r typecheck` 全通过；`pnpm exec biome check .` 430 文件通过；`node scripts/qa/run-regression.mjs validate` 为 98 automated / 53 manual。e2e 输出在忽略的 `.tools/video-portable-e2e/run-XEFox3/`。请基于提交增量复核，不把主检出 `D:/codex/animate` 的其他未提交资料并入此任务。
+本机初次验证：`node --test scripts/video/portable-package.test.mjs` 7/7；`node scripts/video/e2e-portable-project.mjs` exit 0、两组双画幅 MP4 与媒体 digest 对账；`pnpm -r typecheck` 全通过；`pnpm exec biome check .` 430 文件通过；`node scripts/qa/run-regression.mjs validate` 为 98 automated / 53 manual。e2e 输出在忽略的 `.tools/video-portable-e2e/run-XEFox3/`。请基于提交增量复核，不把主检出 `D:/codex/animate` 的其他未提交资料并入此任务。交叉审核后修复了 C1/C4/C5，补齐 C3 边界说明；C2 的 schema 无上限前提经测试证伪，并将 QA ID 改为 VID-045，避免与模板线 VID-043/044 冲突；后续验证见报告。

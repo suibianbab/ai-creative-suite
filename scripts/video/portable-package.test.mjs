@@ -7,6 +7,7 @@ import {
   readdir,
   readFile,
   rm,
+  symlink,
   writeFile,
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -304,5 +305,121 @@ test("恢复目标不能落在包内，原包保持可再次校验", async (t) =
   assert.equal(
     (await verifyPortableBundle(bundle)).project.id,
     JSON.parse(await readFile(OLD, "utf8")).id,
+  );
+});
+
+test("恢复输出与媒体仓互相包含时前置拒绝，不留下目录", async (t) => {
+  const root = await sandbox(t);
+  const source = await prepared(root);
+  const bundle = path.join(root, "bundle");
+  await packPortableProject({
+    projectFile: source.projectFile,
+    styleBibleFile: BIBLE,
+    storeRoot: source.storeRoot,
+    out: bundle,
+  });
+  const out = path.join(root, "nested-output");
+  await assert.rejects(
+    restorePortableBundle({ bundle, out, storeRoot: path.join(out, "store") }),
+    /不能互相包含/,
+  );
+  assert.deepEqual(
+    (await readdir(root)).filter((name) => name === "nested-output"),
+    [],
+  );
+  const storeRoot = path.join(root, "nested-store");
+  await assert.rejects(
+    restorePortableBundle({
+      bundle,
+      out: path.join(storeRoot, "output"),
+      storeRoot,
+    }),
+    /不能互相包含/,
+  );
+  assert.deepEqual(
+    (await readdir(root)).filter((name) => name === "nested-store"),
+    [],
+  );
+});
+
+test("包内未列出文件与符号链接必须被拒绝", async (t) => {
+  const root = await sandbox(t);
+  const source = await prepared(root);
+  const bundle = path.join(root, "bundle");
+  await packPortableProject({
+    projectFile: source.projectFile,
+    styleBibleFile: BIBLE,
+    storeRoot: source.storeRoot,
+    out: bundle,
+  });
+  const extra = path.join(bundle, "media", "original", "extra.txt");
+  await writeFile(extra, "unlisted");
+  await assert.rejects(verifyPortableBundle(bundle), /未列出/);
+  await rm(extra);
+  const target = path.join(bundle, "media", "original", source.storeKey);
+  await rm(target);
+  try {
+    await symlink(
+      path.join(source.storeRoot, "original", source.storeKey),
+      target,
+      "file",
+    );
+  } catch (error) {
+    if (["EPERM", "EACCES"].includes(error.code)) {
+      t.diagnostic(`Windows 当前权限不允许创建文件符号链接：${error.code}`);
+      return;
+    }
+    throw error;
+  }
+  await assert.rejects(verifyPortableBundle(bundle), /普通文件/);
+});
+
+test("媒体账本超过项目 schema 的 1000 条上限时打包前拒绝", async (t) => {
+  const root = await sandbox(t);
+  const source = await prepared(root);
+  source.project.mediaAssets = Array.from({ length: 1001 }, (_, i) => {
+    const digest = createHash("sha256").update(`fixture-${i}`).digest("hex");
+    return {
+      ...source.project.mediaAssets[0],
+      assetId: randomUUID(),
+      original: {
+        ...source.project.mediaAssets[0].original,
+        sha256: digest,
+        storeKey: `${digest.slice(0, 16)}.mp4`,
+      },
+    };
+  });
+  await writeFile(source.projectFile, JSON.stringify(source.project));
+  const out = path.join(root, "too-many");
+  await assert.rejects(
+    packPortableProject({
+      projectFile: source.projectFile,
+      styleBibleFile: BIBLE,
+      storeRoot: source.storeRoot,
+      out,
+    }),
+    /mediaAssets must be an array of at most 1000 entries/,
+  );
+  assert.deepEqual(
+    (await readdir(root)).filter((name) => name === "too-many"),
+    [],
+  );
+});
+
+test("manifest 文件项超过包格式上限时给出专门错误", async (t) => {
+  const root = await sandbox(t);
+  const bundle = path.join(root, "bundle");
+  await packPortableProject({
+    projectFile: OLD,
+    storeRoot: path.join(root, "empty-store"),
+    out: bundle,
+  });
+  const manifestFile = path.join(bundle, "manifest.json");
+  const manifest = JSON.parse(await readFile(manifestFile, "utf8"));
+  manifest.files = Array.from({ length: 1003 }, () => manifest.files[0]);
+  await writeFile(manifestFile, JSON.stringify(manifest));
+  await assert.rejects(
+    verifyPortableBundle(bundle),
+    /manifest 超过包格式 v1 上限/,
   );
 });
