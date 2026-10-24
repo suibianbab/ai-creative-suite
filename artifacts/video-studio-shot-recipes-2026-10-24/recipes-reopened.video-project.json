@@ -1,0 +1,242 @@
+{
+  "schemaVersion": 1,
+  "id": "690a0ef5-1ab3-4a39-80d2-4a1532481aa9",
+  "title": "未命名视频项目",
+  "brief": {
+    "sentence": "",
+    "aspectTargets": [
+      "landscape",
+      "portrait"
+    ],
+    "applications": [
+      {
+        "sentence": "镜头配方 recipe-text-point：开场提问或收尾点题：一句话抓住注意力",
+        "appendedShotCount": 1,
+        "appendedDurationMs": 3000,
+        "filmShotCountAfter": 1,
+        "filmTotalMsAfter": 3000,
+        "appliedAt": "2026-10-24T09:10:11.962Z"
+      },
+      {
+        "sentence": "镜头配方 recipe-data-bar：数据对比结论：柱状图讲清一组数字",
+        "appendedShotCount": 1,
+        "appendedDurationMs": 2800,
+        "filmShotCountAfter": 2,
+        "filmTotalMsAfter": 5800,
+        "appliedAt": "2026-10-24T09:10:12.113Z"
+      },
+      {
+        "sentence": "镜头配方 recipe-product-clip：商品实拍画面：用真实素材展示产品",
+        "appendedShotCount": 1,
+        "appendedDurationMs": 3000,
+        "filmShotCountAfter": 3,
+        "filmTotalMsAfter": 8800,
+        "appliedAt": "2026-10-24T09:10:13.580Z"
+      }
+    ]
+  },
+  "shots": [
+    {
+      "shotId": "708423b6-90cc-4d34-a593-f9774e13c5fe",
+      "order": 0,
+      "locked": false,
+      "workingVersionId": "277bf2e7-4503-4020-ac58-792d82d95ca4",
+      "contentVersions": [
+        {
+          "versionId": "8c5cfebf-20f6-4bc8-8d97-05406da543e9",
+          "createdAt": "2026-10-24T09:10:11.962Z",
+          "durationMs": 3000,
+          "description": "配方镜头：开场提问或收尾点题：一句话抓住注意力",
+          "narrationText": "一句话开场，点出主题。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 3000,
+              "seed": 3728,
+              "background": "#ffffff",
+              "params": {
+                "title": "开场提问",
+                "subtitle": "三十秒讲清楚",
+                "titleColor": "#1b2c29",
+                "subtitleColor": "#5d7469",
+                "entrance": "fade-up",
+                "enterMs": 450
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "shot-recipe",
+            "engineVersion": "1"
+          }
+        },
+        {
+          "versionId": "277bf2e7-4503-4020-ac58-792d82d95ca4",
+          "createdAt": "2026-10-24T09:10:13.713Z",
+          "durationMs": 3000,
+          "description": "配方镜头：开场提问或收尾点题：一句话抓住注意力",
+          "narrationText": "一句话开场，点出主题。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 3000,
+              "seed": 3728,
+              "background": "#ffffff",
+              "params": {
+                "title": "开场提问（改）",
+                "titleColor": "#1b2c29",
+                "subtitleColor": "#5d7469",
+                "entrance": "fade-up",
+                "enterMs": 450,
+                "subtitle": "三十秒讲清楚"
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "human-edit",
+            "engineVersion": "1",
+            "parentVersionId": "8c5cfebf-20f6-4bc8-8d97-05406da543e9"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "8c5cfebf-20f6-4bc8-8d97-05406da543e9",
+          "at": "2026-10-24T09:10:11.962Z",
+          "actor": "human"
+        },
+        {
+          "kind": "submitted",
+          "versionId": "277bf2e7-4503-4020-ac58-792d82d95ca4",
+          "at": "2026-10-24T09:10:13.713Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "f3e9b108-2682-420c-a8b0-7bcd400d1edf",
+      "order": 1,
+      "locked": false,
+      "workingVersionId": "cc4e06e1-2b78-4262-96a6-1ff2aa98070a",
+      "contentVersions": [
+        {
+          "versionId": "cc4e06e1-2b78-4262-96a6-1ff2aa98070a",
+          "createdAt": "2026-10-24T09:10:12.113Z",
+          "durationMs": 2800,
+          "description": "配方镜头：数据对比结论：柱状图讲清一组数字",
+          "narrationText": "用一组数字，讲清对比结论。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "bar-chart",
+              "componentVersion": 1,
+              "durationMs": 2800,
+              "seed": 9286,
+              "background": "#ffffff",
+              "params": {
+                "title": "月度对比",
+                "bars": [
+                  {
+                    "label": "一月",
+                    "value": 3
+                  },
+                  {
+                    "label": "二月",
+                    "value": 6
+                  },
+                  {
+                    "label": "三月",
+                    "value": 9
+                  }
+                ],
+                "barColor": "#2f6f4f",
+                "accentColor": "#d9822b",
+                "textColor": "#1b2c29",
+                "enterMs": 1400
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "shot-recipe",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "cc4e06e1-2b78-4262-96a6-1ff2aa98070a",
+          "at": "2026-10-24T09:10:12.113Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "0a53c4a1-83a2-4a43-a3f2-c589a7396a0f",
+      "order": 2,
+      "locked": false,
+      "workingVersionId": "8779386b-7c0b-41f6-a16b-4fa3d1472619",
+      "contentVersions": [
+        {
+          "versionId": "8779386b-7c0b-41f6-a16b-4fa3d1472619",
+          "createdAt": "2026-10-24T09:10:13.580Z",
+          "durationMs": 3000,
+          "description": "配方镜头：商品实拍画面：用真实素材展示产品",
+          "narrationText": "来看产品的真实画面。",
+          "sceneSource": {
+            "type": "media-clip",
+            "mediaAssetId": "cba7f689-90cf-4958-a19e-3375735fb2e0",
+            "inMs": 0,
+            "outMs": 3000,
+            "fit": "contain",
+            "focalX": 0.5,
+            "audio": "mute"
+          },
+          "provenance": {
+            "engineId": "shot-recipe",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "8779386b-7c0b-41f6-a16b-4fa3d1472619",
+          "at": "2026-10-24T09:10:13.580Z",
+          "actor": "human"
+        }
+      ]
+    }
+  ],
+  "renderRecords": [],
+  "deliveries": [],
+  "savedVersion": 3,
+  "mediaAssets": [
+    {
+      "assetId": "cba7f689-90cf-4958-a19e-3375735fb2e0",
+      "createdAt": "2026-10-24T09:10:13.356Z",
+      "origin": {
+        "kind": "local-upload",
+        "fileName": "product.mp4"
+      },
+      "original": {
+        "sha256": "1880911db62601d353642ed559d08c6da85bbb6e582263b1b42e67209ad47f2f",
+        "bytes": 99759,
+        "durationMs": 3000,
+        "width": 1280,
+        "height": 720,
+        "fps": 24,
+        "codec": "h264",
+        "hasAudio": false,
+        "storeKey": "1880911db62601d3.mp4"
+      }
+    }
+  ]
+}
