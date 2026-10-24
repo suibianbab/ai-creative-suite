@@ -1,8 +1,16 @@
 // W1 镜头配方：按用途选镜头的元数据目录与编译核心。配方只编译到已注册
 // 组件 spec（或经应用层的受控 media-clip 镜头），不引入第二种项目模型
 // 或任意代码入口；应用语义沿用 apply-plan 的「内存追加 + 保存确认」。
-import type { MediaAsset, VideoProject } from "@acs/video-document";
-import { defaultRegistry, type SceneSpec, type SvgNode } from "@acs/video-scene";
+import type {
+  MediaAsset,
+  SceneSource,
+  VideoProject,
+} from "@acs/video-document";
+import {
+  defaultRegistry,
+  type SceneSpec,
+  type SvgNode,
+} from "@acs/video-scene";
 
 export type RecipeInputs = {
   title?: string;
@@ -11,6 +19,7 @@ export type RecipeInputs = {
   values?: number[];
   assetId?: string;
   durationMs?: number;
+  narrationText?: string;
 };
 
 export type ShotRecipe = {
@@ -26,9 +35,7 @@ export type ShotRecipe = {
   license: string;
   previewFrame: number;
   verified: boolean;
-  build: (
-    inputs: RecipeInputs,
-  ) => { spec: SceneSpec } | { error: string };
+  build: (inputs: RecipeInputs) => { spec: SceneSpec } | { error: string };
 };
 
 const clampDuration = (
@@ -123,7 +130,11 @@ export const SHOT_RECIPES: readonly ShotRecipe[] = [
     previewFrame: 60,
     verified: true,
     build(inputs) {
-      const durationMs = clampDuration(this, inputs.durationMs, this.durationMs.defaultMs);
+      const durationMs = clampDuration(
+        this,
+        inputs.durationMs,
+        this.durationMs.defaultMs,
+      );
       const title = inputs.title?.trim() || "一句话开场";
       const subtitle = inputs.subtitle?.trim() || "副标题补充说明";
       if (title.length > 40 || subtitle.length > 40)
@@ -150,7 +161,10 @@ export const SHOT_RECIPES: readonly ShotRecipe[] = [
     componentId: "bar-chart",
     placeholders: {
       title: { label: "图表标题", example: "四季度销量对比" },
-      labels: { label: "分类名（2–8 个，逗号分隔）", example: "一季度, 二季度, 三季度, 四季度" },
+      labels: {
+        label: "分类名（2–8 个，逗号分隔）",
+        example: "一季度, 二季度, 三季度, 四季度",
+      },
       values: { label: "数值（与分类一一对应）", example: "32, 46, 58, 82" },
     },
     requiresAsset: false,
@@ -158,15 +172,19 @@ export const SHOT_RECIPES: readonly ShotRecipe[] = [
     previewFrame: 60,
     verified: true,
     build(inputs) {
-      const durationMs = clampDuration(this, inputs.durationMs, this.durationMs.defaultMs);
+      const durationMs = clampDuration(
+        this,
+        inputs.durationMs,
+        this.durationMs.defaultMs,
+      );
       const labels =
         inputs.labels === undefined && inputs.values === undefined
           ? ["一季度", "二季度", "三季度", "四季度"]
-          : inputs.labels?.map((label) => label.trim()).filter(Boolean) ?? [];
+          : (inputs.labels?.map((label) => label.trim()).filter(Boolean) ?? []);
       const values =
         inputs.labels === undefined && inputs.values === undefined
           ? [32, 46, 58, 82]
-          : inputs.values ?? [];
+          : (inputs.values ?? []);
       if (labels.length < 2 || labels.length > 8)
         return { error: "分类数量须为 2..8 个" };
       if (values.length !== labels.length)
@@ -180,7 +198,10 @@ export const SHOT_RECIPES: readonly ShotRecipe[] = [
       return {
         spec: baseSpec("bar-chart", durationMs, {
           title,
-          bars: labels.map((label, index) => ({ label, value: values[index]! })),
+          bars: labels.map((label, index) => ({
+            label,
+            value: values[index]!,
+          })),
           barColor: "#2f6f4f",
           accentColor: "#d9822b",
           textColor: "#1b2c29",
@@ -212,3 +233,128 @@ export const SHOT_RECIPES: readonly ShotRecipe[] = [
     },
   },
 ];
+
+const DEFAULT_NARRATION: Record<string, string> = {
+  "recipe-text-point": "一句话开场，点出主题。",
+  "recipe-data-bar": "用一组数字，讲清对比结论。",
+  "recipe-product-clip": "来看产品的真实画面。",
+};
+
+// 应用配方：向当前项目内存文档追加一个普通 ContentVersion 镜头（与
+// apply-plan 同款「追加 + 待保存确认」语义，不直接落库）。media-clip
+// 是 sceneSource 级目标，走资产分支构造受控媒体镜头。
+export function applyShotRecipe(
+  document: VideoProject,
+  recipeId: string,
+  inputs: RecipeInputs,
+  mediaAssets: MediaAsset[] = [],
+): { document: VideoProject; notice: string } | { error: string } {
+  const recipe = SHOT_RECIPES.find((item) => item.id === recipeId);
+  if (!recipe) return { error: `未知配方：${recipeId}` };
+  const durationMs = Math.min(
+    recipe.durationMs.max,
+    Math.max(
+      recipe.durationMs.min,
+      inputs.durationMs ?? recipe.durationMs.defaultMs,
+    ),
+  );
+  const now = new Date().toISOString();
+  const versionId = crypto.randomUUID();
+  let sceneSource: SceneSource;
+  let usedAsset: MediaAsset | null = null;
+  if (recipe.componentId === "media-clip") {
+    const asset = mediaAssets.find((item) => item.assetId === inputs.assetId);
+    if (!asset) return { error: "请先选择项目内已导入的媒体素材" };
+    usedAsset = asset;
+    sceneSource = {
+      type: "media-clip",
+      mediaAssetId: asset.assetId,
+      inMs: 0,
+      outMs: Math.min(durationMs, asset.original.durationMs),
+      fit: "contain",
+      focalX: 0.5,
+      audio: "mute",
+    };
+  } else {
+    const built = recipe.build(inputs);
+    if (!("spec" in built)) return { error: built.error };
+    sceneSource = {
+      type: "spec",
+      spec:
+        built.spec.durationMs === durationMs
+          ? built.spec
+          : { ...built.spec, durationMs },
+    };
+  }
+  const narrationText =
+    inputs.narrationText?.trim() ||
+    DEFAULT_NARRATION[recipeId] ||
+    recipe.purpose;
+  const shot = {
+    shotId: crypto.randomUUID(),
+    order: document.shots.length,
+    locked: false,
+    workingVersionId: versionId,
+    contentVersions: [
+      {
+        versionId,
+        createdAt: now,
+        durationMs,
+        description: `配方镜头：${recipe.purpose}`,
+        narrationText,
+        sceneSource,
+        provenance: {
+          engineId: "shot-recipe",
+          engineVersion: String(recipe.version),
+        },
+      },
+    ],
+    events: [
+      {
+        kind: "submitted" as const,
+        versionId,
+        at: now,
+        actor: "human" as const,
+      },
+    ],
+  };
+  const shots = [...document.shots, shot];
+  const isFirst = document.shots.length === 0;
+  const totalMs = shots.reduce(
+    (ms, item) => ms + item.contentVersions[0]!.durationMs,
+    0,
+  );
+  return {
+    document: {
+      ...document,
+      shots,
+      // media-clip 契约：镜头引用的资产必须在项目账本内（账本只追加）。
+      ...(usedAsset
+        ? {
+            mediaAssets: (document.mediaAssets ?? []).some(
+              (item) => item.assetId === usedAsset!.assetId,
+            )
+              ? document.mediaAssets
+              : [...(document.mediaAssets ?? []), usedAsset],
+          }
+        : {}),
+      brief: {
+        ...document.brief,
+        applications: [
+          ...(document.brief.applications ?? []),
+          {
+            sentence: `镜头配方 ${recipeId}：${recipe.purpose}`,
+            appendedShotCount: 1,
+            appendedDurationMs: durationMs,
+            filmShotCountAfter: shots.length,
+            filmTotalMsAfter: totalMs,
+            appliedAt: now,
+          },
+        ],
+      },
+    },
+    notice: isFirst
+      ? `已应用配方（首个镜头 / ${(totalMs / 1000).toFixed(1)} 秒）到当前项目，确认无误后点「保存」`
+      : `已追加配方镜头（整片 ${shots.length} 个镜头 / ${(totalMs / 1000).toFixed(1)} 秒），确认无误后点「保存」`,
+  };
+}
