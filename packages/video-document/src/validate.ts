@@ -6,6 +6,8 @@ import type {
   ShotEvent,
   VideoProject,
 } from "./types.js";
+import { EXPORT_FPS } from "./aspect.js";
+import { quantizeTimeline } from "./quantize.js";
 
 export type { VideoProject } from "./types.js";
 
@@ -603,6 +605,8 @@ export function validateVideoProject(value: unknown): VideoProject {
   // P3-B（Codex 复核 E）：3D 渲染证据要与版本对账，先按 versionId 索引版本。
   const versionsById = new Map<string, ContentVersion>();
   const knownShotIds = new Set<string>();
+  // W2 风格代表帧确认：versionId 必须属于其声明的 shotId。
+  const versionsByShotId = new Map<string, Set<string>>();
   const knownOrders = new Set<number>();
   // 全管线顺序契约（P3-A 修复 I-1）：MP4/TTS/转场边界按数组序消费，交互页按
   // order 排序。要求数组本身严格升序，两边叙事顺序天然一致；允许跳号。
@@ -637,6 +641,10 @@ export function validateVideoProject(value: unknown): VideoProject {
       }
       knownVersionIds.add(version.versionId);
       versionsById.set(version.versionId, version);
+      const shotVersions = versionsByShotId.get(parsedShot.shotId);
+      if (shotVersions) shotVersions.add(version.versionId);
+      else
+        versionsByShotId.set(parsedShot.shotId, new Set([version.versionId]));
     }
   }
   if (
@@ -918,6 +926,115 @@ export function validateVideoProject(value: unknown): VideoProject {
         fail(`${field}.boundary 与前条重复（同一边界至多一条转场）`);
       }
       seen.add(boundary);
+    }
+  }
+  // —— W2 风格代表帧确认账本：可省略；存在时逐条查形状并与镜头/版本对账 ——
+  if (parsed.styleFrameConfirmations !== undefined) {
+    if (
+      !Array.isArray(parsed.styleFrameConfirmations) ||
+      parsed.styleFrameConfirmations.length > 100
+    ) {
+      fail("styleFrameConfirmations 须为至多 100 条的数组");
+    }
+    const knownConfirmationIds = new Set<string>();
+    for (const [index, confirmation] of parsed.styleFrameConfirmations.entries()) {
+      const field = `styleFrameConfirmations[${index}]`;
+      if (!isRecord(confirmation)) fail(`${field} must be an object`);
+      if (!isUuid(confirmation.confirmationId))
+        fail(`${field}.confirmationId must be a UUID`);
+      if (knownConfirmationIds.has(confirmation.confirmationId))
+        fail(`${field}.confirmationId is duplicated`);
+      knownConfirmationIds.add(confirmation.confirmationId as string);
+      if (typeof confirmation.shotId !== "string" || !knownShotIds.has(confirmation.shotId)) {
+        fail(`${field}.shotId 未指向项目中的镜头`);
+      }
+      const shotVersions = versionsByShotId.get(confirmation.shotId as string);
+      if (
+        typeof confirmation.versionId !== "string" ||
+        !shotVersions?.has(confirmation.versionId)
+      ) {
+        fail(`${field}.versionId 未指向该镜头的内容版本`);
+      }
+      for (const key of ["contentDigest", "workingSetDigest"] as const) {
+        if (
+          typeof confirmation[key] !== "string" ||
+          !SHA256_HEX.test(confirmation[key] as string)
+        ) {
+          fail(`${field}.${key} 须为 64 位小写十六进制`);
+        }
+      }
+      const version = versionsById.get(confirmation.versionId as string)!;
+      if (
+        !Number.isInteger(confirmation.frameMs) ||
+        (confirmation.frameMs as number) < 0 ||
+        (confirmation.frameMs as number) >= version.durationMs
+      ) {
+        fail(
+          `${field}.frameMs 须为 0..${version.durationMs - 1} 的整数毫秒`,
+        );
+      }
+      const frames = quantizeTimeline([version.durationMs], EXPORT_FPS)
+        .shots[0]!.frames;
+      if (
+        !Number.isInteger(confirmation.frameIndex) ||
+        (confirmation.frameIndex as number) < 0 ||
+        (confirmation.frameIndex as number) >= frames
+      ) {
+        fail(`${field}.frameIndex 须为 0..${frames - 1} 的整数帧`);
+      }
+      const ref = confirmation.styleBibleRef;
+      if (
+        !isRecord(ref) ||
+        !isUuid(ref.bibleId) ||
+        !isUuid(ref.versionId) ||
+        typeof ref.digest !== "string" ||
+        !SHA256_HEX.test(ref.digest)
+      ) {
+        fail(`${field}.styleBibleRef 须包含 bibleId、versionId 与 SHA-256 digest`);
+      }
+      const keyframes = confirmation.keyframes;
+      if (
+        !Array.isArray(keyframes) ||
+        keyframes.length !== 2 ||
+        !keyframes.some((frame) => frame?.aspect === "landscape") ||
+        !keyframes.some((frame) => frame?.aspect === "portrait")
+      ) {
+        fail(`${field}.keyframes 须恰好横竖各一条`);
+      }
+      for (const [frameIndex, frame] of keyframes.entries()) {
+        const frameField = `${field}.keyframes[${frameIndex}]`;
+        if (!isRecord(frame)) fail(`${frameField} must be an object`);
+        if (frame.aspect !== "landscape" && frame.aspect !== "portrait") {
+          fail(`${frameField}.aspect 须为 landscape 或 portrait`);
+        }
+        if (typeof frame.digest !== "string" || !SHA256_HEX.test(frame.digest)) {
+          fail(`${frameField}.digest 须为 64 位小写十六进制`);
+        }
+        if (!Number.isInteger(frame.bytes) || (frame.bytes as number) < 1) {
+          fail(`${frameField}.bytes 须为正整数`);
+        }
+        if (
+          typeof frame.outputRef !== "string" ||
+          frame.outputRef.length < 1 ||
+          frame.outputRef.length > 200 ||
+          frame.outputRef.includes("..")
+        ) {
+          fail(`${frameField}.outputRef 须为 1..200 字符且不含 ..`);
+        }
+      }
+      if (
+        confirmation.note !== undefined &&
+        (typeof confirmation.note !== "string" ||
+          confirmation.note.length < 1 ||
+          confirmation.note.length > 200)
+      ) {
+        fail(`${field}.note 须为 1..200 字符`);
+      }
+      if (!isIsoTime(confirmation.confirmedAt))
+        fail(`${field}.confirmedAt must be an ISO 8601 string`);
+      if (confirmation.actor !== "human") {
+        fail(`${field}.actor must be "human"（人工显式确认）`);
+      }
     }
   }
   return parsed as VideoProject;

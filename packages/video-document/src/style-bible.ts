@@ -78,6 +78,24 @@ export function validateStyleBible(value: unknown): StyleBible {
       version.name.length > 100
     )
       throw new Error(`${field} 创建时间或名称无效`);
+    if (version.derivedFrom !== undefined) {
+      const derived = version.derivedFrom;
+      if (
+        !record(derived) ||
+        typeof derived.sourceBibleId !== "string" ||
+        !UUID.test(derived.sourceBibleId) ||
+        typeof derived.versionId !== "string" ||
+        !UUID.test(derived.versionId) ||
+        typeof derived.digest !== "string" ||
+        !SHA.test(derived.digest) ||
+        typeof derived.changeNote !== "string" ||
+        derived.changeNote.trim().length < 1 ||
+        derived.changeNote.length > 200
+      )
+        throw new Error(
+          `${field}.derivedFrom 须包含 sourceBibleId、versionId、SHA-256 digest 与 1..200 字改动说明`,
+        );
+    }
     const palette = version.palette;
     if (
       !record(palette) ||
@@ -128,6 +146,58 @@ export async function styleVersionDigest(
   return Array.from(new Uint8Array(digest), (b) =>
     b.toString(16).padStart(2, "0"),
   ).join("");
+}
+
+// W2 派生风格：在既有 Bible 上追加一个不可变新版本，显式记录来源版本与
+// 改动说明。旧版本原封不动，引用旧版本的项目不受派生影响（重开/重渲照常）。
+export async function deriveStyleBibleVersion(
+  bible: StyleBible,
+  options: {
+    fromVersionId: string;
+    palette?: StyleBibleVersion["palette"];
+    name?: string;
+    changeNote: string;
+    newVersionId?: string;
+    at?: string;
+  },
+): Promise<StyleBible> {
+  validateStyleBible(bible);
+  if (
+    typeof options.changeNote !== "string" ||
+    options.changeNote.trim().length < 1 ||
+    options.changeNote.length > 200
+  )
+    throw new Error("派生改动说明须为 1..200 字符");
+  const source = bible.versions.find(
+    (entry) => entry.versionId === options.fromVersionId,
+  );
+  if (!source) throw new Error("派生来源版本不存在");
+  const versionId = options.newVersionId ?? crypto.randomUUID();
+  const next: StyleBible = {
+    ...bible,
+    currentVersionId: versionId,
+    versions: [
+      ...bible.versions,
+      {
+        versionId,
+        createdAt: options.at ?? new Date().toISOString(),
+        name: options.name ?? `派生自 ${source.name}`,
+        palette: options.palette
+          ? { ...options.palette }
+          : { ...source.palette },
+        fontFamily: "NotoSansSC",
+        lightingPreset: "orbit3d-fixed-soft-studio",
+        derivedFrom: {
+          sourceBibleId: bible.id,
+          versionId: source.versionId,
+          digest: await styleVersionDigest(source),
+          changeNote: options.changeNote,
+        },
+      },
+    ],
+  };
+  assertStyleBibleEvolution(bible, next);
+  return validateStyleBible(next);
 }
 
 export async function resolveStyleBibleRef(

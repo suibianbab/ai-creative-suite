@@ -104,6 +104,15 @@ export function assertAppendOnlyEvolution(
     next.deliveries,
     (slot) => `deliveries[${slot}]`,
   );
+  // W2 风格代表帧确认：与 renderRecords 同一只追加纪律——已保存的签收
+  // 记录不得删除或改写（有效性由派生比较判定，不需要也不允许原地修订）。
+  if (previous.styleFrameConfirmations !== undefined) {
+    requirePrefix(
+      previous.styleFrameConfirmations,
+      next.styleFrameConfirmations ?? [],
+      (slot) => `styleFrameConfirmations[${slot}]`,
+    );
+  }
   // brief.applications（分镜应用快照）：逐次审计记录，与 shots/events 同一
   // 只追加纪律——已保存条目不得删除或改写；此前无记录（单镜头/旧项目路径）
   // 则不受约束。

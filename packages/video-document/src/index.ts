@@ -5,6 +5,7 @@ export * from "./evolve.js";
 export * from "./operations.js";
 export * from "./quantize.js";
 export * from "./style-bible.js";
+export * from "./style-confirmation.js";
 export * from "./subtitles.js";
 export * from "./transitions.js";
 export * from "./types.js";

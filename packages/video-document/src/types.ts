@@ -151,12 +151,40 @@ export type VideoProject = {
   transitions?: ShotTransition[];
   // —— P2.5 媒体混编：素材元数据账本（二进制不入文档，只追加）——
   mediaAssets?: MediaAsset[];
+  // —— W2 风格代表帧确认账本（只追加）；有效性由派生比较得出，不落可变状态 ——
+  styleFrameConfirmations?: StyleFrameConfirmation[];
 };
 
 export type StyleBibleRef = {
   bibleId: string;
   versionId: string;
   digest: string; // canonicalJson(StyleBibleVersion) 的 SHA-256
+};
+
+// —— W2 风格代表帧确认：人工对「真实渲染器出的横竖关键帧」的显式签收。
+// 只追加账本（与 renderRecords 同纪律）；有效性不落库，由
+// style-confirmation.ts 的 styleConfirmationStatus 对照当前工作集推导——
+// 内容或风格任一变更后旧确认自然失效，保存/刷新/导入后无需迁移状态。——
+export type StyleFrameKeyframeEvidence = {
+  aspect: AspectTarget;
+  digest: string; // PNG 字节 SHA-256（64 位小写十六进制）
+  bytes: number; // 正整数
+  outputRef: string; // 服务端证据路径（如 style-frame/<id>/landscape.png），不含 ..
+};
+
+export type StyleFrameConfirmation = {
+  confirmationId: string; // uuid
+  shotId: string; // 代表帧取自的镜头
+  versionId: string; // 确认时该镜头的工作内容版本（不可变）
+  contentDigest: string; // canonicalJson(ContentVersion) 的 SHA-256
+  frameMs: number; // 用户选定的时间点（整数毫秒，0..durationMs-1）
+  frameIndex: number; // 量化帧号（EXPORT_FPS，与出片同一帧数学）
+  styleBibleRef: StyleBibleRef; // 确认时的风格版本快照
+  workingSetDigest: string; // 全项目工作集快照摘要（镜头工作版本+转场+风格引用）
+  keyframes: StyleFrameKeyframeEvidence[]; // 恰好横竖各一条
+  note?: string; // 1..200 字符
+  confirmedAt: string; // ISO 8601
+  actor: "human"; // 人工显式确认（与 approved 事件同口径）
 };
 
 export type StyleBibleVersion = {
@@ -174,6 +202,16 @@ export type StyleBibleVersion = {
   fontFamily: "NotoSansSC";
   // 当前 orbit3d@1 灯光是固定 rig；不宣称任意场景可调光。
   lightingPreset: "orbit3d-fixed-soft-studio";
+  // —— W2 派生风格：新版本从哪个版本派生、改了什么。可选：初始版本无来源。
+  // 旧 Bible 无此字段照常读取；一旦存在须形状完整并与来源摘要对账。——
+  derivedFrom?: StyleBibleDerivation;
+};
+
+export type StyleBibleDerivation = {
+  sourceBibleId: string; // 来源 Style Bible（同本派生时即本 Bible id）
+  versionId: string; // 来源版本
+  digest: string; // 来源版本 canonicalJson SHA-256
+  changeNote: string; // 1..200 字符，明确本次改动
 };
 
 export type StyleBible = {

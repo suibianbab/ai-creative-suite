@@ -5,6 +5,7 @@ import { reviseWorkingVersion } from "./operations.js";
 import {
   applyStyleBible,
   assertStyleBibleEvolution,
+  deriveStyleBibleVersion,
   resolveStyleBibleRef,
   styleSceneSpec,
   styleVersionDigest,
@@ -113,6 +114,64 @@ test("Style Bible 独立版本校验、摘要与旧版本只追加", async () =>
   next.versions[0]!.palette.background = "#000000";
   assert.throws(() => assertStyleBibleEvolution(bible, next), /不可改写/);
   assert.match(await styleVersionDigest(bible.versions[0]!), /^[0-9a-f]{64}$/);
+});
+
+test("派生风格产生带来源与改动说明的不可变新版本，旧引用仍可解析", async () => {
+  const derived = await deriveStyleBibleVersion(bible, {
+    fromVersionId: ID2,
+    palette: { ...bible.versions[0]!.palette, background: "#000000" },
+    changeNote: "加深背景，主体色不变",
+    at: AT,
+  });
+  assertStyleBibleEvolution(bible, derived);
+  validateStyleBible(derived);
+  assert.equal(derived.currentVersionId, derived.versions[1]!.versionId);
+  const source = derived.versions[0]!;
+  const child = derived.versions[1]!;
+  assert.equal(child.derivedFrom?.sourceBibleId, bible.id);
+  assert.equal(child.derivedFrom?.versionId, ID2);
+  assert.equal(child.derivedFrom?.digest, await styleVersionDigest(source));
+  assert.equal(child.derivedFrom?.changeNote, "加深背景，主体色不变");
+  assert.equal(child.palette.background, "#000000");
+  // 旧项目引用旧版本：演化后的 Bible 仍能解析旧引用（重开/重渲不受派生影响）
+  await resolveStyleBibleRef(
+    { bibleId: bible.id, versionId: ID2, digest: await styleVersionDigest(source) },
+    derived,
+  );
+  // 来源版本不存在 / 改动说明为空：拒绝
+  await assert.rejects(
+    deriveStyleBibleVersion(bible, {
+      fromVersionId: ID4,
+      changeNote: "x",
+      at: AT,
+    }),
+    /不存在/,
+  );
+  await assert.rejects(
+    deriveStyleBibleVersion(bible, {
+      fromVersionId: ID2,
+      changeNote: " ",
+      at: AT,
+    }),
+    /改动说明/,
+  );
+});
+
+test("validateStyleBible 校验 derivedFrom 形状", () => {
+  const base = structuredClone(bible);
+  base.versions[0]!.derivedFrom = {
+    sourceBibleId: ID,
+    versionId: ID2,
+    digest: "0".repeat(64),
+    changeNote: "初始导入",
+  };
+  validateStyleBible(base);
+  const bad = structuredClone(base);
+  bad.versions[0]!.derivedFrom = { ...base.versions[0]!.derivedFrom!, digest: "xyz" };
+  assert.throws(() => validateStyleBible(bad), /derivedFrom/);
+  const empty = structuredClone(base);
+  empty.versions[0]!.derivedFrom = { ...base.versions[0]!.derivedFrom!, changeNote: "" };
+  assert.throws(() => validateStyleBible(empty), /derivedFrom/);
 });
 
 test("应用风格仅追加镜头内容版本，项目只留引用；重开与单镜头修订维持风格", async () => {
