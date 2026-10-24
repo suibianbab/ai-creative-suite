@@ -40,8 +40,10 @@
 
 ## 四态报告
 
-1. **代码实现**：完成（上述两个文件 + 各自测试；`registryVersion` 仍为 8，无新组件）。
-2. **自动回归**：通过。`@acs/video-scene` 184/184、`@acs/video-document` 158/158、`@acs/web` 281/281、`pnpm -r typecheck` 0 错、`pnpm exec biome check .` 干净、`node scripts/qa/run-regression.mjs validate` 通过（101 automated / 53 manual）。`qa/registry.json` 与 `CURRENT_STATE.md` 按分工规则留给集成时一次更新（暂定 `VID-048`）。
+1. **代码实现**：完成（上述两个文件 + 各自测试；`registryVersion` 仍为 8，无新组件）。**独立终审（新上下文评审）后追加一轮修复**，两项 Important 均以 RED→GREEN 测试修复并已推送：
+   - image 竖版图示组位移被 cycle 重构挤动（260→300，旧 spec 竖版偏移 40 设计单位）→ 恢复旧契约，新增测试钉住；
+   - cycle n=6 竖版弧跨度为负（trim 0.55 > π/6，环断裂）→ trim 钳制到半间距内 + n≥5 盒宽收窄，新增 3..6 阶段 × 双画幅的正角跨度与端点不落盒测试。
+2. **自动回归**：通过。终审修复后复跑：`@acs/video-scene` 186/186（含 2 个终审整改测试）、`@acs/video-document` 158/158、`@acs/web` 281/281、`pnpm -r typecheck` 0 错、`pnpm exec biome check .` 干净、`node scripts/qa/run-regression.mjs validate` 通过（101 automated / 53 manual）。`qa/registry.json` 与 `CURRENT_STATE.md` 按分工规则留给集成时一次更新（暂定 `VID-048`）。
 3. **真实浏览器与真实出片**：通过。
    - 浏览器闭环（自写脚本 `browser/` 下留证）：`BASE_URL=http://127.0.0.1:3215 node artifacts/video-studio-stem-visual-2026-10-24/e2e-acceptance.mjs` → PASS：样片创建 7 镜 → 改文案（镜 1 标题）+ 改图示（镜 2 cycle 标题、镜 3 线描路径）→ 保存 → 刷新重开 → 镜 3 回滚到原始版本（编辑历史保留在工作版本切换里）；控制台/页面错误 0。截图 `browser/01-created.png`…`04-rolled-back.png`，项目 JSON `browser/02-edited…04-rolled-back.video-project.json`。
    - 标准链路：`BASE_URL=http://127.0.0.1:3215 SAMPLE_ID=stem node scripts/video/e2e-gallery.mjs` → failures 0（含双画幅预览、无声双 MP4 与台账回写）。
@@ -58,12 +60,13 @@
 
 ## 不满意之处 / 遗留
 
-1. **cycle 阶段与 diagramLabels 无专属编辑控件**：编辑器「图示类型」对 cycle 显示成「图片」入口（不触碰不破坏数据，标题/路径/流程步骤仍可编辑）。根因是编辑器模板族文件不在本轮所有权内；建议集成轮补一个 cycle 分支（给 flow-templates 或 composition 面板）。
-2. **镜 2 cycle 的 caption 在竖版离标题较近、在横版偏小**（22 设计字号）；手机端可读性靠竖版更大的盒子弥补，未做真机检查。
-3. **线描单色**：太阳/海面/水蒸气共用 Style Bible object 色，缺少第二强调色通道（需组件级多色支持，超出本轮）。
-4. **未做人耳听审与真机（手机）播放检查**；沿用结构化核对的证据边界。
-5. 镜 1/7 保持纯文字开场收尾（上轮已审过，本轮未动）；若要拉满质量可考虑给开场加视觉元素。
-6. `artifacts/` 目录不入库（沿用既往交付惯例），证据只在本机绝对路径下。
+1. **cycle 阶段与 diagramLabels 无专属编辑控件**：编辑器「图示类型」对 cycle 显示成「图片」入口（不触碰不破坏数据，标题/路径/流程步骤仍可编辑；上传图片会合法地把图示替换为 image）。根因是编辑器模板族文件不在本轮所有权内；建议集成轮补一个 cycle 分支（给 flow-templates 或 composition 面板）。（终审 Minor，挂账）
+2. **diagramLabels 引线起点固定 24 设计单位**：对 ≥3 字的长标签，水平引线可能穿过文字（样片 2–3 字已调开）；改从文字包围盒边缘出线需配新测试，挂账。
+3. **镜 2 cycle 的 caption 在竖版离标题较近、在横版偏小**（22 设计字号）；手机端可读性靠竖版更大的盒子弥补，未做真机检查。
+4. **线描单色**：太阳/海面/水蒸气共用 Style Bible object 色，缺少第二强调色通道（需组件级多色支持，超出本轮）。
+5. **未做人耳听审与真机（手机）播放检查**；沿用结构化核对的证据边界。
+6. 镜 1/7 保持纯文字开场收尾（上轮已审过，本轮未动）；若要拉满质量可考虑给开场加视觉元素。
+7. `artifacts/` 下仅 .md/.json 入库（gitignore 放行口径），MP4/WAV/PNG 等二进制证据只在本机绝对路径下。
 
 ## 复跑（在 worktree `D:\codex\animate\.claude\worktrees\stem-visual`）
 
