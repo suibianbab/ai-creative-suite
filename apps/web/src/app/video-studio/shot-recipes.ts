@@ -10,6 +10,7 @@ import {
   defaultRegistry,
   type SceneSpec,
   type SvgNode,
+  validateSceneSpec,
 } from "@acs/video-scene";
 
 export type RecipeInputs = {
@@ -52,12 +53,14 @@ const baseSpec = (
   componentId: string,
   durationMs: number,
   params: Record<string, unknown>,
+  seed: number,
 ): SceneSpec => ({
   specVersion: 1,
   componentId,
   componentVersion: 1,
   durationMs,
-  seed: Math.floor(Math.random() * 9000) + 1000,
+  // 预览/出片同源：配方用固定 seed，同一输入永远同一画面。
+  seed,
   background: "#ffffff",
   params,
 });
@@ -140,14 +143,19 @@ export const SHOT_RECIPES: readonly ShotRecipe[] = [
       if (title.length > 40 || subtitle.length > 40)
         return { error: "标题与副标题各不超过 40 字" };
       return {
-        spec: baseSpec("text-animation", durationMs, {
-          title,
-          subtitle,
-          titleColor: "#1b2c29",
-          subtitleColor: "#5d7469",
-          entrance: "fade-up",
-          enterMs: 450,
-        }),
+        spec: baseSpec(
+          "text-animation",
+          durationMs,
+          {
+            title,
+            subtitle,
+            titleColor: "#1b2c29",
+            subtitleColor: "#5d7469",
+            entrance: "fade-up",
+            enterMs: 450,
+          },
+          4601,
+        ),
       };
     },
   },
@@ -191,22 +199,29 @@ export const SHOT_RECIPES: readonly ShotRecipe[] = [
         return { error: "数值数量须与分类一一对应" };
       if (values.some((value) => !Number.isFinite(value) || value < 0))
         return { error: "数值须为非负数字" };
+      if (values.some((value) => value > 1e12))
+        return { error: "数值须不超过 1e12（组件上限）" };
       if (labels.some((label) => label.length > 6))
         return { error: "分类名不超过 6 字（图表标签截断口径）" };
       const title = inputs.title?.trim() || "数据对比";
       if (title.length > 20) return { error: "图表标题不超过 20 字" };
       return {
-        spec: baseSpec("bar-chart", durationMs, {
-          title,
-          bars: labels.map((label, index) => ({
-            label,
-            value: values[index]!,
-          })),
-          barColor: "#2f6f4f",
-          accentColor: "#d9822b",
-          textColor: "#1b2c29",
-          enterMs: 1400,
-        }),
+        spec: baseSpec(
+          "bar-chart",
+          durationMs,
+          {
+            title,
+            bars: labels.map((label, index) => ({
+              label,
+              value: values[index]!,
+            })),
+            barColor: "#2f6f4f",
+            accentColor: "#d9822b",
+            textColor: "#1b2c29",
+            enterMs: 1400,
+          },
+          4602,
+        ),
       };
     },
   },
@@ -251,7 +266,14 @@ export function applyShotRecipe(
 ): { document: VideoProject; notice: string } | { error: string } {
   const recipe = SHOT_RECIPES.find((item) => item.id === recipeId);
   if (!recipe) return { error: `未知配方：${recipeId}` };
-  const durationMs = Math.min(
+  // 风格契约同口径：外部媒体画面无法由 Style Bible 保证——链接风格的
+  // 项目明确拒绝媒体配方，而不是等保存/出片才失败。
+  if (recipe.componentId === "media-clip" && document.styleBibleRef)
+    return {
+      error:
+        "项目已链接 Style Bible，不支持媒体镜头配方（外部画面无法由风格规范保证）",
+    };
+  let durationMs = Math.min(
     recipe.durationMs.max,
     Math.max(
       recipe.durationMs.min,
@@ -266,11 +288,14 @@ export function applyShotRecipe(
     const asset = mediaAssets.find((item) => item.assetId === inputs.assetId);
     if (!asset) return { error: "请先选择项目内已导入的媒体素材" };
     usedAsset = asset;
+    // 媒体镜头契约：durationMs 必须等于 outMs−inMs。素材比配方时长短时，
+    // 镜头时长取片段长度，而不是留下保存必炸的半吊子镜头。
+    durationMs = Math.min(durationMs, asset.original.durationMs);
     sceneSource = {
       type: "media-clip",
       mediaAssetId: asset.assetId,
       inMs: 0,
-      outMs: Math.min(durationMs, asset.original.durationMs),
+      outMs: durationMs,
       fit: "contain",
       focalX: 0.5,
       audio: "mute",
@@ -278,13 +303,19 @@ export function applyShotRecipe(
   } else {
     const built = recipe.build(inputs);
     if (!("spec" in built)) return { error: built.error };
-    sceneSource = {
-      type: "spec",
-      spec:
-        built.spec.durationMs === durationMs
-          ? built.spec
-          : { ...built.spec, durationMs },
-    };
+    const spec =
+      built.spec.durationMs === durationMs
+        ? built.spec
+        : { ...built.spec, durationMs };
+    // 编译产物必须过组件校验（含用户输入分支），坏 spec 不进文档。
+    try {
+      validateSceneSpec(spec, defaultRegistry);
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : "配方参数无效",
+      };
+    }
+    sceneSource = { type: "spec", spec };
   }
   const narrationText =
     inputs.narrationText?.trim() ||
@@ -292,7 +323,9 @@ export function applyShotRecipe(
     recipe.purpose;
   const shot = {
     shotId: crypto.randomUUID(),
-    order: document.shots.length,
+    // 导入件允许 order 跳号（校验只要求严格升序）——追加位取 max+1。
+    order:
+      document.shots.reduce((max, item) => Math.max(max, item.order), -1) + 1,
     locked: false,
     workingVersionId: versionId,
     contentVersions: [
@@ -320,10 +353,14 @@ export function applyShotRecipe(
   };
   const shots = [...document.shots, shot];
   const isFirst = document.shots.length === 0;
-  const totalMs = shots.reduce(
-    (ms, item) => ms + item.contentVersions[0]!.durationMs,
-    0,
-  );
+  // 对账口径与 apply-plan 一致：按工作版本时长累计（film*After 可与
+  // shots 的 working 版本总时长对账，见 BriefApplication 契约）。
+  const totalMs = shots.reduce((ms, item) => {
+    const working = item.contentVersions.find(
+      (version) => version.versionId === item.workingVersionId,
+    );
+    return ms + (working ?? item.contentVersions[0]!).durationMs;
+  }, 0);
   return {
     document: {
       ...document,

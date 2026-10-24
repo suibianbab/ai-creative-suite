@@ -224,3 +224,113 @@ test("追加不改动既有镜头；商品配方校验资产并构造受控媒�
   }
   assert.deepEqual(media.document.mediaAssets, [exampleAsset]);
 });
+
+test("终审修复：短素材时长契约（durationMs=outMs−inMs）、稀疏 order、working 版本对账、bible 项目拒媒体配方", () => {
+  // F1：2.5s 素材 + 默认 3000ms → 镜头时长必须等于片段长度且可保存。
+  const shortAsset: MediaAsset = {
+    ...exampleAsset,
+    assetId: "22222222-3333-4333-8444-555555555555",
+    original: { ...exampleAsset.original, durationMs: 2500 },
+  };
+  const short = applyShotRecipe(
+    emptyProject(),
+    "recipe-product-clip",
+    { assetId: shortAsset.assetId },
+    [shortAsset],
+  );
+  assert.ok("document" in short);
+  if (!("document" in short)) return;
+  validateVideoProject(short.document);
+  const version = short.document.shots[0]!.contentVersions[0]!;
+  assert.equal(version.durationMs, 2500);
+
+  // F7：导入件允许稀疏 order（0,5,9）→ 追加 order 须为 max+1。
+  const seeded = applyShotRecipe(emptyProject(), "recipe-text-point", {});
+  assert.ok("document" in seeded);
+  if (!("document" in seeded)) return;
+  const template = seeded.document.shots[0]!;
+  const sparse = emptyProject();
+  sparse.shots = [0, 5, 9].map((order) => {
+    const cloneVersionId = crypto.randomUUID();
+    return {
+      ...template,
+      shotId: crypto.randomUUID(),
+      order,
+      workingVersionId: cloneVersionId,
+      contentVersions: [
+        { ...template.contentVersions[0]!, versionId: cloneVersionId },
+      ],
+      events: template.events.map((event) => ({
+        ...event,
+        versionId: cloneVersionId,
+      })),
+    };
+  });
+  const appendedSparse = applyShotRecipe(sparse, "recipe-data-bar", {
+    labels: ["A", "B"],
+    values: [1, 2],
+  });
+  assert.ok("document" in appendedSparse);
+  if (!("document" in appendedSparse)) return;
+  validateVideoProject(appendedSparse.document);
+  assert.equal(appendedSparse.document.shots.at(-1)!.order, 10);
+
+  // F4：totalMs 按 working 版本计——镜头修订变长后，filmTotalMsAfter 对账。
+  const evolvedBase = applyShotRecipe(emptyProject(), "recipe-text-point", {});
+  assert.ok("document" in evolvedBase);
+  if (!("document" in evolvedBase)) return;
+  const evolved = evolvedBase.document;
+  const shot = evolved.shots[0]!;
+  const revisedVersionId = crypto.randomUUID();
+  shot.contentVersions.push({
+    ...shot.contentVersions[0]!,
+    versionId: revisedVersionId,
+    durationMs: 4000,
+  });
+  shot.workingVersionId = revisedVersionId;
+  const afterRevision = applyShotRecipe(evolved, "recipe-text-point", {});
+  assert.ok("document" in afterRevision);
+  if (!("document" in afterRevision)) return;
+  assert.equal(
+    afterRevision.document.brief.applications!.at(-1)!.filmTotalMsAfter,
+    7000,
+  );
+
+  // F3：链接 Style Bible 的项目拒绝媒体配方（既有风格契约同口径）。
+  const bibleProject = {
+    ...emptyProject(),
+    styleBibleRef: {
+      bibleId: "33333333-3333-4333-8333-333333333333",
+      versionId: "44444444-4444-4444-8444-444444444444",
+      digest: "b".repeat(64),
+    },
+  };
+  const rejected = applyShotRecipe(
+    bibleProject,
+    "recipe-product-clip",
+    { assetId: exampleAsset.assetId },
+    [exampleAsset],
+  );
+  assert.ok("error" in rejected && /Style Bible/.test(rejected.error));
+});
+
+test("终审修复：数值上限与编译产物过组件校验", () => {
+  // F2a：超过组件上限（1e12）的数值在 build 层拒绝。
+  const recipe = SHOT_RECIPES.find((r) => r.id === "recipe-data-bar")!;
+  const tooBig = recipe.build({
+    labels: ["A", "B"],
+    values: [Number.MAX_SAFE_INTEGER, 1],
+  });
+  assert.ok("error" in tooBig && /数值/.test(tooBig.error));
+  // F2b：applyShotRecipe 对编译产物跑 validateSceneSpec——坏 spec 进不了文档。
+  const hostile = applyShotRecipe(emptyProject(), "recipe-data-bar", {
+    labels: ["A", "B"],
+    values: [1e13, 1],
+  });
+  assert.ok("error" in hostile);
+});
+
+test("终审修复：预览确定性——同配方两次预览逐字节一致", () => {
+  const text = SHOT_RECIPES.find((r) => r.id === "recipe-text-point")!;
+  assert.equal(recipePreviewSvg(text), recipePreviewSvg(text));
+});

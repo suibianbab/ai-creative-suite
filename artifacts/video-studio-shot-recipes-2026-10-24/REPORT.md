@@ -14,7 +14,7 @@
 
 1. **代码实现**：完成。仅 `shot-recipes.ts(+test)`、`recipe-catalog.tsx`、`page.tsx`（侧栏插块）、`video-studio.css`、e2e 与 registry；未触碰 video-scene 组件、schema、render API、tts-*。
 2. **自动回归**：web 292/292（+10 用例：元数据/编译/预览转义/应用/资产校验）；video-scene 186/186、video-document 159/159；typecheck、Biome、qa validate 全绿；旧 STEM 样片 e2e 回归 exit 0。
-3. **真实浏览器与真实出片**：通过。浏览器：新建项目 → 三配方应用（商品条经内置样片视频上传取得资产）→ 改标题 → 保存 → 刷新重开（3 镜持久、编辑保留）→ 横竖预览 viewBox 断言；控制台零错误（`report.json`）。出片：导出项目双画幅 H.264（1280×720 / 720×1280），frameMap 3 镜；预览/导出一致性——目录预览与导出渲染在相同 previewFrame 经同一注册表渲染，可见文本集合一致（「开场提问（改）」「三十秒讲清楚」双侧断言）。
+3. **真实浏览器与真实出片**：通过。浏览器：新建项目 → 三配方应用（商品条经内置样片视频上传取得资产）→ 改标题 → 保存 → 刷新重开（3 镜持久、编辑保留）→ 横竖预览 viewBox 断言；控制台零错误（`report.json`）。出片：导出项目双画幅 H.264（1280×720 / 720×1280），frameMap 3 镜；预览/导出一致性为**字符串级**——导出 spec 在 previewFrame 经同一注册表重渲染，与目录预览的可见文本集合一致（「开场提问（改）」「三十秒讲清楚」双侧断言）；MP4 侧核 codec/尺寸，帧画面以抽帧 PNG 供人工（非像素比对）。
 4. **视觉质量**：抽帧级（`landscape/portrait-shot1-mid.png` + `editor-recipes.png` 编辑器整页截图）；文字镜头预览清晰；不宣称商业画质。配方为简洁示意版式，商用需按品牌调整。
 
 ## 已知限制 / 挂账

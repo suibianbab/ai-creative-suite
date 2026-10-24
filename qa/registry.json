@@ -10,7 +10,7 @@
       "requiresPorts": [3210],
       "checks": [
         "Create a project, apply all three recipes (text point, data bars, product clip with uploaded media), edit a title, save, reopen after reload, and assert both aspect previews",
-        "Dual-aspect H.264 renders from the exported project keep the three-shot frame map, and the exported text-shot render at the catalog preview frame carries the same visible texts",
+        "Dual-aspect H.264 renders from the exported project keep the three-shot frame map; the exported text-shot spec re-rendered at the catalog preview frame through the same registry carries the same visible texts (string parity, not an MP4 pixel comparison)",
         "Outputs stay in ignored .tools; the older gallery sample regression runs separately"
       ]
     },

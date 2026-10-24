@@ -11,7 +11,6 @@ import {
 } from "./shot-recipes";
 
 export type RecipeCatalogProps = {
-  enabled: boolean;
   busy: boolean;
   mediaAssets: MediaAsset[];
   onApply: (recipeId: string, inputs: RecipeInputs) => string | null; // 返回错误文案；null = 已应用
@@ -45,9 +44,16 @@ function RecipeInputsForm({
         .split(/[,，]/)
         .map((item) => item.trim())
         .filter(Boolean);
-      const parsedValues = values
-        .split(/[,，]/)
-        .map((item) => Number(item.trim()))
+      const rawValues = values.split(/[,，]/).map((item) => item.trim());
+      const badIndex = rawValues.findIndex(
+        (item) => item !== "" && !Number.isFinite(Number(item)),
+      );
+      if (badIndex >= 0) {
+        setError(`第 ${badIndex + 1} 个数值「${rawValues[badIndex]}」不是数字`);
+        return;
+      }
+      const parsedValues = rawValues
+        .map((item) => Number(item))
         .filter((item) => Number.isFinite(item));
       if (parsedLabels.length > 0) inputs.labels = parsedLabels;
       if (parsedValues.length > 0) inputs.values = parsedValues;
@@ -148,7 +154,6 @@ function RecipeInputsForm({
 }
 
 export function RecipeCatalog({
-  enabled,
   busy,
   mediaAssets,
   onApply,
@@ -160,6 +165,14 @@ export function RecipeCatalog({
     for (const recipe of SHOT_RECIPES)
       for (const topic of recipe.topics) set.add(topic);
     return ["全部", ...set];
+  }, []);
+  // 预览只依赖配方默认输入（固定 seed，见 shot-recipes baseSpec），
+  // 按配方缓存，避免编辑器任意击键触发整组重渲与 innerHTML 抖动。
+  const previewById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const recipe of SHOT_RECIPES)
+      map.set(recipe.id, recipePreviewSvg(recipe));
+    return map;
   }, []);
   const visible = SHOT_RECIPES.filter(
     (recipe) => filter === "全部" || recipe.topics.includes(filter),
@@ -186,11 +199,6 @@ export function RecipeCatalog({
           </button>
         ))}
       </div>
-      {enabled ? null : (
-        <p className="recipe-disabled-hint">
-          先新建或打开一个项目，再添加配方镜头。
-        </p>
-      )}
       <div className="recipe-grid">
         {visible.map((recipe) => (
           <article className="recipe-card" key={recipe.id}>
@@ -198,7 +206,7 @@ export function RecipeCatalog({
               className="recipe-preview"
               aria-label={`${recipe.purpose}预览`}
               dangerouslySetInnerHTML={{
-                __html: recipePreviewSvg(recipe),
+                __html: previewById.get(recipe.id) ?? "",
               }}
             />
             <div className="recipe-card-body">
@@ -218,14 +226,13 @@ export function RecipeCatalog({
               <button
                 type="button"
                 className="recipe-toggle"
-                disabled={!enabled}
                 onClick={() =>
                   setOpenId(openId === recipe.id ? null : recipe.id)
                 }
               >
                 {openId === recipe.id ? "收起输入" : "填写并添加"}
               </button>
-              {openId === recipe.id && enabled ? (
+              {openId === recipe.id ? (
                 <RecipeInputsForm
                   recipe={recipe}
                   mediaAssets={mediaAssets}

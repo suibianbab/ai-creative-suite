@@ -586,7 +586,6 @@ export default function VideoStudioPage() {
           {/* W1 镜头配方目录：与规划器并列的第二条加镜路径——按用途选卡、
               换字/换素材后追加为普通内容版本（内存追加，点「保存」落库）。 */}
           <RecipeCatalog
-            enabled
             busy={busy}
             mediaAssets={mediaAssets}
             onApply={(recipeId, inputs) => {
@@ -597,11 +596,23 @@ export default function VideoStudioPage() {
                 mediaAssets,
               );
               if ("error" in result) return result.error;
-              setEditor({
-                ...editor,
-                document: result.document,
-                message: result.notice,
-              });
+              // 与 onRevise 等路径同口径：链接 Style Bible 的项目里，
+              // spec 配方镜头追加后按风格重着色（媒体配方已在核心层拒绝）。
+              void applyLinkedStyle(result.document)
+                .then((styled) =>
+                  setEditor({
+                    ...editor,
+                    document: styled,
+                    message: result.notice,
+                  }),
+                )
+                .catch(() =>
+                  setEditor({
+                    ...editor,
+                    document: result.document,
+                    message: result.notice,
+                  }),
+                );
               return null;
             }}
           />
