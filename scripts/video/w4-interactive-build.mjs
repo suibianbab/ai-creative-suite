@@ -19,10 +19,7 @@ const esbuild = path.join(
   root,
   "node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild/bin/esbuild",
 );
-const entry = path.join(
-  root,
-  "scripts/video/w4-interactive/app.js",
-);
+const entry = path.join(root, "scripts/video/w4-interactive/app.js");
 const bundlePath = path.join(out, "app.bundle.js");
 execFileSync(
   process.execPath,

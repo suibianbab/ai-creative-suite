@@ -28,6 +28,19 @@
       ]
     },
     {
+      "id": "VID-053",
+      "tier": "smoke",
+      "title": "Neutral edit-list export: seamless authoritative timeline and atomic write",
+      "cwd": ".",
+      "argv": ["node", "--test", "scripts/video/export-edit-list.test.mjs"],
+      "requiresPorts": [],
+      "checks": [
+        "The versioned acs-edit-list v1 export yields a seamless authoritative timeline with narration text, audio track and word-timing references digested, and the media ledger",
+        "Deterministic re-export matches field-for-field; broken/empty/malformed lists are rejected by the validator",
+        "CLI export is atomic (no partial file on failure) and old projects remain readable"
+      ]
+    },
+    {
       "id": "VID-050",
       "tier": "browser-video",
       "title": "Shot recipe catalog apply-edit-save-reopen and dual-aspect render",

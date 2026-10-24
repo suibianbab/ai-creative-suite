@@ -162,10 +162,7 @@ try {
   // 导出风格规范（派生后版本表含全部历史版本，可解析派生前引用）。
   const [bibleDownload] = await Promise.all([
     page.waitForEvent("download"),
-    page
-      .getByRole("button", { name: "导出风格规范 JSON" })
-      .first()
-      .click(),
+    page.getByRole("button", { name: "导出风格规范 JSON" }).first().click(),
   ]);
   biblePath = path.join(out, "workbench.style-bible.json");
   await bibleDownload.saveAs(biblePath);

@@ -1,0 +1,163 @@
+{
+  "format": "acs-edit-list",
+  "formatVersion": 1,
+  "exportedAt": "2026-10-24T15:56:42.298Z",
+  "projectId": "85277ef6-bc0f-465f-8146-786b0f0643df",
+  "savedVersion": 5,
+  "authoritativeTimeline": "shots 按序拼接即为唯一权威终片时间线",
+  "fps": 24,
+  "aspects": [
+    "landscape",
+    "portrait"
+  ],
+  "timeline": [
+    {
+      "shotId": "d0882a65-499a-4c03-98c6-b5a0a8489c84",
+      "versionId": "5993c1c3-48b8-4525-ac74-8d69ebf1b198",
+      "startFrame": 0,
+      "endFrame": 72,
+      "durationMs": 3000,
+      "description": "问题开场：一滴水会走过哪里",
+      "component": "spec",
+      "narrationText": "一滴水，会走过哪里？",
+      "componentId": "text-animation",
+      "audioTrack": {
+        "file": "d0882a65-499a-4c03-98c6-b5a0a8489c84-5993c1c3-48b8-4525-ac74-8d69ebf1b198.wav",
+        "bytes": 128684,
+        "sha256": "944e4369c7fb086880f92d4e58355273bd4cfa6d2d306244777ed3978faedc73"
+      },
+      "wordTimings": {
+        "file": "d0882a65-499a-4c03-98c6-b5a0a8489c84-5993c1c3-48b8-4525-ac74-8d69ebf1b198.words.json",
+        "bytes": 1639,
+        "sha256": "ba4f350142aae60dd385f5bdb75fa31891e9392cf89e8b55e75770a8067e8ad3"
+      }
+    },
+    {
+      "shotId": "dc6ea591-5205-440f-8b3f-00a7b253a5c5",
+      "versionId": "c36dacab-7c3b-4cf8-ad00-a7415aabd247",
+      "startFrame": 72,
+      "endFrame": 168,
+      "durationMs": 4010,
+      "description": "总览：水在海洋、天空和陆地间循环（时长对齐 4010ms）",
+      "component": "spec",
+      "narrationText": "水在海洋、天空和陆地间不停移动。",
+      "componentId": "flow-steps",
+      "audioTrack": {
+        "file": "dc6ea591-5205-440f-8b3f-00a7b253a5c5-c36dacab-7c3b-4cf8-ad00-a7415aabd247.wav",
+        "bytes": 190124,
+        "sha256": "0ce5b200ce3eeae3d1f66e98580c3a84f11ec329ff645a18a6609aa178086c1d"
+      },
+      "wordTimings": {
+        "file": "dc6ea591-5205-440f-8b3f-00a7b253a5c5-c36dacab-7c3b-4cf8-ad00-a7415aabd247.words.json",
+        "bytes": 2751,
+        "sha256": "86cbaecfb8770f2014bc64627dacad9b8bfe5ce4dad91c2234e98dd8eed1ecba"
+      }
+    },
+    {
+      "shotId": "5a8bbea5-1b02-4673-b365-10d4ec7835eb",
+      "versionId": "f39398f4-8a8b-493a-87ac-0366deb33cd0",
+      "startFrame": 168,
+      "endFrame": 264,
+      "durationMs": 4000,
+      "description": "蒸发：阳光加热海面，液态水变为水蒸气",
+      "component": "spec",
+      "narrationText": "阳光加热海面，水变成水蒸气。",
+      "componentId": "sketch-note",
+      "audioTrack": {
+        "file": "5a8bbea5-1b02-4673-b365-10d4ec7835eb-f39398f4-8a8b-493a-87ac-0366deb33cd0.wav",
+        "bytes": 186284,
+        "sha256": "bb8f99ecfd9b74958d54a82b5055d3d34b789cccd4227becdcfe0025ad54dd45"
+      },
+      "wordTimings": {
+        "file": "5a8bbea5-1b02-4673-b365-10d4ec7835eb-f39398f4-8a8b-493a-87ac-0366deb33cd0.words.json",
+        "bytes": 2274,
+        "sha256": "6a99dd3ec8df3b6f279825f419e8bc229bae1829348d67625d3fb00a83cf68c6"
+      }
+    },
+    {
+      "shotId": "f70a26b9-1e28-44c1-9453-9f4e6c8af9d4",
+      "versionId": "fa60b98e-c336-4ae2-aea4-aafb8fdba0c6",
+      "startFrame": 264,
+      "endFrame": 360,
+      "durationMs": 4000,
+      "description": "凝结：上升的水蒸气遇冷形成云",
+      "component": "spec",
+      "narrationText": "水蒸气上升，遇冷凝结成云。",
+      "componentId": "sketch-note",
+      "audioTrack": {
+        "file": "f70a26b9-1e28-44c1-9453-9f4e6c8af9d4-fa60b98e-c336-4ae2-aea4-aafb8fdba0c6.wav",
+        "bytes": 155564,
+        "sha256": "dacf79c8a0c4dc0590ed2e25f158d3edd73b3bed3c8b15019f97e580cf6db1ee"
+      },
+      "wordTimings": {
+        "file": "f70a26b9-1e28-44c1-9453-9f4e6c8af9d4-fa60b98e-c336-4ae2-aea4-aafb8fdba0c6.words.json",
+        "bytes": 2272,
+        "sha256": "ce2be6df34a09a36e965df56e2f948119341aff6683efbb6fd9043d9ab4e1dde"
+      }
+    },
+    {
+      "shotId": "865b8644-e315-4052-ba21-b0dda7058f38",
+      "versionId": "17524e81-4543-42d4-9a98-8626f993564a",
+      "startFrame": 360,
+      "endFrame": 456,
+      "durationMs": 4000,
+      "description": "降水：云中水滴聚集并落下",
+      "component": "spec",
+      "narrationText": "云中水滴聚集，落下形成降水。",
+      "componentId": "line-drawing",
+      "audioTrack": {
+        "file": "865b8644-e315-4052-ba21-b0dda7058f38-17524e81-4543-42d4-9a98-8626f993564a.wav",
+        "bytes": 182444,
+        "sha256": "bd5311cfcc4c8cf95cce17b8c4ff734814fe65b41f4fcb584934740b4f5ffa1c"
+      },
+      "wordTimings": {
+        "file": "865b8644-e315-4052-ba21-b0dda7058f38-17524e81-4543-42d4-9a98-8626f993564a.words.json",
+        "bytes": 2433,
+        "sha256": "89404ee5173ad5766e66858060e834d6c6462d0211f8e56e888822e4d4c2e63a"
+      }
+    },
+    {
+      "shotId": "499ed8aa-da55-4a52-8a01-a4492b960caa",
+      "versionId": "a368009a-02f4-4257-93bc-a224410dbfec",
+      "startFrame": 456,
+      "endFrame": 552,
+      "durationMs": 4000,
+      "description": "汇流：雨水进入河流并回到海洋",
+      "component": "spec",
+      "narrationText": "雨水汇入河流，最终回到海洋。",
+      "componentId": "flow-diagram",
+      "audioTrack": {
+        "file": "499ed8aa-da55-4a52-8a01-a4492b960caa-a368009a-02f4-4257-93bc-a224410dbfec.wav",
+        "bytes": 174764,
+        "sha256": "00bd15ee3febcfdae94a981da3a0575f5c3587acb9f80a3bc2c46d3da7a5c24a"
+      },
+      "wordTimings": {
+        "file": "499ed8aa-da55-4a52-8a01-a4492b960caa-a368009a-02f4-4257-93bc-a224410dbfec.words.json",
+        "bytes": 2433,
+        "sha256": "4dba30ce44882e193d00e40ce52e94de7ed6269789abf0ab57f1edad21e6e5f3"
+      }
+    },
+    {
+      "shotId": "8146d208-0d68-488d-a145-45a9c672960d",
+      "versionId": "1033a4e0-7933-4827-8750-1612938ad976",
+      "startFrame": 552,
+      "endFrame": 624,
+      "durationMs": 3000,
+      "description": "结语：点明水循环并邀请继续探索",
+      "component": "spec",
+      "narrationText": "这，就是水循环。",
+      "componentId": "text-animation",
+      "audioTrack": {
+        "file": "8146d208-0d68-488d-a145-45a9c672960d-1033a4e0-7933-4827-8750-1612938ad976.wav",
+        "bytes": 109484,
+        "sha256": "ab041f61651798e66163a12ca9419ef2bfa1b88a5255256dca7f8bb91c299259"
+      },
+      "wordTimings": {
+        "file": "8146d208-0d68-488d-a145-45a9c672960d-1033a4e0-7933-4827-8750-1612938ad976.words.json",
+        "bytes": 1480,
+        "sha256": "0dd8562cdad818a06d9538874fea46da66b6f927f493f28c712d3f67ddf23938"
+      }
+    }
+  ],
+  "mediaAssets": []
+}

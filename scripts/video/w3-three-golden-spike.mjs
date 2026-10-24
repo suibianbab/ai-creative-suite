@@ -59,7 +59,13 @@ summary.bakeMs = timed("bake", () =>
 summary.renderMs = timed("render", () =>
   execFileSync(
     process.execPath,
-    ["scripts/video/render-scene.mjs", "--project", projectPath, "--out", path.join(out, "render")],
+    [
+      "scripts/video/render-scene.mjs",
+      "--project",
+      projectPath,
+      "--out",
+      path.join(out, "render"),
+    ],
     { cwd: root, stdio: "inherit" },
   ),
 );
