@@ -97,6 +97,7 @@ export default function VideoStudioPage() {
   const [renderDownloads, setRenderDownloads] = useState<{
     projectId: string;
     signature: string;
+    narrated: boolean;
     files: Array<{
       aspect: "landscape" | "portrait";
       url: string;
@@ -189,9 +190,16 @@ export default function VideoStudioPage() {
       ...project.shots.map((shot) => shot.workingVersionId),
     ].join(":");
 
-  const renderFromWorkbench = async (state: EditorState) => {
+  const renderFromWorkbench = async (state: EditorState, narrated = false) => {
     const project = state.document;
-    setEditor({ ...state, busy: true, message: "正在生成横竖版 MP4…" });
+    setRenderDownloads(null);
+    setEditor({
+      ...state,
+      busy: true,
+      message: narrated
+        ? "正在合成旁白、字幕和横竖版 MP4…"
+        : "正在生成横竖版 MP4…",
+    });
     let saved: VideoProject | null = null;
     try {
       saved = await saveVideoProject(project);
@@ -205,10 +213,11 @@ export default function VideoStudioPage() {
       const response = await fetch("/api/video/render", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ project: saved, styleBible }),
+        body: JSON.stringify({ project: saved, styleBible, narrated }),
       });
       const payload = (await response.json()) as {
         project?: VideoProject;
+        alignedProject?: VideoProject;
         downloads?: Array<{
           aspect: "landscape" | "portrait";
           url: string;
@@ -218,11 +227,14 @@ export default function VideoStudioPage() {
       };
       if (!response.ok || !payload.project || payload.downloads?.length !== 2)
         throw new Error(payload.error ?? "双画幅出片失败");
+      if (payload.alignedProject)
+        await importVideoProject(validateVideoProject(payload.alignedProject));
       const returned = validateVideoProject(payload.project);
       const imported = await importVideoProject(returned);
       setRenderDownloads({
         projectId: imported.id,
         signature: renderSignature(imported),
+        narrated,
         files: payload.downloads,
       });
       setEditor((current) =>
@@ -231,8 +243,7 @@ export default function VideoStudioPage() {
               ...current,
               document: imported,
               busy: false,
-              message:
-                "横竖版视频已生成，点击下方链接下载；渲染记录已保存到项目。",
+              message: `${narrated ? "有声" : "无声"}横竖版视频已生成，点击下方链接下载；渲染记录已保存到项目。`,
             }
           : current,
       );
@@ -1033,9 +1044,26 @@ export default function VideoStudioPage() {
             type="button"
             className="editor-render"
             disabled={busy || document.shots.length === 0}
-            onClick={() => void renderFromWorkbench(editor)}
+            onClick={() => void renderFromWorkbench(editor, false)}
           >
-            {busy ? "处理中…" : "生成横竖版 MP4"}
+            {busy ? "处理中…" : "生成无声横竖版 MP4"}
+          </button>
+          <button
+            type="button"
+            className="editor-render-narrated"
+            disabled={
+              busy ||
+              !document.shots.some((shot) =>
+                shot.contentVersions.some(
+                  (version) =>
+                    version.versionId === shot.workingVersionId &&
+                    Boolean(version.narrationText?.trim()),
+                ),
+              )
+            }
+            onClick={() => void renderFromWorkbench(editor, true)}
+          >
+            {busy ? "处理中…" : "生成有声横竖版 MP4（含字幕）"}
           </button>
           {renderDownloads?.projectId === document.id &&
           renderDownloads.signature === renderSignature(document) ? (
@@ -1046,7 +1074,8 @@ export default function VideoStudioPage() {
                   href={file.url}
                   download={`${file.aspect}.mp4`}
                 >
-                  下载{file.aspect === "landscape" ? "横版" : "竖版"} MP4
+                  下载{renderDownloads.narrated ? "有声" : "无声"}
+                  {file.aspect === "landscape" ? "横版" : "竖版"} MP4
                 </a>
               ))}
             </div>

@@ -181,7 +181,8 @@
   cursor: not-allowed;
 }
 
-.editor-render {
+.editor-render,
+.editor-render-narrated {
   margin-left: 10px;
   padding: 9px 14px;
   border: 1px solid #285b83;
@@ -193,7 +194,8 @@
   cursor: pointer;
 }
 
-.editor-render:disabled {
+.editor-render:disabled,
+.editor-render-narrated:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }

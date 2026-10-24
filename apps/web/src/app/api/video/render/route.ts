@@ -28,13 +28,28 @@ export async function POST(request: Request) {
     );
   let project;
   let bible = null;
+  let narrated = false;
   try {
     const body = await request.text();
     if (Buffer.byteLength(body) > MAX_BODY)
       return Response.json({ error: "项目超过 8 MiB 上限" }, { status: 413 });
     const payload = JSON.parse(body);
+    if (payload.narrated !== undefined && typeof payload.narrated !== "boolean")
+      throw new Error("有声出片选项必须为布尔值");
+    narrated = payload.narrated === true;
     project = validateVideoProject(payload.project);
     if (project.shots.length === 0) throw new Error("空项目不能出片");
+    if (
+      narrated &&
+      !project.shots.some((shot) =>
+        shot.contentVersions.some(
+          (version) =>
+            version.versionId === shot.workingVersionId &&
+            Boolean(version.narrationText?.trim()),
+        ),
+      )
+    )
+      throw new Error("当前镜头没有旁白文本，请先填写旁白再生成有声版");
     if (project.styleBibleRef) {
       bible = validateStyleBible(payload.styleBible);
       const version = await resolveStyleBibleRef(project.styleBibleRef, bible);
@@ -47,9 +62,14 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
+  if (narrated && !process.env.DASHSCOPE_API_KEY)
+    return Response.json(
+      { error: "未配置 DASHSCOPE_API_KEY，无法生成有声版" },
+      { status: 503 },
+    );
   active = true;
   try {
-    const result = await renderLocalProject(project, bible);
+    const result = await renderLocalProject(project, bible, { narrated });
     return Response.json(result, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     return Response.json(

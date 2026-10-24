@@ -15,6 +15,7 @@ import type { StyleBible, VideoProject } from "@acs/video-document";
 
 const MAX_JOBS = 30;
 const RENDER_TIMEOUT_MS = 600_000;
+const NARRATION_TIMEOUT_MS = 900_000;
 const UUID =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 
@@ -62,7 +63,11 @@ async function sha256File(file: string): Promise<string> {
   return hash.digest("hex");
 }
 
-function runRender(args: string[], root: string): Promise<string> {
+function runRender(
+  args: string[],
+  root: string,
+  timeoutMs = RENDER_TIMEOUT_MS,
+): Promise<string> {
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, args, {
       cwd: root,
@@ -75,7 +80,7 @@ function runRender(args: string[], root: string): Promise<string> {
     };
     child.stdout.on("data", append);
     child.stderr.on("data", append);
-    const timer = setTimeout(() => child.kill(), RENDER_TIMEOUT_MS);
+    const timer = setTimeout(() => child.kill(), timeoutMs);
     child.once("error", (error) => {
       clearTimeout(timer);
       reject(error);
@@ -92,8 +97,10 @@ function runRender(args: string[], root: string): Promise<string> {
 export async function renderLocalProject(
   project: VideoProject,
   bible: StyleBible | null,
+  options: { narrated?: boolean } = {},
 ): Promise<{
   project: VideoProject;
+  alignedProject?: VideoProject;
   downloads: Array<{
     aspect: "landscape" | "portrait";
     url: string;
@@ -110,6 +117,7 @@ export async function renderLocalProject(
   mkdirSync(dir);
   const projectFile = path.join(dir, "project.video-project.json");
   writeFileSync(projectFile, JSON.stringify(project, null, 2));
+  let alignedProject: VideoProject | undefined;
   const args = [
     path.join(root, "scripts/video/render-scene.mjs"),
     "--project",
@@ -122,7 +130,32 @@ export async function renderLocalProject(
     writeFileSync(bibleFile, JSON.stringify(bible, null, 2));
     args.push("--style-bible", bibleFile);
   }
-  await runRender(args, root);
+  try {
+    if (options.narrated) {
+      const narrationDir = path.join(dir, "narration");
+      await runRender(
+        [
+          path.join(root, "scripts/video/tts-narration.mjs"),
+          "--project",
+          projectFile,
+          "--out",
+          narrationDir,
+        ],
+        root,
+        NARRATION_TIMEOUT_MS,
+      );
+      const afterNarration = JSON.parse(
+        readFileSync(projectFile, "utf8"),
+      ) as VideoProject;
+      if (afterNarration.savedVersion !== project.savedVersion)
+        alignedProject = afterNarration;
+      args.push("--narration", narrationDir);
+    }
+    await runRender(args, root);
+  } catch (error) {
+    rmSync(dir, { recursive: true, force: true });
+    throw error;
+  }
   const rendered = JSON.parse(
     readFileSync(projectFile, "utf8"),
   ) as VideoProject;
@@ -140,5 +173,5 @@ export async function renderLocalProject(
       };
     }),
   );
-  return { project: rendered, downloads };
+  return { project: rendered, alignedProject, downloads };
 }
