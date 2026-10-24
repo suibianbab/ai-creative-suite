@@ -30,6 +30,7 @@ export function serializeSvgNode(node: SvgNode): string {
 
 export function countSvgNodes(node: SvgNode): number {
   return (
-    1 + (node.children ?? []).reduce((sum, child) => sum + countSvgNodes(child), 0)
+    1 +
+    (node.children ?? []).reduce((sum, child) => sum + countSvgNodes(child), 0)
   );
 }

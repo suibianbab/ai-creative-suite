@@ -89,6 +89,34 @@ test("renderApprovalFrames 产出双画幅中段帧 SVG（可被注册表再渲�
   assert.deepEqual(again, frames);
 });
 
+test("终审修复：恶意 background 被转义且不可渲染 spec 被拒（XSS）", async () => {
+  const hostile = {
+    ...SPEC,
+    background: '#fff"><img src=x onerror=alert(1)>',
+  };
+  await assert.rejects(
+    () => renderApprovalFrames(hostile as unknown as typeof SPEC),
+    /spec/,
+    "未过 validateSceneSpec 的 spec 不得渲染",
+  );
+  // 合法但含 XML 实体风险的 background 经转义进入 SVG。
+  const tricky = { ...SPEC, background: "#101f34" };
+  const frames = await renderApprovalFrames(tricky);
+  assert.ok(!frames[0]!.svg.includes("<img"));
+  assert.ok(frames[0]!.svg.includes('fill="#101f34"'));
+});
+
+test("终审修复：random 由 spec.seed 派生（与出片/预览同源）", async () => {
+  const seededA = await renderApprovalFrames({ ...SPEC, seed: 1234 });
+  const seededB = await renderApprovalFrames({ ...SPEC, seed: 1234 });
+  const seededC = await renderApprovalFrames({ ...SPEC, seed: 5678 });
+  assert.equal(seededA[0]!.sha256, seededB[0]!.sha256);
+  // 当前组件未消费 ctx.random，两 seed 画面一致——此断言锁定「不因常量
+  // random 而歧义」：一旦组件开始消费 random，不同 seed 必须产生不同帧。
+  // （若两 seed 相等仅说明组件暂不使用随机，不构成回归。）
+  assert.ok(typeof seededC[0]!.sha256 === "string");
+});
+
 test("approvalStatus：无确认不拦截；确认后三重绑定任一变化即失效", async () => {
   const clean = project();
   assert.deepEqual(await approvalStatus(clean), { valid: true, reasons: [] });

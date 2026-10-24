@@ -29,6 +29,9 @@ export function FrameApprovalPanel({
   );
   const [shotId, setShotId] = useState(specShots[0]?.shotId ?? "");
   const [frames, setFrames] = useState<ApprovalFrame[] | null>(null);
+  // F9：帧在生成时绑定（镜头内容版本 × 风格摘要）身份；身份漂移后确认
+  // 置灰，避免「旧画面 + 新版本号」的出生即失效确认。
+  const [frameIdentity, setFrameIdentity] = useState<string | null>(null);
   const [status, setStatus] = useState({
     valid: true,
     reasons: [] as string[],
@@ -36,9 +39,27 @@ export function FrameApprovalPanel({
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
 
+  const currentShot = project.shots.find((item) => item.shotId === shotId);
+  const currentIdentity = currentShot
+    ? `${currentShot.workingVersionId}:${project.styleBibleRef?.digest ?? ""}`
+    : null;
+  const framesFresh = frames !== null && frameIdentity === currentIdentity;
+
+  // F10：状态只在确认相关输入变化时重算（确认列表 + 工作版本 + 风格引用），
+  // 而非项目对象身份——标题输入等无关编辑不再触发 O(确认数) 全帧重渲。
+  const approvalKey = useMemo(
+    () =>
+      JSON.stringify([
+        project.styleFrameApprovals ?? [],
+        project.shots.map((shot) => shot.workingVersionId),
+        project.styleBibleRef ?? null,
+      ]),
+    [project.styleFrameApprovals, project.shots, project.styleBibleRef],
+  );
   useEffect(() => {
     void approvalStatus(project).then(setStatus);
-  }, [project]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- approvalKey 是重算触发器
+  }, [approvalKey]);
 
   const generate = async () => {
     const shot = specShots.find((item) => item.shotId === shotId);
@@ -55,6 +76,9 @@ export function FrameApprovalPanel({
       setFrames(
         await renderApprovalFrames(working.sceneSource.spec as SceneSpec),
       );
+      setFrameIdentity(
+        `${shot.workingVersionId}:${project.styleBibleRef?.digest ?? ""}`,
+      );
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "关键帧生成失败");
     } finally {
@@ -63,7 +87,7 @@ export function FrameApprovalPanel({
   };
 
   const confirm = () => {
-    if (!frames || !project.styleBibleRef) return;
+    if (!frames || !project.styleBibleRef || !framesFresh) return;
     const shot = project.shots.find((item) => item.shotId === shotId);
     if (!shot) return;
     const entry = {
@@ -154,14 +178,21 @@ export function FrameApprovalPanel({
         <p className="approval-status">尚未确认任何代表帧（未启用导出闸门）</p>
       )}
       {frames ? (
-        <button
-          type="button"
-          className="approval-confirm"
-          disabled={busy}
-          onClick={confirm}
-        >
-          确认代表帧
-        </button>
+        <>
+          <button
+            type="button"
+            className="approval-confirm"
+            disabled={busy || !framesFresh}
+            onClick={confirm}
+          >
+            确认代表帧
+          </button>
+          {!framesFresh ? (
+            <p className="approval-message">
+              镜头内容或风格已变化，画面已过期——请重新生成后再确认。
+            </p>
+          ) : null}
+        </>
       ) : null}
       {message ? <p className="approval-message">{message}</p> : null}
     </section>

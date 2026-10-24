@@ -927,15 +927,18 @@ export function validateVideoProject(value: unknown): VideoProject {
       !Array.isArray(parsed.styleFrameApprovals) ||
       parsed.styleFrameApprovals.length > parsed.shots.length
     ) {
-      fail("styleFrameApprovals must be an array of at most one entry per shot");
+      fail(
+        "styleFrameApprovals must be an array of at most one entry per shot",
+      );
     }
+    // 有确认必须有风格引用：否则导出闸门永久失效且确认面板无从渲染。
+    if (parsed.styleFrameApprovals.length > 0 && !parsed.styleBibleRef)
+      fail("styleFrameApprovals 须伴随 styleBibleRef（确认绑定风格版本）");
     const seenShots = new Set<string>();
     for (const [index, approval] of parsed.styleFrameApprovals.entries()) {
       const field = `styleFrameApprovals[${index}]`;
       if (!isRecord(approval)) fail(`${field} must be an object`);
-      const shot = parsed.shots.find(
-        (item) => item.shotId === approval.shotId,
-      );
+      const shot = parsed.shots.find((item) => item.shotId === approval.shotId);
       if (!shot) fail(`${field}.shotId 须指向项目内镜头`);
       if (seenShots.has(approval.shotId as string))
         fail(`${field}.shotId 与前条重复（每镜头至多一条确认）`);
@@ -962,12 +965,15 @@ export function validateVideoProject(value: unknown): VideoProject {
       if (
         !Array.isArray(approval.frames) ||
         approval.frames.length !== 2 ||
+        (approval.frames as unknown[]).some((frame) => !isRecord(frame)) ||
         new Set(
           (approval.frames as Array<{ aspect?: string }>).map(
             (frame) => frame.aspect,
           ),
         ).size !== 2 ||
-        (approval.frames as Array<{ aspect?: string; svgSha256?: string }>).some(
+        (
+          approval.frames as Array<{ aspect?: string; svgSha256?: string }>
+        ).some(
           (frame) =>
             (frame.aspect !== "landscape" && frame.aspect !== "portrait") ||
             typeof frame.svgSha256 !== "string" ||

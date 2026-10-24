@@ -100,13 +100,16 @@ export function validateStyleBible(value: unknown): StyleBible {
         versionId?: unknown;
         note?: unknown;
       };
+      if (!record(derived)) throw new Error(`${field}.derivedFrom 须为对象`);
       if (
         typeof derived.versionId !== "string" ||
         !UUID.test(derived.versionId) ||
         derived.versionId === version.versionId ||
         !value.versions.some((item) => item.versionId === derived.versionId)
       )
-        throw new Error(`${field}.derivedFrom.versionId 须指向本 Bible 其它版本`);
+        throw new Error(
+          `${field}.derivedFrom.versionId 须指向本 Bible 其它版本`,
+        );
       if (
         typeof derived.note !== "string" ||
         derived.note.trim().length < 1 ||

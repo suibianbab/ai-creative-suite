@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { assertAppendOnlyEvolution } from "./evolve.js";
 import type {
   MediaAsset,
   ThreeRenderEvidence,
   ThreeSceneSpec,
 } from "./types.js";
 import { type VideoProject, validateVideoProject } from "./validate.js";
-import { assertAppendOnlyEvolution } from "./evolve.js";
 
 const UUID = "0b0b13a2-6c63-4d3d-9a52-a70f6a3b1001";
 function baseProject(): VideoProject {
@@ -1243,38 +1243,45 @@ function approvalEntry(
   };
 }
 
+const withBibleRef = (p: VideoProject) => {
+  (p as { styleBibleRef?: unknown }).styleBibleRef = {
+    bibleId: "5f0a2b6c-1111-4222-8333-444455556666",
+    versionId: "6a1b3c7d-2222-4333-8444-555566667777",
+    digest: "c".repeat(64),
+  };
+  return p;
+};
+
 test("W2：合法 styleFrameApprovals 通过；shotId 重复/坏形状拒绝", () => {
-  const p = baseProject();
+  const p = withBibleRef(baseProject());
   (p as { styleFrameApprovals?: unknown[] }).styleFrameApprovals = [
     approvalEntry(p),
   ];
   assert.equal(validateVideoProject(p).styleFrameApprovals?.length, 1);
 
-  const dup = baseProject();
+  const dup = withBibleRef(baseProject());
   (dup as { styleFrameApprovals?: unknown[] }).styleFrameApprovals = [
     approvalEntry(dup),
     approvalEntry(dup),
   ];
   assert.throws(() => validateVideoProject(dup), /styleFrameApprovals/);
 
-  const badShot = baseProject();
+  const badShot = withBibleRef(baseProject());
   (badShot as { styleFrameApprovals?: unknown[] }).styleFrameApprovals = [
     approvalEntry(badShot, { shotId: "not-a-uuid" }),
   ];
-  assert.throws(() => validateVideoProject(badShot), /styleFrameApprovals/);
+  assert.throws(() => validateVideoProject(badShot), /镜头/);
 
-  const foreignVersion = baseProject();
-  (foreignVersion as { styleFrameApprovals?: unknown[] }).styleFrameApprovals = [
-    approvalEntry(foreignVersion, {
-      contentVersionId: "0b0b13a2-6c63-4d3d-9a52-a70f6a3b1999",
-    }),
-  ];
-  assert.throws(
-    () => validateVideoProject(foreignVersion),
-    /contentVersionId/,
-  );
+  const foreignVersion = withBibleRef(baseProject());
+  (foreignVersion as { styleFrameApprovals?: unknown[] }).styleFrameApprovals =
+    [
+      approvalEntry(foreignVersion, {
+        contentVersionId: "0b0b13a2-6c63-4d3d-9a52-a70f6a3b1999",
+      }),
+    ];
+  assert.throws(() => validateVideoProject(foreignVersion), /contentVersionId/);
 
-  const missingAspect = baseProject();
+  const missingAspect = withBibleRef(baseProject());
   (missingAspect as { styleFrameApprovals?: unknown[] }).styleFrameApprovals = [
     approvalEntry(missingAspect, {
       frames: [{ aspect: "landscape", svgSha256: "d".repeat(64) }],
@@ -1283,8 +1290,33 @@ test("W2：合法 styleFrameApprovals 通过；shotId 重复/坏形状拒绝", (
   assert.throws(() => validateVideoProject(missingAspect), /frames|aspect/);
 });
 
+test("W2：有确认记录必须有风格引用；frames 空元素按字段错误拒绝", () => {
+  // F3：导入「有 approvals 无 styleBibleRef」的项目在 schema 层拒绝，
+  // 杜绝「导出被永久阻断且面板不渲染」的死局。
+  const orphan = baseProject();
+  (orphan as { styleFrameApprovals?: unknown[] }).styleFrameApprovals = [
+    approvalEntry(orphan),
+  ];
+  delete (orphan as { styleBibleRef?: unknown }).styleBibleRef;
+  assert.throws(() => validateVideoProject(orphan), /styleBibleRef/);
+
+  // F5：frames 含 null 元素时给字段级错误而非 TypeError。
+  const nullFrame = withBibleRef(baseProject());
+  (nullFrame as { styleFrameApprovals?: unknown[] }).styleFrameApprovals = [
+    approvalEntry(nullFrame, {
+      frames: [null, { aspect: "portrait", svgSha256: "e".repeat(64) }],
+    }),
+  ];
+  assert.throws(() => validateVideoProject(nullFrame), /frames/);
+});
+
 test("W2：styleFrameApprovals 是当前态可改写（evolve 不按只追加约束）", () => {
   const history = baseProject();
+  (history as { styleBibleRef?: unknown }).styleBibleRef = {
+    bibleId: "5f0a2b6c-1111-4222-8333-444455556666",
+    versionId: "6a1b3c7d-2222-4333-8444-555566667777",
+    digest: "c".repeat(64),
+  };
   (history as { styleFrameApprovals?: unknown[] }).styleFrameApprovals = [
     approvalEntry(history),
   ];

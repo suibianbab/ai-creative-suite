@@ -57,7 +57,11 @@ async function buildRecipeSet(setName, recipeId, inputs, bible) {
   const project = emptyProject(`W2 对照 · ${setName}`);
   const applied = applyShotRecipe(project, recipeId, inputs);
   if (!("document" in applied)) throw new Error(applied.error);
-  const styled = await applyStyleBible(applied.document, bible, bible.currentVersionId);
+  const styled = await applyStyleBible(
+    applied.document,
+    bible,
+    bible.currentVersionId,
+  );
   validateVideoProject(styled);
   const projectPath = path.join(dir, "project.json");
   const biblePath = path.join(dir, `${setName}.style-bible.json`);

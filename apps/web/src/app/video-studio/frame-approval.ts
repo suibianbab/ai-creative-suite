@@ -4,9 +4,12 @@
 import type { StyleFrameApproval, VideoProject } from "@acs/video-document";
 import {
   defaultRegistry,
+  escapeSvg,
   type SceneSpec,
   type SvgNode,
+  seededRandom,
   serializeSvgNode,
+  validateSceneSpec,
 } from "@acs/video-scene";
 
 export type ApprovalFrame = {
@@ -34,7 +37,7 @@ function svgDocument(
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" ` +
     `viewBox="0 0 ${width} ${height}" font-family="NotoSansSC, sans-serif">` +
-    `<rect width="${width}" height="${height}" fill="${background}"/>` +
+    `<rect width="${width}" height="${height}" fill="${escapeSvg(background)}"/>` +
     serializeSvgNode(node) +
     `</svg>`
   );
@@ -43,8 +46,12 @@ function svgDocument(
 export async function renderApprovalFrames(
   spec: SceneSpec,
 ): Promise<ApprovalFrame[]> {
+  // 与预览/出片同口径：渲染前过组件校验，随机源由 spec.seed 派生
+  // （scene-spec-composition 与 scene-preview 均为 seededRandom(seed)）。
+  validateSceneSpec(spec, defaultRegistry);
   const durationFrames = Math.ceil((spec.durationMs / 1000) * 24);
   const frame = Math.floor(durationFrames / 2);
+  const random = seededRandom(spec.seed);
   const results: ApprovalFrame[] = [];
   for (const [aspect, width, height] of [
     ["landscape", 1280, 720],
@@ -58,7 +65,7 @@ export async function renderApprovalFrames(
         durationFrames,
         width,
         height,
-        random: () => 0.42,
+        random,
       });
     const svg = svgDocument(node, width, height, spec.background);
     results.push({ aspect, svg, sha256: await sha256Hex(svg) });

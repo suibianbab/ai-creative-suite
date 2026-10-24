@@ -8,14 +8,10 @@ const ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   "../..",
 );
-const {
-  MAX_SVG_EXPORT_NODES,
-  serializeSvgNode,
-  countSvgNodes,
-  escapeSvg,
-} = await import(
-  pathToFileURL(path.join(ROOT, "packages/video-scene/dist/index.js")).href
-);
+const { MAX_SVG_EXPORT_NODES, serializeSvgNode, countSvgNodes, escapeSvg } =
+  await import(
+    pathToFileURL(path.join(ROOT, "packages/video-scene/dist/index.js")).href
+  );
 
 export { MAX_SVG_EXPORT_NODES };
 export const serializeNode = serializeSvgNode;

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { countSvgNodes, serializeSvgNode } from "./svg-serialize.js";
 import type { SvgNode } from "./svg.js";
+import { countSvgNodes, serializeSvgNode } from "./svg-serialize.js";
 
 const fixture: SvgNode = {
   tag: "g",
@@ -17,7 +17,7 @@ test("serializeSvgNode 转义五种 XML 实体并区分文本/自闭合", () => 
   assert.ok(svg.includes('fill="a&amp;b&lt;c&gt;&quot;d&#39;e"'));
   assert.ok(svg.includes(">&lt;&amp;&gt;&quot;&#39;<"));
   assert.ok(svg.includes('<rect width="10" height="5"/>'));
-  assert.ok(!svg.includes("<rect width=\"10\" height=\"5\"></rect>"));
+  assert.ok(!svg.includes('<rect width="10" height="5"></rect>'));
 });
 
 test("countSvgNodes 统计整棵树", () => {
@@ -25,12 +25,11 @@ test("countSvgNodes 统计整棵树", () => {
   assert.equal(countSvgNodes({ tag: "rect", attrs: {} }), 1);
 });
 
-test("与 scripts/video/svg-serialize.mjs 语义逐字节一致（对拍）", async () => {
-  // @ts-expect-error 对拍目标是仓库内无类型 .mjs
-  const script = await import("../../../scripts/video/svg-serialize.mjs");
+test("serializeSvgNode 金串锁定（上提前 CLI 语义的字节级基准）", () => {
+  // 基准来自 scripts/video/svg-serialize.mjs 上提前的实际输出；CLI 侧
+  // 的 9 条自有测试继续覆盖 canvas/animated 路径，这里锁节点级语义。
   assert.equal(
     serializeSvgNode(fixture),
-    script.serializeNode(fixture),
-    "上提实现与既有 CLI 序列化器输出必须一致",
+    '<g fill="a&amp;b&lt;c&gt;&quot;d&#39;e"><rect width="10" height="5"/><text>&lt;&amp;&gt;&quot;&#39;</text></g>',
   );
 });
