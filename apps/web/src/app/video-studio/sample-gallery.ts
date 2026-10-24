@@ -13,7 +13,12 @@ import {
   validateSceneSpec,
 } from "@acs/video-scene";
 
-export type GallerySampleId = "stem" | "data" | "product";
+export type GallerySampleId =
+  | "stem"
+  | "data"
+  | "product"
+  | "renovation"
+  | "appliance";
 
 export const GALLERY_SAMPLES: ReadonlyArray<{
   id: GallerySampleId;
@@ -43,6 +48,20 @@ export const GALLERY_SAMPLES: ReadonlyArray<{
     detail: "5 镜头 · 约 12 秒 · 可上传自己的视频替换商品素材",
     poster: "/samples/p4-product.png",
   },
+  {
+    id: "renovation",
+    title: "两房变三房 · 家装方案",
+    summary: "四步流程＋户型示意＋关键提醒的家装讲解",
+    detail: "5 镜头 · 约 16 秒 · 可改标题、流程、标注与户型线稿",
+    poster: "/samples/p4-renovation.svg",
+  },
+  {
+    id: "appliance",
+    title: "换滤芯四步 · 设备操作",
+    summary: "操作流程＋安全提醒＋维护参数的设备指南",
+    detail: "5 镜头 · 约 16.5 秒 · 可改步骤、提醒与周期数字",
+    poster: "/samples/p4-appliance.svg",
+  },
 ];
 
 const STEM_PALETTE = {
@@ -58,6 +77,20 @@ const DATA_PALETTE = {
   secondary: "#afcde6",
   accent: "#ffbc60",
   object: "#4a9fdb",
+};
+const RENOVATION_PALETTE = {
+  background: "#241c14",
+  foreground: "#f5efe6",
+  secondary: "#e3cfae",
+  accent: "#d97a3d",
+  object: "#7d8b5a",
+};
+const APPLIANCE_PALETTE = {
+  background: "#141a22",
+  foreground: "#eef3f8",
+  secondary: "#c3d4e6",
+  accent: "#4aa3d9",
+  object: "#5b7fa6",
 };
 
 type SampleShot = {
@@ -304,6 +337,191 @@ function sampleShots(
         source: text("增长，清晰可见", "替换为你的真实数据", 2000, 4204),
       },
     ];
+  if (id === "renovation")
+    return [
+      {
+        durationMs: 3000,
+        description: "开场：点出改造目标",
+        narrationText: "两房能变三房吗？",
+        source: text("两房变三房", "一次讲清改造方案", 3000, 4401),
+      },
+      {
+        durationMs: 3500,
+        description: "总览：改造四步流程",
+        narrationText: "量房、设计、施工、验收，四步走完。",
+        source: spec("explainer-composition", 3500, 4402, {
+          title: "改造四步",
+          titleColor: "#f5efe6",
+          textColor: "#f5efe6",
+          boxColor: "#e3cfae",
+          arrowColor: "#d97a3d",
+          strokeColor: "#7d8b5a",
+          titleY: 145,
+          titleEnterMs: 0,
+          diagramOffsetX: 0,
+          diagramOffsetY: -75,
+          diagramEnterMs: 450,
+          diagram: {
+            kind: "flow",
+            steps: [
+              { label: "量房" },
+              { label: "设计" },
+              { label: "施工" },
+              { label: "验收" },
+            ],
+          },
+          annotations: [
+            {
+              text: "工期与预算可控",
+              x: 500,
+              y: 730,
+              portraitY: 1260,
+              enterMs: 2000,
+            },
+          ],
+        }),
+      },
+      {
+        durationMs: 3500,
+        description: "户型：示意墙体调整",
+        narrationText: "非承重墙移除，空间重新划分。",
+        source: spec("explainer-composition", 3500, 4403, {
+          title: "户型调整示意",
+          titleColor: "#f5efe6",
+          textColor: "#f5efe6",
+          boxColor: "#e3cfae",
+          arrowColor: "#d97a3d",
+          strokeColor: "#7d8b5a",
+          titleY: 145,
+          titleEnterMs: 0,
+          diagramOffsetX: 0,
+          diagramOffsetY: 20,
+          diagramEnterMs: 450,
+          diagram: {
+            kind: "drawing",
+            paths: [
+              "M 220 300 L 780 300 L 780 620 L 220 620 Z",
+              "M 500 300 L 500 620",
+            ],
+          },
+          annotations: [
+            {
+              text: "非承重墙可移除",
+              x: 500,
+              y: 740,
+              portraitY: 1240,
+              enterMs: 1800,
+            },
+          ],
+        }),
+      },
+      {
+        durationMs: 3000,
+        description: "提醒：两条关键原则",
+        narrationText: "承重墙不能动，水电走顶更好修。",
+        source: spec("sketch-note", 3000, 4404, {
+          title: "两个关键提醒",
+          items: [
+            { text: "承重墙不可拆", emphasis: "下划线" },
+            { text: "水电走顶易检修", emphasis: "圈" },
+          ],
+          inkColor: "#f5efe6",
+          accentColor: "#d97a3d",
+          writeMs: 900,
+          drawMs: 700,
+          staggerMs: 500,
+        }),
+      },
+      {
+        durationMs: 3000,
+        description: "收尾：邀请下一步",
+        narrationText: "从方案到入住，从一次量房开始。",
+        source: text("从方案到入住", "下一步：预约实地量房", 3000, 4405),
+      },
+    ];
+  if (id === "appliance")
+    return [
+      {
+        durationMs: 3500,
+        description: "开场：点明维护目标",
+        narrationText: "换滤芯，只需四步。",
+        source: text("换滤芯只需四步", "咖啡机维护指南", 3500, 4501),
+      },
+      {
+        durationMs: 4000,
+        description: "操作：维护四步流程",
+        narrationText: "断电、开盖、更换、复位，一步不乱。",
+        source: spec("explainer-composition", 4000, 4502, {
+          title: "维护四步",
+          titleColor: "#eef3f8",
+          textColor: "#eef3f8",
+          boxColor: "#c3d4e6",
+          arrowColor: "#4aa3d9",
+          strokeColor: "#5b7fa6",
+          titleY: 145,
+          titleEnterMs: 0,
+          diagramOffsetX: 0,
+          diagramOffsetY: -75,
+          diagramEnterMs: 450,
+          diagram: {
+            kind: "flow",
+            steps: [
+              { label: "断电" },
+              { label: "开盖" },
+              { label: "更换" },
+              { label: "复位" },
+            ],
+          },
+          annotations: [
+            {
+              text: "热水排空后再操作",
+              x: 500,
+              y: 730,
+              portraitY: 1250,
+              enterMs: 2200,
+            },
+          ],
+        }),
+      },
+      {
+        durationMs: 3000,
+        description: "安全：两条操作提醒",
+        narrationText: "只用原厂滤芯，先断电再开盖。",
+        source: spec("sketch-note", 3000, 4503, {
+          title: "安全提醒",
+          items: [
+            { text: "只用原厂滤芯", emphasis: "下划线" },
+            { text: "先断电再开盖", emphasis: "圈" },
+          ],
+          inkColor: "#eef3f8",
+          accentColor: "#4aa3d9",
+          writeMs: 900,
+          drawMs: 700,
+          staggerMs: 500,
+        }),
+      },
+      {
+        durationMs: 2500,
+        description: "参数：滤芯更换周期",
+        narrationText: "滤芯每九十天更换一次。",
+        source: spec("number-counter", 2500, 4504, {
+          title: "滤芯更换周期",
+          value: 90,
+          prefix: "",
+          suffix: " 天",
+          decimals: 0,
+          countMs: 1400,
+          numberColor: "#eef3f8",
+          accentColor: "#4aa3d9",
+        }),
+      },
+      {
+        durationMs: 3500,
+        description: "收尾：维护的价值",
+        narrationText: "维护到位，风味常在。",
+        source: text("维护到位，风味常在", "到期自动提醒更省心", 3500, 4505),
+      },
+    ];
   if (!productAsset || productAsset.original.durationMs < 3000)
     throw new Error("产品样片需要完整的 3 秒商品示例素材");
   return [
@@ -405,7 +623,14 @@ export async function createGallerySample(
     savedVersion: 1,
     ...(productAsset ? { mediaAssets: [productAsset] } : {}),
   };
-  const palette = id === "stem" ? STEM_PALETTE : DATA_PALETTE;
+  const palette =
+    id === "stem"
+      ? STEM_PALETTE
+      : id === "renovation"
+        ? RENOVATION_PALETTE
+        : id === "appliance"
+          ? APPLIANCE_PALETTE
+          : DATA_PALETTE;
   let bible: StyleBible | null = null;
   if (id !== "product") {
     const versionId = crypto.randomUUID();
@@ -417,7 +642,14 @@ export async function createGallerySample(
         {
           versionId,
           createdAt: now,
-          name: id === "stem" ? "深蓝科学" : "深蓝数据",
+          name:
+            id === "stem"
+              ? "深蓝科学"
+              : id === "renovation"
+                ? "暖木家装"
+                : id === "appliance"
+                  ? "蓝灰技术"
+                  : "深蓝数据",
           palette,
           fontFamily: "NotoSansSC",
           lightingPreset: "orbit3d-fixed-soft-studio",

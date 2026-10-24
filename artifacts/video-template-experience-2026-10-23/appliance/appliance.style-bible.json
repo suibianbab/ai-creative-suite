@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "384b7552-2b59-4b40-8e28-7fb8305e5103",
+  "currentVersionId": "2f5abe68-9ca4-4522-a842-cb569df16703",
+  "versions": [
+    {
+      "versionId": "2f5abe68-9ca4-4522-a842-cb569df16703",
+      "createdAt": "2026-10-23T16:12:15.103Z",
+      "name": "蓝灰技术",
+      "palette": {
+        "background": "#141a22",
+        "foreground": "#eef3f8",
+        "secondary": "#c3d4e6",
+        "accent": "#4aa3d9",
+        "object": "#5b7fa6"
+      },
+      "fontFamily": "NotoSansSC",
+      "lightingPreset": "orbit3d-fixed-soft-studio"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360">
+  <rect width="640" height="360" fill="#241c14"/>
+  <rect x="60" y="52" width="120" height="120" rx="10" fill="#3a2c1e" opacity=".7"/>
+  <text x="48" y="82" fill="#f5efe6" font-family="sans-serif" font-size="29" font-weight="700">两房变三房</text>
+  <text x="49" y="115" fill="#e3cfae" font-family="sans-serif" font-size="15">量房 → 设计 → 施工 → 验收</text>
+  <path d="M80 210 L560 210 L560 320 L80 320 Z" fill="none" stroke="#e3cfae" stroke-width="5" stroke-linecap="round"/>
+  <path d="M320 210 L320 320" fill="none" stroke="#d97a3d" stroke-width="5" stroke-dasharray="14 10" stroke-linecap="round"/>
+  <text x="352" y="272" fill="#d97a3d" font-family="sans-serif" font-size="14">非承重墙可移除</text>
+  <circle cx="80" cy="210" r="9" fill="#7d8b5a"/><circle cx="560" cy="210" r="9" fill="#7d8b5a"/>
+  <circle cx="80" cy="320" r="9" fill="#7d8b5a"/><circle cx="560" cy="320" r="9" fill="#7d8b5a"/>
+</svg>

@@ -829,6 +829,9 @@ export function ShotEditorCard({
               </optgroup>
             </select>
           </label>
+          <p className="aspect-layout-hint">
+            选中模板即把模板内容预填进下方编辑区；改回「保持当前组件」不会撤销预填，应用修订时按编辑区当前内容保存。
+          </p>
           {!editingMedia ? (
             <>
               {editingThree ? (

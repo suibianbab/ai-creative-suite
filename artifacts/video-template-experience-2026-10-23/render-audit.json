@@ -1,0 +1,44 @@
+{
+  "pass": true,
+  "themes": [
+    {
+      "name": "renovation",
+      "projectId": "8afbfafa-068b-47ad-8d0d-1448fa386af5",
+      "durationMs": 16000,
+      "shots": 5,
+      "renderRecords": 10,
+      "outputs": [
+        {
+          "aspect": "landscape",
+          "frames": 384,
+          "sha256": "ced3dcad302a17c5dd811f244ba0ea55f9ce74741ee31e1cc32e164bcb7ac9ce"
+        },
+        {
+          "aspect": "portrait",
+          "frames": 384,
+          "sha256": "460ac4e89ccd93a3d61d140b010bdbe136e80a62e62bdd6ef324f413812b7703"
+        }
+      ]
+    },
+    {
+      "name": "appliance",
+      "projectId": "a15e19d3-7f6d-4b4c-bfdc-fd097ff7d1a1",
+      "durationMs": 16500,
+      "shots": 5,
+      "renderRecords": 10,
+      "outputs": [
+        {
+          "aspect": "landscape",
+          "frames": 396,
+          "sha256": "0db36a6c7aaa850bfc93e242375a24c0d2799b9b76ee5113eb163c2d0b3f1a0d"
+        },
+        {
+          "aspect": "portrait",
+          "frames": 396,
+          "sha256": "23dc74e3780236e592d1d077ebee7d0ea205956d539d3d8490e6efc47f23968d"
+        }
+      ]
+    }
+  ],
+  "visualReview": "See REPORT.md; sampled frames do not prove commercial finish."
+}

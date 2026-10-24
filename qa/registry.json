@@ -1580,6 +1580,53 @@
       ]
     },
     {
+      "id": "VID-043",
+      "tier": "browser-video",
+      "title": "Dual-theme gallery extension samples full browser chain",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/e2e-gallery-extensions.mjs"],
+      "requiresPorts": [3210],
+      "checks": [
+        "Create the renovation and appliance projects from the new gallery cards, each with five shots and a linked Style Bible",
+        "Edit a composition title and one annotation, save via the editor save action, reopen after reload, and roll the shot back to the gallery version",
+        "Assert the template prefill semantics hint is visible and both aspect previews switch with correct canvas viewBox",
+        "The run writes to .tools by default and reports browser console errors"
+      ]
+    },
+    {
+      "id": "VID-044",
+      "tier": "integration",
+      "title": "Retained dual-theme gallery evidence integrity check",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/audit-gallery-extensions.mjs"],
+      "requiresPorts": [],
+      "requiresFiles": [
+        "artifacts/video-template-experience-2026-10-23/renovation/render/landscape.mp4",
+        "artifacts/video-template-experience-2026-10-23/renovation/render/portrait.mp4",
+        "artifacts/video-template-experience-2026-10-23/appliance/render/landscape.mp4",
+        "artifacts/video-template-experience-2026-10-23/appliance/render/portrait.mp4"
+      ],
+      "checks": [
+        "Committed evidence artifacts stay complete and self-consistent: encoding, dimensions, frame counts, and SHA-256 digests",
+        "Per-shot render records tie to the frameMap and working-version ids/contentDigests, and project ids tie to the browser report",
+        "This is a retained-evidence check by design; current-code regression coverage is the separate live gate VID-046",
+        "Visual quality remains a separate sampled-frame review recorded in REPORT.md"
+      ]
+    },
+    {
+      "id": "VID-046",
+      "tier": "integration",
+      "title": "Live dual-theme gallery render regression gate",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/audit-gallery-extensions-live.mjs"],
+      "requiresPorts": [3210],
+      "checks": [
+        "Create both gallery extension projects from current code through the real browser, then render dual-aspect H.264 MP4s from the fresh projects",
+        "The same per-shot record/frameMap/working-version assertions run against the live outputs, so sample or renderer regressions fail the gate",
+        "Outputs stay in ignored .tools and never overwrite the retained delivery evidence"
+      ]
+    },
+    {
       "id": "VID-025",
       "tier": "integration",
       "title": "Video Studio P3-B three 镜头预烘焙出片与确定性",
