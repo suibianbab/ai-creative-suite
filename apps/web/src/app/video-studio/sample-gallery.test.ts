@@ -65,6 +65,82 @@ test("样片库生成独立、有效的项目；程序化样片引用独立 Styl
   }
 });
 
+test("STEM 样片：环形总览＋分步图解编排，旁白文本与 2026-10-23 版逐字一致", async () => {
+  const { project } = await createGallerySample("stem");
+  const kindOf = (index: number) => {
+    const source = project.shots[index]!.contentVersions[0]!.sceneSource;
+    assert.equal(source.type, "spec");
+    if (source.type !== "spec") return "非 spec";
+    const scene = validateSceneSpec(source.spec, defaultRegistry);
+    if (scene.componentId === "explainer-composition") {
+      return (scene.params as { diagram: { kind: string } }).diagram.kind;
+    }
+    return scene.componentId;
+  };
+  assert.deepEqual(
+    project.shots.map((_, index) => kindOf(index)),
+    [
+      "text-animation",
+      "cycle",
+      "drawing",
+      "sketch-note",
+      "drawing",
+      "flow",
+      "text-animation",
+    ],
+  );
+  // 旁白与上一版逐字、逐时长一致是零成本复用已审 TTS 资产的前提。
+  assert.deepEqual(
+    project.shots.map((shot) => shot.contentVersions[0]!.narrationText),
+    [
+      "一滴水，会走过哪里？",
+      "水在海洋、天空和陆地间不停移动。",
+      "阳光加热海面，水变成水蒸气。",
+      "水蒸气上升，遇冷凝结成云。",
+      "云中水滴聚集，落下形成降水。",
+      "雨水汇入河流，最终回到海洋。",
+      "这，就是水循环。",
+    ],
+  );
+  const overviewSource = project.shots[1]!.contentVersions[0]!.sceneSource;
+  assert.equal(overviewSource.type, "spec");
+  if (overviewSource.type === "spec") {
+    const overview = validateSceneSpec(overviewSource.spec, defaultRegistry)
+      .params as {
+      diagram: {
+        kind: string;
+        steps: Array<{ label: string; caption?: string }>;
+        centerText?: string;
+      };
+    };
+    assert.equal(overview.diagram.kind, "cycle");
+    assert.deepEqual(
+      overview.diagram.steps.map((step) => step.label),
+      ["蒸发", "凝结", "降水", "汇流"],
+    );
+    assert.ok(
+      overview.diagram.steps.every((step) => (step.caption ?? "").length > 0),
+    );
+    assert.equal(overview.diagram.centerText, "水循环");
+  }
+  // 蒸发与降水两镜必须带部件标注（图解自解释），否则图示仍依赖旁白。
+  for (const index of [2, 4]) {
+    const source = project.shots[index]!.contentVersions[0]!.sceneSource;
+    assert.equal(source.type, "spec");
+    if (source.type === "spec") {
+      const labels = (
+        validateSceneSpec(source.spec, defaultRegistry).params as {
+          diagramLabels?: unknown[];
+        }
+      ).diagramLabels;
+      assert.ok(
+        Array.isArray(labels) && labels.length >= 2,
+        `镜头 ${index + 1} 缺少部件标注`,
+      );
+    }
+  }
+});
+
 test("产品样片必须有真实素材，两个商品镜头引用同一不可变资产", async () => {
   await assert.rejects(() => createGallerySample("product"), /示例素材/);
   const { project, bible } = await createGallerySample("product", exampleAsset);

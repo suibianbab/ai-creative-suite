@@ -1,0 +1,338 @@
+{
+  "generatedAt": "2026-10-24T03:28:45.997Z",
+  "projectId": "9c140aa8-43ad-4e67-9254-ef006fd7e2eb",
+  "remotion": "4.0.534",
+  "browser": "Google Chrome 155.0.8059.41",
+  "fontDigests": {
+    "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+  },
+  "styleBibleRef": {
+    "bibleId": "1147ed0d-f8bb-407d-ab8f-01d9018eb846",
+    "versionId": "1548268c-1c6a-4519-ad81-e7984e80d4d6",
+    "digest": "3634bc5dcde88b7eb65081aa92d593c6ee65cb6d2d0611bbd613492ca734c588"
+  },
+  "aspects": {
+    "landscape": {
+      "registryVersion": 8,
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "frames": 624,
+      "output": "landscape.mp4",
+      "frameMap": [
+        {
+          "shotIndex": 0,
+          "shotId": "8994291a-5980-49d0-a20d-8388fce72b6c",
+          "versionId": "f9a3a0e2-597c-456f-a5e1-1f21dd1a00ec",
+          "componentId": "text-animation",
+          "startFrame": 0,
+          "frames": 72,
+          "contentDigest": "499c63f5d1be6923e25e4d1ab8f493d18a59beee66c412083f798628cee56717"
+        },
+        {
+          "shotIndex": 1,
+          "shotId": "3cbcce57-6a55-432f-af83-109f0b425b71",
+          "versionId": "94f30e6e-8ead-4d66-baf2-140b6c577a71",
+          "componentId": "explainer-composition",
+          "startFrame": 72,
+          "frames": 96,
+          "contentDigest": "285278cb67653ee3c5a7a354343fe4edd795abbf4929aa3ddf0b440da904162c"
+        },
+        {
+          "shotIndex": 2,
+          "shotId": "6d9770c2-9c7e-469a-9751-45a09423275b",
+          "versionId": "e8d77050-42a0-4726-aac1-1032595856f7",
+          "componentId": "explainer-composition",
+          "startFrame": 168,
+          "frames": 96,
+          "contentDigest": "fef219082c19f0f956263bb104ce7a8fe8863e5442823d7b600237409e0f982c"
+        },
+        {
+          "shotIndex": 3,
+          "shotId": "a05009e7-c215-4542-823a-aa1e897649f1",
+          "versionId": "949f5951-36b5-48c3-812d-4655415b41e4",
+          "componentId": "sketch-note",
+          "startFrame": 264,
+          "frames": 96,
+          "contentDigest": "3f4ef915c66d5035a4036f488a1811c1c2e240c0403067dd5cd13289328f57e8"
+        },
+        {
+          "shotIndex": 4,
+          "shotId": "4b14743d-6a3a-4b99-9da9-d61329972df2",
+          "versionId": "2d2c6af6-284b-4e75-9994-702d08a45a05",
+          "componentId": "explainer-composition",
+          "startFrame": 360,
+          "frames": 96,
+          "contentDigest": "18ec4d441242c9853aaeb7ff86bcf55dd96e5212ca3dbf65e5f546de617bc6de"
+        },
+        {
+          "shotIndex": 5,
+          "shotId": "0c5e3b85-c8f0-4a90-94b1-2b4409034d59",
+          "versionId": "35a70090-b219-433b-aeac-112fa99a49cb",
+          "componentId": "explainer-composition",
+          "startFrame": 456,
+          "frames": 96,
+          "contentDigest": "46029aa1d35e9f9991275f37e83b9e1c28452503208dae72c39269b1c264a9df"
+        },
+        {
+          "shotIndex": 6,
+          "shotId": "43ed1a62-4abc-4fc3-9daa-10741e406342",
+          "versionId": "b31fc609-1e54-4de3-9734-e83ac0a7448d",
+          "componentId": "text-animation",
+          "startFrame": 552,
+          "frames": 72,
+          "contentDigest": "f04db1b1497c90ba2a3667a5b8df6d3a4d6b82444184a8d1db4857ad124ff218"
+        }
+      ],
+      "narration": [
+        {
+          "shotIndex": 0,
+          "versionId": "f9a3a0e2-597c-456f-a5e1-1f21dd1a00ec",
+          "audioBytes": 128684,
+          "durationMs": 2680,
+          "wordsFile": "8994291a-5980-49d0-a20d-8388fce72b6c-f9a3a0e2-597c-456f-a5e1-1f21dd1a00ec.words.json"
+        },
+        {
+          "shotIndex": 1,
+          "versionId": "94f30e6e-8ead-4d66-baf2-140b6c577a71",
+          "audioBytes": 190124,
+          "durationMs": 3960,
+          "wordsFile": "3cbcce57-6a55-432f-af83-109f0b425b71-94f30e6e-8ead-4d66-baf2-140b6c577a71.words.json"
+        },
+        {
+          "shotIndex": 2,
+          "versionId": "e8d77050-42a0-4726-aac1-1032595856f7",
+          "audioBytes": 186284,
+          "durationMs": 3880,
+          "wordsFile": "6d9770c2-9c7e-469a-9751-45a09423275b-e8d77050-42a0-4726-aac1-1032595856f7.words.json"
+        },
+        {
+          "shotIndex": 3,
+          "versionId": "949f5951-36b5-48c3-812d-4655415b41e4",
+          "audioBytes": 155564,
+          "durationMs": 3240,
+          "wordsFile": "a05009e7-c215-4542-823a-aa1e897649f1-949f5951-36b5-48c3-812d-4655415b41e4.words.json"
+        },
+        {
+          "shotIndex": 4,
+          "versionId": "2d2c6af6-284b-4e75-9994-702d08a45a05",
+          "audioBytes": 182444,
+          "durationMs": 3800,
+          "wordsFile": "4b14743d-6a3a-4b99-9da9-d61329972df2-2d2c6af6-284b-4e75-9994-702d08a45a05.words.json"
+        },
+        {
+          "shotIndex": 5,
+          "versionId": "35a70090-b219-433b-aeac-112fa99a49cb",
+          "audioBytes": 174764,
+          "durationMs": 3640,
+          "wordsFile": "0c5e3b85-c8f0-4a90-94b1-2b4409034d59-35a70090-b219-433b-aeac-112fa99a49cb.words.json"
+        },
+        {
+          "shotIndex": 6,
+          "versionId": "b31fc609-1e54-4de3-9734-e83ac0a7448d",
+          "audioBytes": 109484,
+          "durationMs": 2280,
+          "wordsFile": "43ed1a62-4abc-4fc3-9daa-10741e406342-b31fc609-1e54-4de3-9734-e83ac0a7448d.words.json"
+        }
+      ],
+      "subtitleCues": [
+        {
+          "shotIndex": 0,
+          "cues": 2,
+          "textSha256": "77f4a712d47e9e02444bb62b6629c7350c1f5ce3c90ca921d320c30402ef4b82"
+        },
+        {
+          "shotIndex": 1,
+          "cues": 3,
+          "textSha256": "b6f8b2d37008db9d96e1050779b8702e4d196001efbdba55981390942e435d39"
+        },
+        {
+          "shotIndex": 2,
+          "cues": 2,
+          "textSha256": "30413292ac641e56bbb8a35a5c7c0277558de14d28d6eac382d56bb9c8354116"
+        },
+        {
+          "shotIndex": 3,
+          "cues": 2,
+          "textSha256": "678878c101c0fc0adf09ce37f1b2c0137485ed1c08a4348f3c61bcf9189cb28a"
+        },
+        {
+          "shotIndex": 4,
+          "cues": 2,
+          "textSha256": "8952656a5bfdfa329998b6d2c0e96b1d7b853183837549881a0271b21813ace7"
+        },
+        {
+          "shotIndex": 5,
+          "cues": 2,
+          "textSha256": "2835f00d1430fba94c1685f28982a7a7bdb343ac1309373def973a8d088bb55f"
+        },
+        {
+          "shotIndex": 6,
+          "cues": 2,
+          "textSha256": "6c9e03729d89133381c3d49f356796471fb04dae9f53721657657e6abf97ac09"
+        }
+      ]
+    },
+    "portrait": {
+      "registryVersion": 8,
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "frames": 624,
+      "output": "portrait.mp4",
+      "frameMap": [
+        {
+          "shotIndex": 0,
+          "shotId": "8994291a-5980-49d0-a20d-8388fce72b6c",
+          "versionId": "f9a3a0e2-597c-456f-a5e1-1f21dd1a00ec",
+          "componentId": "text-animation",
+          "startFrame": 0,
+          "frames": 72,
+          "contentDigest": "499c63f5d1be6923e25e4d1ab8f493d18a59beee66c412083f798628cee56717"
+        },
+        {
+          "shotIndex": 1,
+          "shotId": "3cbcce57-6a55-432f-af83-109f0b425b71",
+          "versionId": "94f30e6e-8ead-4d66-baf2-140b6c577a71",
+          "componentId": "explainer-composition",
+          "startFrame": 72,
+          "frames": 96,
+          "contentDigest": "285278cb67653ee3c5a7a354343fe4edd795abbf4929aa3ddf0b440da904162c"
+        },
+        {
+          "shotIndex": 2,
+          "shotId": "6d9770c2-9c7e-469a-9751-45a09423275b",
+          "versionId": "e8d77050-42a0-4726-aac1-1032595856f7",
+          "componentId": "explainer-composition",
+          "startFrame": 168,
+          "frames": 96,
+          "contentDigest": "fef219082c19f0f956263bb104ce7a8fe8863e5442823d7b600237409e0f982c"
+        },
+        {
+          "shotIndex": 3,
+          "shotId": "a05009e7-c215-4542-823a-aa1e897649f1",
+          "versionId": "949f5951-36b5-48c3-812d-4655415b41e4",
+          "componentId": "sketch-note",
+          "startFrame": 264,
+          "frames": 96,
+          "contentDigest": "3f4ef915c66d5035a4036f488a1811c1c2e240c0403067dd5cd13289328f57e8"
+        },
+        {
+          "shotIndex": 4,
+          "shotId": "4b14743d-6a3a-4b99-9da9-d61329972df2",
+          "versionId": "2d2c6af6-284b-4e75-9994-702d08a45a05",
+          "componentId": "explainer-composition",
+          "startFrame": 360,
+          "frames": 96,
+          "contentDigest": "18ec4d441242c9853aaeb7ff86bcf55dd96e5212ca3dbf65e5f546de617bc6de"
+        },
+        {
+          "shotIndex": 5,
+          "shotId": "0c5e3b85-c8f0-4a90-94b1-2b4409034d59",
+          "versionId": "35a70090-b219-433b-aeac-112fa99a49cb",
+          "componentId": "explainer-composition",
+          "startFrame": 456,
+          "frames": 96,
+          "contentDigest": "46029aa1d35e9f9991275f37e83b9e1c28452503208dae72c39269b1c264a9df"
+        },
+        {
+          "shotIndex": 6,
+          "shotId": "43ed1a62-4abc-4fc3-9daa-10741e406342",
+          "versionId": "b31fc609-1e54-4de3-9734-e83ac0a7448d",
+          "componentId": "text-animation",
+          "startFrame": 552,
+          "frames": 72,
+          "contentDigest": "f04db1b1497c90ba2a3667a5b8df6d3a4d6b82444184a8d1db4857ad124ff218"
+        }
+      ],
+      "narration": [
+        {
+          "shotIndex": 0,
+          "versionId": "f9a3a0e2-597c-456f-a5e1-1f21dd1a00ec",
+          "audioBytes": 128684,
+          "durationMs": 2680,
+          "wordsFile": "8994291a-5980-49d0-a20d-8388fce72b6c-f9a3a0e2-597c-456f-a5e1-1f21dd1a00ec.words.json"
+        },
+        {
+          "shotIndex": 1,
+          "versionId": "94f30e6e-8ead-4d66-baf2-140b6c577a71",
+          "audioBytes": 190124,
+          "durationMs": 3960,
+          "wordsFile": "3cbcce57-6a55-432f-af83-109f0b425b71-94f30e6e-8ead-4d66-baf2-140b6c577a71.words.json"
+        },
+        {
+          "shotIndex": 2,
+          "versionId": "e8d77050-42a0-4726-aac1-1032595856f7",
+          "audioBytes": 186284,
+          "durationMs": 3880,
+          "wordsFile": "6d9770c2-9c7e-469a-9751-45a09423275b-e8d77050-42a0-4726-aac1-1032595856f7.words.json"
+        },
+        {
+          "shotIndex": 3,
+          "versionId": "949f5951-36b5-48c3-812d-4655415b41e4",
+          "audioBytes": 155564,
+          "durationMs": 3240,
+          "wordsFile": "a05009e7-c215-4542-823a-aa1e897649f1-949f5951-36b5-48c3-812d-4655415b41e4.words.json"
+        },
+        {
+          "shotIndex": 4,
+          "versionId": "2d2c6af6-284b-4e75-9994-702d08a45a05",
+          "audioBytes": 182444,
+          "durationMs": 3800,
+          "wordsFile": "4b14743d-6a3a-4b99-9da9-d61329972df2-2d2c6af6-284b-4e75-9994-702d08a45a05.words.json"
+        },
+        {
+          "shotIndex": 5,
+          "versionId": "35a70090-b219-433b-aeac-112fa99a49cb",
+          "audioBytes": 174764,
+          "durationMs": 3640,
+          "wordsFile": "0c5e3b85-c8f0-4a90-94b1-2b4409034d59-35a70090-b219-433b-aeac-112fa99a49cb.words.json"
+        },
+        {
+          "shotIndex": 6,
+          "versionId": "b31fc609-1e54-4de3-9734-e83ac0a7448d",
+          "audioBytes": 109484,
+          "durationMs": 2280,
+          "wordsFile": "43ed1a62-4abc-4fc3-9daa-10741e406342-b31fc609-1e54-4de3-9734-e83ac0a7448d.words.json"
+        }
+      ],
+      "subtitleCues": [
+        {
+          "shotIndex": 0,
+          "cues": 2,
+          "textSha256": "77f4a712d47e9e02444bb62b6629c7350c1f5ce3c90ca921d320c30402ef4b82"
+        },
+        {
+          "shotIndex": 1,
+          "cues": 3,
+          "textSha256": "b6f8b2d37008db9d96e1050779b8702e4d196001efbdba55981390942e435d39"
+        },
+        {
+          "shotIndex": 2,
+          "cues": 2,
+          "textSha256": "30413292ac641e56bbb8a35a5c7c0277558de14d28d6eac382d56bb9c8354116"
+        },
+        {
+          "shotIndex": 3,
+          "cues": 2,
+          "textSha256": "678878c101c0fc0adf09ce37f1b2c0137485ed1c08a4348f3c61bcf9189cb28a"
+        },
+        {
+          "shotIndex": 4,
+          "cues": 2,
+          "textSha256": "8952656a5bfdfa329998b6d2c0e96b1d7b853183837549881a0271b21813ace7"
+        },
+        {
+          "shotIndex": 5,
+          "cues": 2,
+          "textSha256": "2835f00d1430fba94c1685f28982a7a7bdb343ac1309373def973a8d088bb55f"
+        },
+        {
+          "shotIndex": 6,
+          "cues": 2,
+          "textSha256": "6c9e03729d89133381c3d49f356796471fb04dae9f53721657657e6abf97ac09"
+        }
+      ]
+    }
+  }
+}
