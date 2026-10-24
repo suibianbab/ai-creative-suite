@@ -70,6 +70,13 @@ function auditTheme(name) {
   const browserTheme = browser.themes.find((item) => item.name === name);
   check(Boolean(browserTheme), `browser-report 缺少 ${name}`);
   assert.equal(project.id, browserTheme.projectId);
+  const durationMs = project.shots.reduce((sum, shot) => {
+    const working = shot.contentVersions.find(
+      (version) => version.versionId === shot.workingVersionId,
+    );
+    check(Boolean(working), `${name} 存在没有工作版本的镜头`);
+    return sum + working.durationMs;
+  }, 0);
   const outputs = [];
   for (const aspect of ["landscape", "portrait"]) {
     const file = path.join(dir, "render", `${aspect}.mp4`);
@@ -84,6 +91,11 @@ function auditTheme(name) {
     const map = manifest.aspects[aspect].frameMap;
     assert.equal(map.length, 5, `${name}/${aspect} frameMap 镜数`);
     assert.equal(
+      map.reduce((sum, item) => sum + item.frames, 0),
+      (durationMs / 1000) * 24,
+      `${name}/${aspect} frameMap 与项目时长不符`,
+    );
+    assert.equal(
       Number(stream.nb_frames),
       map.reduce((sum, item) => sum + item.frames, 0),
       `${name}/${aspect} 帧数与 frameMap 总和`,
@@ -91,6 +103,12 @@ function auditTheme(name) {
     const size = aspect === "landscape" ? [1280, 720] : [720, 1280];
     for (const item of map) {
       const shot = project.shots[item.shotIndex];
+      check(Boolean(shot), `${name}/${aspect} frameMap 指向不存在的镜头`);
+      assert.equal(
+        item.shotId,
+        shot.shotId,
+        `${name}/${aspect} frameMap 镜头 ID 不符`,
+      );
       // The rendered map must reflect the retained project's working versions.
       assert.equal(
         item.versionId,

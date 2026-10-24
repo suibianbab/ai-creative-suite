@@ -19,6 +19,12 @@
 - **P2（VID-044 静态审计）接受并已修**：①VID-044 改标「留存证据完整性检查」，审计补逐镜对账——frameMap.versionId ↔ 项目 workingVersionId、renderRecords 逐镜 versionId/contentDigest/frames/尺寸匹配、各画幅记录数与镜头数对账（变异自检：改一条记录 versionId 即被捕获）；②新增 VID-046 live 门禁（`audit-gallery-extensions-live.mjs`）：当前代码跑浏览器链 → 新产物双画幅渲染 → 同套断言，检出样片/渲染器回归。出片证据仍以留存目录为准，live 输出只在 .tools。
 - **非阻断提醒照单确认**：回滚断言按交接单承诺口径（操作与导出）保留，不扩诺"回滚后保存重开"；`next build` 维持未验证项；商业成片口径不变。测试数勘误：修复轮后 web 为 280/280。
 
+## Codex 增量复核补记（2026-10-24）
+
+- e5556ed 的留存审计补了逐镜关联，真实 live 模式也在本工作树实际跑通。但 VID-046 按注册表命令启动时，脚本因缺少 `BASE_URL` 立即失败；Codex 在 wrapper 中默认 `http://localhost:3210`，与注册表 `requiresPorts:[3210]` 对齐，仍允许显式覆盖。
+- e5556ed 重构删掉了旧审计的“项目总时长 ↔ frameMap 总帧数”检查；Codex 已恢复，并补 frameMap 的镜头 ID 对账。对忽略目录中的项目副本把一镜从 3000ms 改为 4000ms，审计按预期非零退出；入库留存证据仍 PASS。
+- 显式设置 `BASE_URL=http://localhost:3212` 后，VID-046 完成双题材浏览器链及四个新 MP4。三个 MP4 与留存字节一致；设备竖版摘要不同，但 props JSON 逐字节相同、解码画面 PSNR 平均 71.24 dB，目检同一关键帧无可见区别。此差异仅记录为编码/渲染稳定性观察，不作为本轮模板功能阻断。
+
 ## 与现有入口的区别（任务单 §2.1 要求，避免换名重复）
 
 | 层 | 现有 | 本轮新增 | 区别 |
