@@ -15,6 +15,19 @@
       ]
     },
     {
+      "id": "VID-052",
+      "tier": "integration",
+      "title": "Self-contained interactive 3D sample: offline, state change, iframe, rebuild parity",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/e2e-w4-interactive.mjs"],
+      "requiresPorts": [],
+      "checks": [
+        "Open the single-file interactive page offline via file://, toggle explode by double-click and rotate by drag, with DOM state attributes reflecting the change",
+        "Headless frame rate stays at or above 15 fps and the page works inside an iframe host",
+        "Rebuilding from source is byte-identical and the page stays under the 8 MiB self-contained cap with an asset manifest recording sources and licenses"
+      ]
+    },
+    {
       "id": "VID-050",
       "tier": "browser-video",
       "title": "Shot recipe catalog apply-edit-save-reopen and dual-aspect render",
