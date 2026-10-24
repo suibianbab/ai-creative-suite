@@ -4,6 +4,7 @@ import {
   validateVideoProject,
   workingStyleIssues,
 } from "@acs/video-document";
+import { approvalStatus } from "../../../video-studio/frame-approval";
 import { isSameOriginRequest } from "../../same-origin";
 import { renderLocalProject } from "./render-local";
 
@@ -56,6 +57,15 @@ export async function POST(request: Request) {
       const issues = workingStyleIssues(project, version);
       if (issues.length) throw new Error(issues.join("；"));
     }
+    // —— C1 服务端闸门：W2 代表帧确认不能只靠工作台前置检查，直连本 API
+    //（CLI/外部 POST）同样要在真实出片前复验每条确认绑定的内容版本、风格
+    // 版本与双画幅帧摘要（approvalStatus 重渲染比对，不信任何客户端布尔）。
+    // 无确认记录 = 功能未启用，不拦截（旧项目兼容契约，同工作台口径）。 ——
+    const approval = await approvalStatus(project);
+    if (!approval.valid)
+      throw new Error(
+        `代表帧确认已失效，未导出：${approval.reasons.join("；")}`,
+      );
   } catch (error) {
     return Response.json(
       { error: error instanceof Error ? error.message : "项目无效" },
