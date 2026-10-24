@@ -303,7 +303,9 @@ export default function VideoStudioPage() {
             }
           : previous,
       );
-      void refreshProjects().catch(() => {});
+      void refreshProjects().catch((error: unknown) =>
+        console.error("项目包已下载，但本地项目列表刷新失败", error),
+      );
     } catch (error) {
       setEditor((previous) =>
         previous?.document.id === current.id
