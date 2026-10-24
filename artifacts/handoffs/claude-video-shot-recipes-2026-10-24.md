@@ -37,7 +37,7 @@
 pnpm --filter @acs/web test
 pnpm -r typecheck && pnpm exec biome check .
 node scripts/qa/run-regression.mjs validate
-node scripts/video/e2e-shot-recipes.mjs        # 需本 worktree web（:3216）
+pnpm --filter @acs/web exec node --import tsx ../../scripts/video/e2e-shot-recipes.mjs  # 需本 worktree web（:3216）
 SAMPLE_ID=stem node scripts/video/e2e-gallery.mjs   # 旧样片回归
 ```
 

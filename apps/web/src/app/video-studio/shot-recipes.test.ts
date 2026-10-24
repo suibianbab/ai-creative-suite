@@ -329,20 +329,34 @@ test("终审修复：短素材时长契约（durationMs=outMs−inMs）、稀疏
   assert.ok("error" in rejected && /Style Bible/.test(rejected.error));
 });
 
-test("终审修复：数值上限与编译产物过组件校验", () => {
-  // F2a：超过组件上限（1e12）的数值在 build 层拒绝。
+test("超过组件上限的数值在配方 build 层拒绝", () => {
   const recipe = SHOT_RECIPES.find((r) => r.id === "recipe-data-bar")!;
   const tooBig = recipe.build({
     labels: ["A", "B"],
     values: [Number.MAX_SAFE_INTEGER, 1],
   });
   assert.ok("error" in tooBig && /数值/.test(tooBig.error));
-  // F2b：applyShotRecipe 对编译产物跑 validateSceneSpec——坏 spec 进不了文档。
-  const hostile = applyShotRecipe(emptyProject(), "recipe-data-bar", {
-    labels: ["A", "B"],
-    values: [1e13, 1],
-  });
-  assert.ok("error" in hostile);
+});
+
+test("即使配方 build 返回坏 spec，应用层组件校验仍阻止入文档", () => {
+  const recipe = SHOT_RECIPES.find((r) => r.id === "recipe-data-bar")!;
+  const originalBuild = recipe.build;
+  try {
+    recipe.build = () => {
+      const built = originalBuild.call(recipe, {});
+      assert.ok("spec" in built);
+      if (!("spec" in built)) throw new Error("测试配方未生成 spec");
+      return {
+        spec: { ...built.spec, componentId: "unregistered-test-component" },
+      };
+    };
+    const result = applyShotRecipe(emptyProject(), recipe.id, {});
+    assert.ok("error" in result);
+    if ("error" in result)
+      assert.match(result.error, /component|组件|registry/i);
+  } finally {
+    recipe.build = originalBuild;
+  }
 });
 
 test("终审修复：预览确定性——同配方两次预览逐字节一致", () => {

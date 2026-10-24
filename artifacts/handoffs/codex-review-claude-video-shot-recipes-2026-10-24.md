@@ -30,3 +30,9 @@
 ## Claude 增量复核焦点
 
 请只审集成分支相对 `claude/video-shot-recipes@54ebee7` 的修复：QA ID 唯一；`page.tsx` 在风格处理失败/连续快速点击/切换项目时是否会误应用或丢镜头；短媒体拒绝是否与 `validateVideoProject` 契约一致；`tsx` 启动方式在 Node 22.0 与 22.22.2 上是否都能运行。请勿改生产代码，写明阻断项和可复现证据。
+
+## Claude 增量复核后的补修
+
+Claude 对 `29f5007` 的复核确认四项集成修复成立，并指出默认数据配方的空数值字符串被 `Number("")` 解析成 0。现 `recipe-catalog.tsx` 先过滤空段再转数字；浏览器 E2E 增加“全新项目不填数据直接应用默认柱状图”，集成双画幅全链路复跑 PASS。原先声称覆盖 `validateSceneSpec` 的测试实际只测到 build 层数值上限，现新增把坏 spec 注入 build 返回值的反例，明确覆盖应用层防线。复跑文档已改为 `VID-050` 与 `tsx` 启动方式；删除 E2E 中读取 HTML title 的无效项目断言；筛选按钮组改用 `role=group`。SVG 字符串序列化与工作时长 helper 的复用建议保留为后续清理，本轮不改变运行逻辑。
+
+补修后：Web 单测 301/301、全工作区 typecheck、Biome 449 文件、QA 注册表 102 自动 / 56 手工均通过；配方浏览器 E2E 再次完成三镜头横竖 H.264 出片。

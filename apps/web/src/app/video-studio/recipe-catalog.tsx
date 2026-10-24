@@ -44,7 +44,10 @@ function RecipeInputsForm({
         .split(/[,，]/)
         .map((item) => item.trim())
         .filter(Boolean);
-      const rawValues = values.split(/[,，]/).map((item) => item.trim());
+      const rawValues = values
+        .split(/[,，]/)
+        .map((item) => item.trim())
+        .filter(Boolean);
       const badIndex = rawValues.findIndex(
         (item) => item !== "" && !Number.isFinite(Number(item)),
       );
@@ -52,9 +55,7 @@ function RecipeInputsForm({
         setError(`第 ${badIndex + 1} 个数值「${rawValues[badIndex]}」不是数字`);
         return;
       }
-      const parsedValues = rawValues
-        .map((item) => Number(item))
-        .filter((item) => Number.isFinite(item));
+      const parsedValues = rawValues.map((item) => Number(item));
       if (parsedLabels.length > 0) inputs.labels = parsedLabels;
       if (parsedValues.length > 0) inputs.values = parsedValues;
     } else if (recipe.componentId === "media-clip") {
@@ -187,7 +188,7 @@ export function RecipeCatalog({
           </p>
         </div>
       </div>
-      <div className="recipe-filters" role="tablist">
+      <div className="recipe-filters" role="group" aria-label="配方主题筛选">
         {topics.map((topic) => (
           <button
             key={topic}

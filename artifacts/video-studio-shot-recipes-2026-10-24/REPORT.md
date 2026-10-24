@@ -6,7 +6,7 @@
 
 - `shot-recipes.ts`：三条配方（`recipe-text-point` 文字重点 / `recipe-data-bar` 数据结论 / `recipe-product-clip` 商品画面）的元数据（稳定 ID/版本、用途、双画幅、时长范围、占位说明、许可、预览帧、验证态）与编译核心；`recipePreviewSvg`（注册表组件渲染一帧，用户文本 XML 转义）；`applyShotRecipe`（追加普通 ContentVersion，BriefApplication 标准形状，media-clip 资产并入账本，内存追加不落库）。
 - `recipe-catalog.tsx` + CSS：编辑视图侧栏「按用途选镜头」目录——筛选 chips、SVG 预览卡、占位说明、逐卡输入面板（文字/数据/资产下拉）、应用即追加并提示保存。
-- `e2e-shot-recipes.mjs`（VID-049）：全链路验收；`qa/registry.json` 102 自动 / 55 手工。
+- `e2e-shot-recipes.mjs`（VID-050）：全链路验收；集成后 `qa/registry.json` 102 自动 / 56 手工。
 
 **放置裁决**：目录在编辑视图（列表视图无打开项目可应用）；页面结构为 editor 存在时提前 return 编辑视图。
 
@@ -31,7 +31,7 @@
 pnpm --filter @acs/web test && pnpm -r typecheck && pnpm exec biome check .
 node scripts/qa/run-regression.mjs validate
 pnpm --filter @acs/web exec next dev --hostname 127.0.0.1 --port 3216
-BASE_URL=http://127.0.0.1:3216 node scripts/video/e2e-shot-recipes.mjs
+BASE_URL=http://localhost:3216 pnpm --filter @acs/web exec node --import tsx ../../scripts/video/e2e-shot-recipes.mjs
 SAMPLE_ID=stem BASE_URL=http://127.0.0.1:3216 node scripts/video/e2e-gallery.mjs
 ```
 

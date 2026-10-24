@@ -6,7 +6,12 @@
       "tier": "browser-video",
       "title": "Shot recipe catalog apply-edit-save-reopen and dual-aspect render",
       "cwd": "apps/web",
-      "argv": ["node", "--import", "tsx", "../../scripts/video/e2e-shot-recipes.mjs"],
+      "argv": [
+        "node",
+        "--import",
+        "tsx",
+        "../../scripts/video/e2e-shot-recipes.mjs"
+      ],
       "requiresPorts": [3210],
       "checks": [
         "Create a project, apply all three recipes (text point, data bars, product clip with uploaded media), edit a title, save, reopen after reload, and assert both aspect previews",

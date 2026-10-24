@@ -78,8 +78,6 @@ try {
   await cards.nth(2).locator(".recipe-apply").click();
   await page.locator(".shot-card").nth(2).waitFor({ timeout: 20_000 });
   assert.equal(await page.locator(".shot-card").count(), 3);
-  const project = await page.evaluate(() => document.title);
-  assert.ok(project.length > 0);
 
   // Edit the text shot's title through the normal editor path.
   const firstCard = page.locator(".shot-card").nth(0);
@@ -159,6 +157,21 @@ try {
     );
   }
   await page.screenshot({ path: path.join(out, "editor-recipes.png") });
+
+  // Fresh project: an untouched data card should use its documented default bars.
+  const defaultsPage = await context.newPage();
+  defaultsPage.on("pageerror", (error) => errors.push(error.message));
+  await defaultsPage.goto(`${baseUrl}/video-studio`, {
+    waitUntil: "domcontentloaded",
+  });
+  await defaultsPage.waitForSelector("html[data-studio-ready]");
+  await defaultsPage.locator(".project-create").click();
+  const defaultDataCard = defaultsPage.locator(".recipe-card").nth(1);
+  await defaultDataCard.locator(".recipe-toggle").click();
+  await defaultDataCard.locator(".recipe-apply").click();
+  await defaultsPage.locator(".shot-card").first().waitFor();
+  assert.equal(await defaultDataCard.locator(".recipe-error").count(), 0);
+  await defaultsPage.close();
 } finally {
   await browser.close();
 }
