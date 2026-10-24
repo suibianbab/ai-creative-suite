@@ -76,6 +76,31 @@ test("单文件包复用目录包校验并在新媒体仓恢复项目与 Style B
   );
 });
 
+test("旧版无媒体无 Style Bible 项目可单文件往返且不新增项目字段", async (t) => {
+  const dir = await mkdtemp(path.join(tmpdir(), "acs-envelope-old-"));
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  const project = JSON.parse(
+    await readFile(
+      path.join(
+        root,
+        "artifacts/video-studio-shot-editor/baseline.video-project.json",
+      ),
+      "utf8",
+    ),
+  );
+  const text = await createPortableEnvelope({
+    project,
+    storeRoot: path.join(dir, "empty"),
+  });
+  const restored = await restorePortableEnvelope({
+    text,
+    storeRoot: path.join(dir, "target"),
+  });
+  assert.deepEqual(restored.project, project);
+  assert.equal(restored.styleBible, null);
+  assert.equal(restored.installedMedia, 0);
+});
+
 test("篡改内容、漏文件、重复路径、路径穿越均在发布项目之前拒绝", async (t) => {
   const input = await fixture(t);
   const text = await createPortableEnvelope({
