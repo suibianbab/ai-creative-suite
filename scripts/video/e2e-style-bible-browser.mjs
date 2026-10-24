@@ -76,6 +76,7 @@ try {
   await page.locator(".project-open").first().click();
   assert.match(await panel.textContent(), /Style Bible/);
   await panel.locator('input[type="color"]').first().fill("#26344a");
+  await panel.locator(".style-bible-change-note").fill("加深背景");
   await panel
     .getByRole("button", { name: "将当前颜色保存为新版本并应用" })
     .click();

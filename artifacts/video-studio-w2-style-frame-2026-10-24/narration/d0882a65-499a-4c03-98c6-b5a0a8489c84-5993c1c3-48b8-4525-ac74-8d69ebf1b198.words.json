@@ -1,0 +1,78 @@
+{
+  "requestId": "ca1f1345-04d1-9d7a-a2b2-fa7afaef2dc0",
+  "model": "cosyvoice-v3-flash",
+  "voice": "longanyang",
+  "usage": {
+    "characters": 18
+  },
+  "sentences": [
+    {
+      "index": 0,
+      "words": [
+        {
+          "end_time": 560,
+          "begin_time": 280,
+          "end_index": 1,
+          "begin_index": 0,
+          "text": "一"
+        },
+        {
+          "end_time": 720,
+          "begin_time": 560,
+          "end_index": 2,
+          "begin_index": 1,
+          "text": "滴"
+        },
+        {
+          "end_time": 1040,
+          "begin_time": 720,
+          "end_index": 3,
+          "begin_index": 2,
+          "text": "水"
+        },
+        {
+          "end_time": 1240,
+          "begin_time": 1040,
+          "end_index": 4,
+          "begin_index": 3,
+          "text": "，"
+        },
+        {
+          "end_time": 1520,
+          "begin_time": 1280,
+          "end_index": 5,
+          "begin_index": 4,
+          "text": "会"
+        },
+        {
+          "end_time": 1720,
+          "begin_time": 1520,
+          "end_index": 6,
+          "begin_index": 5,
+          "text": "走"
+        },
+        {
+          "end_time": 1840,
+          "begin_time": 1720,
+          "end_index": 7,
+          "begin_index": 6,
+          "text": "过"
+        },
+        {
+          "end_time": 2120,
+          "begin_time": 1840,
+          "end_index": 8,
+          "begin_index": 7,
+          "text": "哪"
+        },
+        {
+          "end_time": 2280,
+          "begin_time": 2120,
+          "end_index": 9,
+          "begin_index": 8,
+          "text": "里"
+        }
+      ]
+    }
+  ]
+}

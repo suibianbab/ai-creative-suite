@@ -52,6 +52,17 @@ try {
   await restored.waitForSelector("html[data-studio-ready]");
   await restored.locator(".project-open").first().click();
   await restored.locator(".shot-card").first().waitFor();
+  // W2 门禁：风格项目出片前先确认代表帧
+  const framePanel = restored.locator(".style-frame-panel");
+  await framePanel.locator(".style-frame-ms").fill("100");
+  await framePanel.locator(".style-frame-generate").click();
+  await framePanel
+    .locator(".style-frame-img-landscape")
+    .waitFor({ timeout: 240_000 });
+  await framePanel.locator(".style-frame-confirm").click();
+  await restored
+    .locator(".editor-message", { hasText: "风格代表帧已确认" })
+    .waitFor({ timeout: 20_000 });
   await restored.locator(".editor-render").click();
   await restored
     .locator(".editor-downloads a")

@@ -135,6 +135,7 @@ try {
     createHash("sha256").update(restoredBytes).digest("hex"),
     project.mediaAssets[0].original.sha256,
   );
+  // product 样片无 Style Bible，出片不受 W2 确认门禁影响，直接渲染。
   await restoredPage.locator(".editor-render").click();
   await restoredPage
     .locator(".editor-downloads a")

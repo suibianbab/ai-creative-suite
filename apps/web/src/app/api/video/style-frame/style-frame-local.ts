@@ -78,15 +78,22 @@ async function sha256File(file: string): Promise<string> {
   return hash.digest("hex");
 }
 
-// 与 render-scene.mjs 相同的 pnpm remotion 调用形态（still 子命令渲染单帧）。
-// 走 runRender（异步 spawn + 超时强杀），不阻塞 dev 服务器事件循环。
+// remotion still 单帧渲染：与 render-scene.mjs 同一 CLI、同一 bundle，但直接以
+// node 执行 @remotion/cli 的 JS 入口（runRender 的首参是 process.execPath）——
+// Windows 下 spawn pnpm shim 不带 shell 会把参数错传给 node（bad option）。
+function remotionCliEntry(root: string): string {
+  const engineDir = path.join(root, "packages", "remotion-engine");
+  const { createRequire } = require("node:module") as typeof import("node:module");
+  const requireFromEngine = createRequire(path.join(engineDir, "index.js"));
+  const pkgPath = requireFromEngine.resolve("@remotion/cli/package.json");
+  return path.join(path.dirname(pkgPath), "remotion-cli.js");
+}
+
 async function defaultStillRenderer(args: StillRenderArgs): Promise<void> {
   const root = workspaceRoot();
+  const engineDir = path.join(root, "packages", "remotion-engine");
   const command = [
-    "--filter",
-    "@acs/remotion-engine",
-    "exec",
-    "remotion",
+    remotionCliEntry(root),
     "still",
     "src/index.ts",
     `SceneSpec-${args.aspect === "landscape" ? "Landscape" : "Portrait"}`,
@@ -96,8 +103,7 @@ async function defaultStillRenderer(args: StillRenderArgs): Promise<void> {
     "--image-format=png",
   ];
   if (existsSync(CHROME)) command.push(`--browser-executable=${CHROME}`);
-  const quote = (arg: string) => (/\s/.test(arg) ? `"${arg}"` : arg);
-  await runRender(command.map(quote), root, STILL_TIMEOUT_MS);
+  await runRender(command, engineDir, STILL_TIMEOUT_MS);
 }
 
 export async function renderStyleFrame(

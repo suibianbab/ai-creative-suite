@@ -1,0 +1,113 @@
+{
+  "requestId": "42a10eec-3c42-9836-bb3d-72f7ff55d6b1",
+  "model": "cosyvoice-v3-flash",
+  "voice": "longanyang",
+  "usage": {
+    "characters": 26
+  },
+  "sentences": [
+    {
+      "index": 0,
+      "words": [
+        {
+          "end_time": 560,
+          "begin_time": 320,
+          "end_index": 1,
+          "begin_index": 0,
+          "text": "云"
+        },
+        {
+          "end_time": 840,
+          "begin_time": 600,
+          "end_index": 2,
+          "begin_index": 1,
+          "text": "中"
+        },
+        {
+          "end_time": 1080,
+          "begin_time": 840,
+          "end_index": 3,
+          "begin_index": 2,
+          "text": "水"
+        },
+        {
+          "end_time": 1320,
+          "begin_time": 1120,
+          "end_index": 4,
+          "begin_index": 3,
+          "text": "滴"
+        },
+        {
+          "end_time": 1520,
+          "begin_time": 1320,
+          "end_index": 5,
+          "begin_index": 4,
+          "text": "聚"
+        },
+        {
+          "end_time": 1760,
+          "begin_time": 1520,
+          "end_index": 6,
+          "begin_index": 5,
+          "text": "集"
+        },
+        {
+          "end_time": 2040,
+          "begin_time": 1760,
+          "end_index": 7,
+          "begin_index": 6,
+          "text": "，"
+        },
+        {
+          "end_time": 2280,
+          "begin_time": 2080,
+          "end_index": 8,
+          "begin_index": 7,
+          "text": "落"
+        },
+        {
+          "end_time": 2520,
+          "begin_time": 2280,
+          "end_index": 9,
+          "begin_index": 8,
+          "text": "下"
+        },
+        {
+          "end_time": 2680,
+          "begin_time": 2520,
+          "end_index": 10,
+          "begin_index": 9,
+          "text": "形"
+        },
+        {
+          "end_time": 2880,
+          "begin_time": 2680,
+          "end_index": 11,
+          "begin_index": 10,
+          "text": "成"
+        },
+        {
+          "end_time": 3080,
+          "begin_time": 2880,
+          "end_index": 12,
+          "begin_index": 11,
+          "text": "降"
+        },
+        {
+          "end_time": 3320,
+          "begin_time": 3120,
+          "end_index": 13,
+          "begin_index": 12,
+          "text": "水"
+        },
+        {
+          "end_time": 3800,
+          "begin_time": 3360,
+          "end_index": 14,
+          "begin_index": 13,
+          "text": "。"
+        }
+      ]
+    }
+  ]
+}

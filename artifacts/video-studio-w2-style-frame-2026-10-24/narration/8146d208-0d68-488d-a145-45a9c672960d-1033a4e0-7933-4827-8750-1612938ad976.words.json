@@ -1,0 +1,71 @@
+{
+  "requestId": "06b6beb2-4de6-94a6-b038-560411e96d84",
+  "model": "cosyvoice-v3-flash",
+  "voice": "longanyang",
+  "usage": {
+    "characters": 14
+  },
+  "sentences": [
+    {
+      "index": 0,
+      "words": [
+        {
+          "end_time": 560,
+          "begin_time": 280,
+          "end_index": 1,
+          "begin_index": 0,
+          "text": "这"
+        },
+        {
+          "end_time": 720,
+          "begin_time": 600,
+          "end_index": 2,
+          "begin_index": 1,
+          "text": "，"
+        },
+        {
+          "end_time": 960,
+          "begin_time": 720,
+          "end_index": 3,
+          "begin_index": 2,
+          "text": "就"
+        },
+        {
+          "end_time": 1120,
+          "begin_time": 960,
+          "end_index": 4,
+          "begin_index": 3,
+          "text": "是"
+        },
+        {
+          "end_time": 1400,
+          "begin_time": 1200,
+          "end_index": 5,
+          "begin_index": 4,
+          "text": "水"
+        },
+        {
+          "end_time": 1680,
+          "begin_time": 1440,
+          "end_index": 6,
+          "begin_index": 5,
+          "text": "循"
+        },
+        {
+          "end_time": 1840,
+          "begin_time": 1680,
+          "end_index": 7,
+          "begin_index": 6,
+          "text": "环"
+        },
+        {
+          "end_time": 2280,
+          "begin_time": 1880,
+          "end_index": 8,
+          "begin_index": 7,
+          "text": "。"
+        }
+      ]
+    }
+  ]
+}

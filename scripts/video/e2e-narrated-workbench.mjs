@@ -49,6 +49,17 @@ try {
   await page.locator(".sample-card").first().locator(".sample-use").click();
   await page.locator(".shot-card").first().waitFor({ timeout: 45_000 });
   assert.equal(await page.locator(".shot-card").count(), 7);
+  // W2 门禁：STEM 样片带风格引用，有声出片前先确认代表帧
+  const framePanel = page.locator(".style-frame-panel");
+  await framePanel.locator(".style-frame-ms").fill("100");
+  await framePanel.locator(".style-frame-generate").click();
+  await framePanel
+    .locator(".style-frame-img-landscape")
+    .waitFor({ timeout: 240_000 });
+  await framePanel.locator(".style-frame-confirm").click();
+  await page
+    .locator(".editor-message", { hasText: "风格代表帧已确认" })
+    .waitFor({ timeout: 20_000 });
   assert.equal(await page.locator(".editor-render-narrated").isEnabled(), true);
   await page.locator(".editor-render-narrated").click();
   await page.waitForFunction(

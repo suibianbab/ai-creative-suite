@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "5a8c6097-9186-4e48-922d-58c555bdf624",
+  "currentVersionId": "a891b7eb-392d-4504-9e3b-d2e8408820d3",
+  "versions": [
+    {
+      "versionId": "a891b7eb-392d-4504-9e3b-d2e8408820d3",
+      "createdAt": "2026-10-24T11:18:11.369Z",
+      "name": "文字动效对照",
+      "palette": {
+        "background": "#101820",
+        "foreground": "#f3e6cf",
+        "secondary": "#e8b04b",
+        "accent": "#e8b04b",
+        "object": "#c98548"
+      },
+      "fontFamily": "NotoSansSC",
+      "lightingPreset": "orbit3d-fixed-soft-studio"
+    }
+  ]
+}
