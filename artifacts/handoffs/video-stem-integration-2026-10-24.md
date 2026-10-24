@@ -11,7 +11,7 @@
 
 ## 交叉复核
 
-Claude 首轮报告：`D:/codex/animate/.claude/worktrees/video-template-experience/artifacts/claude-review-narrated-workbench-2026-10-24.md`，发现 N1–N7。Codex 在 `9b8be55` 修复。Claude 对 `c01bff1..9b8be55` 二轮复核：`D:/codex/animate/.claude/worktrees/claude-rereview-narrated-9b8be55/artifacts/claude-rereview-narrated-workbench-9b8be55.md`，结论 N1–N7 修复、无新阻断。Codex 对视觉线的审查：`artifacts/handoffs/codex-review-claude-video-stem-visual-2026-10-24.md`；集成时补齐“循环图被当图片”以及结构化标注编辑入口。
+Claude 首轮报告：`artifacts/handoffs/claude-review-narrated-workbench-2026-10-24.md`，发现 N1–N7。Codex 在 `9b8be55` 修复。Claude 对 `c01bff1..9b8be55` 二轮复核：`artifacts/handoffs/claude-rereview-narrated-workbench-9b8be55.md`，结论 N1–N7 修复、无新阻断。Codex 对视觉线的审查：`artifacts/handoffs/codex-review-claude-video-stem-visual-2026-10-24.md`；集成时补齐“循环图被当图片”以及结构化标注编辑入口。
 
 ## 验证证据
 
