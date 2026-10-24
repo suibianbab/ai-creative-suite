@@ -37,6 +37,19 @@ function groupIntoCues(
     buffer = [];
   };
   for (const unit of units) {
+    // 长度上限恰好落在句末前一字时，把紧随的标点并入前一条。
+    // 否则会单独渲染一个只有「。」的深色字幕块。
+    if (
+      buffer.length === 0 &&
+      cues.length > 0 &&
+      unit.text.trim().length > 0 &&
+      [...unit.text.trim()].every(isCueBreakChar)
+    ) {
+      const previous = cues[cues.length - 1]!;
+      previous.text += unit.text;
+      previous.endMs = unit.endMs;
+      continue;
+    }
     buffer.push(unit);
     const chars = buffer.reduce((n, item) => n + [...item.text].length, 0);
     if (unitBreaks(unit) || chars >= SUBTITLE_MAX_CUE_CHARS) flush();

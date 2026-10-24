@@ -39,6 +39,21 @@ test("无标点超 10 字：按上限断开（10+1）", () => {
   );
 });
 
+test("达到 10 字上限后紧跟句号：句号归前一条，不生成单字字幕块", () => {
+  const text = "水在海洋、天空和陆地间不停移动。";
+  const words = [...text].map((char, i) => ({
+    text: char,
+    beginMs: i * 200,
+    endMs: i * 200 + 180,
+  }));
+  const cues = buildSubtitleCues({ narrationText: text, words });
+  assert.deepEqual(
+    cues.map((cue) => cue.text),
+    ["水在海洋、", "天空和陆地间不停移动。"],
+  );
+  assert.equal(cues[1]!.endMs, words.at(-1)!.endMs);
+});
+
 test("words 为空数组且给 spanMs → 均匀分布（近似路径）", () => {
   const cues = buildSubtitleCues({
     narrationText: "水循环。",
