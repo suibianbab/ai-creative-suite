@@ -12,7 +12,7 @@ import {
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { buildEditList, validateEditList } from "./export-edit-list.mjs";
 
 const ROOT = path.resolve(
@@ -272,6 +272,82 @@ test("edit-list v2：媒体仓素材核验（可读 + 摘要一致，坏账本�
     );
   } finally {
     rmSync(store, { recursive: true, force: true });
+  }
+});
+
+test("终审修复：帧量化与渲染器同一口径（累计边界，非逐镜头取整）", async () => {
+  // durations [3010×4] @24fps：渲染器（quantizeTimeline，ADR 0003 §3.5）
+  // 边界 72/144/217/289；逐镜头取整会得 72/144/216/288 —— 切片方案按
+  // 清单剪就会从第二镜起错一帧。
+  const { quantizeTimeline } = await import(
+    pathToFileURL(path.join(ROOT, "packages/video-document/dist/index.js")).href
+  );
+  const durations = [3010, 3010, 3010, 3010];
+  const drift = JSON.parse(
+    readFileSync(
+      path.join(
+        ROOT,
+        "artifacts/video-studio-stem-sample-final-2026-10-23/stem.video-project.json",
+      ),
+      "utf8",
+    ),
+  );
+  drift.shots = drift.shots.slice(0, durations.length);
+  drift.renderRecords = [];
+  drift.deliveries = [];
+  drift.shots.forEach((shot, index) => {
+    const version = shot.contentVersions.find(
+      (v) => v.versionId === shot.workingVersionId,
+    );
+    version.durationMs = durations[index];
+  });
+  const list = buildEditList(drift);
+  validateEditList(list);
+  assert.deepEqual(
+    list.timeline.map((entry) => entry.endFrame),
+    [72, 144, 217, 289],
+  );
+  // 与渲染器产物同帧数（render-scene 按 totalFrames 断言 MP4）。
+  assert.equal(
+    list.timeline[list.timeline.length - 1].endFrame,
+    quantizeTimeline(durations, 24).totalFrames,
+  );
+});
+
+test("终审修复：--fps 非正整数大声拒绝（单镜头项目不得写出 NaN 清单）", () => {
+  const single = structuredClone(project);
+  single.shots = [single.shots[0]];
+  single.renderRecords = [];
+  single.deliveries = [];
+  const dir = mkdtempSync(path.join(tmpdir(), "c2-fps-"));
+  const projectFile = path.join(dir, "single.json");
+  try {
+    writeFileSync(projectFile, JSON.stringify(single));
+    let failed = false;
+    try {
+      execFileSync(
+        process.execPath,
+        [
+          "scripts/video/export-edit-list.mjs",
+          "--project",
+          projectFile,
+          "--out",
+          dir,
+          "--fps",
+          "abc",
+        ],
+        { cwd: ROOT, encoding: "utf8" },
+      );
+    } catch {
+      failed = true;
+    }
+    assert.ok(failed, "--fps abc 必须非零退出");
+    assert.ok(
+      !existsSync(path.join(dir, "edit-list.v2.json")),
+      "非法 fps 不得落盘清单",
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
   }
 });
 

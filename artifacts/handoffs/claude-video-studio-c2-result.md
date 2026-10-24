@@ -8,7 +8,7 @@
 
 ## 改动（`scripts/video/export-edit-list.mjs` → v2）
 
-- `transitions[]`：每条 `{boundary, kind, durationMs, startFrame, frames, halfOut, halfIn, baked:true}`——窗口帧数学与渲染器同一份 `resolveTransitionWindows`（video-document dist），借帧越界在导出时大声拒绝。
+- `transitions[]`：每条 `{boundary, kind, durationMs, startFrame, frames, halfOut, halfIn, baked:true}`——窗口帧数学用 `resolveTransitionWindows`（video-document dist；与渲染器装配**同式**——渲染器内联了自己的同式实现，见终审修复节），借帧越界在导出时大声拒绝。
 - `compositionNotes[]`：①转场已合成进帧（区间/总长不变）；②逐镜切片首尾相接即还原权威终片（切片内含变暗帧）；③要改/去转场，切片无法恢复未变暗原始帧，须回项目重出片——编辑器侧可编辑性限制如实写明。
 - `renderSources` + 逐镜 `sourceSpans` + `slicePlan`（`--render <dir>` 给定才有）：真实渲染源逐画幅 SHA-256/字节入账；每镜两个画幅的精确帧区间；可复跑的 ffmpeg 命令模板。
 - 素材核验（`--media-store <dir>` 给定才有）：逐资产打开 `original/<storeKey>` 实测 SHA-256 与账本比对，`verified{file,bytes,sha256}` 入清单；不可读/摘要不符即拒绝导出。
@@ -46,3 +46,9 @@ node scripts/video/export-edit-list.mjs --project .tools/video-studio-c2-transit
 2. 转场 kind 目前仅 `fade`（schema 限定）；清单结构已为多 kind 留位。
 3. 素材核验只在显式 `--media-store` 时进行；不传则清单只带账本（与 v1 行为一致，未冒称核验）。
 4. 切片是"明确受支持方案 + 已实测命令"而非编辑器内建导出；逐镜切片文件本轮作为证据产物归档（3 个），全量 14 个切片可由 slicePlan 一键复算。
+
+## 终审修复（全分支新上下文复核后，同一提交序列内补齐）
+
+- **帧量化改为渲染器同一口径**：v2 初版沿用了 v1 的逐镜头 `round(durationMs×fps/1000)`，与渲染器的累计边界取整（ADR 0003 §3.5）在特定时长组合下从第二镜起错一帧（如 [3010×4]@24fps：72/144/216/288 vs 正确 72/144/217/289）——切片方案会把错帧写进可执行命令。已改用 `quantizeTimeline`（video-document 导出，零帧镜头大声拒绝），回归测试锁定 `[72,144,217,289]`。已交付的 STEM 转场工件两种取整恰好同值，帧数据不受影响。
+- **--fps 非正整数大声拒绝**：初版单镜头项目 + `--fps abc` 会把 `endFrame: null` 写进清单（NaN 比较全部为假）。已在 CLI 入口校验。
+- 文本更正：转场帧数学与渲染器是**同式**实现（渲染器 render-scene 内联了自己的窗口计算，非调用同一函数），两处等价但存在漂移风险——已在代码注释与本报告中改为准确表述。

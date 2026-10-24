@@ -288,7 +288,40 @@ print("SMOKE_OK")
     (name) => name.startsWith("smoke") && name.endsWith(".png"),
   );
   if (!smokePng) throw new Error("smoke frame missing");
-  console.log(`SMOKE PASS → ${smokePng}`);
+  // 像素级回归断言（终审补）：背景逐像素等于 #101820（会抓住 sRGB→线性
+  // 转换缺失类回归——该 bug 实测渲成 (71,87,99)）；主体蓝与参照轴金存在。
+  const rgb = execFileSync("ffmpeg", [
+    "-v",
+    "error",
+    "-i",
+    path.join(WORK, smokePng),
+    "-f",
+    "rawvideo",
+    "-pix_fmt",
+    "rgb24",
+    "-",
+  ]);
+  const at = (x, y) => {
+    const i = (y * 320 + x) * 3;
+    return [rgb[i], rgb[i + 1], rgb[i + 2]];
+  };
+  const corner = at(2, 2);
+  if (corner[0] !== 0x10 || corner[1] !== 0x18 || corner[2] !== 0x20)
+    throw new Error(
+      `冒烟帧背景应为 #101820，实测 rgb(${corner.join(",")})（疑似 sRGB/线性转换回归）`,
+    );
+  let blue = 0;
+  let gold = 0;
+  for (let i = 0; i + 2 < rgb.length; i += 3) {
+    const [r, g, b] = [rgb[i], rgb[i + 1], rgb[i + 2]];
+    if (b > r + 20 && b > 80) blue += 1;
+    if (r > 150 && g > 110 && b < 110) gold += 1;
+  }
+  if (blue < 100) throw new Error(`冒烟帧主体蓝色像素过少：${blue}`);
+  if (gold < 1) throw new Error("冒烟帧未见参照轴金色像素");
+  console.log(
+    `SMOKE PASS → ${smokePng}（背景 #101820 精确、蓝 ${blue}px、金 ${gold}px）`,
+  );
   process.exit(0);
 }
 

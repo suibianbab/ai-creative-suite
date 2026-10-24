@@ -20,9 +20,10 @@ const ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   "../..",
 );
-const { resolveTransitionWindows, validateVideoProject } = await import(
-  pathToFileURL(path.join(ROOT, "packages/video-document/dist/index.js")).href
-);
+const { quantizeTimeline, resolveTransitionWindows, validateVideoProject } =
+  await import(
+    pathToFileURL(path.join(ROOT, "packages/video-document/dist/index.js")).href
+  );
 
 const sha256File = (file) =>
   createHash("sha256").update(readFileSync(file)).digest("hex");
@@ -55,19 +56,22 @@ export function buildEditList(
     shot.contentVersions.find(
       (version) => version.versionId === shot.workingVersionId,
     );
-  const spans = project.shots
-    .map((shot) => working(shot).durationMs)
-    .map((durationMs) => Math.round((durationMs / 1000) * fps));
+  // —— 终审修复：帧量化与渲染器同一口径（quantizeTimeline，ADR 0003 §3.5
+  // 累计边界取整）。逐镜头取整会随镜头数累积跨 fps 漂移，切片边界从此错帧。
+  // 零帧镜头在此大声拒绝（与渲染器 ZeroFrameShotError 同源）。 ——
+  const quantized = quantizeTimeline(
+    project.shots.map((shot) => working(shot).durationMs),
+    fps,
+  ).shots;
   const timeline = [];
-  let cursorFrames = 0;
   for (const [index, shot] of project.shots.entries()) {
     const version = working(shot);
-    const frames = spans[index];
+    const { startFrame, frames } = quantized[index];
     const entry = {
       shotId: shot.shotId,
       versionId: version.versionId,
-      startFrame: cursorFrames,
-      endFrame: cursorFrames + frames,
+      startFrame,
+      endFrame: startFrame + frames,
       durationMs: version.durationMs,
       description: version.description,
       component: version.sceneSource.type,
@@ -113,16 +117,13 @@ export function buildEditList(
       });
     }
     timeline.push(entry);
-    cursorFrames += frames;
   }
-  // —— C2 转场合成窗口：与渲染器同一份帧数学（resolveTransitionWindows），
-  // 借帧越界在这里大声拒绝；窗口叠加在相邻镜头帧内，区间与总时长不变 ——
+  // —— C2 转场合成窗口：resolveTransitionWindows 的帧数学（与渲染器装配
+  // 同式；借帧越界在这里大声拒绝）；窗口叠加在相邻镜头帧内，区间与总时长
+  // 不变。spans 即上面的累计边界量化结果。 ——
   const windows = resolveTransitionWindows(
     project.transitions ?? [],
-    spans.map((frames, index) => ({
-      startFrame: timeline[index].startFrame,
-      frames,
-    })),
+    quantized,
     fps,
   );
   const transitions = (project.transitions ?? []).map((transition, index) => ({
@@ -187,7 +188,7 @@ export function buildEditList(
         file: `${aspect}.mp4`,
         bytes: readFileSync(file).length,
         sha256: sha256File(file),
-        totalFrames: cursorFrames,
+        totalFrames: timeline[timeline.length - 1].endFrame,
       };
     }
     list.slicePlan = {
@@ -353,8 +354,13 @@ if (
     ["render", values.render],
     ["media-store", values["media-store"]],
   ]);
+  const fps = values.fps ? Number(values.fps) : 24;
+  if (!Number.isInteger(fps) || fps <= 0) {
+    console.error(`--fps 必须为正整数（收到：${values.fps}）`);
+    process.exit(1);
+  }
   const list = buildEditList(project, {
-    fps: values.fps ? Number(values.fps) : 24,
+    fps,
     narrationDir: values.narration ?? null,
     renderDir: values.render ?? null,
     mediaStore: values["media-store"] ?? null,
@@ -365,6 +371,6 @@ if (
   writeFileSync(temp, `${JSON.stringify(list, null, 2)}\n`);
   renameSync(temp, path.join(values.out, "edit-list.v2.json"));
   console.log(
-    `edit-list v2 → ${path.join(values.out, "edit-list.v2.json")}（${list.timeline.length} 镜头 / ${list.transitions.length} 转场 / ${list.aspects.join("+")} / ${values.fps ?? 24}fps${values.render ? " / 含切片方案" : ""}${values["media-store"] ? " / 素材已核验" : ""}）`,
+    `edit-list v2 → ${path.join(values.out, "edit-list.v2.json")}（${list.timeline.length} 镜头 / ${list.transitions.length} 转场 / ${list.aspects.join("+")} / ${fps}fps${values.render ? " / 含切片方案" : ""}${values["media-store"] ? " / 素材已核验" : ""}）`,
   );
 }
