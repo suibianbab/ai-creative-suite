@@ -21,7 +21,8 @@ function unitBreaks(unit: { text: string }): boolean {
   return unit.text.length > 0 && isCueBreakChar(unit.text.at(-1)!);
 }
 
-// 连续字累积成 cue：遇停顿标点收口；不遇则 ≤SUBTITLE_MAX_CUE_CHARS 断开。
+// 连续字累积成 cue：遇停顿标点收口；不遇则按 10 字断开。
+// 恰好断在句末标点前时，允许前一条多带该标点，避免单独一块标点字幕。
 function groupIntoCues(
   units: { text: string; startMs: number; endMs: number }[],
 ): SubtitleCue[] {

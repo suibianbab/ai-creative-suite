@@ -1,16 +1,30 @@
 #!/usr/bin/env node
 // D2 旁白合成 CLI：项目 JSON → 逐镜头 DashScope CosyVoice TTS。
 //   产物：<out>/<shotId>-<versionId>.wav（PCM16 24k mono）+ .words.json（句/字时间戳）。
-//   计费：每次调用 append artifacts/tts-usage.jsonl（用户授权累计 ≤¥50，超限即停）。
+//   计费：同仓 worktree 共用 Git common dir 下的台账（累计 ≤¥50，超限即停）。
+//   已成功计费的音频按 model/voice/text 缓存；重试优先复用，不重复发请求。
 // 密钥纪律：DASHSCOPE_API_KEY 只从环境读，绝不写盘/入产物/入日志。
 // 原子性：单镜头先完整合成再落盘（tmp+rename 原子替换）——API 失败不产生半个
-//   资产；写盘中途崩溃也只留 .tmp，不会被下次装配误用；已完成的镜头保留。
+//   资产；不确定是否已计费的失败按估算额预留台账，避免预算低估。
 // 用法: node scripts/video/tts-narration.mjs --project <path.json> --out <dir>
 //       [--voice longanyang] [--model cosyvoice-v3-flash]
-import { appendFileSync, mkdirSync, readFileSync, renameSync } from "node:fs";
+import { createHash } from "node:crypto";
+import {
+  appendFileSync,
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  renameSync,
+} from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
+import {
+  acquireTtsLock,
+  migrateLegacyLedgers,
+  sharedTtsRoot,
+} from "./tts-ledger.mjs";
 import {
   applyDurationAlignments,
   atomicWriteFile,
@@ -30,7 +44,8 @@ const ROOT = path.resolve(
 );
 const ENDPOINT =
   "https://dashscope.aliyuncs.com/api/v1/services/audio/tts/SpeechSynthesizer";
-const USAGE_LEDGER = path.join(ROOT, "artifacts", "tts-usage.jsonl");
+let USAGE_LEDGER;
+let CACHE_DIR;
 const BUDGET_CNY = 50; // 用户授权的累计计费上限（会话裁决）
 
 function fail(message) {
@@ -75,6 +90,42 @@ const apiKey = process.env.DASHSCOPE_API_KEY;
 if (!apiKey) fail("缺环境变量 DASHSCOPE_API_KEY（密钥只走 env，不读文件）");
 const model = values.model;
 const voice = values.voice;
+const sharedRoot = sharedTtsRoot(ROOT);
+acquireTtsLock(sharedRoot);
+USAGE_LEDGER = migrateLegacyLedgers(ROOT, sharedRoot);
+CACHE_DIR = path.join(sharedRoot, "cache");
+
+function cachePaths(job) {
+  const key = createHash("sha256")
+    .update(JSON.stringify({ model, voice, text: job.text }))
+    .digest("hex");
+  return {
+    wav: path.join(CACHE_DIR, `${key}.wav`),
+    words: path.join(CACHE_DIR, `${key}.words.json`),
+  };
+}
+
+function restoreCache(job, base) {
+  const cache = cachePaths(job);
+  if (!existsSync(cache.wav) || !existsSync(cache.words)) return null;
+  try {
+    const wav = readFileSync(cache.wav);
+    const words = JSON.parse(readFileSync(cache.words, "utf8"));
+    if (
+      wav.subarray(0, 4).toString("ascii") !== "RIFF" ||
+      words.model !== model ||
+      words.voice !== voice ||
+      !Array.isArray(words.sentences)
+    )
+      return null;
+    const durationMs = wavDurationMs(wav);
+    copyFileSync(cache.wav, `${base}.wav`);
+    copyFileSync(cache.words, `${base}.words.json`);
+    return durationMs;
+  } catch {
+    return null;
+  }
+}
 
 // scripts/ 不进 workspace 包图，按预检裁决用相对路径引 dist。
 const { validateVideoProject } = await import(
@@ -99,6 +150,15 @@ mkdirSync(values.out, { recursive: true });
 const wavMsByBase = new Map();
 
 for (const job of jobs) {
+  const base = path.join(values.out, `${job.shotId}-${job.versionId}`);
+  const cachedMs = restoreCache(job, base);
+  if (cachedMs !== null) {
+    wavMsByBase.set(`${job.shotId}-${job.versionId}`, cachedMs);
+    console.log(
+      `镜头 ${job.shotIndex + 1}/${project.shots.length} 使用已计费旁白缓存`,
+    );
+    continue;
+  }
   const estimate = estimateTtsCostCny(job.text.length * 2, model); // 中文按每字 2 计费字符估算
   if (spent + estimate > BUDGET_CNY) {
     fail(
@@ -108,9 +168,10 @@ for (const job of jobs) {
 
   // ttsFetchInit：认证/SSE 头 + 120s AbortSignal——DashScope 挂起时掐断请求
   // 而非永等（裸跑 CLI 无 e2e 包装的 300s 兜底，终评 minor#3）
-  let response;
+  let parsed;
+  let usageRecorded = false;
   try {
-    response = await fetch(ENDPOINT, {
+    const response = await fetch(ENDPOINT, {
       ...ttsFetchInit(apiKey),
       body: JSON.stringify({
         model,
@@ -123,38 +184,19 @@ for (const job of jobs) {
         },
       }),
     });
-  } catch (error) {
-    fail(
-      `镜头 ${job.shotIndex + 1}（${job.shotId}）TTS 请求失败（120s 超时或网络错误）: ${error.message}`,
-    );
-  }
-  if (!response.ok) {
-    // request_id 显式点名（终评 minor#2）：DashScope 对账/工单必填
-    fail(
-      `镜头 ${job.shotIndex + 1}（${job.shotId}）TTS ${describeHttpFailure(response.status, await response.text())}`,
-    );
-  }
-
-  const parsed = parseTtsSse(await response.text());
-  if (parsed.finishReason !== "stop") {
-    fail(
-      `镜头 ${job.shotIndex + 1}（${job.shotId}）合成未正常结束：finish_reason=${parsed.finishReason ?? "缺失"} request_id=${parsed.requestId ?? "?"}`,
-    );
-  }
-  const wav = Buffer.concat(parsed.audioChunks);
-  if (wav.subarray(0, 4).toString("ascii") !== "RIFF") {
-    fail(
-      `镜头 ${job.shotIndex + 1}（${job.shotId}）音频字节异常（非 RIFF 开头，${wav.byteLength}B），拒绝落盘`,
-    );
-  }
-
-  const base = path.join(values.out, `${job.shotId}-${job.versionId}`);
-  // tmp+rename 原子写（终评 minor#4）：写盘中途崩溃只留 .tmp，
-  // 不会留半个 wav 被下次装配当正常资产
-  atomicWriteFile(`${base}.wav`, wav);
-  atomicWriteFile(
-    `${base}.words.json`,
-    `${JSON.stringify(
+    if (!response.ok)
+      throw new Error(
+        `TTS ${describeHttpFailure(response.status, await response.text())}`,
+      );
+    parsed = parseTtsSse(await response.text());
+    if (parsed.finishReason !== "stop")
+      throw new Error(
+        `合成未正常结束：finish_reason=${parsed.finishReason ?? "缺失"} request_id=${parsed.requestId ?? "?"}`,
+      );
+    const wav = Buffer.concat(parsed.audioChunks);
+    if (wav.subarray(0, 4).toString("ascii") !== "RIFF")
+      throw new Error(`音频字节异常（非 RIFF 开头，${wav.byteLength}B）`);
+    const words = `${JSON.stringify(
       {
         requestId: parsed.requestId,
         model,
@@ -164,28 +206,63 @@ for (const job of jobs) {
       },
       null,
       2,
-    )}\n`,
-  );
-  wavMsByBase.set(`${job.shotId}-${job.versionId}`, wavDurationMs(wav));
-
-  const characters = parsed.usage?.characters ?? 0;
-  const costCny = estimateTtsCostCny(characters, model);
-  appendUsage({
-    at: new Date().toISOString(),
-    purpose: "video-studio-d2-narration",
-    model,
-    voice,
-    shotId: job.shotId,
-    versionId: job.versionId,
-    requestId: parsed.requestId,
-    characters,
-    costCny,
-  });
-  spent += costCny;
-  console.log(
-    `镜头 ${job.shotIndex + 1}/${project.shots.length} ${job.shotId} → ${path.basename(base)}.wav ` +
-      `(${wav.byteLength}B, ${parsed.sentences.length} 句, characters=${characters}, ¥${costCny.toFixed(4)}, 累计 ¥${spent.toFixed(4)})`,
-  );
+    )}\n`;
+    atomicWriteFile(`${base}.wav`, wav);
+    atomicWriteFile(`${base}.words.json`, words);
+    wavMsByBase.set(`${job.shotId}-${job.versionId}`, wavDurationMs(wav));
+    const characters = parsed.usage?.characters ?? job.text.length * 2;
+    const costCny = estimateTtsCostCny(characters, model);
+    appendUsage({
+      at: new Date().toISOString(),
+      purpose: "video-studio-d2-narration",
+      model,
+      voice,
+      shotId: job.shotId,
+      versionId: job.versionId,
+      requestId: parsed.requestId,
+      characters,
+      costCny,
+      saved: true,
+    });
+    usageRecorded = true;
+    spent += costCny;
+    try {
+      mkdirSync(CACHE_DIR, { recursive: true });
+      const cache = cachePaths(job);
+      atomicWriteFile(cache.wav, wav);
+      atomicWriteFile(cache.words, words);
+    } catch (error) {
+      console.warn(
+        `镜头 ${job.shotIndex + 1} 缓存写入失败，下次可能重新计费：${error.message}`,
+      );
+    }
+    console.log(
+      `镜头 ${job.shotIndex + 1}/${project.shots.length} ${job.shotId} → ${path.basename(base)}.wav ` +
+        `(${wav.byteLength}B, ${parsed.sentences.length} 句, characters=${characters}, ¥${costCny.toFixed(4)}, 累计 ¥${spent.toFixed(4)})`,
+    );
+  } catch (error) {
+    if (!usageRecorded) {
+      // 上游是否已计费无法确定时，按估算额预留预算，避免失败窗口低估总花费。
+      const characters = parsed?.usage?.characters ?? job.text.length * 2;
+      const costCny = estimateTtsCostCny(characters, model);
+      appendUsage({
+        at: new Date().toISOString(),
+        purpose: "video-studio-d2-narration",
+        model,
+        voice,
+        shotId: job.shotId,
+        versionId: job.versionId,
+        requestId: parsed?.requestId ?? null,
+        characters,
+        costCny,
+        saved: false,
+        uncertain: true,
+      });
+    }
+    fail(
+      `镜头 ${job.shotIndex + 1}（${job.shotId}）TTS 失败：${error.message}`,
+    );
+  }
 }
 
 console.log(

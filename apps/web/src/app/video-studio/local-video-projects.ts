@@ -359,6 +359,75 @@ export async function importVideoProject(
   }
 }
 
+// TTS 时长对齐与出片回写可能连续产生两个内容版本。整条快进链必须在
+// 同一 IndexedDB 事务中提交，避免第二步失败时本地停在中间版本。
+export async function importVideoProjectChain(
+  documents: VideoProject[],
+): Promise<VideoProject> {
+  if (documents.length === 0) throw new Error("导入版本链不能为空");
+  const id = documents[0]!.id;
+  for (const document of documents) {
+    validateVideoProject(document);
+    if (document.id !== id) throw new Error("导入版本链必须属于同一项目");
+    await checkStyleReference(document);
+  }
+  const database = await openDatabase();
+  try {
+    const transaction = database.transaction(
+      ["projects", "versions"],
+      "readwrite",
+    );
+    const done = transactionDone(transaction);
+    const stored = await requestResult(
+      transaction.objectStore("projects").get(id) as IDBRequest<
+        ProjectRecord | undefined
+      >,
+    );
+    let current = stored?.document;
+    try {
+      for (const document of documents) {
+        if (current && canonicalJson(document) === canonicalJson(current))
+          continue;
+        if (current) {
+          if (document.savedVersion !== current.savedVersion + 1)
+            throw new VideoProjectConflictError(
+              id,
+              document.savedVersion,
+              current.savedVersion,
+            );
+          assertAppendOnlyEvolution(current, document);
+        }
+        const savedAt = Date.now();
+        transaction.objectStore("versions").put(
+          {
+            projectId: id,
+            savedVersion: document.savedVersion,
+            savedAt,
+            document,
+          } satisfies VersionSnapshot,
+          `${id}:${document.savedVersion}`,
+        );
+        transaction.objectStore("projects").put({
+          id,
+          title: document.title,
+          updatedAt: savedAt,
+          savedVersion: document.savedVersion,
+          document,
+        } satisfies ProjectRecord);
+        current = document;
+      }
+    } catch (error) {
+      done.catch(() => {});
+      transaction.abort();
+      throw error;
+    }
+    await done;
+    return current!;
+  } finally {
+    database.close();
+  }
+}
+
 export async function openVideoProject(
   id: string,
 ): Promise<VideoProject | null> {

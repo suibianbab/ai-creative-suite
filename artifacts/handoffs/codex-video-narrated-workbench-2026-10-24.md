@@ -30,3 +30,17 @@
 5. 明确区分“链路通过”和“音质/配音表现达到商业水平”。本轮只核音轨存在、音量非零、字幕可见，没有人耳评价配音自然度。
 
 发现阻断问题时请给文件/行、复现步骤和实际影响；修复后只复核受影响增量。不要同时修改 Claude 所有权文件。两线集成时由 Codex 统一登记 `VID-047/048`、更新当前状态，并跑 Claude 新画面与本线有声入口组合后的最终成片。
+
+## 对 Claude 二轮审核的整改（分支增量，待复核）
+
+审核源：`D:\codex\animate\.claude\worktrees\video-template-experience\artifacts\claude-review-narrated-workbench-2026-10-24.md`。
+
+- N1：TTS 成功资产写入 Git common dir 下的内容寻址缓存（model/voice/text SHA-256）；新作业先复用 WAV+字级时间戳，渲染失败后清理 job 目录也不会抹掉已计费缓存。使用已付费旧产物预热 7 个缓存项后，以假密钥做无网络复跑：7/7 cache hit，台账仍 28 条，无新计费。
+- N2：出片期间整个编辑区 `fieldset disabled` + `inert`，返回列表按钮禁用；用户不能在长作业期间修订镜头后被完成回调静默覆盖。真实 Playwright 用拦截的无费渲染请求挂起后尝试填写项目标题，操作被拒；释放为模拟失败后标题保持原值、错误提示可见（`.tools/n2-browser-lock.mjs`，PASS）。
+- N3：所有同仓工作树改用 `.git/acs-video-tts/tts-usage.jsonl`，每次计费前合并旧工作树台账、按 requestId 去重；单飞锁避免两个新版 TTS CLI 同时透支。实地迁移两个旧账本共 28 条、¥0.0656。旧版工作树 CLI 不认识新锁，集成后不应再用旧版本发起计费。
+- N4：`importVideoProjectChain` 将对齐版与渲染版放在同一个 IndexedDB readwrite 事务；第二步篡改旧内容的反例证明没有留下中间版本。
+- N5：上游请求后异常、非正常结束或坏 WAV 按已知 usage 或保守估算写 `saved:false, uncertain:true` 台账行；不能确认未收费时不让预算被低估。确定成功则写 `saved:true`。
+- N6：Windows 超时杀 Node 及子进程树；失败目录删除有重试，删除自身失败只告警，不遮住原始出片错误。
+- N7：重试开始不再清空上次成功下载链接；新成功后替换。N8 已将尾随标点占额外一字的口径写入字幕注释；N10 浏览器 e2e 等待改为 1520s 覆盖服务端 TTS+渲染预算。N9（旁白存在性判断共用助手）为非阻断维护项，暂未改。
+
+无付费复核：web 283/283、`video-document` 159/159、TTS 测试 21/21（新增临时 Git 双工作树去重/锁/增量同步）、全工作区 typecheck、Biome；真实共享账本迁移和 7 镜缓存复跑均通过。**仍待**集成 Claude 新样片后的真实浏览器双画幅出片、晚帧字幕重看与人耳主观听审。请只复核本节对应的分支新增提交，不重复首轮已通过项。

@@ -7,8 +7,11 @@
 //  - 行前缀 id:/event:/:HTTP_STATUS/data:，finish_reason 中间事件是字符串 "null"。
 
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import {
+  appendFileSync,
   existsSync,
+  mkdirSync,
   mkdtempSync,
   readFileSync,
   rmSync,
@@ -17,6 +20,11 @@ import {
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
+import {
+  acquireTtsLock,
+  migrateLegacyLedgers,
+  sharedTtsRoot,
+} from "./tts-ledger.mjs";
 import {
   atomicWriteFile,
   buildNarrationJobs,
@@ -225,6 +233,65 @@ test("parseUsageLedger：合法逐行求和；坏行 throw 点名行号，不静
     /第 2 行/,
     "坏行必须点名行号（其后条目不得被静默丢弃）",
   );
+});
+
+test("同仓 worktree 共用台账：旧账按 requestId 去重、后续同步并阻止并发计费", () => {
+  const parent = mkdtempSync(path.join(tmpdir(), "acs-tts-ledger-"));
+  const repo = path.join(parent, "repo");
+  const other = path.join(parent, "other");
+  const git = (args, cwd = repo) =>
+    execFileSync("git", args, { cwd, stdio: "pipe" });
+  mkdirSync(repo);
+  try {
+    git(["init", "-b", "main"]);
+    git(["config", "user.email", "qa@example.test"]);
+    git(["config", "user.name", "QA"]);
+    writeFileSync(path.join(repo, "README.md"), "test");
+    git(["add", "README.md"]);
+    git(["commit", "-m", "fixture"]);
+    git(["worktree", "add", "-b", "other", other]);
+    mkdirSync(path.join(repo, "artifacts"));
+    mkdirSync(path.join(other, "artifacts"));
+    const line = (id, cost) =>
+      `${JSON.stringify({ requestId: id, costCny: cost })}\n`;
+    writeFileSync(
+      path.join(repo, "artifacts", "tts-usage.jsonl"),
+      line("a", 0.01) + line("b", 0.02),
+    );
+    writeFileSync(
+      path.join(other, "artifacts", "tts-usage.jsonl"),
+      line("b", 0.02) + line("c", 0.03),
+    );
+    const shared = sharedTtsRoot(other);
+    const release = acquireTtsLock(shared);
+    try {
+      assert.throws(() => acquireTtsLock(shared), /已有 TTS 计费任务/);
+      const ledger = migrateLegacyLedgers(other, shared);
+      assert.deepEqual(
+        parseUsageLedger(readFileSync(ledger, "utf8")).map(
+          (entry) => entry.requestId,
+        ),
+        ["a", "b", "c"],
+      );
+      appendFileSync(
+        path.join(other, "artifacts", "tts-usage.jsonl"),
+        line("d", 0.04),
+      );
+      assert.equal(
+        parseUsageLedger(
+          readFileSync(migrateLegacyLedgers(repo, shared), "utf8"),
+        ).length,
+        4,
+      );
+    } finally {
+      release();
+    }
+    assert.equal(existsSync(path.join(shared, "active.lock")), false);
+  } finally {
+    if (existsSync(other)) git(["worktree", "remove", "--force", other]);
+    if (path.dirname(path.resolve(parent)) === path.resolve(tmpdir()))
+      rmSync(parent, { recursive: true, force: true });
+  }
 });
 
 // ── 终评 minor×7 补充 pass（用户裁决全修） ──────────────────────────────

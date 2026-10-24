@@ -54,7 +54,7 @@ try {
   await page.waitForFunction(
     () => !document.querySelector(".editor-render-narrated")?.disabled,
     null,
-    { timeout: 900_000 },
+    { timeout: 1_520_000 },
   );
   assert.match(
     await page.locator(".editor-message").innerText(),

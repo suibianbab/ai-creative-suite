@@ -1,4 +1,4 @@
-import { spawn } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
 import {
   createReadStream,
@@ -80,7 +80,18 @@ function runRender(
     };
     child.stdout.on("data", append);
     child.stderr.on("data", append);
-    const timer = setTimeout(() => child.kill(), timeoutMs);
+    const timer = setTimeout(() => {
+      if (process.platform === "win32" && child.pid) {
+        try {
+          execFileSync("taskkill", ["/PID", String(child.pid), "/T", "/F"], {
+            windowsHide: true,
+            stdio: "ignore",
+          });
+        } catch {
+          child.kill();
+        }
+      } else child.kill();
+    }, timeoutMs);
     child.once("error", (error) => {
       clearTimeout(timer);
       reject(error);
@@ -92,6 +103,20 @@ function runRender(
         reject(new Error(`出片失败（exit ${code}）：${output.slice(-1200)}`));
     });
   });
+}
+
+function cleanupFailedJob(dir: string): void {
+  try {
+    rmSync(dir, {
+      recursive: true,
+      force: true,
+      maxRetries: 5,
+      retryDelay: 200,
+    });
+  } catch (error) {
+    // Windows 子进程可能短暂持有文件句柄；清理错误不能遮住原始失败原因。
+    console.warn("视频作业目录清理失败", dir, error);
+  }
 }
 
 export async function renderLocalProject(
@@ -153,7 +178,7 @@ export async function renderLocalProject(
     }
     await runRender(args, root);
   } catch (error) {
-    rmSync(dir, { recursive: true, force: true });
+    cleanupFailedJob(dir);
     throw error;
   }
   try {
@@ -176,7 +201,7 @@ export async function renderLocalProject(
     );
     return { project: rendered, alignedProject, downloads };
   } catch (error) {
-    rmSync(dir, { recursive: true, force: true });
+    cleanupFailedJob(dir);
     throw error;
   }
 }

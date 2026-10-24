@@ -12,6 +12,7 @@ import {
 import { IDBFactory } from "fake-indexeddb";
 import {
   importVideoProject,
+  importVideoProjectChain,
   openStyleBible,
   openVideoProject,
   readVideoProjectVersion,
@@ -309,5 +310,38 @@ test("导入：新项目原样入库；快进一版（CLI 回写）接受；分�
       () => importVideoProject(tamperedFastForward),
       VideoProjectMutationError,
     );
+  });
+});
+
+test("双版本快进在一个事务提交，第二步被拒时不留下中间版本", async () => {
+  await withTabs(async () => {
+    const base = await saveVideoProject(makeProject());
+    const aligned = structuredClone(base);
+    aligned.savedVersion += 1;
+    aligned.title = "旁白已对齐";
+    const rendered = structuredClone(aligned);
+    rendered.savedVersion += 1;
+    rendered.renderRecords.push(
+      makeRenderRecord(base.shots[0]!.contentVersions[0]!.versionId),
+    );
+    const tampered = structuredClone(rendered);
+    tampered.shots[0]!.contentVersions[0]!.description = "篡改旧版本";
+    await assert.rejects(
+      () => importVideoProjectChain([aligned, tampered]),
+      VideoProjectMutationError,
+    );
+    assert.equal(
+      (await openVideoProject(base.id))!.savedVersion,
+      base.savedVersion,
+    );
+    assert.equal(
+      await readVideoProjectVersion(base.id, aligned.savedVersion),
+      null,
+    );
+
+    const accepted = await importVideoProjectChain([aligned, rendered]);
+    assert.equal(accepted.savedVersion, base.savedVersion + 2);
+    assert.equal((await openVideoProject(base.id))!.renderRecords.length, 1);
+    assert.ok(await readVideoProjectVersion(base.id, aligned.savedVersion));
   });
 });

@@ -50,6 +50,13 @@
   padding: 28px 24px 48px;
 }
 
+.editor-pane {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
 .project-toolbar {
   display: flex;
   align-items: center;

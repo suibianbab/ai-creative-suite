@@ -24,6 +24,7 @@ import {
 } from "./apply-plan";
 import {
   importVideoProject,
+  importVideoProjectChain,
   listVideoProjects,
   openStyleBible,
   openVideoProject,
@@ -192,7 +193,6 @@ export default function VideoStudioPage() {
 
   const renderFromWorkbench = async (state: EditorState, narrated = false) => {
     const project = state.document;
-    setRenderDownloads(null);
     setEditor({
       ...state,
       busy: true,
@@ -227,10 +227,12 @@ export default function VideoStudioPage() {
       };
       if (!response.ok || !payload.project || payload.downloads?.length !== 2)
         throw new Error(payload.error ?? "双画幅出片失败");
-      if (payload.alignedProject)
-        await importVideoProject(validateVideoProject(payload.alignedProject));
       const returned = validateVideoProject(payload.project);
-      const imported = await importVideoProject(returned);
+      const imported = await importVideoProjectChain(
+        payload.alignedProject
+          ? [validateVideoProject(payload.alignedProject), returned]
+          : [returned],
+      );
       setRenderDownloads({
         projectId: imported.id,
         signature: renderSignature(imported),
@@ -538,6 +540,7 @@ export default function VideoStudioPage() {
           <button
             type="button"
             className="project-action"
+            disabled={busy}
             onClick={() => {
               setEditor(null);
               refreshProjects().catch(() => {});
@@ -546,7 +549,12 @@ export default function VideoStudioPage() {
             返回列表
           </button>
         </header>
-        <section className="editor-pane">
+        <fieldset
+          className="editor-pane"
+          aria-busy={busy}
+          inert={busy}
+          disabled={busy}
+        >
           <label className="editor-field">
             项目标题
             <input
@@ -1119,7 +1127,7 @@ export default function VideoStudioPage() {
               </ul>
             </div>
           ) : null}
-        </section>
+        </fieldset>
       </main>
     );
   }
