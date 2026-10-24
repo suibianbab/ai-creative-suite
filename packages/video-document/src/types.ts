@@ -151,6 +151,22 @@ export type VideoProject = {
   transitions?: ShotTransition[];
   // —— P2.5 媒体混编：素材元数据账本（二进制不入文档，只追加）——
   mediaAssets?: MediaAsset[];
+  // —— W2 风格代表帧确认：当前态（可改写，同 transitions 口径），每镜头至多
+  // 一条；绑定内容版本 + 风格版本摘要 + 双画幅确认帧 SVG SHA-256 三重身份，
+  // 任一变化即失效（运行时判定，见工作台 frame-approval）。缺省 = 未启用。 ——
+  styleFrameApprovals?: StyleFrameApproval[];
+};
+
+// W2 代表帧确认记录：确认的是「这个镜头内容 × 这个风格版本 × 这两帧画面」。
+export type StyleFrameApproval = {
+  shotId: string;
+  contentVersionId: string;
+  styleBibleRef: StyleBibleRef;
+  frames: Array<{
+    aspect: AspectTarget;
+    svgSha256: string;
+  }>;
+  confirmedAt: string;
 };
 
 export type StyleBibleRef = {
@@ -174,6 +190,9 @@ export type StyleBibleVersion = {
   fontFamily: "NotoSansSC";
   // 当前 orbit3d@1 灯光是固定 rig；不宣称任意场景可调光。
   lightingPreset: "orbit3d-fixed-soft-studio";
+  // W2 派生来源：本版本从哪个版本派生、改了什么。进入 canonicalJson，
+  // 派生版本天然获得新 digest 身份；旧项目引用旧版本不受影响。
+  derivedFrom?: { versionId: string; note: string };
 };
 
 export type StyleBible = {

@@ -313,3 +313,36 @@ test("旧流程图无 nodeTextColor 时仅豁免自动派生字段，其他风�
   legacy.params.boxColor = "#ff0000";
   assert.match(workingStyleIssues(source, dark).join(""), /偏离/);
 });
+
+test("W2：derivedFrom 派生元数据——合法通过、坏引用与超长备注拒绝、digest 随之变化", async () => {
+  const derived = structuredClone(bible);
+  derived.versions.push({
+    ...derived.versions[0]!,
+    versionId: crypto.randomUUID(),
+    createdAt: "2026-10-24T00:00:00.000Z",
+    name: "暖木家装 · 派生",
+    derivedFrom: {
+      versionId: derived.versions[0]!.versionId,
+      note: "把 secondary 换成暖木色",
+    },
+  });
+  derived.currentVersionId = derived.versions.at(-1)!.versionId;
+  validateStyleBible(derived);
+  const before = await styleVersionDigest(derived.versions[0]!);
+  const after = await styleVersionDigest(derived.versions[1]!);
+  assert.notEqual(before, after, "派生版本 digest 必须是新身份");
+
+  const badRef = structuredClone(derived);
+  badRef.versions[1]!.derivedFrom = {
+    versionId: "0b0b13a2-6c63-4d3d-9a52-a70f6a3b1999",
+    note: "指向不存在的版本",
+  };
+  assert.throws(() => validateStyleBible(badRef), /derivedFrom/);
+
+  const longNote = structuredClone(derived);
+  longNote.versions[1]!.derivedFrom = {
+    versionId: derived.versions[0]!.versionId,
+    note: "长".repeat(201),
+  };
+  assert.throws(() => validateStyleBible(longNote), /derivedFrom/);
+});

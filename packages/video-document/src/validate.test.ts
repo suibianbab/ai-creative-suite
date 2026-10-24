@@ -6,6 +6,7 @@ import type {
   ThreeSceneSpec,
 } from "./types.js";
 import { type VideoProject, validateVideoProject } from "./validate.js";
+import { assertAppendOnlyEvolution } from "./evolve.js";
 
 const UUID = "0b0b13a2-6c63-4d3d-9a52-a70f6a3b1001";
 function baseProject(): VideoProject {
@@ -1217,4 +1218,79 @@ test("RenderRecord.three 字段逐项非法被拒（表驱动）", () => {
     Object.assign(project.renderRecords[0]!, { three });
     assert.throws(() => validateVideoProject(project), pattern, name);
   }
+});
+
+// —— W2 风格代表帧确认（styleFrameApprovals）与派生元数据（derivedFrom）——
+function approvalEntry(
+  project: VideoProject,
+  overrides: Record<string, unknown> = {},
+) {
+  const shot = project.shots[0]!;
+  return {
+    shotId: shot.shotId,
+    contentVersionId: shot.contentVersions[0]!.versionId,
+    styleBibleRef: {
+      bibleId: "5f0a2b6c-1111-4222-8333-444455556666",
+      versionId: "6a1b3c7d-2222-4333-8444-555566667777",
+      digest: "c".repeat(64),
+    },
+    frames: [
+      { aspect: "landscape", svgSha256: "d".repeat(64) },
+      { aspect: "portrait", svgSha256: "e".repeat(64) },
+    ],
+    confirmedAt: "2026-10-24T00:00:00.000Z",
+    ...overrides,
+  };
+}
+
+test("W2：合法 styleFrameApprovals 通过；shotId 重复/坏形状拒绝", () => {
+  const p = baseProject();
+  (p as { styleFrameApprovals?: unknown[] }).styleFrameApprovals = [
+    approvalEntry(p),
+  ];
+  assert.equal(validateVideoProject(p).styleFrameApprovals?.length, 1);
+
+  const dup = baseProject();
+  (dup as { styleFrameApprovals?: unknown[] }).styleFrameApprovals = [
+    approvalEntry(dup),
+    approvalEntry(dup),
+  ];
+  assert.throws(() => validateVideoProject(dup), /styleFrameApprovals/);
+
+  const badShot = baseProject();
+  (badShot as { styleFrameApprovals?: unknown[] }).styleFrameApprovals = [
+    approvalEntry(badShot, { shotId: "not-a-uuid" }),
+  ];
+  assert.throws(() => validateVideoProject(badShot), /styleFrameApprovals/);
+
+  const foreignVersion = baseProject();
+  (foreignVersion as { styleFrameApprovals?: unknown[] }).styleFrameApprovals = [
+    approvalEntry(foreignVersion, {
+      contentVersionId: "0b0b13a2-6c63-4d3d-9a52-a70f6a3b1999",
+    }),
+  ];
+  assert.throws(
+    () => validateVideoProject(foreignVersion),
+    /contentVersionId/,
+  );
+
+  const missingAspect = baseProject();
+  (missingAspect as { styleFrameApprovals?: unknown[] }).styleFrameApprovals = [
+    approvalEntry(missingAspect, {
+      frames: [{ aspect: "landscape", svgSha256: "d".repeat(64) }],
+    }),
+  ];
+  assert.throws(() => validateVideoProject(missingAspect), /frames|aspect/);
+});
+
+test("W2：styleFrameApprovals 是当前态可改写（evolve 不按只追加约束）", () => {
+  const history = baseProject();
+  (history as { styleFrameApprovals?: unknown[] }).styleFrameApprovals = [
+    approvalEntry(history),
+  ];
+  const next = structuredClone(history);
+  (next as { styleFrameApprovals?: unknown[] }).styleFrameApprovals = [
+    approvalEntry(next, { confirmedAt: "2026-10-24T01:00:00.000Z" }),
+  ];
+  assert.doesNotThrow(() => assertAppendOnlyEvolution(history, next));
 });
