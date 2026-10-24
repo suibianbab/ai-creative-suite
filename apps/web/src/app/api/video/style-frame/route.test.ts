@@ -124,8 +124,10 @@ test("未知镜头、越界时间与风格漂移给出可操作错误", async ()
     assert.match((await outOfRange.json()).error, /frameMs/);
 
     const drifted = structuredClone(project);
-    const driftedSource = drifted.shots[0]!.contentVersions[0]!
-      .sceneSource as { type: "spec"; spec: { params: Record<string, unknown> } };
+    const driftedSource = drifted.shots[0]!.contentVersions[0]!.sceneSource as {
+      type: "spec";
+      spec: { params: Record<string, unknown> };
+    };
     driftedSource.spec.params.titleColor = "#123456";
     const drift = await POST(
       new Request(url, {

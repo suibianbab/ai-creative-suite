@@ -70,8 +70,10 @@ test("confirmationBlockSignature 覆盖风格引用、工作版本与转场", ()
   const base = confirmationBlockSignature(project);
   assert.equal(base, confirmationBlockSignature(project));
   // 工作版本变化 → 签名变化
-  const baseSource = sample().shots[0]!.contentVersions[0]!
-    .sceneSource as { type: "spec"; spec: Record<string, unknown> };
+  const baseSource = sample().shots[0]!.contentVersions[0]!.sceneSource as {
+    type: "spec";
+    spec: Record<string, unknown>;
+  };
   const edited = reviseWorkingVersion(
     project,
     project.shots[0]!.shotId,

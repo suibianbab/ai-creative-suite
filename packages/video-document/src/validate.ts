@@ -1,3 +1,5 @@
+import { EXPORT_FPS } from "./aspect.js";
+import { quantizeTimeline } from "./quantize.js";
 import type {
   AspectTarget,
   ContentVersion,
@@ -6,8 +8,6 @@ import type {
   ShotEvent,
   VideoProject,
 } from "./types.js";
-import { EXPORT_FPS } from "./aspect.js";
-import { quantizeTimeline } from "./quantize.js";
 
 export type { VideoProject } from "./types.js";
 
@@ -937,7 +937,10 @@ export function validateVideoProject(value: unknown): VideoProject {
       fail("styleFrameConfirmations 须为至多 100 条的数组");
     }
     const knownConfirmationIds = new Set<string>();
-    for (const [index, confirmation] of parsed.styleFrameConfirmations.entries()) {
+    for (const [
+      index,
+      confirmation,
+    ] of parsed.styleFrameConfirmations.entries()) {
       const field = `styleFrameConfirmations[${index}]`;
       if (!isRecord(confirmation)) fail(`${field} must be an object`);
       if (!isUuid(confirmation.confirmationId))
@@ -945,7 +948,10 @@ export function validateVideoProject(value: unknown): VideoProject {
       if (knownConfirmationIds.has(confirmation.confirmationId))
         fail(`${field}.confirmationId is duplicated`);
       knownConfirmationIds.add(confirmation.confirmationId as string);
-      if (typeof confirmation.shotId !== "string" || !knownShotIds.has(confirmation.shotId)) {
+      if (
+        typeof confirmation.shotId !== "string" ||
+        !knownShotIds.has(confirmation.shotId)
+      ) {
         fail(`${field}.shotId 未指向项目中的镜头`);
       }
       const shotVersions = versionsByShotId.get(confirmation.shotId as string);
@@ -969,9 +975,7 @@ export function validateVideoProject(value: unknown): VideoProject {
         (confirmation.frameMs as number) < 0 ||
         (confirmation.frameMs as number) >= version.durationMs
       ) {
-        fail(
-          `${field}.frameMs 须为 0..${version.durationMs - 1} 的整数毫秒`,
-        );
+        fail(`${field}.frameMs 须为 0..${version.durationMs - 1} 的整数毫秒`);
       }
       const frames = quantizeTimeline([version.durationMs], EXPORT_FPS)
         .shots[0]!.frames;
@@ -990,7 +994,9 @@ export function validateVideoProject(value: unknown): VideoProject {
         typeof ref.digest !== "string" ||
         !SHA256_HEX.test(ref.digest)
       ) {
-        fail(`${field}.styleBibleRef 须包含 bibleId、versionId 与 SHA-256 digest`);
+        fail(
+          `${field}.styleBibleRef 须包含 bibleId、versionId 与 SHA-256 digest`,
+        );
       }
       const keyframes = confirmation.keyframes;
       if (
@@ -1007,7 +1013,10 @@ export function validateVideoProject(value: unknown): VideoProject {
         if (frame.aspect !== "landscape" && frame.aspect !== "portrait") {
           fail(`${frameField}.aspect 须为 landscape 或 portrait`);
         }
-        if (typeof frame.digest !== "string" || !SHA256_HEX.test(frame.digest)) {
+        if (
+          typeof frame.digest !== "string" ||
+          !SHA256_HEX.test(frame.digest)
+        ) {
           fail(`${frameField}.digest 须为 64 位小写十六进制`);
         }
         if (!Number.isInteger(frame.bytes) || (frame.bytes as number) < 1) {

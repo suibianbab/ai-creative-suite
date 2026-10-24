@@ -12,9 +12,7 @@
         "tsx",
         "../../scripts/video/e2e-shot-recipes.mjs"
       ],
-      "requiresPorts": [
-        3210
-      ],
+      "requiresPorts": [3210],
       "checks": [
         "Create a project, apply all three recipes (text point, data bars, product clip with uploaded media), edit a title, save, reopen after reload, and assert both aspect previews",
         "Dual-aspect H.264 renders from the exported project keep the three-shot frame map; the exported text-shot spec re-rendered at the catalog preview frame through the same registry carries the same visible texts (string parity, not an MP4 pixel comparison)",
@@ -32,9 +30,7 @@
         "tsx",
         "../../scripts/video/e2e-style-frame-confirm.mjs"
       ],
-      "requiresPorts": [
-        3210
-      ],
+      "requiresPorts": [3210],
       "checks": [
         "Pick a spec shot and frame time, generate real-renderer landscape/portrait keyframes via /api/video/style-frame, confirm explicitly, and save; exported project carries one human-actor confirmation with hex digests and the quantized frameIndex",
         "Editing a shot invalidates the confirmation (derived status), and POSTing the invalidated project to /api/video/render is rejected 400 with a confirmation reason; regenerating and re-confirming unlocks a real dual-aspect MP4 export",
@@ -47,36 +43,23 @@
       "tier": "smoke",
       "title": "Source lint and formatting",
       "cwd": ".",
-      "argv": [
-        "pnpm",
-        "lint"
-      ],
-      "checks": [
-        "No Biome errors or formatting drift"
-      ]
+      "argv": ["pnpm", "lint"],
+      "checks": ["No Biome errors or formatting drift"]
     },
     {
       "id": "QG-002",
       "tier": "smoke",
       "title": "Type boundaries across workspaces",
       "cwd": ".",
-      "argv": [
-        "pnpm",
-        "typecheck"
-      ],
-      "checks": [
-        "All TypeScript workspaces typecheck"
-      ]
+      "argv": ["pnpm", "typecheck"],
+      "checks": ["All TypeScript workspaces typecheck"]
     },
     {
       "id": "IMG-001",
       "tier": "smoke",
       "title": "ImageDocument operations and text-instruction transactions",
       "cwd": ".",
-      "argv": [
-        "pnpm",
-        "test"
-      ],
+      "argv": ["pnpm", "test"],
       "checks": [
         "Original asset references remain unchanged by composition edits",
         "Crop, mask and framing preserve non-destructive undo and redo",
@@ -138,13 +121,8 @@
       "tier": "smoke",
       "title": "Production build",
       "cwd": ".",
-      "argv": [
-        "pnpm",
-        "build"
-      ],
-      "checks": [
-        "API and web production builds complete"
-      ]
+      "argv": ["pnpm", "build"],
+      "checks": ["API and web production builds complete"]
     },
     {
       "id": "AST-001",
@@ -158,13 +136,8 @@
         "tsx",
         "src/assets/asset-foundation.integration.ts"
       ],
-      "requiresFiles": [
-        ".env"
-      ],
-      "requiresPorts": [
-        5432,
-        9000
-      ],
+      "requiresFiles": [".env"],
+      "requiresPorts": [5432, 9000],
       "checks": [
         "Cross-tenant reads fail",
         "Original bytes and hash remain intact",
@@ -183,13 +156,8 @@
         "tsx",
         "src/image-projects/image-project-store.integration.ts"
       ],
-      "requiresFiles": [
-        ".env"
-      ],
-      "requiresPorts": [
-        5432,
-        9000
-      ],
+      "requiresFiles": [".env"],
+      "requiresPorts": [5432, 9000],
       "checks": [
         "Version conflict rejects stale saves",
         "Image adjustment values persist in immutable project versions",
@@ -209,12 +177,8 @@
         "tsx",
         "src/auth/access-context.integration.ts"
       ],
-      "requiresFiles": [
-        ".env"
-      ],
-      "requiresPorts": [
-        5432
-      ],
+      "requiresFiles": [".env"],
+      "requiresPorts": [5432],
       "checks": [
         "Forged and expired tokens fail",
         "Token role claims grant no access",
@@ -233,13 +197,8 @@
         "tsx",
         "src/image-projects/local-image-import.integration.ts"
       ],
-      "requiresFiles": [
-        ".env"
-      ],
-      "requiresPorts": [
-        5432,
-        9000
-      ],
+      "requiresFiles": [".env"],
+      "requiresPorts": [5432, 9000],
       "checks": [
         "Failed import retries reuse assets",
         "Original and mask references map to server IDs",
@@ -258,13 +217,8 @@
         "tsx",
         "src/assets/orphan-object-sweeper.integration.ts"
       ],
-      "requiresFiles": [
-        ".env"
-      ],
-      "requiresPorts": [
-        5432,
-        9000
-      ],
+      "requiresFiles": [".env"],
+      "requiresPorts": [5432, 9000],
       "checks": [
         "Dry-run changes nothing",
         "Recent and referenced objects are retained",
@@ -283,13 +237,8 @@
         "tsx",
         "src/image-projects/image-project-http.integration.ts"
       ],
-      "requiresFiles": [
-        ".env"
-      ],
-      "requiresPorts": [
-        5432,
-        9000
-      ],
+      "requiresFiles": [".env"],
+      "requiresPorts": [5432, 9000],
       "checks": [
         "Unauthenticated uploads and cross-workspace reads fail before file handling",
         "Oversized multipart requests are rejected before file buffering",
@@ -341,13 +290,8 @@
       "tier": "image-qa",
       "title": "PhotoCraft native masked adjustment pixel boundary",
       "cwd": ".",
-      "argv": [
-        "python",
-        "qa/photocraft_masked_pixel_check.py"
-      ],
-      "requiresFiles": [
-        "qa/fixtures/photocraft-hat-teal.png"
-      ],
+      "argv": ["python", "qa/photocraft_masked_pixel_check.py"],
+      "requiresFiles": ["qa/fixtures/photocraft-hat-teal.png"],
       "checks": [
         "Selected pixels change under a native editable brightness mask",
         "Every pixel outside the selected rectangle remains unchanged"
@@ -380,13 +324,8 @@
         "python",
         "scripts/photocraft/test_subject_background_targets.py"
       ],
-      "requiresFiles": [
-        "qa/fixtures/photocraft-fluffy-cat-cc0.jpg"
-      ],
-      "requiresPorts": [
-        4101,
-        4112
-      ],
+      "requiresFiles": ["qa/fixtures/photocraft-fluffy-cat-cc0.jpg"],
+      "requiresPorts": [4101, 4112],
       "checks": [
         "Subject recolor and background brightness execute with no drawn scope, only the AI subject mask",
         "An optional rect intersects the mask instead of replacing it, keeping outside subject pixels unchanged",
@@ -406,14 +345,8 @@
         "tsx",
         "src/auth/keycloak-smoke.ts"
       ],
-      "requiresFiles": [
-        ".env",
-        ".env.auth.local"
-      ],
-      "requiresPorts": [
-        5432,
-        8180
-      ],
+      "requiresFiles": [".env", ".env.auth.local"],
+      "requiresPorts": [5432, 8180],
       "checks": [
         "Real issuer and audience token verifies against JWKS",
         "Database membership grants and revocation are enforced"
@@ -431,14 +364,8 @@
         "tsx",
         "src/auth/dev-browser-http-smoke.ts"
       ],
-      "requiresFiles": [
-        ".env",
-        ".env.auth.local"
-      ],
-      "requiresPorts": [
-        5432,
-        8180
-      ],
+      "requiresFiles": [".env", ".env.auth.local"],
+      "requiresPorts": [5432, 8180],
       "checks": [
         "Anonymous project list receives 401",
         "Public browser client enforces PKCE and permits only the development origin",
@@ -457,14 +384,8 @@
         "tsx",
         "src/auth/dev-isolation-http-smoke.ts"
       ],
-      "requiresFiles": [
-        ".env",
-        ".env.auth.local"
-      ],
-      "requiresPorts": [
-        5432,
-        8180
-      ],
+      "requiresFiles": [".env", ".env.auth.local"],
+      "requiresPorts": [5432, 8180],
       "checks": [
         "An authenticated Keycloak user with no membership receives 403 on project list",
         "The same user cannot read an existing project by ID"
@@ -475,10 +396,7 @@
       "tier": "image-qa",
       "title": "Image QA intake and source integrity",
       "cwd": ".",
-      "argv": [
-        "python",
-        "scripts/image_quality/test_review_workflow.py"
-      ],
+      "argv": ["python", "scripts/image_quality/test_review_workflow.py"],
       "checks": [
         "Original checksum changes invalidate review",
         "Missing rights and outputs block acceptance",
@@ -490,16 +408,9 @@
       "tier": "image-qa",
       "title": "PhotoCraft native masked black-hat recipe",
       "cwd": ".",
-      "argv": [
-        "python",
-        "scripts/photocraft/test_hat_bridge.py"
-      ],
-      "requiresFiles": [
-        "qa/fixtures/photocraft-hat-teal.png"
-      ],
-      "requiresPorts": [
-        4112
-      ],
+      "argv": ["python", "scripts/photocraft/test_hat_bridge.py"],
+      "requiresFiles": ["qa/fixtures/photocraft-hat-teal.png"],
+      "requiresPorts": [4112],
       "checks": [
         "Editable PhotoCraft source retains a masked adjustment layer",
         "Hat fabric changes strongly while the label and background stay within measured limits",
@@ -511,16 +422,9 @@
       "tier": "image-qa",
       "title": "PhotoCraft bounded local edit recipes and protected region",
       "cwd": ".",
-      "argv": [
-        "python",
-        "scripts/photocraft/test_local_instruction_bridge.py"
-      ],
-      "requiresFiles": [
-        "qa/fixtures/photocraft-hat-teal.png"
-      ],
-      "requiresPorts": [
-        4112
-      ],
+      "argv": ["python", "scripts/photocraft/test_local_instruction_bridge.py"],
+      "requiresFiles": ["qa/fixtures/photocraft-hat-teal.png"],
+      "requiresPorts": [4112],
       "checks": [
         "PhotoCraft lasso confines brim recolor away from the crown and cast shadow",
         "Sampled green recolor and label exclusion leave protected patch pixels unchanged",
@@ -533,14 +437,8 @@
       "tier": "image-qa",
       "title": "Local Qwen3 instruction interpretation through the web route",
       "cwd": ".",
-      "argv": [
-        "node",
-        "scripts/photocraft/test_instruction_model.mjs"
-      ],
-      "requiresPorts": [
-        3000,
-        11435
-      ],
+      "argv": ["node", "scripts/photocraft/test_instruction_model.mjs"],
+      "requiresPorts": [3000, 11435],
       "checks": [
         "Non-rule recolor and saturation phrases produce bounded plans with the correct target",
         "Logo protection survives model translation",
@@ -552,16 +450,9 @@
       "tier": "image-qa",
       "title": "PhotoCraft native add/subtract lasso and edge refinement quality",
       "cwd": ".",
-      "argv": [
-        "python",
-        "scripts/photocraft/test_selection_refinement.py"
-      ],
-      "requiresFiles": [
-        "qa/fixtures/photocraft-hat-teal.png"
-      ],
-      "requiresPorts": [
-        4112
-      ],
+      "argv": ["python", "scripts/photocraft/test_selection_refinement.py"],
+      "requiresFiles": ["qa/fixtures/photocraft-hat-teal.png"],
+      "requiresPorts": [4112],
       "checks": [
         "Expanded lasso recovers the known teal brim border",
         "Color-range intersection reduces neutral background spill",
@@ -575,13 +466,8 @@
       "tier": "image-qa",
       "title": "PhotoCraft hat brim boundary golden sample",
       "cwd": ".",
-      "argv": [
-        "python",
-        "scripts/photocraft/test_hat_brim_boundary.py"
-      ],
-      "requiresFiles": [
-        "qa/fixtures/photocraft-hat-teal.png"
-      ],
+      "argv": ["python", "scripts/photocraft/test_hat_brim_boundary.py"],
+      "requiresFiles": ["qa/fixtures/photocraft-hat-teal.png"],
       "checks": [
         "Native editable PhotoCraft source has original and masked adjustment layers",
         "Left brim cyan residue is confined to at most 20 sampled fabric pixels",
@@ -594,16 +480,9 @@
       "tier": "image-qa",
       "title": "PhotoCraft native Object Selection and Refine Edge bridge",
       "cwd": ".",
-      "argv": [
-        "python",
-        "scripts/photocraft/test_native_object_selection.py"
-      ],
-      "requiresFiles": [
-        "qa/fixtures/photocraft-hat-teal.png"
-      ],
-      "requiresPorts": [
-        4112
-      ],
+      "argv": ["python", "scripts/photocraft/test_native_object_selection.py"],
+      "requiresFiles": ["qa/fixtures/photocraft-hat-teal.png"],
+      "requiresPorts": [4112],
       "checks": [
         "Native Object Selection isolates the hat brim within the user box",
         "Native Refine Edge preserves most fabric while limiting shadow spill",
@@ -619,16 +498,9 @@
       "tier": "image-qa",
       "title": "PhotoCraft native whole-image adjustments and crop",
       "cwd": ".",
-      "argv": [
-        "python",
-        "scripts/photocraft/test_general_native_edits.py"
-      ],
-      "requiresFiles": [
-        "qa/fixtures/photocraft-hat-teal.png"
-      ],
-      "requiresPorts": [
-        4112
-      ],
+      "argv": ["python", "scripts/photocraft/test_general_native_edits.py"],
+      "requiresFiles": ["qa/fixtures/photocraft-hat-teal.png"],
+      "requiresPorts": [4112],
       "checks": [
         "PhotoCraft crops to the user box without deleting source pixels",
         "Whole-image brightness, contrast and saturation create editable native adjustment layers",
@@ -640,16 +512,9 @@
       "tier": "image-qa",
       "title": "PhotoCraft native mask brush correction and undo source",
       "cwd": ".",
-      "argv": [
-        "python",
-        "scripts/photocraft/test_native_mask_refinement.py"
-      ],
-      "requiresFiles": [
-        "qa/fixtures/photocraft-hat-teal.png"
-      ],
-      "requiresPorts": [
-        4112
-      ],
+      "argv": ["python", "scripts/photocraft/test_native_mask_refinement.py"],
+      "requiresFiles": ["qa/fixtures/photocraft-hat-teal.png"],
+      "requiresPorts": [4112],
       "checks": [
         "Black mask stroke removes a local color spill and white stroke restores it",
         "Each stroke returns a new editable PhotoCraft source while retaining the prior preview for undo",
@@ -661,16 +526,9 @@
       "tier": "image-qa",
       "title": "PhotoCraft native spot healing, exposure and vibrance",
       "cwd": ".",
-      "argv": [
-        "python",
-        "scripts/photocraft/test_native_heal_and_tone.py"
-      ],
-      "requiresFiles": [
-        "qa/fixtures/photocraft-hat-teal.png"
-      ],
-      "requiresPorts": [
-        4112
-      ],
+      "argv": ["python", "scripts/photocraft/test_native_heal_and_tone.py"],
+      "requiresFiles": ["qa/fixtures/photocraft-hat-teal.png"],
+      "requiresPorts": [4112],
       "checks": [
         "Spot healing restores a marked blemish while retaining an untouched source layer",
         "Exposure and vibrance use editable PhotoCraft adjustment layers",
@@ -686,12 +544,8 @@
         "python",
         "scripts/photocraft/test_profile_and_format_export.py"
       ],
-      "requiresFiles": [
-        "qa/fixtures/photocraft-hat-teal.png"
-      ],
-      "requiresPorts": [
-        4112
-      ],
+      "requiresFiles": ["qa/fixtures/photocraft-hat-teal.png"],
+      "requiresPorts": [4112],
       "checks": [
         "Source profile inspection reports Display P3",
         "PNG, JPEG, WebP, TIFF and PSD preserve embedded Display P3 ICC data",
@@ -704,17 +558,9 @@
       "tier": "image-qa",
       "title": "Provider subject mask becomes a native PhotoCraft adjustment mask",
       "cwd": ".",
-      "argv": [
-        "python",
-        "scripts/photocraft/test_provider_mask_bridge.py"
-      ],
-      "requiresFiles": [
-        "qa/fixtures/photocraft-fluffy-cat-cc0.jpg"
-      ],
-      "requiresPorts": [
-        4101,
-        4112
-      ],
+      "argv": ["python", "scripts/photocraft/test_provider_mask_bridge.py"],
+      "requiresFiles": ["qa/fixtures/photocraft-fluffy-cat-cc0.jpg"],
+      "requiresPorts": [4101, 4112],
       "checks": [
         "JPEG and editable PhotoCraft sources both receive Provider masks through the versioned bridge",
         "A PhotoCraft lasso can intersect the Provider mask to keep the face outside the local ear edit",
@@ -728,13 +574,8 @@
       "tier": "image-qa",
       "title": "PhotoCraft native Curves and Levels round trip",
       "cwd": ".",
-      "argv": [
-        "python",
-        "scripts/photocraft/test_native_curves_levels.py"
-      ],
-      "requiresFiles": [
-        "qa/fixtures/photocraft-hat-teal.png"
-      ],
+      "argv": ["python", "scripts/photocraft/test_native_curves_levels.py"],
+      "requiresFiles": ["qa/fixtures/photocraft-hat-teal.png"],
       "checks": [
         "Curves and Levels alter pixels through native editable adjustment layers",
         "Native and PSD source reopen with both adjustment layers"
@@ -745,17 +586,9 @@
       "tier": "image-qa",
       "title": "Pinned PhotoCraft worker admission and failure recovery",
       "cwd": ".",
-      "argv": [
-        "python",
-        "scripts/photocraft/test_bridge_task_limits.py"
-      ],
-      "requiresFiles": [
-        "qa/fixtures/photocraft-fluffy-cat-cc0.jpg"
-      ],
-      "requiresPorts": [
-        4101,
-        4112
-      ],
+      "argv": ["python", "scripts/photocraft/test_bridge_task_limits.py"],
+      "requiresFiles": ["qa/fixtures/photocraft-fluffy-cat-cc0.jpg"],
+      "requiresPorts": [4101, 4112],
       "checks": [
         "Bridge reports pinned PhotoCraft 0.6.0 and admits one active edit",
         "Concurrent edit receives retryable 429 instead of competing for local GPU resources",
@@ -767,10 +600,7 @@
       "tier": "image-qa",
       "title": "PhotoCraft natural-language plan safety rules",
       "cwd": ".",
-      "argv": [
-        "node",
-        "scripts/photocraft/test_instruction_rules.mjs"
-      ],
+      "argv": ["node", "scripts/photocraft/test_instruction_rules.mjs"],
       "checks": [
         "Direct plans preserve target, direction and numeric amount",
         "Subject/background targets resolve from the provider mask and never widen a scoped edit",
@@ -784,17 +614,9 @@
       "tier": "image-qa",
       "title": "PhotoCraft gray cat ear recolor with editable mask",
       "cwd": ".",
-      "argv": [
-        "python",
-        "scripts/photocraft/test_gray_cat_ear_bridge.py"
-      ],
-      "requiresFiles": [
-        "qa/fixtures/photocraft-fluffy-cat-cc0.jpg"
-      ],
-      "requiresPorts": [
-        4101,
-        4112
-      ],
+      "argv": ["python", "scripts/photocraft/test_gray_cat_ear_bridge.py"],
+      "requiresFiles": ["qa/fixtures/photocraft-fluffy-cat-cc0.jpg"],
+      "requiresPorts": [4101, 4112],
       "checks": [
         "Ear tip, middle and root lose orange chroma without losing luminance texture",
         "PhotoCraft mask brush reduces gray spill on the orange head while ear samples remain unchanged",
@@ -807,10 +629,7 @@
       "tier": "image-qa",
       "title": "PhotoCraft gray ear root brush refinement and editable source",
       "cwd": ".",
-      "argv": [
-        "python",
-        "scripts/photocraft/refine_gray_ear_root.py"
-      ],
+      "argv": ["python", "scripts/photocraft/refine_gray_ear_root.py"],
       "requiresFiles": [
         "qa/fixtures/photocraft-fluffy-cat-cc0.jpg",
         ".tools/photocraft-selection-qa/gray-ear/gray-ear-refined.pcraft",
@@ -828,16 +647,9 @@
       "tier": "image-qa",
       "title": "PhotoCraft ordered instruction sequence and editable source",
       "cwd": ".",
-      "argv": [
-        "node",
-        "scripts/photocraft/test_instruction_sequence.mjs"
-      ],
-      "requiresFiles": [
-        "qa/fixtures/photocraft-hat-teal.png"
-      ],
-      "requiresPorts": [
-        4112
-      ],
+      "argv": ["node", "scripts/photocraft/test_instruction_sequence.mjs"],
+      "requiresFiles": ["qa/fixtures/photocraft-hat-teal.png"],
+      "requiresPorts": [4112],
       "checks": [
         "Recolor, whole-image brightness and square crop execute in order on PhotoCraft native sources",
         "Every effect changes the rendered preview and editable adjustment layers survive",
@@ -849,16 +661,9 @@
       "tier": "image-qa",
       "title": "PhotoCraft fine hat brim visual sample",
       "cwd": ".",
-      "argv": [
-        "python",
-        "scripts/photocraft/render_hat_brim_fine.py"
-      ],
-      "requiresFiles": [
-        "qa/fixtures/photocraft-hat-teal.png"
-      ],
-      "requiresPorts": [
-        4112
-      ],
+      "argv": ["python", "scripts/photocraft/render_hat_brim_fine.py"],
+      "requiresFiles": ["qa/fixtures/photocraft-hat-teal.png"],
+      "requiresPorts": [4112],
       "checks": [
         "Native PhotoCraft lasso follows the crown seam and visible brim edge",
         "At least 8250 of 8289 sampled teal brim pixels become red with no sampled neutral shadow damage",
@@ -871,16 +676,9 @@
       "tier": "image-qa",
       "title": "PhotoCraft hat brim quality gate rejects rough selection",
       "cwd": ".",
-      "argv": [
-        "python",
-        "scripts/photocraft/test_hat_quality_gate.py"
-      ],
-      "requiresFiles": [
-        "qa/fixtures/photocraft-hat-teal.png"
-      ],
-      "requiresPorts": [
-        4112
-      ],
+      "argv": ["python", "scripts/photocraft/test_hat_quality_gate.py"],
+      "requiresFiles": ["qa/fixtures/photocraft-hat-teal.png"],
+      "requiresPorts": [4112],
       "checks": [
         "Five-point rough lasso fails target coverage or background protection",
         "383-point native PhotoCraft lasso passes target coverage and background protection",
@@ -892,10 +690,7 @@
       "tier": "image-qa",
       "title": "PhotoCraft command catalog and reusable native plan executor",
       "cwd": ".",
-      "argv": [
-        "node",
-        "scripts/photocraft/test_native_command_adapter.mjs"
-      ],
+      "argv": ["node", "scripts/photocraft/test_native_command_adapter.mjs"],
       "checks": [
         "Pinned PhotoCraft command catalog exposes verified groups",
         "A command sequence is compiled through one executor",
@@ -907,16 +702,9 @@
       "tier": "image-qa",
       "title": "PhotoCraft native text layer through instruction bridge",
       "cwd": ".",
-      "argv": [
-        "python",
-        "scripts/photocraft/test_native_text_bridge.py"
-      ],
-      "requiresFiles": [
-        "qa/fixtures/photocraft-hat-teal.png"
-      ],
-      "requiresPorts": [
-        4112
-      ],
+      "argv": ["python", "scripts/photocraft/test_native_text_bridge.py"],
+      "requiresFiles": ["qa/fixtures/photocraft-hat-teal.png"],
+      "requiresPorts": [4112],
       "checks": [
         "Native type.create changes preview without changing distant original pixels",
         "Saved .pcraft reopens with a separate editable Type layer",
@@ -928,16 +716,9 @@
       "tier": "image-qa",
       "title": "PhotoCraft canvas size capability through shared native adapter",
       "cwd": ".",
-      "argv": [
-        "python",
-        "scripts/photocraft/test_canvas_size_bridge.py"
-      ],
-      "requiresFiles": [
-        "qa/fixtures/photocraft-tiny.png"
-      ],
-      "requiresPorts": [
-        4112
-      ],
+      "argv": ["python", "scripts/photocraft/test_canvas_size_bridge.py"],
+      "requiresFiles": ["qa/fixtures/photocraft-tiny.png"],
+      "requiresPorts": [4112],
       "checks": [
         "Native image.canvasSize changes the preview to the requested dimensions",
         "Saved .pcraft reopens with the same dimensions and editable original pixel layer",
@@ -953,12 +734,8 @@
         "python",
         "scripts/photocraft/test_native_geometry_levels_bridge.py"
       ],
-      "requiresFiles": [
-        "qa/fixtures/photocraft-tiny.png"
-      ],
-      "requiresPorts": [
-        4112
-      ],
+      "requiresFiles": ["qa/fixtures/photocraft-tiny.png"],
+      "requiresPorts": [4112],
       "checks": [
         "Native image.imageSize changes preview and reopened source to requested dimensions",
         "Native Levels visibly changes preview and reopens with an editable adjustment layer and exact parameters",
@@ -974,12 +751,8 @@
         "python",
         "scripts/photocraft/test_native_type_style_shadow_bridge.py"
       ],
-      "requiresFiles": [
-        "qa/fixtures/photocraft-hat-teal.png"
-      ],
-      "requiresPorts": [
-        4112
-      ],
+      "requiresFiles": ["qa/fixtures/photocraft-hat-teal.png"],
+      "requiresPorts": [4112],
       "checks": [
         "Native type.setStyle saves the requested bold weight and underline in an editable Type layer",
         "Native layer.layerStyle.dropShadow changes preview and survives source reopen",
@@ -991,14 +764,8 @@
       "tier": "image-qa",
       "title": "Capability-aware PhotoCraft natural-language planner",
       "cwd": ".",
-      "argv": [
-        "node",
-        "scripts/photocraft/test_capability_planner.mjs"
-      ],
-      "requiresPorts": [
-        3000,
-        11435
-      ],
+      "argv": ["node", "scripts/photocraft/test_capability_planner.mjs"],
+      "requiresPorts": [3000, 11435],
       "checks": [
         "Multiple phrasings of image-size resolve to the same exact dimensions",
         "Levels, text style and drop shadow resolve to bounded PhotoCraft plans",
@@ -1010,16 +777,9 @@
       "tier": "image-qa",
       "title": "PhotoCraft saved selection and active layer binding",
       "cwd": ".",
-      "argv": [
-        "python",
-        "scripts/photocraft/test_selected_context.py"
-      ],
-      "requiresFiles": [
-        "qa/fixtures/photocraft-hat-teal.png"
-      ],
-      "requiresPorts": [
-        4112
-      ],
+      "argv": ["python", "scripts/photocraft/test_selected_context.py"],
+      "requiresFiles": ["qa/fixtures/photocraft-hat-teal.png"],
+      "requiresPorts": [4112],
       "checks": [
         "Inspect returns the saved active layer and selection bounds",
         "An existing native selection drives a local editable adjustment",
@@ -1031,17 +791,12 @@
       "tier": "image-qa",
       "title": "Generated result composes as an editable PhotoCraft masked layer",
       "cwd": ".",
-      "argv": [
-        "python",
-        "scripts/photocraft/test_generated_compose.py"
-      ],
+      "argv": ["python", "scripts/photocraft/test_generated_compose.py"],
       "requiresFiles": [
         "qa/fixtures/photocraft-tiny.pcraft",
         "qa/fixtures/photocraft-tiny.png"
       ],
-      "requiresPorts": [
-        4112
-      ],
+      "requiresPorts": [4112],
       "checks": [
         "Generated PNG is placed as a separate masked layer in native source",
         "Pixels outside the selected rectangle are unchanged",
@@ -1065,9 +820,7 @@
         "--test",
         "../web/src/app/api/image-local-edit/route.test.ts"
       ],
-      "requiresFiles": [
-        "qa/fixtures/photocraft-hat-teal.png"
-      ],
+      "requiresFiles": ["qa/fixtures/photocraft-hat-teal.png"],
       "checks": [
         "Unconfigured provider rejects without an image edit",
         "Configured development route sends image, mask, prompt and bounded rectangle through the Provider abstraction",
@@ -1080,13 +833,8 @@
       "tier": "image-qa",
       "title": "PhotoCraft foreground mask and independent generated background",
       "cwd": ".",
-      "argv": [
-        "python",
-        "scripts/photocraft/test_background_compose.py"
-      ],
-      "requiresPorts": [
-        4112
-      ],
+      "argv": ["python", "scripts/photocraft/test_background_compose.py"],
+      "requiresPorts": [4112],
       "checks": [
         "Background replacement retains original foreground pixels behind a native editable PhotoCraft mask",
         "Generated background is an independent Smart Object below the foreground",
@@ -1101,13 +849,8 @@
       "tier": "image-qa",
       "title": "PhotoCraft whole-image rotation and mirror commands",
       "cwd": ".",
-      "argv": [
-        "python",
-        "scripts/photocraft/test_native_orient_bridge.py"
-      ],
-      "requiresPorts": [
-        4112
-      ],
+      "argv": ["python", "scripts/photocraft/test_native_orient_bridge.py"],
+      "requiresPorts": [4112],
       "checks": [
         "Five bounded native PhotoCraft commands preserve expected pixel orientation",
         "Quarter turns swap width and height while mirrors retain dimensions",
@@ -1120,13 +863,8 @@
       "tier": "image-qa",
       "title": "PhotoCraft selected-layer duplicate and visibility",
       "cwd": ".",
-      "argv": [
-        "python",
-        "scripts/photocraft/test_native_layer_action.py"
-      ],
-      "requiresPorts": [
-        4112
-      ],
+      "argv": ["python", "scripts/photocraft/test_native_layer_action.py"],
+      "requiresPorts": [4112],
       "checks": [
         "Native layer duplicate retains original and adds an editable Pixel layer",
         "Hide and show change only the selected layer visibility and reopen correctly",
@@ -1139,16 +877,9 @@
       "tier": "image-qa",
       "title": "PhotoCraft PSD save does not persist an active selection",
       "cwd": ".",
-      "argv": [
-        "python",
-        "scripts/photocraft/test_psd_selection_roundtrip.py"
-      ],
-      "requiresFiles": [
-        "qa/fixtures/photocraft-hat-teal.png"
-      ],
-      "requiresPorts": [
-        4112
-      ],
+      "argv": ["python", "scripts/photocraft/test_psd_selection_roundtrip.py"],
+      "requiresFiles": ["qa/fixtures/photocraft-hat-teal.png"],
+      "requiresPorts": [4112],
       "checks": [
         "A native .pcraft source retains selection bounds after reopen",
         "The same document saved as PSD has no active selection after reopen",
@@ -1160,11 +891,7 @@
       "tier": "smoke",
       "title": "Instruction telemetry aggregation and tau calibration",
       "cwd": ".",
-      "argv": [
-        "node",
-        "--test",
-        "scripts/photocraft/test_calibrate_tau.mjs"
-      ],
+      "argv": ["node", "--test", "scripts/photocraft/test_calibrate_tau.mjs"],
       "checks": [
         "Telemetry aggregates lanes, confidence rings, tau and slider deltas per bucket",
         "Tau suggestions require bucket evidence and a low manual override rate",
@@ -1176,13 +903,8 @@
       "tier": "image-qa",
       "title": "PhotoCraft native batch recipe directory replay",
       "cwd": ".",
-      "argv": [
-        "python",
-        "scripts/photocraft/test_batch_recipe.py"
-      ],
-      "requiresFiles": [
-        "qa/fixtures/photocraft-hat-teal.png"
-      ],
+      "argv": ["python", "scripts/photocraft/test_batch_recipe.py"],
+      "requiresFiles": ["qa/fixtures/photocraft-hat-teal.png"],
       "checks": [
         "batch --actions refuses an output directory equal to the input without --in-place",
         "Mixed adjustment and orientation steps replay over a directory while original files stay byte-identical",
@@ -1209,10 +931,7 @@
       "tier": "image-qa",
       "title": "Pinned PhotoCraft command registry covers every in-use native id",
       "cwd": ".",
-      "argv": [
-        "node",
-        "scripts/photocraft/sync-command-registry.mjs"
-      ],
+      "argv": ["node", "scripts/photocraft/sync-command-registry.mjs"],
       "requiresFiles": [
         ".tools/photocraft-0.6.0/desktop/photocraft-0.6.0-windows-x64-portable/photocraft-cli.exe"
       ],
@@ -1227,19 +946,12 @@
       "tier": "image-qa",
       "title": "Live-engine instruction eval through the dev bridge",
       "cwd": ".",
-      "argv": [
-        "node",
-        "scripts/photocraft/live-eval.mjs"
-      ],
+      "argv": ["node", "scripts/photocraft/live-eval.mjs"],
       "requiresFiles": [
         "qa/fixtures/photocraft-hat-teal.png",
         ".tools/photocraft-tests/probe-text-style-shadow.pcraft"
       ],
-      "requiresPorts": [
-        4101,
-        4104,
-        4112
-      ],
+      "requiresPorts": [4101, 4104, 4112],
       "checks": [
         "Express and model lane cases execute their eval-set preset plans on the real PhotoCraft engine through the versioned bridge; the model lane does not exercise the runtime cloud parse + judge round-trip",
         "Parser-pinned lanes (gap / model-reject / sequence-reject) run the same assertions as instruction-eval.test.ts inside the script before being counted",
@@ -1286,10 +998,7 @@
       "tier": "live-grounding",
       "title": "Cross-domain real-image grounding quality and tau_auto gate evidence",
       "cwd": ".",
-      "argv": [
-        "node",
-        "scripts/photocraft/grounding-eval.mjs"
-      ],
+      "argv": ["node", "scripts/photocraft/grounding-eval.mjs"],
       "requiresFiles": [
         "qa/fixtures/photocraft-grounding/annotations.json",
         "qa/fixtures/photocraft-grounding/provenance.json",
@@ -1297,9 +1006,7 @@
         "qa/fixtures/photocraft-fluffy-cat-cc0.jpg",
         "scripts/photocraft/grounding-contract.mjs"
       ],
-      "requiresPorts": [
-        4104
-      ],
+      "requiresPorts": [4104],
       "checks": [
         "All annotated targets across 11 real photos (flower / interior / building / product / pet, 5 domains) query the live SAM + Chinese-CLIP open-vocab candidate service on :4104 — the same service the product open-vocab ring uses — one POST per (image, phrase)",
         "Fixture integrity is validated before any service call (annotation boxes within [0,1], image/target counts, provenance coverage, real pixel dimensions parsed from PNG/JPEG headers); missing or corrupted fixtures exit non-zero",
@@ -1313,10 +1020,7 @@
       "tier": "live-grounding",
       "title": "Candidate pixel-mask quality vs human-reviewed GT and end-to-end mask selection",
       "cwd": ".",
-      "argv": [
-        "node",
-        "scripts/photocraft/mask-quality-eval.mjs"
-      ],
+      "argv": ["node", "scripts/photocraft/mask-quality-eval.mjs"],
       "requiresFiles": [
         "qa/fixtures/photocraft-grounding/annotations.json",
         "qa/fixtures/photocraft-grounding/masks/manifest.json",
@@ -1324,10 +1028,7 @@
         "scripts/photocraft/mask-quality-eval.mjs",
         "scripts/photocraft/grounding-contract.mjs"
       ],
-      "requiresPorts": [
-        4104,
-        4112
-      ],
+      "requiresPorts": [4104, 4112],
       "checks": [
         "Human-reviewed pixel-mask GT integrity is validated before any service call: every manifest target must exist in annotations.json as a single-instance phrase, each mask PNG must match the annotation width x height exactly and be strictly binary 0/255 grayscale (decode-level check, not header-only); any violation exits non-zero",
         "For each GT target the live :4104 candidate service is queried via the shared contract (fetchCandidates also re-validates the required mask_png_b64 field per candidate); the top-3 candidate masks are decoded, resized to GT resolution with bilinear interpolation (approximating the browser canvas path) and binarized at >=128, then scored per candidate for mask IoU, miss rate |G&~C|/|G| and spill rate |C&~G|/|C| against the GT, with the best candidate by IoU summarized per target",
@@ -1341,19 +1042,14 @@
       "tier": "live-grounding",
       "title": "Box-constrained candidate mode vs grid mode on the same GT targets",
       "cwd": ".",
-      "argv": [
-        "node",
-        "scripts/photocraft/box-constrained-eval.mjs"
-      ],
+      "argv": ["node", "scripts/photocraft/box-constrained-eval.mjs"],
       "requiresFiles": [
         "qa/fixtures/photocraft-grounding/annotations.json",
         "qa/fixtures/photocraft-grounding/masks/manifest.json",
         "scripts/photocraft/box-constrained-eval.mjs",
         "scripts/photocraft/grounding-contract.mjs"
       ],
-      "requiresPorts": [
-        4104
-      ],
+      "requiresPorts": [4104],
       "checks": [
         "GT fixture integrity is validated before any service call with the same gate as IMG-054 (manifest targets must be single-instance annotation phrases, mask PNG size must equal the annotation size, masks strictly binary); any violation exits non-zero",
         "Each GT target is evaluated in four arms against the same :4104 model: grid mode (no prompt header), box mode with x-acs-prompt-box set to the annotation box converted to normalized [x1,y1,x2,y2] as a simulated user box, and the same two pools re-requested with X-Acs-Rank: ensemble (0.7*z(clip)+0.3*z(sam) re-ranking); all arms go through the shared fetchCandidates contract so mask_png_b64 and sam_score are validated per candidate",
@@ -1391,10 +1087,7 @@
       "tier": "browser-image",
       "title": "PhotoCraft browser path and requested-region quality",
       "cwd": ".",
-      "argv": [
-        "node",
-        "scripts/photocraft/acceptance-e1.mjs"
-      ],
+      "argv": ["node", "scripts/photocraft/acceptance-e1.mjs"],
       "requiresFiles": [
         "scripts/photocraft/acceptance-e1.mjs",
         "scripts/photocraft/proxy3100.mjs",
@@ -1402,11 +1095,7 @@
         "qa/fixtures/photocraft-fluffy-cat-cc0.jpg",
         "qa/fixtures/photocraft-grounding/masks/hibiscus-brilliant.jpg/花蕊.png"
       ],
-      "requiresPorts": [
-        3100,
-        4112,
-        4104
-      ],
+      "requiresPorts": [3100, 4112, 4104],
       "checks": [
         "The tracked Playwright rig opens four real browser edit flows and records interaction failures separately from visual-quality failures",
         "For the petal instruction, the pistil GT region must stay nearly unchanged after an explicit PhotoCraft mask-brush retouch; the unretouched defect is recorded separately",
@@ -1420,10 +1109,7 @@
       "tier": "browser-image",
       "title": "Region-difference report for the browser PhotoCraft previews",
       "cwd": ".",
-      "argv": [
-        "node",
-        "scripts/photocraft/e1-region-diff.mjs"
-      ],
+      "argv": ["node", "scripts/photocraft/e1-region-diff.mjs"],
       "requiresFiles": [
         "scripts/photocraft/e1-region-diff.mjs",
         "qa/fixtures/photocraft-grounding/masks/hibiscus-brilliant.jpg/花蕊.png",
@@ -1443,17 +1129,9 @@
       "tier": "image-qa",
       "title": "Preview vs save-reopen vs export pixel consistency",
       "cwd": ".",
-      "argv": [
-        "node",
-        "scripts/photocraft/preview-consistency.mjs"
-      ],
-      "requiresFiles": [
-        "qa/fixtures/photocraft-hat-teal.png"
-      ],
-      "requiresPorts": [
-        4112,
-        4101
-      ],
+      "argv": ["node", "scripts/photocraft/preview-consistency.mjs"],
+      "requiresFiles": ["qa/fixtures/photocraft-hat-teal.png"],
+      "requiresPorts": [4112, 4101],
       "checks": [
         "Whole-image and provider-masked brightness cases with one slider modification (12 to 37) render byte-identical across the live slider preview, a reopened saved document and a cold CLI convert export",
         "Reopened documents expose the slider value on the editable adjustment layer, and masked layers keep their mask after save and reopen",
@@ -1466,17 +1144,12 @@
       "tier": "image-qa",
       "title": "Subject-level automation rate probe against the plan's 100% promise",
       "cwd": ".",
-      "argv": [
-        "node",
-        "scripts/photocraft/subject-auto-probe.mjs"
-      ],
+      "argv": ["node", "scripts/photocraft/subject-auto-probe.mjs"],
       "requiresFiles": [
         "qa/fixtures/photocraft-grounding/annotations.json",
         "scripts/photocraft/subject-auto-probe.mjs"
       ],
-      "requiresPorts": [
-        4112
-      ],
+      "requiresPorts": [4112],
       "checks": [
         "Operationalizes the plan §0 subject-level 100% promise: for each of the 11 annotation images the bridge /v1/instruction must return 200 with a provider-mask selection, selectionBounds non-null, a pixel-visible preview (brightness +30 plan; change threshold 48 separates engine re-encode noise from real edits), and the changed-pixel bbox inside selectionBounds within 8px",
         "Provider mask foreground coverage is measured directly on :4101 per image so empty or whole-image masks surface as probe failures instead of hiding behind HTTP 200",
@@ -1488,19 +1161,14 @@
       "tier": "live-grounding",
       "title": "Exclude-point mask algebra eval (part = whole minus mis-selected region)",
       "cwd": ".",
-      "argv": [
-        "node",
-        "scripts/photocraft/exclude-point-eval.mjs"
-      ],
+      "argv": ["node", "scripts/photocraft/exclude-point-eval.mjs"],
       "requiresFiles": [
         "qa/fixtures/photocraft-grounding/annotations.json",
         "qa/fixtures/photocraft-grounding/masks/manifest.json",
         "scripts/photocraft/exclude-point-eval.mjs",
         "scripts/photocraft/grounding-contract.mjs"
       ],
-      "requiresPorts": [
-        4104
-      ],
+      "requiresPorts": [4104],
       "checks": [
         "Derives part-level GT via boolean mask algebra from reviewed whole and sub-region GT masks (petals = flower minus stamen, ears = cat head minus face) with zero new annotations; derived components must all be in the IMG-054 manifest and non-empty, else exit non-zero before any service call",
         "Simulates the interaction from GT alone: the prompt box is the whole-target annotation box and exclude points are sub-region GT centroids, sent through the shared fetchCandidates contract with X-Acs-Exclude-Points (and an ensemble-rank third arm)",
@@ -1512,10 +1180,7 @@
       "tier": "image-qa",
       "title": "Plan §7 promise-versus-measured assembly across the PhotoCraft eval reports",
       "cwd": ".",
-      "argv": [
-        "node",
-        "scripts/photocraft/section7-metrics.mjs"
-      ],
+      "argv": ["node", "scripts/photocraft/section7-metrics.mjs"],
       "requiresFiles": [
         "scripts/photocraft/section7-metrics.mjs",
         "scripts/photocraft/section7-rates.mjs",
@@ -1539,10 +1204,7 @@
       "tier": "smoke",
       "title": "Video Studio double-render determinism",
       "cwd": ".",
-      "argv": [
-        "pnpm",
-        "qa:video-determinism"
-      ],
+      "argv": ["pnpm", "qa:video-determinism"],
       "checks": [
         "The committed text-animation fixture (artifacts/video-studio-smoke/project.json) renders twice with identical decoded pixels for all 72 frames (frame-compare decodeFrameHash, not container bytes)",
         "The run states its coverage scope: single-fixture spot check; dual-aspect MP4 size/frame counts are covered by the render pipeline output checks",
@@ -1554,11 +1216,7 @@
       "tier": "smoke",
       "title": "Render environment browser-version probe",
       "cwd": ".",
-      "argv": [
-        "node",
-        "--test",
-        "scripts/video/env-info.test.mjs"
-      ],
+      "argv": ["node", "--test", "scripts/video/env-info.test.mjs"],
       "checks": [
         "browserLabel returns a version-bearing label for an existing executable and never throws",
         "Missing paths and empty paths (Remotion bundled headless shell) return explicit unavailable markers",
@@ -1570,11 +1228,7 @@
       "tier": "smoke",
       "title": "Determinism check compares decoded pixels, not PNG container bytes",
       "cwd": ".",
-      "argv": [
-        "node",
-        "--test",
-        "scripts/video/frame-compare.test.mjs"
-      ],
+      "argv": ["node", "--test", "scripts/video/frame-compare.test.mjs"],
       "checks": [
         "Same pixels with different PNG metadata (inserted tEXt chunk) hash equal under decodeFrameHash while container-byte hashes differ",
         "Different pixels at the same dimensions hash different",
@@ -1586,12 +1240,7 @@
       "tier": "smoke",
       "title": "Scene component determinism gates and render resource limits",
       "cwd": ".",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "@acs/video-scene",
-        "test"
-      ],
+      "argv": ["pnpm", "--filter", "@acs/video-scene", "test"],
       "checks": [
         "Static gate: every built-in component source (src/components/*.ts) is scanned for forbidden wall-clock (Date.now, new Date, performance.now), unseeded randomness (Math.random, crypto.getRandomValues), network (fetch, XMLHttpRequest, WebSocket, EventSource, sendBeacon) and storage (localStorage, sessionStorage, indexedDB) usage per ADR 0003 §2.3, and the scanner self-test proves each class is detected",
         "Render output budget: assertNodeBudget rejects SvgNode trees beyond MAX_RENDER_NODES (2000) with SceneResourceError naming counts, enforced per frame by both render bridges (remotion composition and workbench preview) per ADR 0003 §2.4",
@@ -1603,11 +1252,7 @@
       "tier": "smoke",
       "title": "Per-frame dry-run gate with worker isolation and frame budget",
       "cwd": ".",
-      "argv": [
-        "node",
-        "--test",
-        "scripts/video/frame-dryrun.test.mjs"
-      ],
+      "argv": ["node", "--test", "scripts/video/frame-dryrun.test.mjs"],
       "checks": [
         "dryRunJobs runs every (shot, frame) render inside a worker thread so a synchronous infinite loop cannot wedge the CLI; the hanging fixture is terminated within the per-frame budget (default 500ms, the runtime side of ADR 0003 §2.4 resource limits)",
         "Timeout and thrown-render failures name the shot label and frame index, and the batch continues past per-frame errors instead of aborting silently",
@@ -1641,13 +1286,8 @@
       "tier": "integration",
       "title": "Video Studio dataviz chart templates and edit loop (bar/line/counter)",
       "cwd": ".",
-      "argv": [
-        "node",
-        "scripts/video/e2e-dataviz.mjs"
-      ],
-      "requiresPorts": [
-        3211
-      ],
+      "argv": ["node", "scripts/video/e2e-dataviz.mjs"],
+      "requiresPorts": [3211],
       "checks": [
         "Workbench chart template selector swaps shot 2 to bar-chart and shot 3 to number-counter through the real editor card, then the revised data (spring/summer/autumn/winter rainfall) lands in the saved and exported project JSON while narration text and duration survive the swap",
         "Exported working specs assert componentId plus params shape: bars join to the edited label,value list and the counter keeps value 250000 from the template",
@@ -1661,13 +1301,8 @@
       "tier": "integration",
       "title": "Video Studio map templates and edit loop (grid/journey)",
       "cwd": ".",
-      "argv": [
-        "node",
-        "scripts/video/e2e-map.mjs"
-      ],
-      "requiresPorts": [
-        3211
-      ],
+      "argv": ["node", "scripts/video/e2e-map.mjs"],
+      "requiresPorts": [3211],
       "checks": [
         "Workbench map template selector (optgroup) swaps shot 2 to map-grid and shot 3 to map-journey through the real editor card, edited region/waypoint data lands in the saved and exported project JSON while narration text and duration survive the swap",
         "Exported working specs assert componentId plus params shape: regions join to the edited label,row,col[,value] list and the journey keeps origin/waypoint/destination with one bare-coordinate waypoint",
@@ -1681,13 +1316,8 @@
       "tier": "integration",
       "title": "Video Studio flow templates and edit loop (steps/diagram)",
       "cwd": ".",
-      "argv": [
-        "node",
-        "scripts/video/e2e-flow.mjs"
-      ],
-      "requiresPorts": [
-        3211
-      ],
+      "argv": ["node", "scripts/video/e2e-flow.mjs"],
+      "requiresPorts": [3211],
       "checks": [
         "Workbench flow template selector (third optgroup) swaps shot 2 to flow-steps and shot 3 to flow-diagram through the real editor card, edited step labels and diamond-marked node/edge data land in the saved and exported project JSON while narration text and duration survive the swap",
         "Exported working specs assert componentId plus params shape: steps join to the edited label list with direction horizontal and durationMs 3100 kept, and diagram nodes/edges round-trip including a diamond kind and a labeled edge",
@@ -1701,13 +1331,8 @@
       "tier": "integration",
       "title": "Video Studio stickman templates and edit loop (figure actions)",
       "cwd": ".",
-      "argv": [
-        "node",
-        "scripts/video/e2e-stick.mjs"
-      ],
-      "requiresPorts": [
-        3211
-      ],
+      "argv": ["node", "scripts/video/e2e-stick.mjs"],
+      "requiresPorts": [3211],
       "checks": [
         "Template dropdown fourth group applies stick-figure: shot 2 swaps to stick-walk-across and shot 3 to stick-meet through the real editor card with data textarea prefilled from template defaults; shot 4 swaps to stick-walk-across keeping template-default figures at the planner default 2000ms (terminal-review I-1 regression witness: the walk completes inside a default shot)",
         "Data edit round-trips figures with action words: per-line action,fromX[,toX] parses into figure objects including a toX-omitted line defaulting to fromX, groundY kept",
@@ -1721,13 +1346,8 @@
       "tier": "integration",
       "title": "Video Studio hand-sketch templates and edit loop (write-on emphasis)",
       "cwd": ".",
-      "argv": [
-        "node",
-        "scripts/video/e2e-sketch.mjs"
-      ],
-      "requiresPorts": [
-        3211
-      ],
+      "argv": ["node", "scripts/video/e2e-sketch.mjs"],
+      "requiresPorts": [3211],
       "checks": [
         "Template dropdown fifth group applies sketch-note: shot 2 swaps to sketch-underline-3 and shot 3 to sketch-highlight-mix through the real editor card with data textarea prefilled from template defaults",
         "Data edit round-trips items with from-right emphasis parsing: per-line text[,emphasis] parses emphasis only when the last segment is an enum word, so comma-bearing text (关键,丙,圈 -> text 关键,丙) and emphasis-omitted lines (补充丁 -> 无) both survive",
@@ -1741,13 +1361,8 @@
       "tier": "integration",
       "title": "Video Studio loading templates and edit loop (phase bounce dots + ring progress)",
       "cwd": ".",
-      "argv": [
-        "node",
-        "scripts/video/e2e-loading.mjs"
-      ],
-      "requiresPorts": [
-        3211
-      ],
+      "argv": ["node", "scripts/video/e2e-loading.mjs"],
+      "requiresPorts": [3211],
       "checks": [
         "Template dropdown sixth group applies loading components: shot 2 swaps to loading-dots-3 and shot 3 to loading-ring-72 through the real editor card with label/count/target inputs prefilled from template defaults",
         "Scalar data edit round-trips: dots count and status label survive on loading-dots, targetPercent and label on loading-progress, colors and cycle/progress timing params preserved through merge",
@@ -1761,13 +1376,8 @@
       "tier": "integration",
       "title": "Video Studio stock source full-chain sample (Wikimedia search, download, media clip, render)",
       "cwd": ".",
-      "argv": [
-        "node",
-        "scripts/video/e2e-stock.mjs"
-      ],
-      "requiresPorts": [
-        3211
-      ],
+      "argv": ["node", "scripts/video/e2e-stock.mjs"],
+      "requiresPorts": [3211],
       "checks": [
         "Stock search finds the pinned Wikimedia candidate and imports the 480p WebM through the real editor panel",
         "Exported project books origin license/author/sourcePageUrl/retrievedAt and a content-addressed storeKey with no proxy",
@@ -1781,10 +1391,7 @@
       "tier": "integration",
       "title": "Video Studio P3-A interactive HTML delivery (file:// step navigation, iframe embedding, deterministic double export)",
       "cwd": ".",
-      "argv": [
-        "node",
-        "scripts/video/e2e-interactive.mjs"
-      ],
+      "argv": ["node", "scripts/video/e2e-interactive.mjs"],
       "requiresPorts": [],
       "checks": [
         "Fixed 3-shot fixture exports via the CLI with exit 0 to index.html; the page carries data-total=\"3\" and the delivery frameMap is [24,37,24] (85 sampled frames in total)",
@@ -1799,10 +1406,7 @@
       "tier": "integration",
       "title": "Video Studio Style Bible four-shot visual consistency, version switching and real exports",
       "cwd": ".",
-      "argv": [
-        "node",
-        "scripts/video/e2e-style-bible.mjs"
-      ],
+      "argv": ["node", "scripts/video/e2e-style-bible.mjs"],
       "requiresPorts": [],
       "checks": [
         "Four-shot text/3D sample renders under a pinned independent Style Bible version with NotoSansSC and fixed orbit3d lighting; render records pin the style reference",
@@ -1816,13 +1420,8 @@
       "tier": "browser-video",
       "title": "Video Studio Style Bible browser save/reopen, version switch and one-shot edit",
       "cwd": ".",
-      "argv": [
-        "node",
-        "scripts/video/e2e-style-bible-browser.mjs"
-      ],
-      "requiresPorts": [
-        3210
-      ],
+      "argv": ["node", "scripts/video/e2e-style-bible-browser.mjs"],
+      "requiresPorts": [3210],
       "checks": [
         "Real browser creates a four-shot storyboard, creates an independent Style Bible, saves project and sidecar, and reopens with the same reference",
         "A new palette version changes the pinned reference and appends shot content versions; switching back retains both historical versions",
@@ -1834,13 +1433,8 @@
       "tier": "browser-video",
       "title": "Video Studio P4 gallery sample edit, reopen and dual-aspect export",
       "cwd": ".",
-      "argv": [
-        "node",
-        "scripts/video/e2e-gallery.mjs"
-      ],
-      "requiresPorts": [
-        3210
-      ],
+      "argv": ["node", "scripts/video/e2e-gallery.mjs"],
+      "requiresPorts": [3210],
       "checks": [
         "STEM, data and product samples create independent valid projects from the browser gallery and edit via the existing shot editor",
         "Edited text and a replacement product video survive save and browser reload",
@@ -1899,13 +1493,8 @@
       "tier": "browser-video",
       "title": "Video Studio dual-aspect preview toggle and per-aspect layout editing",
       "cwd": ".",
-      "argv": [
-        "node",
-        "scripts/video/e2e-dual-aspect-edit.mjs"
-      ],
-      "requiresPorts": [
-        3210
-      ],
+      "argv": ["node", "scripts/video/e2e-dual-aspect-edit.mjs"],
+      "requiresPorts": [3210],
       "checks": [
         "Piece and single-shot previews switch between landscape and portrait with the export canvas viewBox and toggleable safe-area guides",
         "Long-title text and 12-point long-label line-chart shots get portrait-only overrides (title lines, label step, short labels) applied through the existing revision chain",
@@ -1918,10 +1507,7 @@
       "tier": "integration",
       "title": "Video Studio narrated 26-second STEM sample dual-aspect delivery audit",
       "cwd": ".",
-      "argv": [
-        "node",
-        "scripts/video/audit-stem-sample.mjs"
-      ],
+      "argv": ["node", "scripts/video/audit-stem-sample.mjs"],
       "requiresPorts": [],
       "requiresFiles": [
         "artifacts/video-studio-stem-sample-final-2026-10-23/stem.video-project.json",
@@ -1940,13 +1526,8 @@
       "tier": "browser-video",
       "title": "Video Studio STEM two-shot multi-element edit, reload, dual-preview and rollback",
       "cwd": ".",
-      "argv": [
-        "node",
-        "scripts/video/e2e-multielement-stem.mjs"
-      ],
-      "requiresPorts": [
-        3210
-      ],
+      "argv": ["node", "scripts/video/e2e-multielement-stem.mjs"],
+      "requiresPorts": [3210],
       "checks": [
         "Edit title, annotation, diagram position and timing in shots 2 and 5 via the real browser, then save and reopen",
         "Both landscape and portrait SVG previews show the edited content; the old shot version remains available for rollback",
@@ -1958,10 +1539,7 @@
       "tier": "integration",
       "title": "Video Studio multi-element narrated STEM dual-aspect render audit",
       "cwd": ".",
-      "argv": [
-        "node",
-        "scripts/video/audit-multielement-stem.mjs"
-      ],
+      "argv": ["node", "scripts/video/audit-multielement-stem.mjs"],
       "requiresPorts": [],
       "requiresFiles": [
         "artifacts/video-studio-multielement-2026-10-23/edited.video-project.json",
@@ -1979,13 +1557,8 @@
       "tier": "browser-video",
       "title": "Reusable multi-element templates in a non-STEM interior project",
       "cwd": ".",
-      "argv": [
-        "node",
-        "scripts/video/e2e-composition-templates.mjs"
-      ],
-      "requiresPorts": [
-        3210
-      ],
+      "argv": ["node", "scripts/video/e2e-composition-templates.mjs"],
+      "requiresPorts": [3210],
       "checks": [
         "Choose flow and drawing composition templates in the real browser, edit their content and bounded timing, save and reopen the same project",
         "Check landscape and portrait SVG preview, image template local raster upload, and immutable version rollback",
@@ -1997,10 +1570,7 @@
       "tier": "integration",
       "title": "Non-STEM composition template dual-aspect MP4 audit",
       "cwd": ".",
-      "argv": [
-        "node",
-        "scripts/video/audit-composition-templates.mjs"
-      ],
+      "argv": ["node", "scripts/video/audit-composition-templates.mjs"],
       "requiresPorts": [],
       "requiresFiles": [
         "artifacts/video-studio-composition-templates-2026-10-23/interior.video-project.json",
@@ -2021,13 +1591,8 @@
       "tier": "browser-video",
       "title": "Legacy flow-diagram without nodeTextColor renders through the API",
       "cwd": ".",
-      "argv": [
-        "node",
-        "scripts/video/verify-legacy-flow-style.mjs"
-      ],
-      "requiresPorts": [
-        3210
-      ],
+      "argv": ["node", "scripts/video/verify-legacy-flow-style.mjs"],
+      "requiresPorts": [3210],
       "checks": [
         "A legacy Style Bible project with low-contrast flow-diagram colors and no nodeTextColor receives HTTP 200 rather than 400",
         "The real render API returns two MP4 downloads and two render records without rewriting the old scene spec",
@@ -2039,10 +1604,7 @@
       "tier": "integration",
       "title": "Portable VideoProject package across independent media stores",
       "cwd": ".",
-      "argv": [
-        "node",
-        "scripts/video/e2e-portable-project.mjs"
-      ],
+      "argv": ["node", "scripts/video/e2e-portable-project.mjs"],
       "requiresPorts": [],
       "requiresFiles": [
         "artifacts/video-studio-composition-templates-2026-10-23/interior.video-project.json",
@@ -2060,13 +1622,8 @@
       "tier": "browser-video",
       "title": "Dual-theme gallery extension samples full browser chain",
       "cwd": ".",
-      "argv": [
-        "node",
-        "scripts/video/e2e-gallery-extensions.mjs"
-      ],
-      "requiresPorts": [
-        3210
-      ],
+      "argv": ["node", "scripts/video/e2e-gallery-extensions.mjs"],
+      "requiresPorts": [3210],
       "checks": [
         "Create the renovation and appliance projects from the new gallery cards, each with five shots and a linked Style Bible",
         "Edit a composition title and one annotation, save via the editor save action, reopen after reload, and roll the shot back to the gallery version",
@@ -2079,10 +1636,7 @@
       "tier": "integration",
       "title": "Retained dual-theme gallery evidence integrity check",
       "cwd": ".",
-      "argv": [
-        "node",
-        "scripts/video/audit-gallery-extensions.mjs"
-      ],
+      "argv": ["node", "scripts/video/audit-gallery-extensions.mjs"],
       "requiresPorts": [],
       "requiresFiles": [
         "artifacts/video-template-experience-2026-10-23/renovation/render/landscape.mp4",
@@ -2102,13 +1656,8 @@
       "tier": "integration",
       "title": "Live dual-theme gallery render regression gate",
       "cwd": ".",
-      "argv": [
-        "node",
-        "scripts/video/audit-gallery-extensions-live.mjs"
-      ],
-      "requiresPorts": [
-        3210
-      ],
+      "argv": ["node", "scripts/video/audit-gallery-extensions-live.mjs"],
+      "requiresPorts": [3210],
       "checks": [
         "Create both gallery extension projects from current code through the real browser, then render dual-aspect H.264 MP4s from the fresh projects",
         "The same per-shot record/frameMap/working-version assertions run against the live outputs, so sample or renderer regressions fail the gate",
@@ -2120,10 +1669,7 @@
       "tier": "integration",
       "title": "Video Studio P3-B three 镜头预烘焙出片与确定性",
       "cwd": ".",
-      "argv": [
-        "node",
-        "scripts/video/e2e-three.mjs"
-      ],
+      "argv": ["node", "scripts/video/e2e-three.mjs"],
       "requiresPorts": [],
       "checks": [
         "出片 exit 0，landscape.mp4 非空；manifest 的 3D 证据 glRenderer 含 SwiftShader、frameHashes 条数 = 该镜头 span 帧数（fixture 24）",

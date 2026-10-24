@@ -3,8 +3,9 @@
 // 有效性不存可变标志位，而是每次与当前工作集快照比对推导——任何镜头
 // 工作版本、转场或风格引用变化后，旧确认自然失效，保存/刷新/导入后
 // 状态依旧准确（不需要迁移或清洗）。
-import { canonicalJson } from "./canonical-json.js";
+
 import { EXPORT_FPS } from "./aspect.js";
+import { canonicalJson } from "./canonical-json.js";
 import { quantizeTimeline } from "./quantize.js";
 import type {
   AspectTarget,
@@ -101,8 +102,7 @@ export async function styleConfirmationStatus(
     };
   }
   if (
-    canonicalJson(latest.styleBibleRef) !==
-    canonicalJson(project.styleBibleRef)
+    canonicalJson(latest.styleBibleRef) !== canonicalJson(project.styleBibleRef)
   ) {
     return {
       valid: false,
@@ -114,7 +114,8 @@ export async function styleConfirmationStatus(
   if (latest.workingSetDigest !== digest) {
     return {
       valid: false,
-      reason: "项目内容（镜头工作版本或转场）已变更，旧确认不能放行新导出：请重新确认",
+      reason:
+        "项目内容（镜头工作版本或转场）已变更，旧确认不能放行新导出：请重新确认",
       confirmation: latest,
     };
   }
@@ -130,9 +131,7 @@ export type StyleFrameConfirmationDraft = {
   at?: string;
 };
 
-function assertKeyframes(
-  keyframes: StyleFrameKeyframeEvidence[],
-): void {
+function assertKeyframes(keyframes: StyleFrameKeyframeEvidence[]): void {
   const aspects = new Set(keyframes.map((frame) => frame.aspect));
   if (
     keyframes.length !== 2 ||
@@ -180,9 +179,7 @@ export async function appendStyleFrameConfirmation(
     draft.frameMs < 0 ||
     draft.frameMs >= working.durationMs
   ) {
-    throw new Error(
-      `frameMs 须为 0..${working.durationMs - 1} 的整数毫秒`,
-    );
+    throw new Error(`frameMs 须为 0..${working.durationMs - 1} 的整数毫秒`);
   }
   if (
     draft.note !== undefined &&

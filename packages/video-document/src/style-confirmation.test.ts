@@ -117,16 +117,26 @@ test("快照摘要覆盖工作版本、转场与风格引用", async () => {
   const project = sample();
   const snapshot = await buildWorkingSetSnapshot(project);
   assert.equal(snapshot.entries.length, 2);
-  assert.ok(snapshot.entries.every((entry) => /^[0-9a-f]{64}$/.test(entry.contentDigest)));
+  assert.ok(
+    snapshot.entries.every((entry) =>
+      /^[0-9a-f]{64}$/.test(entry.contentDigest),
+    ),
+  );
   assert.ok(/^[0-9a-f]{64}$/.test(await workingSetDigest(project)));
   // 同一项目两次计算结果一致
-  assert.equal(await workingSetDigest(project), await workingSetDigest(project));
+  assert.equal(
+    await workingSetDigest(project),
+    await workingSetDigest(project),
+  );
   // 改转场后摘要变化
   const withFade = {
     ...project,
     transitions: [{ boundary: 0, kind: "fade" as const, durationMs: 300 }],
   };
-  assert.notEqual(await workingSetDigest(withFade), await workingSetDigest(project));
+  assert.notEqual(
+    await workingSetDigest(withFade),
+    await workingSetDigest(project),
+  );
 });
 
 test("追加确认绑定版本/帧/风格摘要，未确认与变更后均判失效", async () => {
@@ -229,17 +239,23 @@ test("再确认后恢复有效；旧确认数组只追加保留", async () => {
   assert.equal(second.styleFrameConfirmations!.length, 2);
   const status = await styleConfirmationStatus(second);
   assert.equal(status.valid, true);
-  assert.equal(status.confirmation!.confirmationId, second.styleFrameConfirmations![1]!.confirmationId);
+  assert.equal(
+    status.confirmation!.confirmationId,
+    second.styleFrameConfirmations![1]!.confirmationId,
+  );
 });
 
 test("append 拒绝非 spec 镜头、越界帧、坏关键帧与缺失风格引用", async () => {
   const project = sample();
   await assert.rejects(
-    appendStyleFrameConfirmation({ ...project, styleBibleRef: undefined }, {
-      shotId: ID4,
-      frameMs: 0,
-      keyframes: KEYFRAMES,
-    }),
+    appendStyleFrameConfirmation(
+      { ...project, styleBibleRef: undefined },
+      {
+        shotId: ID4,
+        frameMs: 0,
+        keyframes: KEYFRAMES,
+      },
+    ),
     /Style Bible/,
   );
   await assert.rejects(
@@ -364,16 +380,16 @@ test("validateVideoProject 拒绝形状非法的确认记录", async () => {
       ...confirmed,
       styleFrameConfirmations: [{ ...record, ...patch }],
     });
-  assert.throws(() => bad({ shotId: "99999999-9999-4999-8999-999999999999" }), /shotId/);
+  assert.throws(
+    () => bad({ shotId: "99999999-9999-4999-8999-999999999999" }),
+    /shotId/,
+  );
   assert.throws(() => bad({ versionId: ID5 }), /versionId/);
   assert.throws(() => bad({ contentDigest: "nothex" }), /contentDigest/);
   assert.throws(() => bad({ frameMs: 9999 }), /frameMs/);
   assert.throws(() => bad({ frameIndex: 999 }), /frameIndex/);
   assert.throws(() => bad({ actor: "ai" }), /actor/);
-  assert.throws(
-    () => bad({ confirmationId: "not-a-uuid" }),
-    /confirmationId/,
-  );
+  assert.throws(() => bad({ confirmationId: "not-a-uuid" }), /confirmationId/);
   assert.throws(
     () =>
       validateVideoProject({

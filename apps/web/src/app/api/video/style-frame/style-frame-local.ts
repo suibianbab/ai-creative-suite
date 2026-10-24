@@ -83,7 +83,8 @@ async function sha256File(file: string): Promise<string> {
 // Windows 下 spawn pnpm shim 不带 shell 会把参数错传给 node（bad option）。
 function remotionCliEntry(root: string): string {
   const engineDir = path.join(root, "packages", "remotion-engine");
-  const { createRequire } = require("node:module") as typeof import("node:module");
+  const { createRequire } =
+    require("node:module") as typeof import("node:module");
   const requireFromEngine = createRequire(path.join(engineDir, "index.js"));
   const pkgPath = requireFromEngine.resolve("@remotion/cli/package.json");
   return path.join(path.dirname(pkgPath), "remotion-cli.js");

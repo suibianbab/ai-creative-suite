@@ -4,8 +4,8 @@ import path from "node:path";
 import test from "node:test";
 import {
   appendStyleFrameConfirmation,
-  styleVersionDigest,
   type StyleBible,
+  styleVersionDigest,
   type VideoProject,
 } from "@acs/video-document";
 import { workspaceRoot } from "./render-local";

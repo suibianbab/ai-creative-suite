@@ -135,7 +135,11 @@ test("派生风格产生带来源与改动说明的不可变新版本，旧引�
   assert.equal(child.palette.background, "#000000");
   // 旧项目引用旧版本：演化后的 Bible 仍能解析旧引用（重开/重渲不受派生影响）
   await resolveStyleBibleRef(
-    { bibleId: bible.id, versionId: ID2, digest: await styleVersionDigest(source) },
+    {
+      bibleId: bible.id,
+      versionId: ID2,
+      digest: await styleVersionDigest(source),
+    },
     derived,
   );
   // 来源版本不存在 / 改动说明为空：拒绝
@@ -167,10 +171,16 @@ test("validateStyleBible 校验 derivedFrom 形状", () => {
   };
   validateStyleBible(base);
   const bad = structuredClone(base);
-  bad.versions[0]!.derivedFrom = { ...base.versions[0]!.derivedFrom!, digest: "xyz" };
+  bad.versions[0]!.derivedFrom = {
+    ...base.versions[0]!.derivedFrom!,
+    digest: "xyz",
+  };
   assert.throws(() => validateStyleBible(bad), /derivedFrom/);
   const empty = structuredClone(base);
-  empty.versions[0]!.derivedFrom = { ...base.versions[0]!.derivedFrom!, changeNote: "" };
+  empty.versions[0]!.derivedFrom = {
+    ...base.versions[0]!.derivedFrom!,
+    changeNote: "",
+  };
   assert.throws(() => validateStyleBible(empty), /derivedFrom/);
 });
 

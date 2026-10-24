@@ -62,14 +62,12 @@ delete project.transitions;
 // W2 门禁：风格项目出片须持有效代表帧确认。本 API 回归用机械确认过闸——
 // 关键帧摘要是占位值，只验证门禁逻辑，不冒充人工审片。
 const { appendStyleFrameConfirmation } = await import(
-  pathToFileURL(
-    path.join(root, "packages/video-document/dist/index.js"),
-  ).href
+  pathToFileURL(path.join(root, "packages/video-document/dist/index.js")).href
 );
 const confirmed = await appendStyleFrameConfirmation(project, {
   shotId: shot.shotId,
   frameMs: 0,
-  keyframes: (["landscape", "portrait"]).map((aspect, index) => ({
+  keyframes: ["landscape", "portrait"].map((aspect, index) => ({
     aspect,
     digest: (index === 0 ? "a" : "b").repeat(64),
     bytes: 128,
