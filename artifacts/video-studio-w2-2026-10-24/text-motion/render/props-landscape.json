@@ -1,0 +1,1 @@
+{"shots":[{"spec":{"specVersion":1,"componentId":"text-animation","componentVersion":1,"durationMs":3000,"seed":4601,"background":"#101f34","params":{"title":"一句话开场","subtitle":"三十秒讲清楚","titleColor":"#f3f5f7","subtitleColor":"#b4d8e4","entrance":"fade-up","enterMs":450}},"startFrame":0,"frames":72}]}

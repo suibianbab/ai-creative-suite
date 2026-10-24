@@ -1,0 +1,162 @@
+{
+  "schemaVersion": 1,
+  "id": "e69b5f21-9e54-4229-aeee-9637ddde49fe",
+  "title": "W2 对照 · text-motion",
+  "brief": {
+    "sentence": "W2 内部对照",
+    "aspectTargets": [
+      "landscape",
+      "portrait"
+    ],
+    "applications": [
+      {
+        "sentence": "镜头配方 recipe-text-point：开场提问或收尾点题：一句话抓住注意力",
+        "appendedShotCount": 1,
+        "appendedDurationMs": 3000,
+        "filmShotCountAfter": 1,
+        "filmTotalMsAfter": 3000,
+        "appliedAt": "2026-10-24T10:57:13.055Z"
+      }
+    ]
+  },
+  "shots": [
+    {
+      "shotId": "4a4255ea-ef36-457b-9d31-84856fb5a9d8",
+      "order": 0,
+      "locked": false,
+      "workingVersionId": "f81759ea-d0f8-4b46-b10d-5f10282094a3",
+      "contentVersions": [
+        {
+          "versionId": "714334eb-9232-4441-b092-f3be17f2acfa",
+          "createdAt": "2026-10-24T10:57:13.055Z",
+          "durationMs": 3000,
+          "description": "配方镜头：开场提问或收尾点题：一句话抓住注意力",
+          "narrationText": "一句话开场，点出主题。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 3000,
+              "seed": 4601,
+              "background": "#ffffff",
+              "params": {
+                "title": "一句话开场",
+                "subtitle": "三十秒讲清楚",
+                "titleColor": "#1b2c29",
+                "subtitleColor": "#5d7469",
+                "entrance": "fade-up",
+                "enterMs": 450
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "shot-recipe",
+            "engineVersion": "1"
+          }
+        },
+        {
+          "versionId": "f81759ea-d0f8-4b46-b10d-5f10282094a3",
+          "createdAt": "2026-10-24T10:57:13.055Z",
+          "durationMs": 3000,
+          "description": "配方镜头：开场提问或收尾点题：一句话抓住注意力（人工修订）",
+          "narrationText": "一句话开场，点出主题。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 3000,
+              "seed": 4601,
+              "background": "#101f34",
+              "params": {
+                "title": "一句话开场",
+                "subtitle": "三十秒讲清楚",
+                "titleColor": "#f3f5f7",
+                "subtitleColor": "#b4d8e4",
+                "entrance": "fade-up",
+                "enterMs": 450
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "human-edit",
+            "engineVersion": "1",
+            "parentVersionId": "714334eb-9232-4441-b092-f3be17f2acfa"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "714334eb-9232-4441-b092-f3be17f2acfa",
+          "at": "2026-10-24T10:57:13.055Z",
+          "actor": "human"
+        },
+        {
+          "kind": "submitted",
+          "versionId": "f81759ea-d0f8-4b46-b10d-5f10282094a3",
+          "at": "2026-10-24T10:57:13.055Z",
+          "actor": "human"
+        }
+      ]
+    }
+  ],
+  "renderRecords": [
+    {
+      "renderId": "771709cb-a411-4e2d-af66-cb9246ce56f2",
+      "versionId": "f81759ea-d0f8-4b46-b10d-5f10282094a3",
+      "contentDigest": "51299e9c27706f309c5b7a312cc731a43758fdad29dd9ae620cc5b4e93440751",
+      "engineId": "remotion",
+      "engineVersion": "8",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "86a2d02e-61a6-4069-987a-fe2859ac4529",
+        "versionId": "9f52d104-8162-4c55-9459-48e127decd0a",
+        "digest": "7f6331aed7aaa49da078f7478977e8ee09ecdc7ed77c51738c2477691e2f20e5"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "4ed40519-96c4-427a-9106-1d6b368b6eba",
+      "versionId": "f81759ea-d0f8-4b46-b10d-5f10282094a3",
+      "contentDigest": "51299e9c27706f309c5b7a312cc731a43758fdad29dd9ae620cc5b4e93440751",
+      "engineId": "remotion",
+      "engineVersion": "8",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "86a2d02e-61a6-4069-987a-fe2859ac4529",
+        "versionId": "9f52d104-8162-4c55-9459-48e127decd0a",
+        "digest": "7f6331aed7aaa49da078f7478977e8ee09ecdc7ed77c51738c2477691e2f20e5"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    }
+  ],
+  "deliveries": [],
+  "savedVersion": 2,
+  "styleBibleRef": {
+    "bibleId": "86a2d02e-61a6-4069-987a-fe2859ac4529",
+    "versionId": "9f52d104-8162-4c55-9459-48e127decd0a",
+    "digest": "7f6331aed7aaa49da078f7478977e8ee09ecdc7ed77c51738c2477691e2f20e5"
+  }
+}

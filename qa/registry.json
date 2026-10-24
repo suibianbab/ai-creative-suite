@@ -2,6 +2,19 @@
   "schemaVersion": 1,
   "automated": [
     {
+      "id": "VID-051",
+      "tier": "browser-video",
+      "title": "Style representative-frame approval, invalidation and export gate",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/e2e-frame-approval.mjs"],
+      "requiresPorts": [3210],
+      "checks": [
+        "Confirm dual-aspect representative frames for a shot, edit the shot, and watch the approval stale with a reason while export is blocked without download links",
+        "Re-confirm to open the gate and complete a real silent dual-aspect render with two download links; derive a new style version with a note and see stale-then-reconfirm again",
+        "Save, reload and reopen: approvals persist in the exported project JSON and the badge stays accurate; browser console clean"
+      ]
+    },
+    {
       "id": "VID-050",
       "tier": "browser-video",
       "title": "Shot recipe catalog apply-edit-save-reopen and dual-aspect render",
