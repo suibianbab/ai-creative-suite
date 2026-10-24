@@ -77,6 +77,20 @@ try {
     waitUntil: "domcontentloaded",
   });
   await restoredPage.waitForSelector("html[data-studio-ready]");
+  const tampered = structuredClone(envelope);
+  tampered.files.find((entry) => entry.path.startsWith("media/")).base64 =
+    "YQ==";
+  const badFile = path.join(out, "tampered.acs-video-package.json");
+  writeFileSync(badFile, JSON.stringify(tampered));
+  await restoredPage
+    .locator('input[accept=".json,application/json"]')
+    .last()
+    .setInputFiles(badFile);
+  await restoredPage
+    .locator(".editor-message", { hasText: "SHA-256" })
+    .waitFor();
+  assert.equal(await restoredPage.locator(".project-open").count(), 0);
+  assert.equal(existsSync(original), false, "坏包不能恢复媒体原件");
   await restoredPage
     .locator('input[accept=".json,application/json"]')
     .last()
