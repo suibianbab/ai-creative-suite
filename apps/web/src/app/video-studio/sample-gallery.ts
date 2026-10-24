@@ -177,8 +177,8 @@ function sampleShots(
             {
               text: "太阳能驱动这趟旅程",
               x: 500,
-              y: 760,
-              portraitY: 1300,
+              y: 780,
+              portraitY: 1340,
               enterMs: 2800,
             },
           ],

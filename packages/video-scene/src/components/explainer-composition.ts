@@ -259,9 +259,9 @@ function cycleNodes(
   const steps = p.diagram.steps;
   const n = steps.length;
   const cx = 500;
-  const cy = portrait ? 540 : 545;
+  const cy = portrait ? 540 : 530;
   const rx = portrait ? 290 : 320;
-  const ry = portrait ? 410 : 225;
+  const ry = portrait ? 410 : 200;
   const boxW = portrait ? 230 : 200;
   const boxH = portrait ? 96 : 84;
   const trim = portrait ? 0.55 : 0.45;
