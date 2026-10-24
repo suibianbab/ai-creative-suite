@@ -63,7 +63,7 @@ async function sha256File(file: string): Promise<string> {
   return hash.digest("hex");
 }
 
-function runRender(
+export function runRender(
   args: string[],
   root: string,
   timeoutMs = RENDER_TIMEOUT_MS,
