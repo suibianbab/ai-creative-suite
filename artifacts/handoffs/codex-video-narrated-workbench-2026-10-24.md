@@ -14,6 +14,7 @@
 
 - `pnpm --filter @acs/web test`：282/282；`pnpm -r typecheck`：全工作区通过；`pnpm exec biome check .`：436 文件通过。
 - 上述作业目录收尾修正后，重跑 web 282/282、全工作区 typecheck 和该文件 Biome 均通过；未重复付费 TTS。
+- 已登记 `VID-047` 为需要人工启动的真实计费浏览器验收，避免普通自动回归意外触发 TTS；`node scripts/qa/run-regression.mjs validate` 报 101 automated / 54 manual。此项只覆盖 Codex 有声入口，Claude 视觉线的 `VID-048` 留待集成。
 - 真实有声浏览器脚本 `node scripts/video/e2e-narrated-workbench.mjs`：从 Gallery 水循环样片创建 7 镜头项目，点有声按钮、下载横竖版、ffprobe 核对 H.264/AAC 与 1280×720 / 720×1280、项目 14 条渲染记录、manifest 两画幅各 7 组旁白及字幕摘要；控制台零错误。报告与产物在 `.tools/video-narrated-workbench-e2e/`：项目 JSON、两片 MP4、`report.json`、`narrated-ready.png`、`subtitle-check.png`。
 - 真实 MP4 SHA-256：横版 `d42f4117e433e12b43772a607caeae2d2b96f2e67f5bf1d3ef50a5a9172ada35`；竖版 `c635e2d401030943f12e65d060a7a0232531a89446fbd084e2cd0b1f0c0977ca`。横版音轨 `mean_volume=-28.2 dB`、`max_volume=-5.7 dB`，并非空音轨。1 秒抽帧可见清晰字幕「一滴水，」。
 - 原有无声回归：`SAMPLE_ID=stem BASE_URL=http://localhost:3212 node scripts/video/e2e-gallery.mjs`，7 镜编辑、保存重开、双画幅预览和双画幅无声出片，`failures=0`。

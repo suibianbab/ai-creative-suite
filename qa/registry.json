@@ -2397,6 +2397,21 @@
       ]
     },
     {
+      "id": "VID-047",
+      "title": "Browser narrated dual-aspect workbench render",
+      "fixture": "Local dev server with DASHSCOPE_API_KEY, Playwright Chromium, water-cycle gallery sample; billed TTS run: BASE_URL=http://localhost:3212 node scripts/video/e2e-narrated-workbench.mjs; output in .tools/video-narrated-workbench-e2e/",
+      "steps": [
+        "Create the seven-shot water-cycle sample in the browser and click the separate narrated MP4 action",
+        "Download both MP4 aspects, export the returned project, and inspect the narration and subtitle manifest",
+        "Check that missing key, failed TTS, and failed render return errors without successful downloads or render records; re-run the older silent gallery path separately"
+      ],
+      "passCriteria": [
+        "Both videos contain H.264 video and nonempty AAC audio at 1280x720 and 720x1280; the manifest has seven narration and subtitle entries per aspect",
+        "The returned project contains 14 render records and remains importable after any TTS duration-alignment version; the browser console has no errors",
+        "Failure leaves no success download link or render record; the TTS ledger records actual billed calls under its existing cap; visual and human voice quality require separate review"
+      ]
+    },
+    {
       "id": "VID-012",
       "title": "Video Studio subtitle track burned into narration piece",
       "fixture": "Same loop as VID-011 (dev server + proxy + billed TTS); word-level cues come from the per-shot .words.json written next to each wav; scripted assertions live in scripts/video/e2e-narrated.mjs and the evidence frame is artifacts/video-studio-narrated/subtitle-band-cue.png (SHA-256 in E2E_NARRATED.md)",
