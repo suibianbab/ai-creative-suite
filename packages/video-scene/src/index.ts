@@ -25,5 +25,6 @@ export * from "./registry.js";
 export * from "./safe-layout.js";
 export * from "./spec.js";
 export * from "./svg.js";
+export * from "./svg-serialize.js";
 export * from "./svg-budget.js";
 export * from "./text-width.js";

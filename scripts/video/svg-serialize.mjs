@@ -1,33 +1,25 @@
 // D4 导出扩充（spec R2）：SvgNode 纯数据树 → 可独立打开的 SVG 文件字符串。
-// 动画 = 翻页册：全部采样帧叠进一个 <svg>，CSS keyframes 各自在时间切片内可见
-// （steps(1,end) 消除插值）。零 React/DOM/网络依赖；确定性：同输入同串。
-export const MAX_SVG_EXPORT_NODES = 50000;
+// 节点级转义/序列化/计数自 2026-10-24 起上提至 @acs/video-scene（W2 预览/
+// 确认帧与 CLI 共用一份语义）；本文件保留画布封装与动画/静态导出器。
+import path from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
-function esc(value) {
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
-}
+const ROOT = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "../..",
+);
+const {
+  MAX_SVG_EXPORT_NODES,
+  serializeSvgNode,
+  countSvgNodes,
+  escapeSvg,
+} = await import(
+  pathToFileURL(path.join(ROOT, "packages/video-scene/dist/index.js")).href
+);
 
-export function serializeNode(node) {
-  const attrs = Object.entries(node.attrs ?? {})
-    .map(([key, value]) => ` ${key}="${esc(value)}"`)
-    .join("");
-  if (node.text !== undefined)
-    return `<${node.tag}${attrs}>${esc(node.text)}</${node.tag}>`;
-  if (node.children?.length)
-    return `<${node.tag}${attrs}>${node.children.map(serializeNode).join("")}</${node.tag}>`;
-  return `<${node.tag}${attrs}/>`;
-}
-
-export function countNodes(node) {
-  return (
-    1 + (node.children ?? []).reduce((sum, child) => sum + countNodes(child), 0)
-  );
-}
+export { MAX_SVG_EXPORT_NODES };
+export const serializeNode = serializeSvgNode;
+export const countNodes = countSvgNodes;
 
 // 切片百分比：足够分辨率且末帧终点恰为 100%。
 function pct(index, frameCount) {
@@ -38,7 +30,7 @@ function canvas(svgBody, { width, height, background }) {
   return (
     `<?xml version="1.0" encoding="UTF-8"?>\n` +
     `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" font-family="NotoSansSC, sans-serif">` +
-    `<rect width="${width}" height="${height}" fill="${esc(background)}"/>` +
+    `<rect width="${width}" height="${height}" fill="${escapeSvg(background)}"/>` +
     svgBody +
     `</svg>\n`
   );
