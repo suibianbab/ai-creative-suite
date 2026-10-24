@@ -59,31 +59,24 @@ try {
   await cards.nth(1).locator(".recipe-labels-input").fill("一月,二月,三月");
   await cards.nth(1).locator(".recipe-values-input").fill("3,6,9");
   await cards.nth(1).locator(".recipe-apply").click();
-  await page
-    .locator(".shot-card")
-    .nth(1)
-    .waitFor({ timeout: 20_000 });
+  await page.locator(".shot-card").nth(1).waitFor({ timeout: 20_000 });
   assert.equal(await page.locator(".shot-card").count(), 2);
 
   // Product recipe: upload the built-in sample clip, then pick it.
   const clipPath = path.join(out, "product.mp4");
-  const response = await page.request.get(`${baseUrl}/samples/p4-hat-product.mp4`);
+  const response = await page.request.get(
+    `${baseUrl}/samples/p4-hat-product.mp4`,
+  );
   writeFileSync(clipPath, await response.body());
   await page.locator(".media-panel input[type=file]").setInputFiles(clipPath);
   await page.locator(".media-upload").click();
-  await page
-    .locator(".media-item")
-    .first()
-    .waitFor({ timeout: 30_000 });
+  await page.locator(".media-item").first().waitFor({ timeout: 30_000 });
   await cards.nth(2).locator(".recipe-toggle").click();
   const select = cards.nth(2).locator(".recipe-asset-select");
   await select.waitFor({ timeout: 10_000 });
   await select.selectOption({ index: 1 });
   await cards.nth(2).locator(".recipe-apply").click();
-  await page
-    .locator(".shot-card")
-    .nth(2)
-    .waitFor({ timeout: 20_000 });
+  await page.locator(".shot-card").nth(2).waitFor({ timeout: 20_000 });
   assert.equal(await page.locator(".shot-card").count(), 3);
   const project = await page.evaluate(() => document.title);
   assert.ok(project.length > 0);
@@ -233,9 +226,7 @@ for (const aspect of ["landscape", "portrait"]) {
 // Preview/export consistency: render the exported text shot at the catalog
 // preview frame through the same registry and compare visible text sets.
 const { defaultRegistry } = await import(
-  pathToFileURL(
-    path.join(root, "packages/video-scene/dist/index.js"),
-  ).href
+  pathToFileURL(path.join(root, "packages/video-scene/dist/index.js")).href
 );
 const { recipePreviewSvg, SHOT_RECIPES } = await import(
   pathToFileURL(

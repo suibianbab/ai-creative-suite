@@ -1,9 +1,11 @@
 # Claude 线交接单：W1 镜头配方目录（video-shot-recipes）
 
-- **分支**：`claude/video-shot-recipes`（基线 `origin/main@518203e`）
+- **分支**：`claude/video-shot-recipes`（基线 `origin/main@518203e`，交付 HEAD 见 `git log main..HEAD`，6+ 提交）
 - **Worktree**：`D:\codex\animate\.claude\worktrees\shot-recipes`
 - **需求源**：`docs/VIDEO_STUDIO_EXTERNAL_PROJECTS_DEVELOPMENT_PLAN_2026-10-23.md` §W1；实施计划 `docs/superpowers/plans/2026-10-24-shot-recipes.md`
-- **基线门禁**（本 worktree 实测）：video-scene 186/186、video-document 159/159、web 284/284、typecheck OK（`pnpm -r build` 中 next build 失败为已知非门禁项）
+- **交付状态（2026-10-24 收口）**：三条配方（元数据/编译/SVG 预览/应用）+ 编辑视图目录 UI + VID-049 e2e 全链路（含双画幅真实出片与预览/导出文本一致性）+ 旧样片回归，全部通过。四态与限制见 `artifacts/video-studio-shot-recipes-2026-10-24/REPORT.md`。门禁：web 292/292（+10）、video-scene 186/186、video-document 159/159、typecheck、Biome、qa validate 102 自动/55 手工。
+- **裁决记录**（详见 SDD 账本与 REPORT）：配方目录放编辑视图（页面结构决定）；BriefApplication 用标准 schema 形状（sentence 携带配方标识）；media-clip 资产应用时并入项目账本。
+- **交叉审核请求**：审配方编译合法性、UI 与既有入口零干扰（nth 序）、SVG 转义、应用-保存语义、VID-049 断言质量；集成注意 qa registry 已含 VID-049（与既有条目无撞号）。
 
 ## 概念边界（P-A 裁决，开工前定义）
 
