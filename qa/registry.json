@@ -1578,7 +1578,7 @@
     {
       "id": "VID-044",
       "tier": "integration",
-      "title": "Dual-theme gallery extension dual-aspect MP4 audit",
+      "title": "Retained dual-theme gallery evidence integrity check",
       "cwd": ".",
       "argv": ["node", "scripts/video/audit-gallery-extensions.mjs"],
       "requiresPorts": [],
@@ -1589,9 +1589,23 @@
         "artifacts/video-template-experience-2026-10-23/appliance/render/portrait.mp4"
       ],
       "checks": [
-        "Both gallery extension projects render dual-aspect H.264 MP4s at 24 fps with frame counts matching total duration",
-        "Render records are appended to the retained project JSONs and SHA-256 digests are recorded",
+        "Committed evidence artifacts stay complete and self-consistent: encoding, dimensions, frame counts, and SHA-256 digests",
+        "Per-shot render records tie to the frameMap and working-version ids/contentDigests, and project ids tie to the browser report",
+        "This is a retained-evidence check by design; current-code regression coverage is the separate live gate VID-046",
         "Visual quality remains a separate sampled-frame review recorded in REPORT.md"
+      ]
+    },
+    {
+      "id": "VID-046",
+      "tier": "integration",
+      "title": "Live dual-theme gallery render regression gate",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/audit-gallery-extensions-live.mjs"],
+      "requiresPorts": [3210],
+      "checks": [
+        "Create both gallery extension projects from current code through the real browser, then render dual-aspect H.264 MP4s from the fresh projects",
+        "The same per-shot record/frameMap/working-version assertions run against the live outputs, so sample or renderer regressions fail the gate",
+        "Outputs stay in ignored .tools and never overwrite the retained delivery evidence"
       ]
     },
     {

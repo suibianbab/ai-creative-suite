@@ -12,7 +12,12 @@
 - e2e `scripts/video/e2e-gallery-extensions.mjs`（VID-043）：双题材全链路（创建→改标题/标注→显式保存→重开→回滚→双画幅预览 viewBox 断言→预填提示可见），控制台零错误。注意：**修订仅进内存，持久化靠「保存」按钮**——e2e 显式点击。
 - 出片与审计 `scripts/video/audit-gallery-extensions.mjs`（VID-044）：双题材双画幅 H.264/24fps，帧数 384/396 精确对齐时长，每项目 10 条渲染记录回写，SHA-256 见 `render-audit.json`。证据（项目/bible/manifest/MP4/20 抽帧/接片/REPORT）在 `artifacts/video-template-experience-2026-10-23/`，MP4 与 PNG 按 `.gitignore` 白名单外惯例 `git add -f` 入库。
 - 视觉检查：20 抽帧 + 4 接片逐项过检（无重叠/截断/裁断/对比问题）；无需布局修复。已知限制（REPORT 记录）：竖版纯文字镜头留白偏大；renovation 镜 3 拆改线为实线（组件无虚线参数）。
-- 门禁：web 279/279（+2 用例）、video-scene 179/179、video-document 158/158、typecheck、Biome、QA validate 99 自动/53 手工。
+- 门禁：web 280/280（+3 用例）、video-scene 179/179、video-document 158/158、typecheck、Biome、QA validate 100 自动/53 手工。
+
+## Codex 复核回应（2026-10-24）
+
+- **P2（VID-044 静态审计）接受并已修**：①VID-044 改标「留存证据完整性检查」，审计补逐镜对账——frameMap.versionId ↔ 项目 workingVersionId、renderRecords 逐镜 versionId/contentDigest/frames/尺寸匹配、各画幅记录数与镜头数对账（变异自检：改一条记录 versionId 即被捕获）；②新增 VID-046 live 门禁（`audit-gallery-extensions-live.mjs`）：当前代码跑浏览器链 → 新产物双画幅渲染 → 同套断言，检出样片/渲染器回归。出片证据仍以留存目录为准，live 输出只在 .tools。
+- **非阻断提醒照单确认**：回滚断言按交接单承诺口径（操作与导出）保留，不扩诺"回滚后保存重开"；`next build` 维持未验证项；商业成片口径不变。测试数勘误：修复轮后 web 为 280/280。
 
 ## 与现有入口的区别（任务单 §2.1 要求，避免换名重复）
 
