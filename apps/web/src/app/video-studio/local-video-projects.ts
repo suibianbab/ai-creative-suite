@@ -359,6 +359,109 @@ export async function importVideoProject(
   }
 }
 
+// 单文件项目包的 Style Bible 与项目在同一个事务发布。服务端已验包并
+// 恢复媒体原件；这里避免“风格规范写入成功、项目导入冲突”的半成品状态。
+export async function importPortableVideoProject(
+  document: VideoProject,
+  styleBible: StyleBible | null,
+): Promise<VideoProject> {
+  validateVideoProject(document);
+  const bible = styleBible ? validateStyleBible(styleBible) : null;
+  if (document.styleBibleRef) {
+    if (!bible) throw new Error("项目包缺少引用的 Style Bible");
+    await resolveStyleBibleRef(document.styleBibleRef, bible);
+  } else if (bible) {
+    throw new Error("项目包包含未被项目引用的 Style Bible");
+  }
+  const database = await openDatabase();
+  try {
+    const transaction = database.transaction(
+      ["projects", "versions", "styleBibles"],
+      "readwrite",
+    );
+    const done = transactionDone(transaction);
+    try {
+      const [storedProject, storedBible] = await Promise.all([
+        requestResult(
+          transaction.objectStore("projects").get(document.id) as IDBRequest<
+            ProjectRecord | undefined
+          >,
+        ),
+        bible
+          ? requestResult(
+              transaction
+                .objectStore("styleBibles")
+                .get(bible.id) as IDBRequest<StyleRecord | undefined>,
+            )
+          : Promise.resolve(undefined),
+      ]);
+      if (
+        storedBible &&
+        canonicalJson(storedBible.document) !== canonicalJson(bible)
+      )
+        throw new Error(
+          "本地 Style Bible 与项目包中的同 ID 版本不同，请先处理冲突",
+        );
+      if (storedProject) {
+        if (canonicalJson(storedProject.document) !== canonicalJson(document)) {
+          if (document.savedVersion !== storedProject.savedVersion + 1)
+            throw new VideoProjectConflictError(
+              document.id,
+              document.savedVersion,
+              storedProject.savedVersion,
+            );
+          assertAppendOnlyEvolution(storedProject.document, document);
+        }
+      }
+      const now = Date.now();
+      if (bible && !storedBible)
+        transaction.objectStore("styleBibles").put({
+          id: bible.id,
+          revision: 1,
+          document: bible,
+        } satisfies StyleRecord);
+      if (
+        !storedProject ||
+        canonicalJson(storedProject.document) !== canonicalJson(document)
+      ) {
+        transaction.objectStore("versions").put(
+          {
+            projectId: document.id,
+            savedVersion: document.savedVersion,
+            savedAt: now,
+            document,
+          } satisfies VersionSnapshot,
+          `${document.id}:${document.savedVersion}`,
+        );
+        transaction.objectStore("projects").put({
+          id: document.id,
+          title: document.title,
+          updatedAt: now,
+          savedVersion: document.savedVersion,
+          document,
+        } satisfies ProjectRecord);
+      }
+      await done;
+      return storedProject?.document &&
+        canonicalJson(storedProject.document) === canonicalJson(document)
+        ? storedProject.document
+        : document;
+    } catch (error) {
+      done.catch(() => {});
+      if (transaction.error === null) {
+        try {
+          transaction.abort();
+        } catch {
+          // Transaction may already have aborted after an IndexedDB error.
+        }
+      }
+      throw error;
+    }
+  } finally {
+    database.close();
+  }
+}
+
 // TTS 时长对齐与出片回写可能连续产生两个内容版本。整条快进链必须在
 // 同一 IndexedDB 事务中提交，避免第二步失败时本地停在中间版本。
 export async function importVideoProjectChain(

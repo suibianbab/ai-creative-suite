@@ -6,6 +6,7 @@ import {
   mkdirSync,
   openSync,
   readFileSync,
+  statSync,
   unlinkSync,
   writeFileSync,
 } from "node:fs";
@@ -31,8 +32,33 @@ export function acquireTtsLock(sharedRoot) {
     fd = openSync(file, "wx");
     writeFileSync(fd, `${process.pid}\n`);
   } catch {
+    if (fd !== undefined) {
+      try {
+        closeSync(fd);
+        unlinkSync(file);
+      } catch {
+        // If cleanup itself fails, the error below still identifies the lock.
+      }
+    }
+    let detail = "PID 未知";
+    try {
+      const pid = Number(readFileSync(file, "utf8").trim());
+      const modified = new Date(statSync(file).mtimeMs).toLocaleString("zh-CN");
+      if (Number.isSafeInteger(pid) && pid > 0) {
+        let status = "状态无法确认";
+        try {
+          process.kill(pid, 0);
+          status = "仍在运行";
+        } catch (error) {
+          if (error?.code === "ESRCH") status = "已退出";
+        }
+        detail = `PID ${pid} ${status}，锁文件修改于 ${modified}`;
+      }
+    } catch {
+      // Empty/corrupt lock remains conservative: never clear it automatically.
+    }
     throw new Error(
-      `已有 TTS 计费任务或遗留锁 ${file}；请核实进程后再重试，不会发起计费请求`,
+      `已有 TTS 计费任务或遗留锁 ${file}（${detail}）；若 PID 已退出，请核实后删除此锁文件再重试。本次不会发起计费请求`,
     );
   }
   const release = () => {

@@ -2428,6 +2428,22 @@
       ]
     },
     {
+      "id": "VID-049",
+      "title": "Browser portable video package export/import and fresh-context rendering",
+      "fixture": "Local dev server with ACS_MEDIA_STORE set to a dedicated workspace .tools/ directory; Playwright Chromium; BASE_URL=http://127.0.0.1:3213 E2E_STORE_DIR=<same store> node scripts/video/e2e-portable-workbench.mjs, then node scripts/video/e2e-portable-style.mjs",
+      "steps": [
+        "Create the built-in product sample, export the single-file project package, remove its original only from the dedicated test store, and import in a fresh browser context",
+        "Check recovered media SHA-256, reopen the project, and render/download both silent MP4 aspects",
+        "Create the renovation sample and repeat package export/import in a fresh context to prove its Style Bible reference restores and renders",
+        "Tamper manifest/media bytes, omit a file or use a traversal/duplicate path; verify rejection without a successful project import"
+      ],
+      "passCriteria": [
+        "Media original is restored byte-for-byte and the five-shot project survives reload; both product MP4s are H.264 at 1280x720 and 720x1280",
+        "The package includes its referenced Style Bible and the fresh-context renovation project renders both aspects without manual JSON import",
+        "Invalid or oversized packages fail with an actionable message; no successful project appears in IndexedDB; no TTS provider request is made"
+      ]
+    },
+    {
       "id": "VID-012",
       "title": "Video Studio subtitle track burned into narration piece",
       "fixture": "Same loop as VID-011 (dev server + proxy + billed TTS); word-level cues come from the per-shot .words.json written next to each wav; scripted assertions live in scripts/video/e2e-narrated.mjs and the evidence frame is artifacts/video-studio-narrated/subtitle-band-cue.png (SHA-256 in E2E_NARRATED.md)",

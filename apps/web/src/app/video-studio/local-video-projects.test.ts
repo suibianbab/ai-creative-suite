@@ -11,6 +11,7 @@ import {
 } from "@acs/video-document";
 import { IDBFactory } from "fake-indexeddb";
 import {
+  importPortableVideoProject,
   importVideoProject,
   importVideoProjectChain,
   openStyleBible,
@@ -104,6 +105,60 @@ test("双标签并发保存：恰有一个成功，另一个收到冲突错误",
       fulfilled[0]?.status === "fulfilled" && fulfilled[0].value.savedVersion,
       3,
     );
+  });
+});
+
+test("项目包导入将 Style Bible 与项目原子提交；项目冲突不留风格记录", async () => {
+  await withTabs(async () => {
+    const bible: StyleBible = {
+      schemaVersion: 1,
+      id: "66666666-6666-4666-8666-666666666666",
+      currentVersionId: "77777777-7777-4777-8777-777777777777",
+      versions: [
+        {
+          versionId: "77777777-7777-4777-8777-777777777777",
+          createdAt: "2026-10-22T00:00:00.000Z",
+          name: "包内风格",
+          palette: {
+            background: "#101820",
+            foreground: "#f3e6cf",
+            secondary: "#e8b04b",
+            accent: "#e8b04b",
+            object: "#c98548",
+          },
+          fontFamily: "NotoSansSC",
+          lightingPreset: "orbit3d-fixed-soft-studio",
+        },
+      ],
+    };
+    const project = makeProject({
+      styleBibleRef: {
+        bibleId: bible.id,
+        versionId: bible.currentVersionId,
+        digest: await styleVersionDigest(bible.versions[0]!),
+      },
+    });
+    const stored = await importPortableVideoProject(project, bible);
+    assert.equal(stored.id, project.id);
+    assert.deepEqual((await openStyleBible(bible.id))?.document, bible);
+    assert.deepEqual(await openVideoProject(project.id), project);
+
+    const otherBible = structuredClone(bible);
+    otherBible.id = "88888888-8888-4888-8888-888888888888";
+    const incoming = makeProject({
+      title: "同版本分叉",
+      styleBibleRef: {
+        bibleId: otherBible.id,
+        versionId: otherBible.currentVersionId,
+        digest: await styleVersionDigest(otherBible.versions[0]!),
+      },
+    });
+    await assert.rejects(
+      importPortableVideoProject(incoming, otherBible),
+      VideoProjectConflictError,
+    );
+    assert.equal(await openStyleBible(otherBible.id), null);
+    assert.deepEqual(await openVideoProject(project.id), project);
   });
 });
 

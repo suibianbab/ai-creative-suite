@@ -43,6 +43,21 @@ import {
 const ATOMIC_DIR = mkdtempSync(path.join(tmpdir(), "acs-atomic-"));
 test.after(() => rmSync(ATOMIC_DIR, { recursive: true, force: true }));
 
+test("遗留 TTS 锁提示 PID 和人工恢复步骤，且不自行删锁计费", () => {
+  const shared = mkdtempSync(path.join(tmpdir(), "acs-stale-tts-lock-"));
+  try {
+    const file = path.join(shared, "active.lock");
+    writeFileSync(file, "99999999\n");
+    assert.throws(
+      () => acquireTtsLock(shared),
+      /PID 99999999.*核实后删除此锁文件/,
+    );
+    assert.equal(existsSync(file), true);
+  } finally {
+    rmSync(shared, { recursive: true, force: true });
+  }
+});
+
 // 两个合成 chunk + 一句 begin/end：镜像真实流的字段结构（字节量缩小）。
 const WAV_HEAD = Buffer.from(
   "UklGRiQAAABXQVZFZm10IBAAAAABAAEAwF0AAIC7AAACABAAZGF0Yf////8=",

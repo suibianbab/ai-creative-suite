@@ -23,6 +23,7 @@ import {
   storyboardConfirmLines,
 } from "./apply-plan";
 import {
+  importPortableVideoProject,
   importVideoProject,
   importVideoProjectChain,
   listVideoProjects,
@@ -128,6 +129,7 @@ export default function VideoStudioPage() {
     setTransitionError(null);
   }, [editor?.document.shots.length, editor?.document.transitions]);
   const importInputRef = useRef<HTMLInputElement>(null);
+  const portableImportInputRef = useRef<HTMLInputElement>(null);
   const styleImportInputRef = useRef<HTMLInputElement>(null);
   // P2.6-T7 U5：最新文档 ref——下载期间允许继续编辑其他镜头，导入完成时
   // 必须以 ref 当前值（而非发起下载时的快照）为基线。
@@ -260,6 +262,59 @@ export default function VideoStudioPage() {
                 error instanceof Error ? error.message : "双画幅出片失败",
             }
           : current,
+      );
+    }
+  };
+
+  const exportPortableProject = async (state: EditorState) => {
+    const current = state.document;
+    setEditor({ ...state, busy: true, message: "正在校验并打包项目与素材…" });
+    let saved: VideoProject | null = null;
+    try {
+      saved = await saveVideoProject(current);
+      const styleBible = saved.styleBibleRef
+        ? (await openStyleBible(saved.styleBibleRef.bibleId))?.document
+        : undefined;
+      if (saved.styleBibleRef && !styleBible)
+        throw new Error("风格规范缺失，请先导入对应的 Style Bible JSON");
+      const response = await fetch("/api/video/portable", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "export", project: saved, styleBible }),
+      });
+      if (!response.ok) {
+        const payload = (await response.json()) as { error?: string };
+        throw new Error(payload.error ?? "项目包导出失败");
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const anchor = window.document.createElement("a");
+      anchor.href = url;
+      anchor.download = `${saved.id}.acs-video-package.json`;
+      anchor.click();
+      URL.revokeObjectURL(url);
+      setEditor((previous) =>
+        previous?.document.id === current.id
+          ? {
+              ...previous,
+              document: saved!,
+              busy: false,
+              message: `已导出 ${anchor.download}（含项目、媒体原件和引用的风格规范）。历史 MP4、旁白音频与代理不在包内。`,
+            }
+          : previous,
+      );
+      await refreshProjects();
+    } catch (error) {
+      setEditor((previous) =>
+        previous?.document.id === current.id
+          ? {
+              ...previous,
+              document: saved ?? current,
+              busy: false,
+              message:
+                error instanceof Error ? error.message : "项目包导出失败",
+            }
+          : previous,
       );
     }
   };
@@ -1112,6 +1167,17 @@ export default function VideoStudioPage() {
           >
             导出项目 JSON
           </button>
+          <button
+            type="button"
+            className="editor-export-portable"
+            disabled={busy}
+            onClick={() => void exportPortableProject(editor)}
+          >
+            导出可移植项目包（含素材）
+          </button>
+          <p className="shot-template-note">
+            浏览器单文件包上限 32 MiB；更大的媒体项目可用现有 CLI 目录包。
+          </p>
           {message ? <p className="editor-message">{message}</p> : null}
 
           {document.renderRecords.length > 0 ? (
@@ -1203,6 +1269,13 @@ export default function VideoStudioPage() {
           </button>
           <button
             type="button"
+            className="project-import-portable"
+            onClick={() => portableImportInputRef.current?.click()}
+          >
+            导入可移植项目包（含素材）
+          </button>
+          <button
+            type="button"
             className="project-import"
             onClick={() => styleImportInputRef.current?.click()}
           >
@@ -1259,6 +1332,58 @@ export default function VideoStudioPage() {
               } catch (error) {
                 setListMessage(
                   error instanceof Error ? error.message : "导入失败",
+                );
+              }
+            }}
+          />
+          <input
+            ref={portableImportInputRef}
+            type="file"
+            accept=".json,application/json"
+            hidden
+            onChange={async (event) => {
+              const file = event.target.files?.[0];
+              event.target.value = "";
+              if (!file) return;
+              try {
+                if (file.size > 32 * 1024 * 1024)
+                  throw new Error(
+                    "项目包超过浏览器 32 MiB 上限，请使用 CLI 目录包",
+                  );
+                const response = await fetch("/api/video/portable", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    action: "import",
+                    envelope: await file.text(),
+                  }),
+                });
+                const payload = (await response.json()) as {
+                  project?: VideoProject;
+                  styleBible?: unknown;
+                  installedMedia?: number;
+                  error?: string;
+                };
+                if (!response.ok || !payload.project)
+                  throw new Error(payload.error ?? "项目包导入失败");
+                const imported = await importPortableVideoProject(
+                  validateVideoProject(payload.project),
+                  payload.styleBible
+                    ? validateStyleBible(payload.styleBible)
+                    : null,
+                );
+                await refreshProjects();
+                setEditor({
+                  document: imported,
+                  message: `已导入项目包：${imported.title}；恢复 ${payload.installedMedia ?? 0} 个媒体原件。历史成片需在本机重新渲染。`,
+                  busy: false,
+                  sentence: imported.brief.sentence,
+                  plan: null,
+                  storyboard: null,
+                });
+              } catch (error) {
+                setListMessage(
+                  error instanceof Error ? error.message : "项目包导入失败",
                 );
               }
             }}
