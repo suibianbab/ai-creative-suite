@@ -2,7 +2,7 @@
 // 组件 spec（或经应用层的受控 media-clip 镜头），不引入第二种项目模型
 // 或任意代码入口；应用语义沿用 apply-plan 的「内存追加 + 保存确认」。
 import type { MediaAsset, VideoProject } from "@acs/video-document";
-import type { SceneSpec } from "@acs/video-scene";
+import { defaultRegistry, type SceneSpec, type SvgNode } from "@acs/video-scene";
 
 export type RecipeInputs = {
   title?: string;
@@ -54,6 +54,56 @@ const baseSpec = (
   background: "#ffffff",
   params,
 });
+
+// 预览帧的序列化：属性值与文本一律 XML 转义（用户输入会进入 SVG）。
+const escapeXml = (value: string) =>
+  value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+
+function serializeNode(node: SvgNode): string {
+  const attrs = Object.entries(node.attrs ?? {})
+    .map(([key, value]) => ` ${key}="${escapeXml(String(value))}"`)
+    .join("");
+  const children = (node.children ?? [])
+    .map((child) => serializeNode(child))
+    .join("");
+  const text = node.text ? escapeXml(node.text) : "";
+  return `<${node.tag}${attrs}>${text}${children}</${node.tag}>`;
+}
+
+const PREVIEW_WIDTH = 320;
+const PREVIEW_HEIGHT = 180;
+
+function placeholderSvg(label: string): string {
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${PREVIEW_WIDTH}" height="${PREVIEW_HEIGHT}" viewBox="0 0 ${PREVIEW_WIDTH} ${PREVIEW_HEIGHT}"><rect width="${PREVIEW_WIDTH}" height="${PREVIEW_HEIGHT}" fill="#141a22"/><rect x="70" y="45" width="180" height="80" rx="8" fill="#223247" stroke="#4aa3d9" stroke-width="2"/><text x="160" y="92" fill="#eef3f8" font-family="sans-serif" font-size="14" text-anchor="middle">${escapeXml(label)}</text></svg>`;
+}
+
+export function recipePreviewSvg(
+  recipe: ShotRecipe,
+  inputs: RecipeInputs = {},
+): string {
+  if (recipe.componentId === "media-clip")
+    return placeholderSvg("商品画面占位");
+  const attempt = recipe.build(inputs);
+  const built = "spec" in attempt ? attempt : recipe.build({});
+  if (!("spec" in built)) return placeholderSvg("预览暂不可用");
+  const spec = built.spec;
+  const durationFrames = Math.ceil((spec.durationMs / 1000) * 24);
+  const node = defaultRegistry
+    .get(spec.componentId, spec.componentVersion)
+    .render(spec, {
+      frame: Math.min(recipe.previewFrame, durationFrames - 1),
+      fps: 24,
+      durationFrames,
+      width: PREVIEW_WIDTH,
+      height: PREVIEW_HEIGHT,
+      random: () => 0.42,
+    });
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${PREVIEW_WIDTH}" height="${PREVIEW_HEIGHT}" viewBox="0 0 ${PREVIEW_WIDTH} ${PREVIEW_HEIGHT}">${serializeNode(node)}</svg>`;
+}
 
 export const SHOT_RECIPES: readonly ShotRecipe[] = [
   {

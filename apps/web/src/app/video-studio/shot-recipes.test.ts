@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { defaultRegistry, validateSceneSpec } from "@acs/video-scene";
-import { SHOT_RECIPES } from "./shot-recipes";
+import { recipePreviewSvg, SHOT_RECIPES } from "./shot-recipes";
 
 const META_KEYS = [
   "id",
@@ -109,4 +109,20 @@ test("商品配方必须先有资产：无 assetId 时明确报错", () => {
     "error" in result ? result.error : "",
     /媒体素材/,
   );
+});
+
+test("配方 SVG 预览：三条各有默认标题文本，用户文本经 XML 转义", () => {
+  const text = SHOT_RECIPES.find((r) => r.id === "recipe-text-point")!;
+  const data = SHOT_RECIPES.find((r) => r.id === "recipe-data-bar")!;
+  const product = SHOT_RECIPES.find((r) => r.id === "recipe-product-clip")!;
+  const textSvg = recipePreviewSvg(text);
+  assert.ok(textSvg.startsWith("<svg"));
+  assert.ok(textSvg.includes("一句话开场"));
+  assert.ok(recipePreviewSvg(data).includes("数据对比"));
+  const productSvg = recipePreviewSvg(product);
+  assert.ok(productSvg.startsWith("<svg"));
+  assert.ok(productSvg.includes("商品画面占位"));
+  const hostile = recipePreviewSvg(text, { title: `<b>&"` });
+  assert.ok(!hostile.includes("<b>"), "预览必须转义用户文本");
+  assert.ok(hostile.includes("&lt;b&gt;"));
 });
