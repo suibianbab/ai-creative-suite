@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "id": "9f6f7e0a-4d2b-4c1e-9a57-2f3d4b6c8e01",
+  "title": "3D 镜头烘焙样例",
+  "brief": {
+    "sentence": "做一个2秒的3D示意视频，1个3D镜头 + 1个文字镜头",
+    "aspectTargets": [
+      "landscape",
+      "portrait"
+    ]
+  },
+  "shots": [
+    {
+      "shotId": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "order": 0,
+      "locked": false,
+      "workingVersionId": "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
+      "contentVersions": [
+        {
+          "versionId": "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
+          "createdAt": "2026-10-21T00:00:00.000Z",
+          "durationMs": 3000,
+          "description": "W3 Three 路线样件：非品牌演示立方体（身份见清单）",
+          "narrationText": "这是一个程序化生成的演示立方体。",
+          "sceneSource": {
+            "type": "three",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "orbit3d",
+              "componentVersion": 1,
+              "durationMs": 3000,
+              "seed": 20261021,
+              "background": "#101820",
+              "params": {
+                "shape": "box",
+                "color": "#4f9dff",
+                "accent": "#e8b04b",
+                "spinPerFrame": 0.02,
+                "tilt": 0.35,
+                "zoom": 1
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "three-registry",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
+          "at": "2026-10-21T00:00:00.000Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "c3d4e5f6-a7b8-4c9d-8e1f-2a3b4c5d6e7f",
+      "order": 1,
+      "locked": false,
+      "workingVersionId": "d4e5f6a7-b8c9-4d0e-9f2a-3b4c5d6e7f80",
+      "contentVersions": [
+        {
+          "versionId": "d4e5f6a7-b8c9-4d0e-9f2a-3b4c5d6e7f80",
+          "createdAt": "2026-10-21T00:00:00.000Z",
+          "durationMs": 1000,
+          "description": "收尾（文字动画）",
+          "narrationText": "谢谢观看。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 1000,
+              "seed": 20261022,
+              "background": "#ffffff",
+              "params": {
+                "title": "3D 示意",
+                "subtitle": "谢谢观看",
+                "titleColor": "#1b2c29",
+                "subtitleColor": "#5d7469",
+                "entrance": "fade-up",
+                "enterMs": 900
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-rules",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "d4e5f6a7-b8c9-4d0e-9f2a-3b4c5d6e7f80",
+          "at": "2026-10-21T00:00:00.000Z",
+          "actor": "human"
+        }
+      ]
+    }
+  ],
+  "mediaAssets": [],
+  "renderRecords": [],
+  "deliveries": [],
+  "savedVersion": 1
+}
