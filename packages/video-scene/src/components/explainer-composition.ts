@@ -167,7 +167,9 @@ function validateParams(value: unknown): ExplainerParams {
         value.diagram.centerText.length < 1 ||
         value.diagram.centerText.length > 10)
     )
-      throw new Error("explainer-composition cycle centerText 必须是 1..10 个字符");
+      throw new Error(
+        "explainer-composition cycle centerText 必须是 1..10 个字符",
+      );
   } else if (value.diagram.kind === "image") {
     // Self-contained raster only: no network dependency or SVG script surface.
     if (!validEmbeddedImage(value.diagram.src))
@@ -180,7 +182,9 @@ function validateParams(value: unknown): ExplainerParams {
     );
   if (value.diagramLabels !== undefined) {
     if (value.diagram.kind !== "drawing")
-      throw new Error("explainer-composition diagramLabels 仅可与 drawing 搭配");
+      throw new Error(
+        "explainer-composition diagramLabels 仅可与 drawing 搭配",
+      );
     if (
       !Array.isArray(value.diagramLabels) ||
       value.diagramLabels.length < 1 ||
@@ -329,8 +333,7 @@ function cycleNodes(
   const heads: SvgNode[] = [];
   for (let i = 0; i < n; i += 1) {
     const next = (i + 1) % n;
-    const fromAngle =
-      ((-90 + (i * 360) / n) * Math.PI) / 180 + trim;
+    const fromAngle = ((-90 + (i * 360) / n) * Math.PI) / 180 + trim;
     // 闭合弧的目标角度补 2π，保证弧沿顺时针走完而不是反向折回。
     const toAngle =
       ((-90 + (next * 360) / n) * Math.PI) / 180 +
@@ -373,7 +376,13 @@ function cycleNodes(
       },
     });
   }
-  const nodes: SvgNode[] = [...edges, ...heads, ...boxes, ...labels, ...captions];
+  const nodes: SvgNode[] = [
+    ...edges,
+    ...heads,
+    ...boxes,
+    ...labels,
+    ...captions,
+  ];
   if (p.diagram.centerText !== undefined) {
     const wrapStart =
       (n - 1) * CYCLE.staggerMs + CYCLE.enterMs + CYCLE.wrapExtraMs;
@@ -398,10 +407,7 @@ function cycleNodes(
 
 // 部件标注：drawing 空间内的小字标签，可选引线＋端点圆指向图示部件；
 // 与路径同组渲染，自动随 diagramOffset/scale 变换（横竖版同坐标）。
-function diagramLabelNodes(
-  p: ExplainerParams,
-  tMs: number,
-): SvgNode[] {
+function diagramLabelNodes(p: ExplainerParams, tMs: number): SvgNode[] {
   if (p.diagram.kind !== "drawing" || !p.diagramLabels) return [];
   return p.diagramLabels.flatMap((label) => {
     const opacity = clamp01((tMs - (label.enterMs ?? 1200)) / 300);
@@ -539,17 +545,10 @@ function render(spec: SceneSpecLike, ctx: FrameContext): SvgNode {
           ]
         : p.diagram.kind === "cycle"
           ? cycleNodes(p, childTMs, portrait)
-          : [
-              ...diagramChildren,
-              ...diagramLabelNodes(p, childTMs),
-            ];
+          : [...diagramChildren, ...diagramLabelNodes(p, childTMs)];
   const diagramY =
     p.diagramOffsetY +
-    (portrait
-      ? p.diagram.kind === "drawing"
-        ? 260
-        : 300
-      : 0);
+    (portrait ? (p.diagram.kind === "drawing" ? 260 : 300) : 0);
   const diagramScale = p.diagram.kind === "drawing" ? 1.3 : 1;
   return {
     tag: "g",

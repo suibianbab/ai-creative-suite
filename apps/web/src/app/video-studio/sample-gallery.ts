@@ -213,9 +213,30 @@ function sampleShots(
             ],
           },
           diagramLabels: [
-            { text: "太阳", x: 600, y: 300, targetX: 680, targetY: 300, enterMs: 500 },
-            { text: "海面", x: 180, y: 545, targetX: 240, targetY: 588, enterMs: 1100 },
-            { text: "水蒸气", x: 360, y: 290, targetX: 360, targetY: 345, enterMs: 1700 },
+            {
+              text: "太阳",
+              x: 600,
+              y: 300,
+              targetX: 680,
+              targetY: 300,
+              enterMs: 500,
+            },
+            {
+              text: "海面",
+              x: 180,
+              y: 545,
+              targetX: 240,
+              targetY: 588,
+              enterMs: 1100,
+            },
+            {
+              text: "水蒸气",
+              x: 360,
+              y: 290,
+              targetX: 360,
+              targetY: 345,
+              enterMs: 1700,
+            },
           ],
           annotations: [
             {
@@ -277,9 +298,30 @@ function sampleShots(
             ],
           },
           diagramLabels: [
-            { text: "云", x: 660, y: 300, targetX: 590, targetY: 320, enterMs: 600 },
-            { text: "雨滴", x: 640, y: 470, targetX: 565, targetY: 474, enterMs: 1400 },
-            { text: "海面", x: 790, y: 550, targetX: 760, targetY: 596, enterMs: 2000 },
+            {
+              text: "云",
+              x: 660,
+              y: 300,
+              targetX: 590,
+              targetY: 320,
+              enterMs: 600,
+            },
+            {
+              text: "雨滴",
+              x: 640,
+              y: 470,
+              targetX: 565,
+              targetY: 474,
+              enterMs: 1400,
+            },
+            {
+              text: "海面",
+              x: 790,
+              y: 550,
+              targetX: 760,
+              targetY: 596,
+              enterMs: 2000,
+            },
           ],
           annotations: [
             {

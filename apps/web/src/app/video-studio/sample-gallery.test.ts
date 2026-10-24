@@ -128,9 +128,11 @@ test("STEM 样片：环形总览＋分步图解编排，旁白文本与 2026-10-
     const source = project.shots[index]!.contentVersions[0]!.sceneSource;
     assert.equal(source.type, "spec");
     if (source.type === "spec") {
-      const labels = (validateSceneSpec(source.spec, defaultRegistry).params as {
-        diagramLabels?: unknown[];
-      }).diagramLabels;
+      const labels = (
+        validateSceneSpec(source.spec, defaultRegistry).params as {
+          diagramLabels?: unknown[];
+        }
+      ).diagramLabels;
       assert.ok(
         Array.isArray(labels) && labels.length >= 2,
         `镜头 ${index + 1} 缺少部件标注`,

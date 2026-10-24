@@ -296,10 +296,7 @@ test("cycle 图示：阶段数、标签、短注与中心文字受校验约束",
   assert.throws(
     () =>
       validateSceneSpec(
-        cycle([
-          { label: "蒸发" },
-          { label: "凝结" },
-        ]),
+        cycle([{ label: "蒸发" }, { label: "凝结" }]),
         defaultRegistry,
       ),
     /cycle/,
@@ -349,7 +346,10 @@ test("cycle 图示：阶段数、标签、短注与中心文字受校验约束",
 });
 
 test("cycle 图示：阶段盒、环向弧、闭合箭头与中心文字分时入场", () => {
-  const late = explainerComposition.render(spec(cycleParams), ctx(1280, 720, 90));
+  const late = explainerComposition.render(
+    spec(cycleParams),
+    ctx(1280, 720, 90),
+  );
   const boxes = allNodes(late).filter(
     (node) =>
       node.tag === "rect" &&
@@ -452,8 +452,7 @@ test("drawing 部件标注：带目标画引线端点，未带目标只有文字
   const dots = allNodes(late).filter((node) => node.tag === "circle");
   assert.equal(dots.length, 1);
   const leaders = allNodes(late).filter(
-    (node) =>
-      node.tag === "path" && Number(node.attrs["stroke-width"]) === 3,
+    (node) => node.tag === "path" && Number(node.attrs["stroke-width"]) === 3,
   );
   assert.equal(leaders.length, 1);
   const early = textNodes(
@@ -463,7 +462,10 @@ test("drawing 部件标注：带目标画引线端点，未带目标只有文字
   assert.equal(Number(early.attrs.opacity), 0);
   // 旧 drawing spec（无 diagramLabels）不渲染任何端点圆。
   const plain = explainerComposition.render(
-    spec({ ...params, diagram: { kind: "drawing", paths: ["M 200 300 L 500 500"] } }),
+    spec({
+      ...params,
+      diagram: { kind: "drawing", paths: ["M 200 300 L 500 500"] },
+    }),
     ctx(1280, 720, 90),
   );
   assert.equal(
