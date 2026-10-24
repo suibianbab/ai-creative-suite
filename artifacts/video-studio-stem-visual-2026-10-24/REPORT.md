@@ -6,8 +6,8 @@
 ## 基线与 HEAD
 
 - 基线：`main@22ea60f`（含分工单基线 `db41d5b`）
-- 分支：`claude/video-stem-visual`，worktree `D:\codex\animate\.claude\worktrees\stem-visual`
-- HEAD：`ac16bc4`（merge-base `22ea60f`，3 个提交：组件扩展 → 几何修正 → Biome 格式化）
+- 分支：`claude/video-stem-visual`（已推送 `origin/claude/video-stem-visual`），worktree `D:\codex\animate\.claude\worktrees\stem-visual`
+- HEAD：见 `git log --oneline main..claude/video-stem-visual`（组件扩展 → 几何修正 → Biome 格式化 → 证据文档四个提交，merge-base `22ea60f`）
 - 所有权遵守：只改了 `packages/video-scene/src/components/explainer-composition.ts`（+测试）与 `apps/web/src/app/video-studio/sample-gallery.ts`（+测试）。未触碰 `page.tsx`、`api/video/render/**`、`scripts/video/tts-*`、`qa/registry.json`、`CURRENT_STATE.md`、Codex 所有权文件与主检出未提交内容。`apps/web/next-env.d.ts` 的改动是 `next dev` 自动生成，未提交。
 
 ## 为什么扩展现有组件而不是新增注册组件（分工单要求的先行说明）
