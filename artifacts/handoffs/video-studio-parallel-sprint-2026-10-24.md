@@ -32,3 +32,9 @@
 ## `/clear` 后的恢复入口
 
 Codex CLI 的 `/clear` 会开始一个新聊天；`/compact` 则把当前聊天压缩成摘要、保留关键上下文。两者都不删除 Git 分支、工作树、文件和提交，但新聊天不能假设记得口头裁决，附着在旧聊天的 Goal 也应重新核对。每条线在提交前更新自己的交接单：基线和 HEAD、已完成、未完成、测试与产物、阻断项、下一条具体命令。清理上下文后，给新聊天本文件及两条线的最新交接单路径即可继续。不要在代码未提交、运行中命令未结束或关键裁决只存在聊天里时执行 `/clear`。
+
+## 执行状态（2026-10-24）
+
+- Codex 有声工作台线已在 `codex/video-narrated-workbench@7658abd` 提交；交叉审核单：`C:\Users\惠普\.codex\worktrees\video-portable-package\animate\artifacts\handoffs\codex-video-narrated-workbench-2026-10-24.md`。真实浏览器有声 7 镜头双画幅通过，旧无声样片回归通过；待 Claude 交叉审核与两线集成。
+- Claude 视觉线通过本机 Claude Code 后台会话 `f24cbfb3` 启动，当前工作树 `D:\codex\animate\.claude\worktrees\stem-visual`。查看进度可用 `claude agents --json` 与 `claude logs f24cbfb3`；完成前不合并其代码。
+- 最终收口责任在 Codex：处理交叉审核阻断项、集成两线、登记 QA、跑集成后的有声 STEM 浏览器与双画幅真实出片、人工审片，再合并推送 main。主检出其他未提交文件保留原状。
