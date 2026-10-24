@@ -345,6 +345,16 @@ export function ShotEditorCard({
         : null,
     );
   const [compositionError, setCompositionError] = useState<string | null>(null);
+  const updateCycleDraft = (
+    update: (
+      diagram: Extract<ExplainerParams["diagram"], { kind: "cycle" }>,
+    ) => Extract<ExplainerParams["diagram"], { kind: "cycle" }>,
+  ) =>
+    setCompositionDraft((current) =>
+      current?.diagram.kind === "cycle"
+        ? { ...current, diagram: update(current.diagram) }
+        : current,
+    );
   // 双画幅版式覆写（2026-10-23 brief §三B）：仅 text-animation / line-chart
   // 出「画幅微调」区块；草稿随工作版本重置，换模板 = 新视觉基底 → 清空。
   const layoutEditable =
@@ -1150,12 +1160,119 @@ export function ShotEditorCard({
                         图示类型：
                         {compositionDraft.diagram.kind === "flow"
                           ? "流程"
-                          : compositionDraft.diagram.kind === "drawing"
-                            ? "线描"
-                            : "图片"}
+                          : compositionDraft.diagram.kind === "cycle"
+                            ? "循环"
+                            : compositionDraft.diagram.kind === "drawing"
+                              ? "线描"
+                              : "图片"}
                         。切换模板可换图示类型。
                       </p>
-                      {compositionDraft.diagram.kind === "flow" ? (
+                      {compositionDraft.diagram.kind === "cycle" ? (
+                        <div className="composition-cycle-editor">
+                          <label className="shot-edit-field">
+                            环中心文字
+                            <input
+                              className="composition-cycle-center"
+                              maxLength={10}
+                              value={compositionDraft.diagram.centerText ?? ""}
+                              onChange={(event) =>
+                                updateCycleDraft((diagram) => ({
+                                  ...diagram,
+                                  centerText: event.target.value || undefined,
+                                }))
+                              }
+                            />
+                          </label>
+                          {compositionDraft.diagram.steps.map(
+                            (step, stepIndex) => (
+                              <div
+                                className="composition-cycle-step"
+                                key={stepIndex}
+                              >
+                                <label className="shot-edit-field">
+                                  阶段 {stepIndex + 1}
+                                  <input
+                                    className={`composition-cycle-${stepIndex}-label`}
+                                    maxLength={6}
+                                    value={step.label}
+                                    onChange={(event) =>
+                                      updateCycleDraft((diagram) => ({
+                                        ...diagram,
+                                        steps: diagram.steps.map(
+                                          (item, index) =>
+                                            index === stepIndex
+                                              ? {
+                                                  ...item,
+                                                  label: event.target.value,
+                                                }
+                                              : item,
+                                        ),
+                                      }))
+                                    }
+                                  />
+                                </label>
+                                <label className="shot-edit-field">
+                                  阶段短注
+                                  <input
+                                    className={`composition-cycle-${stepIndex}-caption`}
+                                    maxLength={12}
+                                    value={step.caption ?? ""}
+                                    onChange={(event) =>
+                                      updateCycleDraft((diagram) => ({
+                                        ...diagram,
+                                        steps: diagram.steps.map(
+                                          (item, index) =>
+                                            index === stepIndex
+                                              ? {
+                                                  ...item,
+                                                  caption:
+                                                    event.target.value ||
+                                                    undefined,
+                                                }
+                                              : item,
+                                        ),
+                                      }))
+                                    }
+                                  />
+                                </label>
+                              </div>
+                            ),
+                          )}
+                          <div className="composition-annotation-actions">
+                            <button
+                              type="button"
+                              disabled={
+                                compositionDraft.diagram.steps.length >= 6
+                              }
+                              onClick={() =>
+                                updateCycleDraft((diagram) => ({
+                                  ...diagram,
+                                  steps: [
+                                    ...diagram.steps,
+                                    { label: "新阶段" },
+                                  ],
+                                }))
+                              }
+                            >
+                              添加阶段
+                            </button>
+                            <button
+                              type="button"
+                              disabled={
+                                compositionDraft.diagram.steps.length <= 3
+                              }
+                              onClick={() =>
+                                updateCycleDraft((diagram) => ({
+                                  ...diagram,
+                                  steps: diagram.steps.slice(0, -1),
+                                }))
+                              }
+                            >
+                              移除末阶段
+                            </button>
+                          </div>
+                        </div>
+                      ) : compositionDraft.diagram.kind === "flow" ? (
                         <label className="shot-edit-field">
                           流程步骤（每行一个，2–8 项）
                           <textarea
@@ -1243,6 +1360,144 @@ export function ShotEditorCard({
                           />
                         </label>
                       )}
+                      {compositionDraft.diagram.kind === "drawing" ? (
+                        <div className="composition-diagram-labels">
+                          <p className="shot-template-note">
+                            图示部件标注（坐标随线描一起缩放）
+                          </p>
+                          {(compositionDraft.diagramLabels ?? []).map(
+                            (label, labelIndex) => (
+                              <div
+                                className="composition-diagram-label-row"
+                                key={labelIndex}
+                              >
+                                <label className="shot-edit-field">
+                                  部件 {labelIndex + 1}
+                                  <input
+                                    className={`composition-diagram-label-${labelIndex}-text`}
+                                    maxLength={8}
+                                    value={label.text}
+                                    onChange={(event) =>
+                                      setCompositionDraft({
+                                        ...compositionDraft,
+                                        diagramLabels:
+                                          compositionDraft.diagramLabels?.map(
+                                            (item, index) =>
+                                              index === labelIndex
+                                                ? {
+                                                    ...item,
+                                                    text: event.target.value,
+                                                  }
+                                                : item,
+                                          ),
+                                      })
+                                    }
+                                  />
+                                </label>
+                                {(
+                                  [
+                                    "x",
+                                    "y",
+                                    "targetX",
+                                    "targetY",
+                                    "enterMs",
+                                  ] as const
+                                ).map((field) => (
+                                  <label
+                                    className="shot-edit-field"
+                                    key={field}
+                                  >
+                                    {
+                                      {
+                                        x: "文字 X",
+                                        y: "文字 Y",
+                                        targetX: "指向 X（可空）",
+                                        targetY: "指向 Y（可空）",
+                                        enterMs: "入场毫秒",
+                                      }[field]
+                                    }
+                                    <input
+                                      className={`composition-diagram-label-${labelIndex}-${field}`}
+                                      type="number"
+                                      min={0}
+                                      max={field === "enterMs" ? 3500 : 1000}
+                                      value={label[field] ?? ""}
+                                      onChange={(event) =>
+                                        setCompositionDraft({
+                                          ...compositionDraft,
+                                          diagramLabels:
+                                            compositionDraft.diagramLabels?.map(
+                                              (item, index) =>
+                                                index === labelIndex
+                                                  ? {
+                                                      ...item,
+                                                      [field]:
+                                                        event.target.value ===
+                                                          "" &&
+                                                        (field === "targetX" ||
+                                                          field === "targetY")
+                                                          ? undefined
+                                                          : Number(
+                                                              event.target
+                                                                .value,
+                                                            ),
+                                                    }
+                                                  : item,
+                                            ),
+                                        })
+                                      }
+                                    />
+                                  </label>
+                                ))}
+                              </div>
+                            ),
+                          )}
+                          <div className="composition-annotation-actions">
+                            <button
+                              type="button"
+                              disabled={
+                                (compositionDraft.diagramLabels?.length ?? 0) >=
+                                4
+                              }
+                              onClick={() =>
+                                setCompositionDraft({
+                                  ...compositionDraft,
+                                  diagramLabels: [
+                                    ...(compositionDraft.diagramLabels ?? []),
+                                    {
+                                      text: "新部件",
+                                      x: 500,
+                                      y: 500,
+                                      enterMs: 1200,
+                                    },
+                                  ],
+                                })
+                              }
+                            >
+                              添加部件标注
+                            </button>
+                            <button
+                              type="button"
+                              disabled={
+                                (compositionDraft.diagramLabels?.length ?? 0) <=
+                                1
+                              }
+                              onClick={() =>
+                                setCompositionDraft({
+                                  ...compositionDraft,
+                                  diagramLabels:
+                                    compositionDraft.diagramLabels?.slice(
+                                      0,
+                                      -1,
+                                    ),
+                                })
+                              }
+                            >
+                              移除末条部件标注
+                            </button>
+                          </div>
+                        </div>
+                      ) : null}
                       {(
                         [
                           "titleY",

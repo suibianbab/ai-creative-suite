@@ -1,5 +1,9 @@
 # Current State v2
 
+## 2026-10-24 Video Studio STEM 视觉模板与浏览器有声出片集成
+
+在 `codex/video-stem-integration` 集成 Claude 的循环图、线描部件标注和七镜 STEM 样片，与 Codex 的浏览器有声双画幅出片。循环阶段、中心字和线描标注可在镜头卡修改，保存重开及回滚通过 `VID-048` 浏览器脚本；新增通用四阶段循环模板。浏览器实际导出横竖两版 H.264/AAC，7 镜产生 14 条渲染记录，字幕/旁白清单各 7 条，控制台零错误；本轮 7 段旁白复用已计费缓存，共享台账保持 28 条、¥0.0656。竖版镜头 2 晚帧已重看，句号没有单独字幕块。Claude 对有声线 N1–N7 增量复核确认修复、无阻断；强杀遗留锁、旧版工作树误用、配音自然度人耳评价仍需后续处理/审听。具体报告见 `artifacts/handoffs/video-stem-integration-2026-10-24.md`。
+
 ## 2026-10-23 Video Studio 组合模板第三轮复核整改（待分支复核）
 
 在 `video-studio/dual-aspect-edit` 分支按组合模板审核清单处理 G1–G8：修复浏览模板后静默改变背景；流程标签几何与节点文字对比统一为共享规则；清理错误消息、死校验和草稿回退；明确上传尺寸配对。G4 决定接受本未合并分支的标注安全区边界收紧，并在设计文档说明兼容范围。浏览器“浏览→还原→应用”与真正应用模板均已验证；scene 179、document 158、web 276 项通过，typecheck、Biome、QA 注册表、双画幅浏览器与旧流程图 API 通过；旧 STEM 样片当前代码重渲的两个 MP4 与留存文件逐字节一致。详见 `docs/VIDEO_STUDIO_MULTIELEMENT_COMPOSITION_2026-10-23.md` 和 `artifacts/codex-review-video-studio-composition-templates-2026-10-23.md`。未合并或推送 main。

@@ -52,9 +52,25 @@
 
 .editor-pane {
   min-width: 0;
-  margin: 0;
-  padding: 0;
   border: 0;
+}
+
+.composition-cycle-step,
+.composition-diagram-label-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 12px 0;
+  padding: 12px;
+  border: 1px solid #cadbd1;
+  border-radius: 8px;
+}
+
+@media (max-width: 640px) {
+  .composition-cycle-step,
+  .composition-diagram-label-row {
+    grid-template-columns: 1fr;
+  }
 }
 
 .project-toolbar {

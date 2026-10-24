@@ -54,6 +54,36 @@ const IMAGE_PLACEHOLDER =
 
 export const COMPOSITION_TEMPLATES: readonly CompositionTemplate[] = [
   {
+    templateId: "composition-cycle-4",
+    componentId: "explainer-composition",
+    label: "多元素 · 循环图解",
+    description: "四阶段闭环、短注与中心文字均可编辑，适合过程或系统循环说明。",
+    params: {
+      ...shared,
+      title: "循环过程",
+      diagramOffsetY: -60,
+      diagram: {
+        kind: "cycle",
+        steps: [
+          { label: "阶段一", caption: "起点" },
+          { label: "阶段二", caption: "变化" },
+          { label: "阶段三", caption: "传递" },
+          { label: "阶段四", caption: "返回" },
+        ],
+        centerText: "持续循环",
+      },
+      annotations: [
+        {
+          text: "在此说明循环的驱动力",
+          x: 500,
+          y: 780,
+          portraitY: 1340,
+          enterMs: 2800,
+        },
+      ],
+    },
+  },
+  {
     templateId: "composition-process-4",
     componentId: "explainer-composition",
     label: "多元素 · 四步说明",

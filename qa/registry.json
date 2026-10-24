@@ -2413,6 +2413,21 @@
       ]
     },
     {
+      "id": "VID-048",
+      "title": "Reusable STEM cycle and drawing-label editing, save and rollback",
+      "fixture": "Local Video Studio dev server and Playwright Chromium; non-billed BASE_URL=http://127.0.0.1:3212 node scripts/video/e2e-cycle-editor.mjs",
+      "steps": [
+        "Create the water-cycle sample, edit a cycle stage label/caption/center and a drawing component label in the browser",
+        "Apply the edits, save and export the project, reload and reopen it, then roll the cycle shot back to its original content version",
+        "Inspect the exported version chain and run VID-047 using already cached paid narration assets for integrated audio/video output"
+      ],
+      "passCriteria": [
+        "Cycle and drawing labels are exposed as editable controls; the new cycle template is reusable and editing does not replace either diagram with a static image",
+        "Both revisions persist through save/reopen and the original cycle version can be restored by rollback; the browser console has no errors",
+        "Integrated narrated dual-aspect output has seven subtitle/narration entries and 14 render records, while the shared billing ledger does not grow on a cache-hit rerun"
+      ]
+    },
+    {
       "id": "VID-012",
       "title": "Video Studio subtitle track burned into narration piece",
       "fixture": "Same loop as VID-011 (dev server + proxy + billed TTS); word-level cues come from the per-shot .words.json written next to each wav; scripted assertions live in scripts/video/e2e-narrated.mjs and the evidence frame is artifacts/video-studio-narrated/subtitle-band-cue.png (SHA-256 in E2E_NARRATED.md)",
