@@ -46,8 +46,18 @@ function fail(message) {
   throw new Error(`项目包：${message}`);
 }
 
+function normalizedAbsolute(value) {
+  // Node on Windows can return a \\?\-prefixed path from recursive mkdir.
+  // Compare it with ordinary paths in the same namespace before checking
+  // containment; the pathname on disk is otherwise identical.
+  return path.toNamespacedPath(path.resolve(value));
+}
+
 function within(parent, candidate) {
-  const relative = path.relative(path.resolve(parent), path.resolve(candidate));
+  const relative = path.relative(
+    normalizedAbsolute(parent),
+    normalizedAbsolute(candidate),
+  );
   return (
     relative === "" ||
     (!relative.startsWith(`..${path.sep}`) &&
@@ -69,8 +79,8 @@ async function exists(file) {
 async function ensureDirectory(dir, created) {
   const first = await mkdir(dir, { recursive: true });
   if (!first) return;
-  let current = path.resolve(dir);
-  const firstCreated = path.resolve(first);
+  let current = normalizedAbsolute(dir);
+  const firstCreated = normalizedAbsolute(first);
   if (!within(firstCreated, current))
     fail(`创建目录返回异常路径：${firstCreated}`);
   for (;;) {

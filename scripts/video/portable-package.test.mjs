@@ -138,6 +138,22 @@ test("旧无媒体项目仍可打包与恢复，不增加项目字段", async (t
   );
 });
 
+test("Windows namespaced 绝对路径与普通路径指向同一目录时可打包并恢复", async (t) => {
+  const root = await sandbox(t);
+  const bundle = path.toNamespacedPath(path.join(root, "nested", "bundle"));
+  await packPortableProject({
+    projectFile: OLD,
+    storeRoot: path.join(root, "empty-store"),
+    out: bundle,
+  });
+  const restored = await restorePortableBundle({
+    bundle,
+    storeRoot: path.join(root, "target-store"),
+    out: path.toNamespacedPath(path.join(root, "other", "restored")),
+  });
+  assert.equal((await readFile(restored.projectFile, "utf8")).length > 0, true);
+});
+
 test("缺媒体、错摘要、缺风格文件都拒绝且不产生成功包", async (t) => {
   const root = await sandbox(t);
   const source = await prepared(root);
