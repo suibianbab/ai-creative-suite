@@ -236,7 +236,7 @@ function validateParams(value: unknown): ExplainerParams {
 }
 
 // cycle 图示：N 阶段沿椭圆环顺时针排布，弧形箭头首尾相接闭合成环；
-// 竖版沿 1778 设计空间纵向拉高椭圆（横版 ry 225 / 竖版 ry 410），解决
+// 竖版沿 1778 设计空间纵向拉高椭圆（横版 ry 200 / 竖版 ry 410），解决
 // flow 线性排布在竖版的大面积留白。时序：阶段 i 于 i×480ms 弹入
 // （500ms，口径同 flow-steps），短注 +700ms；弧 i 在两端阶段落定后
 // 380ms 描画 + 160ms 箭头（闭合弧额外 +240ms 错峰）；中心文字在环
@@ -266,9 +266,12 @@ function cycleNodes(
   const cy = portrait ? 540 : 530;
   const rx = portrait ? 290 : 320;
   const ry = portrait ? 410 : 200;
-  const boxW = portrait ? 230 : 200;
+  // n≥5 时盒子收窄，保证弧端点仍落在盒外（阶段圆周更密）。
+  const boxW = portrait ? (n >= 5 ? 200 : 230) : n >= 5 ? 175 : 200;
   const boxH = portrait ? 96 : 84;
-  const trim = portrait ? 0.55 : 0.45;
+  // trim 必须小于半间距，否则弧跨度为负、环断裂（n=6 竖版 0.55 > π/6）。
+  const gapRad = (2 * Math.PI) / n;
+  const trim = Math.min(portrait ? 0.55 : 0.45, gapRad / 2 - 0.1);
   const point = (angle: number): [number, number] => [
     cx + rx * Math.cos(angle),
     cy + ry * Math.sin(angle),
@@ -546,9 +549,14 @@ function render(spec: SceneSpecLike, ctx: FrameContext): SvgNode {
         : p.diagram.kind === "cycle"
           ? cycleNodes(p, childTMs, portrait)
           : [...diagramChildren, ...diagramLabelNodes(p, childTMs)];
+  // 旧契约：flow 竖版 300、drawing/image 竖版 260；新增 cycle 与 flow 同列 300。
   const diagramY =
     p.diagramOffsetY +
-    (portrait ? (p.diagram.kind === "drawing" ? 260 : 300) : 0);
+    (portrait
+      ? p.diagram.kind === "flow" || p.diagram.kind === "cycle"
+        ? 300
+        : 260
+      : 0);
   const diagramScale = p.diagram.kind === "drawing" ? 1.3 : 1;
   return {
     tag: "g",

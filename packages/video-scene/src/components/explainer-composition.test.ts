@@ -522,3 +522,111 @@ test("diagramLabels 仅可与 drawing 搭配且字段受界", () => {
     /diagramLabels/,
   );
 });
+
+test("终审整改：image 竖版图示组位移保持旧契约 260，不被新种类挤动", () => {
+  const src =
+    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/l9sAAAAASUVORK5CYII=";
+  const imageSpec = spec({ ...params, diagram: { kind: "image", src } });
+  validateSceneSpec(imageSpec, defaultRegistry);
+  for (const [width, height] of [
+    [1280, 720],
+    [720, 1280],
+  ]) {
+    const tree = explainerComposition.render(imageSpec, ctx(width!, height!));
+    const group = allNodes(tree).find(
+      (node) => node.tag === "g" && node.attrs.transform,
+    );
+    const translate = /translate\((-?\d+) (-?\d+)\)/.exec(
+      String(group?.attrs.transform),
+    );
+    const expectedY = (height! > width! ? 260 : 0) + params.diagramOffsetY;
+    assert.equal(
+      Number(translate?.[2]),
+      expectedY,
+      `${width}x${height} 的 image 竖/横版组位移`,
+    );
+  }
+});
+
+test("终审整改：cycle 3..6 阶段双画幅下弧跨度为正且端点不落入阶段盒", () => {
+  for (const n of [3, 4, 5, 6]) {
+    const nStep = spec({
+      ...params,
+      diagram: {
+        kind: "cycle",
+        steps: Array.from({ length: n }, (_, index) => ({
+          label: `阶段${index}`,
+          caption: `短注${index}`,
+        })),
+        centerText: "环",
+      },
+    });
+    validateSceneSpec(nStep, defaultRegistry);
+    for (const [width, height] of [
+      [1280, 720],
+      [720, 1280],
+    ]) {
+      const tree = explainerComposition.render(nStep, ctx(width!, height!, 90));
+      const arcs = allNodes(tree).filter(
+        (node) => node.tag === "path" && String(node.attrs.d).includes("A "),
+      );
+      assert.equal(arcs.length, n, `${n} 阶段应有 ${n} 条弧`);
+      const boxes = allNodes(tree)
+        .filter(
+          (node) =>
+            node.tag === "rect" &&
+            Number(node.attrs.width) >= 120 &&
+            Number(node.attrs.width) <= 300,
+        )
+        .map((node) => ({
+          left: Number(node.attrs.x),
+          top: Number(node.attrs.y),
+          right: Number(node.attrs.x) + Number(node.attrs.width),
+          bottom: Number(node.attrs.y) + Number(node.attrs.height),
+        }));
+      for (const arc of arcs) {
+        const d = String(arc.attrs.d);
+        const radii = /A ([\d.]+) ([\d.]+) /.exec(d)!;
+        const rx = Number(radii[1]);
+        const ry = Number(radii[2]);
+        const start = /M (-?[\d.]+) (-?[\d.]+)/.exec(d)!;
+        const end = /A [\d.]+ [\d.]+ \d+ \d+ \d+ (-?[\d.]+) (-?[\d.]+)/.exec(
+          d,
+        )!;
+        const sx = Number(start[1]);
+        const sy = Number(start[2]);
+        const ex = Number(end[1]);
+        const ey = Number(end[2]);
+        // 正角跨度：以椭圆参数角顺时针度量，trim > 半间距的负跨度会得到
+        // 接近 2π 的反弧（sweep=1 取不到 ≤π 的正向小弧）。
+        const cy = height! > width! ? 540 : 530;
+        const angleOf = (x: number, y: number) =>
+          Math.atan2((y - cy) / ry, (x - 500) / rx);
+        const span =
+          (angleOf(ex, ey) - angleOf(sx, sy) + 2 * Math.PI) % (2 * Math.PI);
+        assert.ok(
+          span >= 0.05 && span <= Math.PI + 0.01,
+          `${n} 阶段 ${width}x${height} 弧角跨度 ${span.toFixed(3)}`,
+        );
+        for (const box of boxes) {
+          for (const point of [
+            [sx, sy],
+            [ex, ey],
+          ] as const) {
+            const px = point[0];
+            const py = point[1];
+            const inside =
+              px > box.left + 1 &&
+              px < box.right - 1 &&
+              py > box.top + 1 &&
+              py < box.bottom - 1;
+            assert.ok(
+              !inside,
+              `${n} 阶段 ${width}x${height} 弧端点 (${px.toFixed(0)},${py.toFixed(0)}) 落入阶段盒`,
+            );
+          }
+        }
+      }
+    }
+  }
+});
