@@ -386,8 +386,10 @@ test("C1：确认有效的项目与无确认的旧项目都通过闸门（有声
 test("C1：出片中途失败时不留成功交付记录（500、无下载、作业目录已清）", async () => {
   await withEnv("development", async () => {
     const broken = await approvalFixture();
-    const spec = broken.project.shots[0]!.contentVersions[0]!
-      .sceneSource as { type: "spec"; spec: { componentId: string } };
+    const spec = broken.project.shots[0]!.contentVersions[0]!.sceneSource as {
+      type: "spec";
+      spec: { componentId: string };
+    };
     spec.spec.componentId = "no-such-component";
     const jobsBefore = jobDirCount();
     const response = await postRender({
