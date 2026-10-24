@@ -14,10 +14,16 @@ mkdirSync(out, { recursive: true });
 const baseUrl = process.env.BASE_URL ?? "http://127.0.0.1:3213";
 const browser = await chromium.launch({ headless: true });
 const errors = [];
+function captureErrors(page) {
+  page.on("pageerror", (error) => errors.push(error.message));
+  page.on("console", (message) => {
+    if (message.type() === "error") errors.push(message.text());
+  });
+}
 try {
   const source = await browser.newContext({ acceptDownloads: true });
   const page = await source.newPage();
-  page.on("pageerror", (error) => errors.push(error.message));
+  captureErrors(page);
   await page.goto(`${baseUrl}/video-studio`, { waitUntil: "domcontentloaded" });
   await page.waitForSelector("html[data-studio-ready]");
   await page.locator(".sample-card").nth(3).locator(".sample-use").click();
@@ -34,15 +40,12 @@ try {
 
   const fresh = await browser.newContext({ acceptDownloads: true });
   const restored = await fresh.newPage();
-  restored.on("pageerror", (error) => errors.push(error.message));
+  captureErrors(restored);
   await restored.goto(`${baseUrl}/video-studio`, {
     waitUntil: "domcontentloaded",
   });
   await restored.waitForSelector("html[data-studio-ready]");
-  await restored
-    .locator('input[accept=".json,application/json"]')
-    .last()
-    .setInputFiles(file);
+  await restored.locator(".project-portable-file-input").setInputFiles(file);
   await restored.locator(".shot-card").first().waitFor({ timeout: 120_000 });
   assert.equal(await restored.locator(".shot-card").count(), 5);
   await restored.reload();

@@ -359,8 +359,8 @@ export async function importVideoProject(
   }
 }
 
-// 单文件项目包的 Style Bible 与项目在同一个事务发布。服务端已验包并
-// 恢复媒体原件；这里避免“风格规范写入成功、项目导入冲突”的半成品状态。
+// 单文件项目包的 Style Bible 与项目在同一个事务发布。服务端已验包、
+// 校验 workingStyleIssues 并恢复媒体原件；这里避免“风格规范写入成功、项目导入冲突”的半成品状态。
 export async function importPortableVideoProject(
   document: VideoProject,
   styleBible: StyleBible | null,

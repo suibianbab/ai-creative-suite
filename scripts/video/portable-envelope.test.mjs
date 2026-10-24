@@ -7,6 +7,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 import {
   createPortableEnvelope,
+  MAX_ENVELOPE_BYTES,
   restorePortableEnvelope,
 } from "./portable-envelope.mjs";
 
@@ -73,6 +74,36 @@ test("单文件包复用目录包校验并在新媒体仓恢复项目与 Style B
   assert.deepEqual(
     await readFile(path.join(targetStore, "original", input.storeKey)),
     input.bytes,
+  );
+});
+
+test("媒体声明超过单文件容量时提前拒绝，且不依赖读取原件", async (t) => {
+  const input = await fixture(t);
+  input.project.mediaAssets[0].original.bytes =
+    Math.floor((MAX_ENVELOPE_BYTES * 3) / 4) + 1;
+  await assert.rejects(
+    createPortableEnvelope({
+      project: input.project,
+      styleBible: input.styleBible,
+      storeRoot: input.sourceStore,
+    }),
+    /浏览器单文件容量/,
+  );
+});
+
+test("导入单文件超过 32 MiB 时拒绝", async (t) => {
+  const input = await fixture(t);
+  const text = await createPortableEnvelope({
+    project: input.project,
+    styleBible: input.styleBible,
+    storeRoot: input.sourceStore,
+  });
+  await assert.rejects(
+    restorePortableEnvelope({
+      text: `${text}${" ".repeat(MAX_ENVELOPE_BYTES - Buffer.byteLength(text) + 1)}`,
+      storeRoot: path.join(input.dir, "target-oversized"),
+    }),
+    /32 MiB/,
   );
 });
 

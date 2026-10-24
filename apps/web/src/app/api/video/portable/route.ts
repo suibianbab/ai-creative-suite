@@ -101,9 +101,18 @@ export async function POST(request: Request) {
     if (payload.action === "import") {
       if (typeof payload.envelope !== "string")
         throw new Error("请选择工作台导出的单文件项目包");
-      const restored = JSON.parse(
-        await runEnvelopeCli("import", payload.envelope, storeRoot),
-      );
+      let restored: unknown;
+      try {
+        restored = JSON.parse(
+          await runEnvelopeCli("import", payload.envelope, storeRoot),
+        );
+      } catch (error) {
+        if (error instanceof SyntaxError)
+          throw new Error(
+            "项目包恢复结果不是合法 JSON，请重试或使用 CLI 校验项目包",
+          );
+        throw error;
+      }
       return Response.json(restored, {
         headers: { "Cache-Control": "no-store" },
       });

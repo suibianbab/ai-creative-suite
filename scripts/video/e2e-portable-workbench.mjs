@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
   existsSync,
   mkdirSync,
   readFileSync,
+  rmdirSync,
   unlinkSync,
   writeFileSync,
 } from "node:fs";
@@ -27,10 +29,34 @@ mkdirSync(out, { recursive: true });
 const baseUrl = process.env.BASE_URL ?? "http://127.0.0.1:3213";
 const browser = await chromium.launch({ headless: true });
 const errors = [];
+function captureErrors(page) {
+  page.on("pageerror", (error) => errors.push(error.message));
+  page.on("console", (message) => {
+    if (message.type() === "error") errors.push(message.text());
+  });
+}
+function probeVideo(file) {
+  const output = execFileSync(
+    "ffprobe",
+    [
+      "-v",
+      "error",
+      "-select_streams",
+      "v:0",
+      "-show_entries",
+      "stream=codec_name,width,height",
+      "-of",
+      "json",
+      file,
+    ],
+    { encoding: "utf8" },
+  );
+  return JSON.parse(output).streams[0];
+}
 try {
   const first = await browser.newContext({ acceptDownloads: true });
   const page = await first.newPage();
-  page.on("pageerror", (error) => errors.push(error.message));
+  captureErrors(page);
   await page.goto(`${baseUrl}/video-studio`, { waitUntil: "domcontentloaded" });
   await page.waitForSelector("html[data-studio-ready]");
   await page.locator(".sample-card").nth(2).locator(".sample-use").click();
@@ -67,12 +93,14 @@ try {
   const original = path.join(store, "original", storeKey);
   assert.ok(existsSync(original));
   unlinkSync(original);
+  rmdirSync(path.dirname(original));
   assert.equal(existsSync(original), false);
+  assert.equal(existsSync(path.dirname(original)), false);
   await first.close();
 
   const fresh = await browser.newContext({ acceptDownloads: true });
   const restoredPage = await fresh.newPage();
-  restoredPage.on("pageerror", (error) => errors.push(error.message));
+  captureErrors(restoredPage);
   await restoredPage.goto(`${baseUrl}/video-studio`, {
     waitUntil: "domcontentloaded",
   });
@@ -83,17 +111,18 @@ try {
   const badFile = path.join(out, "tampered.acs-video-package.json");
   writeFileSync(badFile, JSON.stringify(tampered));
   await restoredPage
-    .locator('input[accept=".json,application/json"]')
-    .last()
+    .locator(".project-portable-file-input")
     .setInputFiles(badFile);
   await restoredPage
     .locator(".editor-message", { hasText: "SHA-256" })
     .waitFor();
   assert.equal(await restoredPage.locator(".project-open").count(), 0);
   assert.equal(existsSync(original), false, "坏包不能恢复媒体原件");
+  assert.equal(errors.length, 1, "篡改包应只产生一次预期的 400 控制台错误");
+  assert.match(errors[0], /status of 400/);
+  errors.length = 0;
   await restoredPage
-    .locator('input[accept=".json,application/json"]')
-    .last()
+    .locator(".project-portable-file-input")
     .setInputFiles(packageFile);
   await restoredPage
     .locator(".shot-card")
@@ -113,7 +142,9 @@ try {
     .waitFor({ timeout: 600_000 });
   assert.equal(await restoredPage.locator(".editor-downloads a").count(), 2);
   const videos = [];
-  for (const link of await restoredPage.locator(".editor-downloads a").all()) {
+  for (const [index, link] of (
+    await restoredPage.locator(".editor-downloads a").all()
+  ).entries()) {
     const [download] = await Promise.all([
       restoredPage.waitForEvent("download"),
       link.click(),
@@ -121,9 +152,17 @@ try {
     const file = path.join(out, download.suggestedFilename());
     await download.saveAs(file);
     const bytes = readFileSync(file);
+    const probe = probeVideo(file);
+    assert.deepEqual(
+      probe,
+      index === 0
+        ? { codec_name: "h264", width: 1280, height: 720 }
+        : { codec_name: "h264", width: 720, height: 1280 },
+    );
     videos.push({
       file,
       bytes: bytes.length,
+      probe,
       sha256: createHash("sha256").update(bytes).digest("hex"),
     });
   }

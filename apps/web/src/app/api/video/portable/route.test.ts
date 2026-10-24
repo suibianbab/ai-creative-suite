@@ -41,6 +41,28 @@ test("仅本地开发同源请求可以调用项目包接口", async () => {
   }
 });
 
+test("项目包请求在读取正文前按声明长度拒绝超大文件", async () => {
+  const previous = mutableEnv.NODE_ENV;
+  try {
+    mutableEnv.NODE_ENV = "development";
+    const oversized = new Request(url, {
+      method: "POST",
+      headers: {
+        Origin: "http://localhost:3210",
+        Host: "localhost:3210",
+        "Content-Length": String(34 * 1024 * 1024 + 1),
+      },
+      body: "{}",
+    });
+    const response = await POST(oversized);
+    assert.equal(response.status, 413);
+    assert.match((await response.json()).error, /34 MiB/);
+  } finally {
+    if (previous === undefined) delete mutableEnv.NODE_ENV;
+    else mutableEnv.NODE_ENV = previous;
+  }
+});
+
 test("项目包接口实际打包和恢复媒体及 Style Bible，篡改包被拒", async () => {
   const dir = await mkdtemp(path.join(tmpdir(), "acs-portable-route-"));
   const previousEnv = {

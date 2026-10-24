@@ -1176,7 +1176,8 @@ export default function VideoStudioPage() {
             导出可移植项目包（含素材）
           </button>
           <p className="shot-template-note">
-            浏览器单文件包上限 32 MiB；更大的媒体项目可用现有 CLI 目录包。
+            浏览器单文件包上限 32 MiB；更大的媒体项目可用现有 CLI
+            目录包。历史渲染记录可能包含原电脑路径，分享前请检查项目数据。
           </p>
           {message ? <p className="editor-message">{message}</p> : null}
 
@@ -1338,6 +1339,7 @@ export default function VideoStudioPage() {
           />
           <input
             ref={portableImportInputRef}
+            className="project-portable-file-input"
             type="file"
             accept=".json,application/json"
             hidden
