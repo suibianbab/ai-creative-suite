@@ -1,0 +1,744 @@
+{
+  "schemaVersion": 1,
+  "id": "c7f85d9f-9865-4ce0-a977-54b4d5c532e6",
+  "title": "水循环 · STEM 解说",
+  "brief": {
+    "sentence": "样片库：水循环 · STEM 解说。这是可编辑起点，请在发布前替换示例文案和素材。",
+    "aspectTargets": [
+      "landscape",
+      "portrait"
+    ]
+  },
+  "shots": [
+    {
+      "shotId": "8f039526-ddf6-45c7-b4a3-fc78194f2d3c",
+      "order": 0,
+      "locked": false,
+      "workingVersionId": "c1693b82-66f3-4ae3-9951-f2020251413f",
+      "contentVersions": [
+        {
+          "versionId": "0102e132-8b91-4b14-9d74-136f62c1bf14",
+          "createdAt": "2026-10-24T03:24:10.095Z",
+          "durationMs": 3000,
+          "description": "问题开场：一滴水会走过哪里",
+          "narrationText": "一滴水，会走过哪里？",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 3000,
+              "seed": 4101,
+              "background": "#101f34",
+              "params": {
+                "title": "一滴水的旅程",
+                "subtitle": "水循环是怎样发生的？",
+                "titleColor": "#f3f5f7",
+                "subtitleColor": "#b4d8e4",
+                "entrance": "fade-up",
+                "enterMs": 450
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        },
+        {
+          "versionId": "c1693b82-66f3-4ae3-9951-f2020251413f",
+          "createdAt": "2026-10-24T03:24:10.428Z",
+          "durationMs": 3000,
+          "description": "问题开场：一滴水会走过哪里",
+          "narrationText": "一滴水，会走过哪里？",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 3000,
+              "seed": 4101,
+              "background": "#101f34",
+              "params": {
+                "title": "一滴水的科学之旅",
+                "titleColor": "#f3f5f7",
+                "subtitleColor": "#b4d8e4",
+                "entrance": "fade-up",
+                "enterMs": 450,
+                "subtitle": "水循环是怎样发生的？"
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "human-edit",
+            "engineVersion": "1",
+            "parentVersionId": "0102e132-8b91-4b14-9d74-136f62c1bf14"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "0102e132-8b91-4b14-9d74-136f62c1bf14",
+          "at": "2026-10-24T03:24:10.095Z",
+          "actor": "human"
+        },
+        {
+          "kind": "submitted",
+          "versionId": "c1693b82-66f3-4ae3-9951-f2020251413f",
+          "at": "2026-10-24T03:24:10.428Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "75bab62a-38c3-4778-938d-30ca7511166c",
+      "order": 1,
+      "locked": false,
+      "workingVersionId": "10cc7c30-0972-483c-94d3-6cdda7390890",
+      "contentVersions": [
+        {
+          "versionId": "f2735c1e-1fa6-40c5-9e1c-e2b99d317828",
+          "createdAt": "2026-10-24T03:24:10.095Z",
+          "durationMs": 4000,
+          "description": "总览：水在海洋、天空和陆地间循环",
+          "narrationText": "水在海洋、天空和陆地间不停移动。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "explainer-composition",
+              "componentVersion": 1,
+              "durationMs": 4000,
+              "seed": 4102,
+              "background": "#101f34",
+              "params": {
+                "title": "水循环的四个阶段",
+                "titleColor": "#f3f5f7",
+                "textColor": "#f3f5f7",
+                "boxColor": "#b4d8e4",
+                "arrowColor": "#f5b652",
+                "strokeColor": "#42a5a0",
+                "titleY": 145,
+                "titleEnterMs": 0,
+                "diagramOffsetX": 0,
+                "diagramOffsetY": -60,
+                "diagramEnterMs": 450,
+                "diagram": {
+                  "kind": "cycle",
+                  "steps": [
+                    {
+                      "label": "蒸发",
+                      "caption": "海面升腾"
+                    },
+                    {
+                      "label": "凝结",
+                      "caption": "高空成云"
+                    },
+                    {
+                      "label": "降水",
+                      "caption": "雨落大地"
+                    },
+                    {
+                      "label": "汇流",
+                      "caption": "江河归海"
+                    }
+                  ],
+                  "centerText": "水循环"
+                },
+                "annotations": [
+                  {
+                    "text": "太阳能驱动这趟旅程",
+                    "x": 500,
+                    "y": 780,
+                    "portraitY": 1340,
+                    "enterMs": 2800
+                  }
+                ]
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        },
+        {
+          "versionId": "10cc7c30-0972-483c-94d3-6cdda7390890",
+          "createdAt": "2026-10-24T03:24:10.581Z",
+          "durationMs": 4000,
+          "description": "总览：水在海洋、天空和陆地间循环",
+          "narrationText": "水在海洋、天空和陆地间不停移动。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "explainer-composition",
+              "componentVersion": 1,
+              "durationMs": 4000,
+              "seed": 4102,
+              "background": "#101f34",
+              "params": {
+                "title": "水循环：四步一圈",
+                "titleColor": "#f3f5f7",
+                "textColor": "#f3f5f7",
+                "boxColor": "#b4d8e4",
+                "arrowColor": "#f5b652",
+                "strokeColor": "#42a5a0",
+                "titleY": 145,
+                "titleEnterMs": 0,
+                "diagramOffsetX": 0,
+                "diagramOffsetY": -60,
+                "diagramEnterMs": 450,
+                "diagram": {
+                  "kind": "cycle",
+                  "steps": [
+                    {
+                      "label": "蒸发",
+                      "caption": "海面升腾"
+                    },
+                    {
+                      "label": "凝结",
+                      "caption": "高空成云"
+                    },
+                    {
+                      "label": "降水",
+                      "caption": "雨落大地"
+                    },
+                    {
+                      "label": "汇流",
+                      "caption": "江河归海"
+                    }
+                  ],
+                  "centerText": "水循环"
+                },
+                "annotations": [
+                  {
+                    "text": "太阳能驱动这趟旅程",
+                    "x": 500,
+                    "y": 780,
+                    "portraitY": 1340,
+                    "enterMs": 2800
+                  }
+                ]
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "human-edit",
+            "engineVersion": "1",
+            "parentVersionId": "f2735c1e-1fa6-40c5-9e1c-e2b99d317828"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "f2735c1e-1fa6-40c5-9e1c-e2b99d317828",
+          "at": "2026-10-24T03:24:10.095Z",
+          "actor": "human"
+        },
+        {
+          "kind": "submitted",
+          "versionId": "10cc7c30-0972-483c-94d3-6cdda7390890",
+          "at": "2026-10-24T03:24:10.581Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "c777ee9b-3d47-45e9-8a10-10ff1c633c66",
+      "order": 2,
+      "locked": false,
+      "workingVersionId": "6116e10c-baa3-4d5b-a992-76de1a3a5b0d",
+      "contentVersions": [
+        {
+          "versionId": "6116e10c-baa3-4d5b-a992-76de1a3a5b0d",
+          "createdAt": "2026-10-24T03:24:10.095Z",
+          "durationMs": 4000,
+          "description": "蒸发：阳光加热海面，液态水变为水蒸气",
+          "narrationText": "阳光加热海面，水变成水蒸气。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "explainer-composition",
+              "componentVersion": 1,
+              "durationMs": 4000,
+              "seed": 4103,
+              "background": "#101f34",
+              "params": {
+                "title": "第一步 · 蒸发",
+                "titleColor": "#f3f5f7",
+                "textColor": "#f3f5f7",
+                "boxColor": "#b4d8e4",
+                "arrowColor": "#f5b652",
+                "strokeColor": "#42a5a0",
+                "titleY": 145,
+                "titleEnterMs": 0,
+                "diagramOffsetX": 0,
+                "diagramOffsetY": 40,
+                "diagramEnterMs": 450,
+                "diagram": {
+                  "kind": "drawing",
+                  "paths": [
+                    "M 692 300 A 48 48 0 1 1 788 300 A 48 48 0 1 1 692 300",
+                    "M 818 300 L 834 300 M 797 345 L 809 357 M 740 360 L 740 376 M 683 345 L 671 357 M 662 300 L 646 300 M 683 255 L 671 243 M 740 240 L 740 224 M 797 255 L 809 243",
+                    "M 120 590 C 220 572 320 608 420 590 C 520 572 620 608 720 590 C 780 578 840 602 880 590",
+                    "M 240 630 C 320 616 400 644 480 630 C 560 616 640 644 720 630",
+                    "M 280 560 C 265 525 295 495 280 460 C 265 425 295 395 280 370",
+                    "M 360 560 C 345 520 375 485 360 445 C 345 405 375 370 360 330",
+                    "M 440 560 C 425 530 455 500 440 465 C 425 430 455 400 440 365"
+                  ]
+                },
+                "diagramLabels": [
+                  {
+                    "text": "太阳",
+                    "x": 600,
+                    "y": 300,
+                    "targetX": 680,
+                    "targetY": 300,
+                    "enterMs": 500
+                  },
+                  {
+                    "text": "海面",
+                    "x": 180,
+                    "y": 545,
+                    "targetX": 240,
+                    "targetY": 588,
+                    "enterMs": 1100
+                  },
+                  {
+                    "text": "水蒸气",
+                    "x": 360,
+                    "y": 290,
+                    "targetX": 360,
+                    "targetY": 345,
+                    "enterMs": 1700
+                  }
+                ],
+                "annotations": [
+                  {
+                    "text": "阳光加热海面",
+                    "x": 500,
+                    "y": 730,
+                    "portraitY": 1280,
+                    "enterMs": 2000
+                  },
+                  {
+                    "text": "液态水变成水蒸气",
+                    "x": 500,
+                    "y": 785,
+                    "portraitY": 1340,
+                    "enterMs": 2600
+                  }
+                ]
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        },
+        {
+          "versionId": "91c64c66-d16f-4192-b593-507845e1c278",
+          "createdAt": "2026-10-24T03:24:10.747Z",
+          "durationMs": 4000,
+          "description": "蒸发：阳光加热海面，液态水变为水蒸气",
+          "narrationText": "阳光加热海面，水变成水蒸气。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "explainer-composition",
+              "componentVersion": 1,
+              "durationMs": 4000,
+              "seed": 4103,
+              "background": "#101f34",
+              "params": {
+                "title": "第一步 · 蒸发",
+                "titleColor": "#f3f5f7",
+                "textColor": "#f3f5f7",
+                "boxColor": "#b4d8e4",
+                "arrowColor": "#f5b652",
+                "strokeColor": "#42a5a0",
+                "titleY": 145,
+                "titleEnterMs": 0,
+                "diagramOffsetX": 0,
+                "diagramOffsetY": 40,
+                "diagramEnterMs": 450,
+                "diagram": {
+                  "kind": "drawing",
+                  "paths": [
+                    "M 692 300 A 48 48 0 1 1 788 300 A 48 48 0 1 1 692 300",
+                    "M 818 300 L 834 300 M 797 345 L 809 357 M 740 360 L 740 376 M 683 345 L 671 357 M 662 300 L 646 300 M 683 255 L 671 243 M 740 240 L 740 224 M 797 255 L 809 243",
+                    "M 140 595 C 220 572 320 608 420 590 C 520 572 620 608 720 590 C 780 578 840 602 880 590",
+                    "M 240 630 C 320 616 400 644 480 630 C 560 616 640 644 720 630",
+                    "M 280 560 C 265 525 295 495 280 460 C 265 425 295 395 280 370",
+                    "M 360 560 C 345 520 375 485 360 445 C 345 405 375 370 360 330",
+                    "M 440 560 C 425 530 455 500 440 465 C 425 430 455 400 440 365"
+                  ]
+                },
+                "diagramLabels": [
+                  {
+                    "text": "太阳",
+                    "x": 600,
+                    "y": 300,
+                    "targetX": 680,
+                    "targetY": 300,
+                    "enterMs": 500
+                  },
+                  {
+                    "text": "海面",
+                    "x": 180,
+                    "y": 545,
+                    "targetX": 240,
+                    "targetY": 588,
+                    "enterMs": 1100
+                  },
+                  {
+                    "text": "水蒸气",
+                    "x": 360,
+                    "y": 290,
+                    "targetX": 360,
+                    "targetY": 345,
+                    "enterMs": 1700
+                  }
+                ],
+                "annotations": [
+                  {
+                    "text": "阳光加热海面",
+                    "x": 500,
+                    "y": 730,
+                    "portraitY": 1280,
+                    "enterMs": 2000
+                  },
+                  {
+                    "text": "液态水变成水蒸气",
+                    "x": 500,
+                    "y": 785,
+                    "portraitY": 1340,
+                    "enterMs": 2600
+                  }
+                ]
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "human-edit",
+            "engineVersion": "1",
+            "parentVersionId": "6116e10c-baa3-4d5b-a992-76de1a3a5b0d"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "6116e10c-baa3-4d5b-a992-76de1a3a5b0d",
+          "at": "2026-10-24T03:24:10.095Z",
+          "actor": "human"
+        },
+        {
+          "kind": "submitted",
+          "versionId": "91c64c66-d16f-4192-b593-507845e1c278",
+          "at": "2026-10-24T03:24:10.747Z",
+          "actor": "human"
+        },
+        {
+          "kind": "audit",
+          "note": "回滚工作版本",
+          "at": "2026-10-24T03:24:11.625Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "89dbf4d0-708a-4d55-8810-bcd9c8373231",
+      "order": 3,
+      "locked": false,
+      "workingVersionId": "5c0be35c-d072-47a4-b689-178bcfb266ef",
+      "contentVersions": [
+        {
+          "versionId": "5c0be35c-d072-47a4-b689-178bcfb266ef",
+          "createdAt": "2026-10-24T03:24:10.095Z",
+          "durationMs": 4000,
+          "description": "凝结：上升的水蒸气遇冷形成云",
+          "narrationText": "水蒸气上升，遇冷凝结成云。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "sketch-note",
+              "componentVersion": 1,
+              "durationMs": 4000,
+              "seed": 4104,
+              "background": "#101f34",
+              "params": {
+                "title": "第二步 · 凝结",
+                "items": [
+                  {
+                    "text": "水蒸气向上升",
+                    "emphasis": "下划线"
+                  },
+                  {
+                    "text": "遇冷凝结成云",
+                    "emphasis": "圈"
+                  }
+                ],
+                "inkColor": "#f3f5f7",
+                "accentColor": "#f5b652",
+                "writeMs": 900,
+                "drawMs": 700,
+                "staggerMs": 500
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "5c0be35c-d072-47a4-b689-178bcfb266ef",
+          "at": "2026-10-24T03:24:10.095Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "daf8ca13-5a2d-4cba-8bfb-851d19319f30",
+      "order": 4,
+      "locked": false,
+      "workingVersionId": "09268ba9-bf6f-4bc8-8f93-e142f9f7fc8c",
+      "contentVersions": [
+        {
+          "versionId": "09268ba9-bf6f-4bc8-8f93-e142f9f7fc8c",
+          "createdAt": "2026-10-24T03:24:10.095Z",
+          "durationMs": 4000,
+          "description": "降水：云中水滴聚集并落下",
+          "narrationText": "云中水滴聚集，落下形成降水。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "explainer-composition",
+              "componentVersion": 1,
+              "durationMs": 4000,
+              "seed": 4105,
+              "background": "#101f34",
+              "params": {
+                "title": "第三步 · 降水",
+                "titleColor": "#f3f5f7",
+                "textColor": "#f3f5f7",
+                "boxColor": "#b4d8e4",
+                "arrowColor": "#f5b652",
+                "strokeColor": "#42a5a0",
+                "titleY": 145,
+                "titleEnterMs": 0,
+                "diagramOffsetX": 0,
+                "diagramOffsetY": 20,
+                "diagramEnterMs": 450,
+                "diagram": {
+                  "kind": "drawing",
+                  "paths": [
+                    "M 280 380 C 255 380 245 360 253 341 C 258 324 275 316 292 318 C 303 281 339 259 378 267 C 404 232 457 226 486 252 C 519 250 547 274 551 307 C 578 310 598 331 598 355 C 598 372 584 385 563 385 Z",
+                    "M 327 440 L 302 508 M 406 440 L 381 508 M 485 440 L 460 508 M 560 440 L 535 508",
+                    "M 260 603 C 348 580 444 580 532 603 C 610 624 689 624 766 603"
+                  ]
+                },
+                "diagramLabels": [
+                  {
+                    "text": "云",
+                    "x": 660,
+                    "y": 300,
+                    "targetX": 590,
+                    "targetY": 320,
+                    "enterMs": 600
+                  },
+                  {
+                    "text": "雨滴",
+                    "x": 640,
+                    "y": 470,
+                    "targetX": 565,
+                    "targetY": 474,
+                    "enterMs": 1400
+                  },
+                  {
+                    "text": "海面",
+                    "x": 790,
+                    "y": 550,
+                    "targetX": 760,
+                    "targetY": 596,
+                    "enterMs": 2000
+                  }
+                ],
+                "annotations": [
+                  {
+                    "text": "云中水滴聚集",
+                    "x": 500,
+                    "y": 725,
+                    "portraitY": 1125,
+                    "enterMs": 1800
+                  },
+                  {
+                    "text": "落下形成降水",
+                    "x": 500,
+                    "y": 780,
+                    "portraitY": 1180,
+                    "enterMs": 2500
+                  }
+                ]
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "09268ba9-bf6f-4bc8-8f93-e142f9f7fc8c",
+          "at": "2026-10-24T03:24:10.095Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "deb20096-1a75-4834-86a8-5e6d722314d0",
+      "order": 5,
+      "locked": false,
+      "workingVersionId": "4584c28d-2669-4a23-b2e5-3e94c3094ba4",
+      "contentVersions": [
+        {
+          "versionId": "4584c28d-2669-4a23-b2e5-3e94c3094ba4",
+          "createdAt": "2026-10-24T03:24:10.095Z",
+          "durationMs": 4000,
+          "description": "汇流：雨水进入河流并回到海洋",
+          "narrationText": "雨水汇入河流，最终回到海洋。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "explainer-composition",
+              "componentVersion": 1,
+              "durationMs": 4000,
+              "seed": 4106,
+              "background": "#101f34",
+              "params": {
+                "title": "第四步 · 汇流",
+                "titleColor": "#f3f5f7",
+                "textColor": "#f3f5f7",
+                "boxColor": "#b4d8e4",
+                "arrowColor": "#f5b652",
+                "strokeColor": "#42a5a0",
+                "titleY": 145,
+                "titleEnterMs": 0,
+                "diagramOffsetX": 0,
+                "diagramOffsetY": -75,
+                "diagramEnterMs": 450,
+                "diagram": {
+                  "kind": "flow",
+                  "steps": [
+                    {
+                      "label": "降水"
+                    },
+                    {
+                      "label": "河流"
+                    },
+                    {
+                      "label": "海洋"
+                    }
+                  ]
+                },
+                "annotations": [
+                  {
+                    "text": "地表与地下径流",
+                    "x": 500,
+                    "y": 740,
+                    "portraitY": 1265,
+                    "enterMs": 2200
+                  }
+                ]
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "4584c28d-2669-4a23-b2e5-3e94c3094ba4",
+          "at": "2026-10-24T03:24:10.095Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "99678fb4-5bf8-49a0-a15c-d8d67ce09715",
+      "order": 6,
+      "locked": false,
+      "workingVersionId": "8480a4a1-5184-4071-82c2-135dceb82be7",
+      "contentVersions": [
+        {
+          "versionId": "8480a4a1-5184-4071-82c2-135dceb82be7",
+          "createdAt": "2026-10-24T03:24:10.095Z",
+          "durationMs": 3000,
+          "description": "结语：点明水循环并邀请继续探索",
+          "narrationText": "这，就是水循环。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 3000,
+              "seed": 4107,
+              "background": "#101f34",
+              "params": {
+                "title": "水，循环不息",
+                "subtitle": "四步循环，生生不息",
+                "titleColor": "#f3f5f7",
+                "subtitleColor": "#b4d8e4",
+                "entrance": "fade-up",
+                "enterMs": 450
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "8480a4a1-5184-4071-82c2-135dceb82be7",
+          "at": "2026-10-24T03:24:10.095Z",
+          "actor": "human"
+        }
+      ]
+    }
+  ],
+  "renderRecords": [],
+  "deliveries": [],
+  "savedVersion": 3,
+  "styleBibleRef": {
+    "bibleId": "4ab67784-77b5-46a7-b321-c1956c45b669",
+    "versionId": "ac5cb1d5-044c-4300-80aa-be974dea4ad1",
+    "digest": "e6e81127064946d438fcb161f244a32e99ec002be5592015ae8d8d4f07359076"
+  }
+}

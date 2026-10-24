@@ -1,0 +1,106 @@
+{
+  "requestId": "dae771d2-0f5d-9278-85af-e01b688139a1",
+  "model": "cosyvoice-v3-flash",
+  "voice": "longanyang",
+  "usage": {
+    "characters": 26
+  },
+  "sentences": [
+    {
+      "index": 0,
+      "words": [
+        {
+          "end_time": 600,
+          "begin_time": 360,
+          "end_index": 1,
+          "begin_index": 0,
+          "text": "阳"
+        },
+        {
+          "end_time": 880,
+          "begin_time": 600,
+          "end_index": 2,
+          "begin_index": 1,
+          "text": "光"
+        },
+        {
+          "end_time": 1200,
+          "begin_time": 920,
+          "end_index": 3,
+          "begin_index": 2,
+          "text": "加"
+        },
+        {
+          "end_time": 1320,
+          "begin_time": 1200,
+          "end_index": 4,
+          "begin_index": 3,
+          "text": "热"
+        },
+        {
+          "end_time": 1560,
+          "begin_time": 1360,
+          "end_index": 5,
+          "begin_index": 4,
+          "text": "海"
+        },
+        {
+          "end_time": 1800,
+          "begin_time": 1560,
+          "end_index": 6,
+          "begin_index": 5,
+          "text": "面"
+        },
+        {
+          "end_time": 2080,
+          "begin_time": 1800,
+          "end_index": 7,
+          "begin_index": 6,
+          "text": "，"
+        },
+        {
+          "end_time": 2400,
+          "begin_time": 2120,
+          "end_index": 8,
+          "begin_index": 7,
+          "text": "水"
+        },
+        {
+          "end_time": 2720,
+          "begin_time": 2560,
+          "end_index": 9,
+          "begin_index": 8,
+          "text": "变"
+        },
+        {
+          "end_time": 2880,
+          "begin_time": 2760,
+          "end_index": 10,
+          "begin_index": 9,
+          "text": "成"
+        },
+        {
+          "end_time": 3080,
+          "begin_time": 2880,
+          "end_index": 11,
+          "begin_index": 10,
+          "text": "水"
+        },
+        {
+          "end_time": 3240,
+          "begin_time": 3080,
+          "end_index": 12,
+          "begin_index": 11,
+          "text": "蒸"
+        },
+        {
+          "end_time": 3520,
+          "begin_time": 3280,
+          "end_index": 13,
+          "begin_index": 12,
+          "text": "气"
+        }
+      ]
+    }
+  ]
+}
