@@ -1723,3 +1723,60 @@
   color: #b3261e;
   font-size: 11px;
 }
+
+/* W2 风格代表帧确认：沿 Style Bible 面板习语，双画幅关键帧并排展示。 */
+.style-frame-panel {
+  margin: 18px 0;
+  padding: 16px;
+  border: 1px solid #cbd9ec;
+  border-radius: 10px;
+  background: #f5f8fc;
+  color: #23364e;
+}
+.style-frame-panel h3 {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+.style-frame-panel p {
+  margin: 6px 0 12px;
+  font-size: 13px;
+}
+.style-frame-panel label {
+  display: block;
+  margin: 8px 0;
+  font-size: 13px;
+}
+.style-frame-panel select,
+.style-frame-panel input {
+  margin-left: 8px;
+}
+.style-frame-panel button {
+  margin: 8px 8px 0 0;
+}
+.style-frame-images {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-start;
+}
+.style-frame-images figure {
+  margin: 0;
+  max-width: 320px;
+}
+.style-frame-images img {
+  display: block;
+  max-width: 320px;
+  max-height: 240px;
+  border: 1px solid #cbd9ec;
+  border-radius: 6px;
+  background: #101820;
+}
+.style-frame-images figcaption {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #5d7469;
+}
+.style-frame-status {
+  font-weight: 600;
+}

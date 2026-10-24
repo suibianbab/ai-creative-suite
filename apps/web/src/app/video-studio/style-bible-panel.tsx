@@ -2,6 +2,7 @@
 
 import {
   applyStyleBible,
+  deriveStyleBibleVersion,
   type StyleBible,
   type StyleBibleVersion,
   type VideoProject,
@@ -48,6 +49,7 @@ export function StyleBiblePanel({
   const [draft, setDraft] =
     useState<StyleBibleVersion["palette"]>(DEFAULT_PALETTE);
   const [selected, setSelected] = useState("");
+  const [changeNote, setChangeNote] = useState("");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const importRef = useRef<HTMLInputElement>(null);
@@ -207,33 +209,44 @@ export function StyleBiblePanel({
           >
             切换并应用选中版本
           </button>
+          <label>
+            派生改动说明（保存为新版本时必填）
+            <input
+              className="style-bible-change-note"
+              value={changeNote}
+              maxLength={200}
+              disabled={busy}
+              placeholder="例如：加深背景、主体色不变"
+              onChange={(event) => setChangeNote(event.target.value)}
+            />
+          </label>
           <button
             type="button"
             disabled={busy}
             onClick={() =>
               run(async () => {
-                const versionId = crypto.randomUUID();
-                const bible: StyleBible = {
-                  ...record.document,
-                  currentVersionId: versionId,
-                  versions: [
-                    ...record.document.versions,
-                    {
-                      versionId,
-                      createdAt: new Date().toISOString(),
-                      name: `风格版本 ${record.document.versions.length + 1}`,
-                      palette: draft,
-                      fontFamily: "NotoSansSC",
-                      lightingPreset: "orbit3d-fixed-soft-studio",
-                    },
-                  ],
-                };
-                const next = await applyStyleBible(project, bible, versionId);
+                if (changeNote.trim().length < 1) {
+                  throw new Error("请先填写派生改动说明（1..200 字）");
+                }
+                const fromVersionId =
+                  project.styleBibleRef?.versionId ??
+                  record.document.currentVersionId;
+                const bible = await deriveStyleBibleVersion(record.document, {
+                  fromVersionId,
+                  palette: draft,
+                  changeNote: changeNote.trim(),
+                });
+                const next = await applyStyleBible(
+                  project,
+                  bible,
+                  bible.currentVersionId,
+                );
                 const saved = await saveStyleBible(bible, record.revision);
                 setRecord(saved);
+                setChangeNote("");
                 onApply(
                   next,
-                  `风格版本 v${bible.versions.length} 已保存并应用；请保存项目及导出新版风格 JSON`,
+                  `风格版本 v${bible.versions.length} 已按「${changeNote.trim()}」派生并应用；引用旧版本的项目不受影响。请保存项目及导出新版风格 JSON`,
                 );
               })
             }

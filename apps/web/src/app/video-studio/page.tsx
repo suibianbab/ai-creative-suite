@@ -60,6 +60,7 @@ import { applyShotRecipe } from "./shot-recipes";
 import { shotWorkingMediaClip, shotWorkingSpec } from "./shot-specs";
 import { importStockForShot } from "./stock-apply";
 import { StyleBiblePanel } from "./style-bible-panel";
+import { StyleFramePanel } from "./style-frame-panel";
 import { threeSceneFromVersion } from "./three-templates";
 import {
   type TransitionDraftRow,
@@ -636,6 +637,16 @@ export default function VideoStudioPage() {
               setEditor({ ...editor, document: next, message: note })
             }
           />
+
+          {/* W2 风格代表帧确认：链接风格的项目在出片前需人工确认横竖关键帧 */}
+          {document.styleBibleRef ? (
+            <StyleFramePanel
+              project={document}
+              onApply={(next, note) =>
+                setEditor({ ...editor, document: next, message: note })
+              }
+            />
+          ) : null}
 
           {/* P2.5-T3 U4/X1：素材面板——上传入账本 + 逐条列出（含同内容提示）。
               挂在标题下方、规划器上方：先有素材，才有媒体镜头可编辑。 */}
