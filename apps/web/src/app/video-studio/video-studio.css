@@ -1566,3 +1566,160 @@
   border: 0;
   background: transparent;
 }
+
+/* W1 镜头配方目录：卡片习语沿样片库，配色同源。 */
+.recipe-catalog {
+  margin-bottom: 34px;
+}
+
+.recipe-catalog-heading h2 {
+  margin: 0 0 6px;
+  font-size: 23px;
+}
+
+.recipe-catalog-heading p {
+  margin: 0 0 12px;
+  color: #587068;
+  font-size: 13px;
+}
+
+.recipe-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.recipe-filter {
+  padding: 5px 12px;
+  border: 1px solid #d6e2db;
+  border-radius: 999px;
+  background: #fff;
+  color: #405851;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.recipe-filter.is-active {
+  border-color: #173f3b;
+  background: #173f3b;
+  color: #fff;
+}
+
+.recipe-disabled-hint {
+  margin: 0 0 12px;
+  color: #8a6d3b;
+  font-size: 12px;
+}
+
+.recipe-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.recipe-card {
+  overflow: hidden;
+  border: 1px solid #d6e2db;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.recipe-preview {
+  display: flex;
+  justify-content: center;
+  aspect-ratio: 16 / 9;
+  background: #141a22;
+}
+
+.recipe-preview svg {
+  width: 100%;
+  height: 100%;
+}
+
+.recipe-card-body {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+}
+
+.recipe-card h3 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.recipe-meta {
+  margin: 0;
+  color: #617a71;
+  font-size: 11px;
+}
+
+.recipe-placeholders {
+  margin: 0;
+  padding-left: 16px;
+  color: #405851;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.recipe-license {
+  color: #617a71;
+  font-size: 10px;
+}
+
+.recipe-toggle,
+.recipe-apply {
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.recipe-toggle {
+  background: #eef4f0;
+  color: #173f3b;
+}
+
+.recipe-toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.recipe-inputs {
+  display: grid;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.recipe-field {
+  display: grid;
+  gap: 4px;
+  color: #405851;
+  font-size: 11px;
+}
+
+.recipe-field input,
+.recipe-field select {
+  padding: 7px 9px;
+  border: 1px solid #d6e2db;
+  border-radius: 7px;
+  font-size: 12px;
+}
+
+.recipe-apply {
+  background: #173f3b;
+  color: #fff;
+}
+
+.recipe-apply:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.recipe-error {
+  margin: 0;
+  color: #b3261e;
+  font-size: 11px;
+}

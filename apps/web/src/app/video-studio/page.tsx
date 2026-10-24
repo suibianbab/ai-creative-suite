@@ -44,6 +44,7 @@ import {
   specSummary,
 } from "./planner";
 import { exportFileName, parseProjectJson } from "./project-io";
+import { RecipeCatalog } from "./recipe-catalog";
 import {
   createGallerySample,
   GALLERY_SAMPLES,
@@ -55,6 +56,7 @@ import {
   type TimelinePreviewItem,
 } from "./scene-preview";
 import { ShotEditorCard } from "./shot-editor-card";
+import { applyShotRecipe } from "./shot-recipes";
 import { shotWorkingMediaClip, shotWorkingSpec } from "./shot-specs";
 import { importStockForShot } from "./stock-apply";
 import { StyleBiblePanel } from "./style-bible-panel";
@@ -134,6 +136,7 @@ export default function VideoStudioPage() {
   // P2.6-T7 U5：最新文档 ref——下载期间允许继续编辑其他镜头，导入完成时
   // 必须以 ref 当前值（而非发起下载时的快照）为基线。
   const documentRef = useRef<VideoProject | null>(null);
+  const recipeApplyPendingRef = useRef(false);
   useEffect(() => {
     documentRef.current = editor?.document ?? null;
   }, [editor?.document]);
@@ -637,6 +640,83 @@ export default function VideoStudioPage() {
           {/* P2.5-T3 U4/X1：素材面板——上传入账本 + 逐条列出（含同内容提示）。
               挂在标题下方、规划器上方：先有素材，才有媒体镜头可编辑。 */}
           <MediaPanel assets={mediaAssets} busy={busy} onUpload={uploadMedia} />
+
+          {/* W1 镜头配方目录：与规划器并列的第二条加镜路径——按用途选卡、
+              换字/换素材后追加为普通内容版本（内存追加，点「保存」落库）。 */}
+          <RecipeCatalog
+            busy={busy}
+            mediaAssets={mediaAssets}
+            onApply={(recipeId, inputs) => {
+              if (recipeApplyPendingRef.current)
+                return "请等待当前配方完成风格处理";
+              const current =
+                documentRef.current?.id === document.id
+                  ? documentRef.current
+                  : document;
+              const result = applyShotRecipe(
+                current,
+                recipeId,
+                inputs,
+                mediaAssets,
+              );
+              if ("error" in result) return result.error;
+              if (!current.styleBibleRef) {
+                // 同一事件循环内连续点配方时，下一次从最新内存文档追加。
+                documentRef.current = result.document;
+                setEditor((previous) =>
+                  previous?.document.id === current.id
+                    ? {
+                        ...previous,
+                        document: result.document,
+                        message: result.notice,
+                      }
+                    : previous,
+                );
+                return null;
+              }
+              // 链接 Style Bible 的项目必须先完成风格处理；失败时保留原文档，
+              // 不能以“已应用”提示发布未通过风格校验的镜头。
+              recipeApplyPendingRef.current = true;
+              setEditor((previous) =>
+                previous?.document.id === current.id
+                  ? {
+                      ...previous,
+                      busy: true,
+                      message: "正在应用配方与风格规范…",
+                    }
+                  : previous,
+              );
+              void applyLinkedStyle(result.document)
+                .then((styled) => {
+                  documentRef.current = styled;
+                  setEditor((previous) =>
+                    previous?.document.id === current.id
+                      ? {
+                          ...previous,
+                          document: styled,
+                          busy: false,
+                          message: result.notice,
+                        }
+                      : previous,
+                  );
+                })
+                .catch((error: unknown) =>
+                  setEditor((previous) =>
+                    previous?.document.id === current.id
+                      ? {
+                          ...previous,
+                          busy: false,
+                          message: `配方未应用：${error instanceof Error ? error.message : "风格处理失败"}`,
+                        }
+                      : previous,
+                  ),
+                )
+                .finally(() => {
+                  recipeApplyPendingRef.current = false;
+                });
+              return null;
+            }}
+          />
 
           <div className="planner-field">
             <label className="planner-label" htmlFor="planner-sentence">
