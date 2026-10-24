@@ -303,7 +303,7 @@ export default function VideoStudioPage() {
             }
           : previous,
       );
-      await refreshProjects();
+      void refreshProjects().catch(() => {});
     } catch (error) {
       setEditor((previous) =>
         previous?.document.id === current.id
