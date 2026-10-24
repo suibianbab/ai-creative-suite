@@ -43,6 +43,7 @@ import {
   specSummary,
 } from "./planner";
 import { exportFileName, parseProjectJson } from "./project-io";
+import { RecipeCatalog } from "./recipe-catalog";
 import {
   createGallerySample,
   GALLERY_SAMPLES,
@@ -54,6 +55,7 @@ import {
   type TimelinePreviewItem,
 } from "./scene-preview";
 import { ShotEditorCard } from "./shot-editor-card";
+import { applyShotRecipe } from "./shot-recipes";
 import { shotWorkingMediaClip, shotWorkingSpec } from "./shot-specs";
 import { importStockForShot } from "./stock-apply";
 import { StyleBiblePanel } from "./style-bible-panel";
@@ -580,6 +582,29 @@ export default function VideoStudioPage() {
           {/* P2.5-T3 U4/X1：素材面板——上传入账本 + 逐条列出（含同内容提示）。
               挂在标题下方、规划器上方：先有素材，才有媒体镜头可编辑。 */}
           <MediaPanel assets={mediaAssets} busy={busy} onUpload={uploadMedia} />
+
+          {/* W1 镜头配方目录：与规划器并列的第二条加镜路径——按用途选卡、
+              换字/换素材后追加为普通内容版本（内存追加，点「保存」落库）。 */}
+          <RecipeCatalog
+            enabled
+            busy={busy}
+            mediaAssets={mediaAssets}
+            onApply={(recipeId, inputs) => {
+              const result = applyShotRecipe(
+                document,
+                recipeId,
+                inputs,
+                mediaAssets,
+              );
+              if ("error" in result) return result.error;
+              setEditor({
+                ...editor,
+                document: result.document,
+                message: result.notice,
+              });
+              return null;
+            }}
+          />
 
           <div className="planner-field">
             <label className="planner-label" htmlFor="planner-sentence">
