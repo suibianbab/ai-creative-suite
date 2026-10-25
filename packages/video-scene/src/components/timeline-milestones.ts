@@ -79,16 +79,30 @@ export function validateParams(value: unknown): TimelineMilestonesParams {
     doneColor: readColor(value, "doneColor", "#2f6f4f"),
     activeColor: readColor(value, "activeColor", "#d9822b"),
     pendingColor: readColor(value, "pendingColor", "#9aa8a0"),
+    // Codex P1-2：显式传入的 enterMs 越界/非有限数→拒绝（不再静默回退）。
     enterMs:
-      typeof value.enterMs === "number" &&
-      value.enterMs >= 200 &&
-      value.enterMs <= 5000
-        ? value.enterMs
-        : 1400,
+      value.enterMs === undefined
+        ? 1400
+        : typeof value.enterMs === "number" &&
+            Number.isFinite(value.enterMs) &&
+            value.enterMs >= 200 &&
+            value.enterMs <= 5000
+          ? value.enterMs
+          : (() => {
+              throw new Error(
+                `timeline-milestones enterMs 须为 200..5000 的有限数（收到 ${String(value.enterMs)}）`,
+              );
+            })(),
     sequence:
-      value.sequence === "sync" || value.sequence === "stagger"
-        ? value.sequence
-        : "stagger",
+      value.sequence === undefined
+        ? "stagger"
+        : value.sequence === "sync" || value.sequence === "stagger"
+          ? value.sequence
+          : (() => {
+              throw new Error(
+                `timeline-milestones sequence 须为 stagger|sync（收到 ${String(value.sequence)}）`,
+              );
+            })(),
   };
 }
 
@@ -118,11 +132,14 @@ function render(spec: SceneSpecLike, ctx: FrameContext): SvgNode {
   const step = (end - start) / (n - 1);
   // 时序预设（Task 2）：sync = 标题/轴线/全部节点同时入场；
   // stagger（默认/旧口径）= 标题 0 → 轴线 300 → 节点 600+i×300。
+  // 入场时长（Codex P1-1 修复）：固定延迟/时长按 enterMs/1400 比例缩放——
+  // enterMs=1400（缺省）精确还原旧时序，其它值按比例加速/减速。
   const isSync = p.sequence === "sync";
-  const titleAppear = easeOutCubic(clamp01(tMs / 600));
+  const k = p.enterMs / 1400;
+  const titleAppear = easeOutCubic(clamp01(tMs / (600 * k)));
   const axisAppear = isSync
     ? titleAppear
-    : easeOutCubic(clamp01((tMs - 300) / 800));
+    : easeOutCubic(clamp01((tMs - 300 * k) / (800 * k)));
 
   const position = (index: number) =>
     portrait
@@ -133,7 +150,7 @@ function render(spec: SceneSpecLike, ctx: FrameContext): SvgNode {
   p.milestones.forEach((milestone, index) => {
     const appear = isSync
       ? titleAppear
-      : easeOutCubic(clamp01((tMs - 600 - index * 300) / 500));
+      : easeOutCubic(clamp01((tMs - (600 + index * 300) * k) / (500 * k)));
     const { x, y } = position(index);
     const color =
       milestone.status === "done"

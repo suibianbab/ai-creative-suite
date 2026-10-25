@@ -68,7 +68,7 @@ export const GALLERY_SAMPLES: ReadonlyArray<{
     id: "quarterly",
     title: "季度业务数据简报 · 演示数据",
     summary: "数据图＋前后对比＋里程碑时间轴＋入场时序可调的完整简报",
-    detail: "6 镜头 · 约 25 秒 · 演示数据，可改数值、入场时长与时序预设",
+    detail: "6 镜头 · 约 22 秒 · 演示数据，可改数值、入场时长与时序预设",
     poster: "/samples/p4-data.svg",
   },
 ];

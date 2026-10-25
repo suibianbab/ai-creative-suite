@@ -78,16 +78,31 @@ export function validateParams(value: unknown): CompareSplitParams {
     accentColor: readColor(value, "accentColor", "#d9822b"),
     positiveColor: readColor(value, "positiveColor", "#2f6f4f"),
     negativeColor: readColor(value, "negativeColor", "#b3261e"),
+    // Codex P1-2：显式传入的 enterMs 越界/非有限数→拒绝（不再静默回退）；
+    // undefined（旧 spec）→缺省值（向后兼容）。
     enterMs:
-      typeof value.enterMs === "number" &&
-      value.enterMs >= 200 &&
-      value.enterMs <= 5000
-        ? value.enterMs
-        : 1200,
+      value.enterMs === undefined
+        ? 1200
+        : typeof value.enterMs === "number" &&
+            Number.isFinite(value.enterMs) &&
+            value.enterMs >= 200 &&
+            value.enterMs <= 5000
+          ? value.enterMs
+          : (() => {
+              throw new Error(
+                `compare-split enterMs 须为 200..5000 的有限数（收到 ${String(value.enterMs)}）`,
+              );
+            })(),
     sequence:
-      value.sequence === "sync" || value.sequence === "stagger"
-        ? value.sequence
-        : "stagger",
+      value.sequence === undefined
+        ? "stagger"
+        : value.sequence === "sync" || value.sequence === "stagger"
+          ? value.sequence
+          : (() => {
+              throw new Error(
+                `compare-split sequence 须为 stagger|sync（收到 ${String(value.sequence)}）`,
+              );
+            })(),
   };
 }
 
@@ -134,8 +149,10 @@ function render(spec: SceneSpecLike, ctx: FrameContext): SvgNode {
   const afterAppear = isSync
     ? appear
     : easeOutCubic(clamp01((tMs - 700) / p.enterMs));
+  // Codex P2-3 修复：sync 模式下徽章与所有元素统一从 200ms 起（不再延后
+  // enterMs/2）；stagger 保持旧口径（1400ms 起、600ms 入场）。
   const deltaAppear = isSync
-    ? easeOutCubic(clamp01((tMs - 200 - p.enterMs * 0.5) / (p.enterMs * 0.5)))
+    ? appear
     : easeOutCubic(clamp01((tMs - 1400) / 600));
 
   const panel = (x: number, y: number, opacity: number): SvgNode => ({
