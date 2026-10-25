@@ -345,6 +345,27 @@ export function ShotEditorCard({
         : null,
     );
   const [compositionError, setCompositionError] = useState<string | null>(null);
+  // Batch-2 Task 1：compare-split / timeline-milestones 可编辑参数草稿。
+  const [compareSplitDraft, setCompareSplitDraft] = useState<Record<
+    string,
+    unknown
+  > | null>(() =>
+    spec?.componentId === "compare-split"
+      ? structuredClone(spec.params as Record<string, unknown>)
+      : null,
+  );
+  const [compareSplitError, setCompareSplitError] = useState<string | null>(
+    null,
+  );
+  const [timelineDraft, setTimelineDraft] = useState<Record<
+    string,
+    unknown
+  > | null>(() =>
+    spec?.componentId === "timeline-milestones"
+      ? structuredClone(spec.params as Record<string, unknown>)
+      : null,
+  );
+  const [timelineError, setTimelineError] = useState<string | null>(null);
   const updateCycleDraft = (
     update: (
       diagram: Extract<ExplainerParams["diagram"], { kind: "cycle" }>,
@@ -482,6 +503,20 @@ export function ShotEditorCard({
         ? structuredClone(nextSpec.params as ExplainerParams)
         : null,
     );
+    // Batch-2 Task 1：compare-split / timeline-milestones 的全量参数草稿
+    //（同 compositionDraft 模式——structuredClone 后表单直改，apply 时替换 params）。
+    setCompareSplitDraft(
+      nextSpec?.componentId === "compare-split"
+        ? structuredClone(nextSpec.params as Record<string, unknown>)
+        : null,
+    );
+    setTimelineDraft(
+      nextSpec?.componentId === "timeline-milestones"
+        ? structuredClone(nextSpec.params as Record<string, unknown>)
+        : null,
+    );
+    setCompareSplitError(null);
+    setTimelineError(null);
     setCompositionError(null);
     setLayoutError(null);
     setLayoutNotice(null);
@@ -926,6 +961,254 @@ export function ShotEditorCard({
                           }
                         />
                       </label>
+                    </>
+                  ) : editSpec.componentId === "compare-split" &&
+                    compareSplitDraft ? (
+                    <>
+                      <label className="shot-edit-field">
+                        对比标题
+                        <input
+                          className="compare-title-input"
+                          maxLength={30}
+                          value={String(compareSplitDraft.title ?? "")}
+                          onChange={(e) =>
+                            setCompareSplitDraft({
+                              ...compareSplitDraft,
+                              title: e.target.value,
+                            })
+                          }
+                        />
+                      </label>
+                      <label className="shot-edit-field">
+                        指标名
+                        <input
+                          className="compare-metric-input"
+                          maxLength={20}
+                          value={String(compareSplitDraft.metricLabel ?? "")}
+                          onChange={(e) =>
+                            setCompareSplitDraft({
+                              ...compareSplitDraft,
+                              metricLabel: e.target.value,
+                            })
+                          }
+                        />
+                      </label>
+                      <label className="shot-edit-field">
+                        前标签（如「改造前」）
+                        <input
+                          className="compare-before-label-input"
+                          maxLength={12}
+                          value={String(compareSplitDraft.beforeLabel ?? "")}
+                          onChange={(e) =>
+                            setCompareSplitDraft({
+                              ...compareSplitDraft,
+                              beforeLabel: e.target.value,
+                            })
+                          }
+                        />
+                      </label>
+                      <label className="shot-edit-field">
+                        前值
+                        <input
+                          className="compare-before-value-input"
+                          maxLength={12}
+                          value={String(compareSplitDraft.beforeValue ?? "")}
+                          onChange={(e) =>
+                            setCompareSplitDraft({
+                              ...compareSplitDraft,
+                              beforeValue: e.target.value,
+                            })
+                          }
+                        />
+                      </label>
+                      <label className="shot-edit-field">
+                        前说明
+                        <input
+                          className="compare-before-note-input"
+                          maxLength={20}
+                          value={String(compareSplitDraft.beforeNote ?? "")}
+                          onChange={(e) =>
+                            setCompareSplitDraft({
+                              ...compareSplitDraft,
+                              beforeNote: e.target.value,
+                            })
+                          }
+                        />
+                      </label>
+                      <label className="shot-edit-field">
+                        后标签
+                        <input
+                          className="compare-after-label-input"
+                          maxLength={12}
+                          value={String(compareSplitDraft.afterLabel ?? "")}
+                          onChange={(e) =>
+                            setCompareSplitDraft({
+                              ...compareSplitDraft,
+                              afterLabel: e.target.value,
+                            })
+                          }
+                        />
+                      </label>
+                      <label className="shot-edit-field">
+                        后值
+                        <input
+                          className="compare-after-value-input"
+                          maxLength={12}
+                          value={String(compareSplitDraft.afterValue ?? "")}
+                          onChange={(e) =>
+                            setCompareSplitDraft({
+                              ...compareSplitDraft,
+                              afterValue: e.target.value,
+                            })
+                          }
+                        />
+                      </label>
+                      <label className="shot-edit-field">
+                        后说明
+                        <input
+                          className="compare-after-note-input"
+                          maxLength={20}
+                          value={String(compareSplitDraft.afterNote ?? "")}
+                          onChange={(e) =>
+                            setCompareSplitDraft({
+                              ...compareSplitDraft,
+                              afterNote: e.target.value,
+                            })
+                          }
+                        />
+                      </label>
+                      <label className="shot-edit-field">
+                        差值文字
+                        <input
+                          className="compare-delta-text-input"
+                          maxLength={16}
+                          value={String(compareSplitDraft.deltaText ?? "")}
+                          onChange={(e) =>
+                            setCompareSplitDraft({
+                              ...compareSplitDraft,
+                              deltaText: e.target.value,
+                            })
+                          }
+                        />
+                      </label>
+                      <label className="shot-edit-field">
+                        差值方向
+                        <select
+                          className="compare-delta-positive-select"
+                          value={
+                            compareSplitDraft.deltaPositive ? "true" : "false"
+                          }
+                          onChange={(e) =>
+                            setCompareSplitDraft({
+                              ...compareSplitDraft,
+                              deltaPositive: e.target.value === "true",
+                            })
+                          }
+                        >
+                          <option value="true">改善（绿）</option>
+                          <option value="false">恶化（红）</option>
+                        </select>
+                      </label>
+                    </>
+                  ) : editSpec.componentId === "timeline-milestones" &&
+                    timelineDraft ? (
+                    <>
+                      <label className="shot-edit-field">
+                        时间轴标题
+                        <input
+                          className="timeline-title-input"
+                          maxLength={30}
+                          value={String(timelineDraft.title ?? "")}
+                          onChange={(e) =>
+                            setTimelineDraft({
+                              ...timelineDraft,
+                              title: e.target.value,
+                            })
+                          }
+                        />
+                      </label>
+                      {(
+                        (timelineDraft.milestones as Array<{
+                          date: string;
+                          label: string;
+                          status: string;
+                        }>) ?? []
+                      ).map((milestone, milestoneIndex) => (
+                        <div
+                          key={milestoneIndex}
+                          className="timeline-milestone-row"
+                        >
+                          <label className="shot-edit-field">
+                            节点 {milestoneIndex + 1} 日期
+                            <input
+                              className={`timeline-date-${milestoneIndex}`}
+                              maxLength={10}
+                              value={milestone.date}
+                              onChange={(e) => {
+                                const milestones = [
+                                  ...((timelineDraft.milestones as (typeof milestone)[]) ??
+                                    []),
+                                ];
+                                milestones[milestoneIndex] = {
+                                  ...milestone,
+                                  date: e.target.value,
+                                };
+                                setTimelineDraft({
+                                  ...timelineDraft,
+                                  milestones,
+                                });
+                              }}
+                            />
+                          </label>
+                          <label className="shot-edit-field">
+                            标签
+                            <input
+                              className={`timeline-label-${milestoneIndex}`}
+                              maxLength={12}
+                              value={milestone.label}
+                              onChange={(e) => {
+                                const milestones = [
+                                  ...((timelineDraft.milestones as (typeof milestone)[]) ??
+                                    []),
+                                ];
+                                milestones[milestoneIndex] = {
+                                  ...milestone,
+                                  label: e.target.value,
+                                };
+                                setTimelineDraft({
+                                  ...timelineDraft,
+                                  milestones,
+                                });
+                              }}
+                            />
+                          </label>
+                          <label className="shot-edit-field">
+                            状态
+                            <select
+                              className={`timeline-status-${milestoneIndex}`}
+                              value={milestone.status}
+                              onChange={(e) => {
+                                const milestones = [
+                                  ...((timelineDraft.milestones as (typeof milestone)[]) ??
+                                    []),
+                                ];
+                                milestones[milestoneIndex] = {
+                                  ...milestone,
+                                  status: e.target.value,
+                                };
+                                setTimelineDraft({
+                                  ...timelineDraft,
+                                  milestones,
+                                });
+                              }}
+                            >
+                              <option value="done">已完成</option>
+                              <option value="active">进行中</option>
+                              <option value="pending">待启动</option>
+                            </select>
+                          </label>
+                        </div>
+                      ))}
                     </>
                   ) : templateLabels ? (
                     <span className="shot-edit-field">
@@ -2359,7 +2642,20 @@ export function ShotEditorCard({
                   setCompositionError(compositionResult.error);
                   return;
                 }
-                const composedSpec = compositionResult?.spec ?? resolvedBase;
+                let composedSpec = compositionResult?.spec ?? resolvedBase;
+                // Batch-2 Task 1：compare-split / timeline-milestones 编辑臂——
+                // 直接替换 params（表单已过字段约束，最终仍走 validateSceneSpec）。
+                if (
+                  composedSpec.componentId === "compare-split" &&
+                  compareSplitDraft
+                ) {
+                  composedSpec = { ...composedSpec, params: compareSplitDraft };
+                } else if (
+                  composedSpec.componentId === "timeline-milestones" &&
+                  timelineDraft
+                ) {
+                  composedSpec = { ...composedSpec, params: timelineDraft };
+                }
                 // Browsing a template leaves the shared background draft alone.
                 // On actual composition Apply, take the template's default only
                 // when the user has not independently changed the color field.
