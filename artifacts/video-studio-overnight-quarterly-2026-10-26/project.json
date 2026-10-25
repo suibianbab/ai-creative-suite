@@ -1,0 +1,625 @@
+{
+  "schemaVersion": 1,
+  "id": "a06ff150-48d6-471e-9757-f16d446ee5a4",
+  "title": "季度业务数据简报 · 演示数据",
+  "brief": {
+    "sentence": "样片库：季度业务数据简报 · 演示数据。这是可编辑起点，请在发布前替换示例文案和素材。",
+    "aspectTargets": [
+      "landscape",
+      "portrait"
+    ]
+  },
+  "shots": [
+    {
+      "shotId": "281f35bb-a4c1-4c7e-bb7e-88ed7fcfc34f",
+      "order": 0,
+      "locked": false,
+      "workingVersionId": "17f06de4-aa3f-4bba-83e8-9dcb00463b8c",
+      "contentVersions": [
+        {
+          "versionId": "17f06de4-aa3f-4bba-83e8-9dcb00463b8c",
+          "createdAt": "2026-10-25T16:00:37.604Z",
+          "durationMs": 3000,
+          "description": "开场：简报标题（演示数据声明）",
+          "narrationText": "第三季度业务数据简报，演示数据。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 3000,
+              "seed": 4801,
+              "background": "#0d1f2d",
+              "params": {
+                "title": "Q3 数据简报",
+                "subtitle": "以下为演示数据，非真实指标",
+                "titleColor": "#e8f0f8",
+                "subtitleColor": "#a8c8e0",
+                "entrance": "fade-up",
+                "enterMs": 450
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "17f06de4-aa3f-4bba-83e8-9dcb00463b8c",
+          "at": "2026-10-25T16:00:37.604Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "faecb01f-9385-4de3-a376-a684de96ede2",
+      "order": 1,
+      "locked": false,
+      "workingVersionId": "d9fd2176-3d39-49e0-935d-74d64213a15f",
+      "contentVersions": [
+        {
+          "versionId": "d9fd2176-3d39-49e0-935d-74d64213a15f",
+          "createdAt": "2026-10-25T16:00:37.604Z",
+          "durationMs": 4000,
+          "description": "数据图：季度收入柱状对比",
+          "narrationText": "七月到九月，收入逐月上升。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "bar-chart",
+              "componentVersion": 1,
+              "durationMs": 4000,
+              "seed": 4802,
+              "background": "#0d1f2d",
+              "params": {
+                "title": "月度收入（万元，演示）",
+                "bars": [
+                  {
+                    "label": "7 月",
+                    "value": 42
+                  },
+                  {
+                    "label": "8 月",
+                    "value": 58
+                  },
+                  {
+                    "label": "9 月",
+                    "value": 71
+                  }
+                ],
+                "barColor": "#4a9d9d",
+                "accentColor": "#ff9e4f",
+                "textColor": "#e8f0f8",
+                "enterMs": 1400
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "d9fd2176-3d39-49e0-935d-74d64213a15f",
+          "at": "2026-10-25T16:00:37.604Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "14040540-481a-4ef4-b61e-2f9e54fc21df",
+      "order": 2,
+      "locked": false,
+      "workingVersionId": "f560b7f7-ec15-42d9-bb2d-e980b5b0b2b2",
+      "contentVersions": [
+        {
+          "versionId": "f560b7f7-ec15-42d9-bb2d-e980b5b0b2b2",
+          "createdAt": "2026-10-25T16:00:37.604Z",
+          "durationMs": 4000,
+          "description": "前后对比：季度环比变化（可调入场时长）",
+          "narrationText": "季度环比，从增长四成到增长六成。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "compare-split",
+              "componentVersion": 1,
+              "durationMs": 4000,
+              "seed": 4803,
+              "background": "#0d1f2d",
+              "params": {
+                "title": "收入环比（演示数据）",
+                "metricLabel": "月均收入增长",
+                "beforeLabel": "Q2",
+                "beforeValue": "+40%",
+                "beforeNote": "上季度基准",
+                "afterLabel": "Q3",
+                "afterValue": "+60%",
+                "afterNote": "本季度实际（演示）",
+                "deltaText": "+40% → +60%",
+                "deltaPositive": true,
+                "textColor": "#e8f0f8",
+                "panelColor": "#1a3040",
+                "accentColor": "#ff9e4f",
+                "positiveColor": "#4a9d9d",
+                "negativeColor": "#e8837a",
+                "enterMs": 2000,
+                "sequence": "stagger"
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "f560b7f7-ec15-42d9-bb2d-e980b5b0b2b2",
+          "at": "2026-10-25T16:00:37.604Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "526cc876-2ebe-4416-a0bd-8a3b8d5f2c83",
+      "order": 3,
+      "locked": false,
+      "workingVersionId": "06b499f8-b615-428f-9131-28d0bd5378a6",
+      "contentVersions": [
+        {
+          "versionId": "06b499f8-b615-428f-9131-28d0bd5378a6",
+          "createdAt": "2026-10-25T16:00:37.604Z",
+          "durationMs": 4000,
+          "description": "里程碑：季度关键节点（可调同步入场）",
+          "narrationText": "产品、运营、市场三条线同步推进。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "timeline-milestones",
+              "componentVersion": 1,
+              "durationMs": 4000,
+              "seed": 4804,
+              "background": "#0d1f2d",
+              "params": {
+                "title": "Q3 里程碑（演示数据）",
+                "milestones": [
+                  {
+                    "date": "7 月",
+                    "label": "产品",
+                    "status": "done"
+                  },
+                  {
+                    "date": "8 月",
+                    "label": "运营",
+                    "status": "done"
+                  },
+                  {
+                    "date": "9 月",
+                    "label": "市场",
+                    "status": "active"
+                  },
+                  {
+                    "date": "Q4",
+                    "label": "规划",
+                    "status": "pending"
+                  }
+                ],
+                "textColor": "#e8f0f8",
+                "lineColor": "#4a9d9d",
+                "doneColor": "#4a9d9d",
+                "activeColor": "#ff9e4f",
+                "pendingColor": "#7a8a9a",
+                "enterMs": 800,
+                "sequence": "sync"
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "06b499f8-b615-428f-9131-28d0bd5378a6",
+          "at": "2026-10-25T16:00:37.604Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "93b87ed0-a341-4597-a736-d60233ab694e",
+      "order": 4,
+      "locked": false,
+      "workingVersionId": "6b634895-2dd0-4d8c-846d-31915bf030bd",
+      "contentVersions": [
+        {
+          "versionId": "6b634895-2dd0-4d8c-846d-31915bf030bd",
+          "createdAt": "2026-10-25T16:00:37.604Z",
+          "durationMs": 3500,
+          "description": "数字强调：核心指标（演示）",
+          "narrationText": "月均收入五十七万元。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "number-counter",
+              "componentVersion": 1,
+              "durationMs": 3500,
+              "seed": 4805,
+              "background": "#0d1f2d",
+              "params": {
+                "title": "月均收入（万元，演示）",
+                "value": 57,
+                "prefix": "",
+                "suffix": " 万元",
+                "decimals": 0,
+                "countMs": 1400,
+                "numberColor": "#e8f0f8",
+                "accentColor": "#ff9e4f"
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "6b634895-2dd0-4d8c-846d-31915bf030bd",
+          "at": "2026-10-25T16:00:37.604Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "391789b7-b632-485c-b661-506a7a382d79",
+      "order": 5,
+      "locked": false,
+      "workingVersionId": "f991f43b-0e0d-4ffb-aeb1-b66ed0d56623",
+      "contentVersions": [
+        {
+          "versionId": "f991f43b-0e0d-4ffb-aeb1-b66ed0d56623",
+          "createdAt": "2026-10-25T16:00:37.604Z",
+          "durationMs": 3000,
+          "description": "收尾：简报回顾",
+          "narrationText": "以上为演示数据，感谢观看。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 3000,
+              "seed": 4806,
+              "background": "#0d1f2d",
+              "params": {
+                "title": "Q3 简报回顾",
+                "subtitle": "演示数据 · 下一期 Q4 展望",
+                "titleColor": "#e8f0f8",
+                "subtitleColor": "#a8c8e0",
+                "entrance": "fade-up",
+                "enterMs": 450
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "f991f43b-0e0d-4ffb-aeb1-b66ed0d56623",
+          "at": "2026-10-25T16:00:37.604Z",
+          "actor": "human"
+        }
+      ]
+    }
+  ],
+  "renderRecords": [
+    {
+      "renderId": "f3b85ca2-ea1e-40c7-a02d-ccd33e875827",
+      "versionId": "17f06de4-aa3f-4bba-83e8-9dcb00463b8c",
+      "contentDigest": "30c9c36cda838fe48a3fe72d9b70a65ecde00a5b60eaefa8a381fc7c6feb42b3",
+      "engineId": "remotion",
+      "engineVersion": "9",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "7fb7e5e9-68b5-4657-a855-8fbebac90d1d",
+        "versionId": "16c1ee90-758d-4acc-9eef-c96359d05cff",
+        "digest": "0e5de034190b028d203104f51c87961676a6e425a5561c4a1f7fbdb1a795ef6d"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "0d2594c4-81dd-4418-a2ed-51f12e9dfe2c",
+      "versionId": "d9fd2176-3d39-49e0-935d-74d64213a15f",
+      "contentDigest": "fe0cebb7989a09c8282f069d492ecc1b3cd1b6a334a441ab7bce01895e90040d",
+      "engineId": "remotion",
+      "engineVersion": "9",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 96,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "7fb7e5e9-68b5-4657-a855-8fbebac90d1d",
+        "versionId": "16c1ee90-758d-4acc-9eef-c96359d05cff",
+        "digest": "0e5de034190b028d203104f51c87961676a6e425a5561c4a1f7fbdb1a795ef6d"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "43f30613-81f5-4342-99f9-2ebe5cb8c418",
+      "versionId": "f560b7f7-ec15-42d9-bb2d-e980b5b0b2b2",
+      "contentDigest": "a844552627d8b8f93367617fd0211169c2bc3a15eecb9973220a7d96332dbe7f",
+      "engineId": "remotion",
+      "engineVersion": "9",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 96,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "7fb7e5e9-68b5-4657-a855-8fbebac90d1d",
+        "versionId": "16c1ee90-758d-4acc-9eef-c96359d05cff",
+        "digest": "0e5de034190b028d203104f51c87961676a6e425a5561c4a1f7fbdb1a795ef6d"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "6613311b-ae93-438f-8ced-50967565a7ae",
+      "versionId": "06b499f8-b615-428f-9131-28d0bd5378a6",
+      "contentDigest": "6e871b0ab8ac58c453ee6211ddc0b407d374bb07f03da650559ad37082d87fbb",
+      "engineId": "remotion",
+      "engineVersion": "9",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 96,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "7fb7e5e9-68b5-4657-a855-8fbebac90d1d",
+        "versionId": "16c1ee90-758d-4acc-9eef-c96359d05cff",
+        "digest": "0e5de034190b028d203104f51c87961676a6e425a5561c4a1f7fbdb1a795ef6d"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "87e975a3-f696-44f1-86a7-86e2b5afce51",
+      "versionId": "6b634895-2dd0-4d8c-846d-31915bf030bd",
+      "contentDigest": "ea6ec33b44984bdafe3f4894a9b87726f09c6d3a1d97ce33639725a65632c5ee",
+      "engineId": "remotion",
+      "engineVersion": "9",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 84,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "7fb7e5e9-68b5-4657-a855-8fbebac90d1d",
+        "versionId": "16c1ee90-758d-4acc-9eef-c96359d05cff",
+        "digest": "0e5de034190b028d203104f51c87961676a6e425a5561c4a1f7fbdb1a795ef6d"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "2f6db8a0-cee0-4a13-bef1-302e00aede76",
+      "versionId": "f991f43b-0e0d-4ffb-aeb1-b66ed0d56623",
+      "contentDigest": "50b01d31b2b6a2879665dc2accc5ac3d7355c85f3e993f6afe976293e11a3ffc",
+      "engineId": "remotion",
+      "engineVersion": "9",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "7fb7e5e9-68b5-4657-a855-8fbebac90d1d",
+        "versionId": "16c1ee90-758d-4acc-9eef-c96359d05cff",
+        "digest": "0e5de034190b028d203104f51c87961676a6e425a5561c4a1f7fbdb1a795ef6d"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "93c2f9be-fafa-4ee2-862a-76ebd05251a9",
+      "versionId": "17f06de4-aa3f-4bba-83e8-9dcb00463b8c",
+      "contentDigest": "30c9c36cda838fe48a3fe72d9b70a65ecde00a5b60eaefa8a381fc7c6feb42b3",
+      "engineId": "remotion",
+      "engineVersion": "9",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "7fb7e5e9-68b5-4657-a855-8fbebac90d1d",
+        "versionId": "16c1ee90-758d-4acc-9eef-c96359d05cff",
+        "digest": "0e5de034190b028d203104f51c87961676a6e425a5561c4a1f7fbdb1a795ef6d"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    },
+    {
+      "renderId": "bceae06c-8f5b-4d9e-b4d5-1597611959fa",
+      "versionId": "d9fd2176-3d39-49e0-935d-74d64213a15f",
+      "contentDigest": "fe0cebb7989a09c8282f069d492ecc1b3cd1b6a334a441ab7bce01895e90040d",
+      "engineId": "remotion",
+      "engineVersion": "9",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 96,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "7fb7e5e9-68b5-4657-a855-8fbebac90d1d",
+        "versionId": "16c1ee90-758d-4acc-9eef-c96359d05cff",
+        "digest": "0e5de034190b028d203104f51c87961676a6e425a5561c4a1f7fbdb1a795ef6d"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    },
+    {
+      "renderId": "57b91784-5358-4c32-a7d9-e45c0fe032b2",
+      "versionId": "f560b7f7-ec15-42d9-bb2d-e980b5b0b2b2",
+      "contentDigest": "a844552627d8b8f93367617fd0211169c2bc3a15eecb9973220a7d96332dbe7f",
+      "engineId": "remotion",
+      "engineVersion": "9",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 96,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "7fb7e5e9-68b5-4657-a855-8fbebac90d1d",
+        "versionId": "16c1ee90-758d-4acc-9eef-c96359d05cff",
+        "digest": "0e5de034190b028d203104f51c87961676a6e425a5561c4a1f7fbdb1a795ef6d"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    },
+    {
+      "renderId": "c51464f0-c1aa-43a9-b1c6-98cc9ebf1bc8",
+      "versionId": "06b499f8-b615-428f-9131-28d0bd5378a6",
+      "contentDigest": "6e871b0ab8ac58c453ee6211ddc0b407d374bb07f03da650559ad37082d87fbb",
+      "engineId": "remotion",
+      "engineVersion": "9",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 96,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "7fb7e5e9-68b5-4657-a855-8fbebac90d1d",
+        "versionId": "16c1ee90-758d-4acc-9eef-c96359d05cff",
+        "digest": "0e5de034190b028d203104f51c87961676a6e425a5561c4a1f7fbdb1a795ef6d"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    },
+    {
+      "renderId": "87ae0bfb-7b71-494f-b5d4-cc7c65dae847",
+      "versionId": "6b634895-2dd0-4d8c-846d-31915bf030bd",
+      "contentDigest": "ea6ec33b44984bdafe3f4894a9b87726f09c6d3a1d97ce33639725a65632c5ee",
+      "engineId": "remotion",
+      "engineVersion": "9",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 84,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "7fb7e5e9-68b5-4657-a855-8fbebac90d1d",
+        "versionId": "16c1ee90-758d-4acc-9eef-c96359d05cff",
+        "digest": "0e5de034190b028d203104f51c87961676a6e425a5561c4a1f7fbdb1a795ef6d"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    },
+    {
+      "renderId": "e63b7830-68cc-4fdb-9af5-b793171c19bb",
+      "versionId": "f991f43b-0e0d-4ffb-aeb1-b66ed0d56623",
+      "contentDigest": "50b01d31b2b6a2879665dc2accc5ac3d7355c85f3e993f6afe976293e11a3ffc",
+      "engineId": "remotion",
+      "engineVersion": "9",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "7fb7e5e9-68b5-4657-a855-8fbebac90d1d",
+        "versionId": "16c1ee90-758d-4acc-9eef-c96359d05cff",
+        "digest": "0e5de034190b028d203104f51c87961676a6e425a5561c4a1f7fbdb1a795ef6d"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    }
+  ],
+  "deliveries": [],
+  "savedVersion": 2,
+  "styleBibleRef": {
+    "bibleId": "7fb7e5e9-68b5-4657-a855-8fbebac90d1d",
+    "versionId": "16c1ee90-758d-4acc-9eef-c96359d05cff",
+    "digest": "0e5de034190b028d203104f51c87961676a6e425a5561c4a1f7fbdb1a795ef6d"
+  }
+}

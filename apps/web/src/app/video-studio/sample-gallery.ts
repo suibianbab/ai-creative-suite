@@ -18,7 +18,8 @@ export type GallerySampleId =
   | "data"
   | "product"
   | "renovation"
-  | "appliance";
+  | "appliance"
+  | "quarterly";
 
 export const GALLERY_SAMPLES: ReadonlyArray<{
   id: GallerySampleId;
@@ -63,6 +64,13 @@ export const GALLERY_SAMPLES: ReadonlyArray<{
     detail: "5 镜头 · 约 16.5 秒 · 可改步骤、提醒与周期数字",
     poster: "/samples/p4-appliance.svg",
   },
+  {
+    id: "quarterly",
+    title: "季度业务数据简报 · 演示数据",
+    summary: "数据图＋前后对比＋里程碑时间轴＋入场时序可调的完整简报",
+    detail: "6 镜头 · 约 25 秒 · 演示数据，可改数值、入场时长与时序预设",
+    poster: "/samples/p4-data.svg",
+  },
 ];
 
 const STEM_PALETTE = {
@@ -92,6 +100,13 @@ const APPLIANCE_PALETTE = {
   secondary: "#c3d4e6",
   accent: "#4aa3d9",
   object: "#5b7fa6",
+};
+const QUARTERLY_PALETTE = {
+  background: "#0d1f2d",
+  foreground: "#e8f0f8",
+  secondary: "#a8c8e0",
+  accent: "#ff9e4f",
+  object: "#4a9d9d",
 };
 
 type SampleShot = {
@@ -573,6 +588,98 @@ function sampleShots(
         source: text("从方案到入住", "下一步：预约实地量房", 3000, 4405),
       },
     ];
+  if (id === "quarterly")
+    return [
+      {
+        durationMs: 3000,
+        description: "开场：简报标题（演示数据声明）",
+        narrationText: "第三季度业务数据简报，演示数据。",
+        source: text("Q3 数据简报", "以下为演示数据，非真实指标", 3000, 4801),
+      },
+      {
+        durationMs: 4000,
+        description: "数据图：季度收入柱状对比",
+        narrationText: "七月到九月，收入逐月上升。",
+        source: spec("bar-chart", 4000, 4802, {
+          title: "月度收入（万元，演示）",
+          bars: [
+            { label: "7 月", value: 42 },
+            { label: "8 月", value: 58 },
+            { label: "9 月", value: 71 },
+          ],
+          barColor: "#4a9d9d",
+          accentColor: "#ff9e4f",
+          textColor: "#e8f0f8",
+          enterMs: 1400,
+        }),
+      },
+      {
+        durationMs: 4000,
+        description: "前后对比：季度环比变化（可调入场时长）",
+        narrationText: "季度环比，从增长四成到增长六成。",
+        source: spec("compare-split", 4000, 4803, {
+          title: "收入环比（演示数据）",
+          metricLabel: "月均收入增长",
+          beforeLabel: "Q2",
+          beforeValue: "+40%",
+          beforeNote: "上季度基准",
+          afterLabel: "Q3",
+          afterValue: "+60%",
+          afterNote: "本季度实际（演示）",
+          deltaText: "+40% → +60%",
+          deltaPositive: true,
+          textColor: "#e8f0f8",
+          panelColor: "#1a3040",
+          accentColor: "#ff9e4f",
+          positiveColor: "#4a9d9d",
+          negativeColor: "#e8837a",
+          enterMs: 2000,
+          sequence: "stagger",
+        }),
+      },
+      {
+        durationMs: 4000,
+        description: "里程碑：季度关键节点（可调同步入场）",
+        narrationText: "产品、运营、市场三条线同步推进。",
+        source: spec("timeline-milestones", 4000, 4804, {
+          title: "Q3 里程碑（演示数据）",
+          milestones: [
+            { date: "7 月", label: "产品", status: "done" },
+            { date: "8 月", label: "运营", status: "done" },
+            { date: "9 月", label: "市场", status: "active" },
+            { date: "Q4", label: "规划", status: "pending" },
+          ],
+          textColor: "#e8f0f8",
+          lineColor: "#3a5068",
+          doneColor: "#4a9d9d",
+          activeColor: "#ff9e4f",
+          pendingColor: "#7a8a9a",
+          enterMs: 800,
+          sequence: "sync",
+        }),
+      },
+      {
+        durationMs: 3500,
+        description: "数字强调：核心指标（演示）",
+        narrationText: "月均收入五十七万元。",
+        source: spec("number-counter", 3500, 4805, {
+          title: "月均收入（万元，演示）",
+          value: 57,
+          prefix: "",
+          suffix: " 万元",
+          decimals: 0,
+          countMs: 1400,
+          numberColor: "#e8f0f8",
+          accentColor: "#ff9e4f",
+        }),
+      },
+      {
+        durationMs: 3000,
+        description: "收尾：简报回顾",
+        narrationText: "以上为演示数据，感谢观看。",
+        source: text("Q3 简报回顾", "演示数据 · 下一期 Q4 展望", 3000, 4806),
+      },
+    ];
   if (id === "appliance")
     return [
       {
@@ -764,7 +871,9 @@ export async function createGallerySample(
         ? RENOVATION_PALETTE
         : id === "appliance"
           ? APPLIANCE_PALETTE
-          : DATA_PALETTE;
+          : id === "quarterly"
+            ? QUARTERLY_PALETTE
+            : DATA_PALETTE;
   let bible: StyleBible | null = null;
   if (id !== "product") {
     const versionId = crypto.randomUUID();

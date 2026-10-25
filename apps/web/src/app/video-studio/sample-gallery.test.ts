@@ -31,7 +31,7 @@ const exampleAsset: MediaAsset = {
 test("样片库生成独立、有效的项目；程序化样片引用独立 Style Bible", async () => {
   assert.deepEqual(
     GALLERY_SAMPLES.map((item) => item.id),
-    ["stem", "data", "product", "renovation", "appliance"],
+    ["stem", "data", "product", "renovation", "appliance", "quarterly"],
   );
   const first = await createGallerySample("stem");
   const second = await createGallerySample("stem");
