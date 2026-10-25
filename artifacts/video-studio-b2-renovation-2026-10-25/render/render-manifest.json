@@ -1,0 +1,162 @@
+{
+  "generatedAt": "2026-10-25T10:26:50.164Z",
+  "projectId": "e5907e32-1251-4ad6-9446-fb3478fe004b",
+  "remotion": "4.0.534",
+  "browser": "Google Chrome 155.0.8059.41",
+  "fontDigests": {
+    "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+  },
+  "styleBibleRef": {
+    "bibleId": "c719435a-06df-4f66-846d-1225d856e70e",
+    "versionId": "a3d52c59-8477-48fd-90bb-39ebcc6df915",
+    "digest": "9cfae4bffaffa89aeacb753c52226142caab1690b16b1c47430ef31bcad9dc64"
+  },
+  "aspects": {
+    "landscape": {
+      "registryVersion": 9,
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "frames": 576,
+      "output": "landscape.mp4",
+      "frameMap": [
+        {
+          "shotIndex": 0,
+          "shotId": "1e383f15-4592-4425-9cfe-396365dfd499",
+          "versionId": "96aaaf12-8d75-445d-a814-6b7a05c6bfff",
+          "componentId": "text-animation",
+          "startFrame": 0,
+          "frames": 72,
+          "contentDigest": "2a094406031b231c5810544106f9e06ce4959faf3abc13ebaab68a62561a3bc6"
+        },
+        {
+          "shotIndex": 1,
+          "shotId": "c487abc8-54af-4af7-9dfe-2dbdd7bae0dd",
+          "versionId": "e28edcb9-a0af-45e0-aa27-0f8b9b814e15",
+          "componentId": "compare-split",
+          "startFrame": 72,
+          "frames": 96,
+          "contentDigest": "d62369193a16aff18e33524ba31d6a1d574c5cf6533504fa6c0770edf369a18f"
+        },
+        {
+          "shotIndex": 2,
+          "shotId": "0d02cc14-eae0-4ea3-bb8f-7ea9c1b93493",
+          "versionId": "90d374b4-e50a-4c1e-9546-8ab69f84ec51",
+          "componentId": "explainer-composition",
+          "startFrame": 168,
+          "frames": 84,
+          "contentDigest": "f68fe0877555a53dc3cd20df741aad5bdcdc2774f5d5e79d460712a0b808b90e"
+        },
+        {
+          "shotIndex": 3,
+          "shotId": "3e256733-83d1-437a-9a72-e5cb54340f91",
+          "versionId": "851df40d-694b-4ed0-a16d-ee95bb5b727c",
+          "componentId": "timeline-milestones",
+          "startFrame": 252,
+          "frames": 96,
+          "contentDigest": "0e619ead2d514d28c90a93271eb84f69b3adfaf8d0c45ab37f83fcf96456f678"
+        },
+        {
+          "shotIndex": 4,
+          "shotId": "ba5edb3f-401a-4e17-8f62-cf195adef641",
+          "versionId": "18710328-ee94-49ba-b4c3-715b5c0f7fef",
+          "componentId": "explainer-composition",
+          "startFrame": 348,
+          "frames": 84,
+          "contentDigest": "7463e636de13d6bf4af9ada25d64d67e9cb30c87f449b810afac0e98cf80e217"
+        },
+        {
+          "shotIndex": 5,
+          "shotId": "6e347732-7cfb-41da-adf7-f77526cdf8c3",
+          "versionId": "b8b701bd-e757-4863-b177-ae30377a6949",
+          "componentId": "sketch-note",
+          "startFrame": 432,
+          "frames": 72,
+          "contentDigest": "68d2a84f78ee652c38f0b495eba6ac203816b6270ec054fbf45cc72a3e98b4c4"
+        },
+        {
+          "shotIndex": 6,
+          "shotId": "7f9a330e-6a9e-40c3-80b6-74d927fa3f8e",
+          "versionId": "60705a6d-c735-4f57-83b5-08010325d9dc",
+          "componentId": "text-animation",
+          "startFrame": 504,
+          "frames": 72,
+          "contentDigest": "7406e4fd3f5d8d79d86e738731cc10a56899c75dbffb5d5118f3340c002eefec"
+        }
+      ]
+    },
+    "portrait": {
+      "registryVersion": 9,
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "frames": 576,
+      "output": "portrait.mp4",
+      "frameMap": [
+        {
+          "shotIndex": 0,
+          "shotId": "1e383f15-4592-4425-9cfe-396365dfd499",
+          "versionId": "96aaaf12-8d75-445d-a814-6b7a05c6bfff",
+          "componentId": "text-animation",
+          "startFrame": 0,
+          "frames": 72,
+          "contentDigest": "2a094406031b231c5810544106f9e06ce4959faf3abc13ebaab68a62561a3bc6"
+        },
+        {
+          "shotIndex": 1,
+          "shotId": "c487abc8-54af-4af7-9dfe-2dbdd7bae0dd",
+          "versionId": "e28edcb9-a0af-45e0-aa27-0f8b9b814e15",
+          "componentId": "compare-split",
+          "startFrame": 72,
+          "frames": 96,
+          "contentDigest": "d62369193a16aff18e33524ba31d6a1d574c5cf6533504fa6c0770edf369a18f"
+        },
+        {
+          "shotIndex": 2,
+          "shotId": "0d02cc14-eae0-4ea3-bb8f-7ea9c1b93493",
+          "versionId": "90d374b4-e50a-4c1e-9546-8ab69f84ec51",
+          "componentId": "explainer-composition",
+          "startFrame": 168,
+          "frames": 84,
+          "contentDigest": "f68fe0877555a53dc3cd20df741aad5bdcdc2774f5d5e79d460712a0b808b90e"
+        },
+        {
+          "shotIndex": 3,
+          "shotId": "3e256733-83d1-437a-9a72-e5cb54340f91",
+          "versionId": "851df40d-694b-4ed0-a16d-ee95bb5b727c",
+          "componentId": "timeline-milestones",
+          "startFrame": 252,
+          "frames": 96,
+          "contentDigest": "0e619ead2d514d28c90a93271eb84f69b3adfaf8d0c45ab37f83fcf96456f678"
+        },
+        {
+          "shotIndex": 4,
+          "shotId": "ba5edb3f-401a-4e17-8f62-cf195adef641",
+          "versionId": "18710328-ee94-49ba-b4c3-715b5c0f7fef",
+          "componentId": "explainer-composition",
+          "startFrame": 348,
+          "frames": 84,
+          "contentDigest": "7463e636de13d6bf4af9ada25d64d67e9cb30c87f449b810afac0e98cf80e217"
+        },
+        {
+          "shotIndex": 5,
+          "shotId": "6e347732-7cfb-41da-adf7-f77526cdf8c3",
+          "versionId": "b8b701bd-e757-4863-b177-ae30377a6949",
+          "componentId": "sketch-note",
+          "startFrame": 432,
+          "frames": 72,
+          "contentDigest": "68d2a84f78ee652c38f0b495eba6ac203816b6270ec054fbf45cc72a3e98b4c4"
+        },
+        {
+          "shotIndex": 6,
+          "shotId": "7f9a330e-6a9e-40c3-80b6-74d927fa3f8e",
+          "versionId": "60705a6d-c735-4f57-83b5-08010325d9dc",
+          "componentId": "text-animation",
+          "startFrame": 504,
+          "frames": 72,
+          "contentDigest": "7406e4fd3f5d8d79d86e738731cc10a56899c75dbffb5d5118f3340c002eefec"
+        }
+      ]
+    }
+  }
+}

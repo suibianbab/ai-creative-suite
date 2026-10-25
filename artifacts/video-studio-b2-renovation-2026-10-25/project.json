@@ -1,0 +1,762 @@
+{
+  "schemaVersion": 1,
+  "id": "e5907e32-1251-4ad6-9446-fb3478fe004b",
+  "title": "两房变三房 · 家装方案",
+  "brief": {
+    "sentence": "样片库：两房变三房 · 家装方案。这是可编辑起点，请在发布前替换示例文案和素材。",
+    "aspectTargets": [
+      "landscape",
+      "portrait"
+    ]
+  },
+  "shots": [
+    {
+      "shotId": "1e383f15-4592-4425-9cfe-396365dfd499",
+      "order": 0,
+      "locked": false,
+      "workingVersionId": "96aaaf12-8d75-445d-a814-6b7a05c6bfff",
+      "contentVersions": [
+        {
+          "versionId": "96aaaf12-8d75-445d-a814-6b7a05c6bfff",
+          "createdAt": "2026-10-25T10:26:39.737Z",
+          "durationMs": 3000,
+          "description": "开场：点出改造目标",
+          "narrationText": "两房能变三房吗？",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 3000,
+              "seed": 4401,
+              "background": "#241c14",
+              "params": {
+                "title": "两房变三房",
+                "subtitle": "一次讲清改造方案",
+                "titleColor": "#f5efe6",
+                "subtitleColor": "#e3cfae",
+                "entrance": "fade-up",
+                "enterMs": 450
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "96aaaf12-8d75-445d-a814-6b7a05c6bfff",
+          "at": "2026-10-25T10:26:39.737Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "c487abc8-54af-4af7-9dfe-2dbdd7bae0dd",
+      "order": 1,
+      "locked": false,
+      "workingVersionId": "e28edcb9-a0af-45e0-aa27-0f8b9b814e15",
+      "contentVersions": [
+        {
+          "versionId": "e28edcb9-a0af-45e0-aa27-0f8b9b814e15",
+          "createdAt": "2026-10-25T10:26:39.737Z",
+          "durationMs": 4000,
+          "description": "对比：改造前后等单时长变化",
+          "narrationText": "等单时长从十二分钟降到三分钟。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "compare-split",
+              "componentVersion": 1,
+              "durationMs": 4000,
+              "seed": 4410,
+              "background": "#241c14",
+              "params": {
+                "title": "等单时长对比",
+                "metricLabel": "顾客平均等单",
+                "beforeLabel": "改造前",
+                "beforeValue": "12 分钟",
+                "beforeNote": "旧吧台动线",
+                "afterLabel": "改造后",
+                "afterValue": "3 分钟",
+                "afterNote": "双窗口分流",
+                "deltaText": "12 → 3 分钟",
+                "deltaPositive": true,
+                "textColor": "#f5efe6",
+                "panelColor": "#3a2c1e",
+                "accentColor": "#d97a3d",
+                "positiveColor": "#8bc4a0",
+                "negativeColor": "#e8837a",
+                "enterMs": 1200
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "e28edcb9-a0af-45e0-aa27-0f8b9b814e15",
+          "at": "2026-10-25T10:26:39.737Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "0d02cc14-eae0-4ea3-bb8f-7ea9c1b93493",
+      "order": 2,
+      "locked": false,
+      "workingVersionId": "90d374b4-e50a-4c1e-9546-8ab69f84ec51",
+      "contentVersions": [
+        {
+          "versionId": "90d374b4-e50a-4c1e-9546-8ab69f84ec51",
+          "createdAt": "2026-10-25T10:26:39.737Z",
+          "durationMs": 3500,
+          "description": "总览：改造四步流程",
+          "narrationText": "量房、设计、施工、验收，四步走完。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "explainer-composition",
+              "componentVersion": 1,
+              "durationMs": 3500,
+              "seed": 4402,
+              "background": "#241c14",
+              "params": {
+                "title": "改造四步",
+                "titleColor": "#f5efe6",
+                "textColor": "#f5efe6",
+                "boxColor": "#e3cfae",
+                "arrowColor": "#d97a3d",
+                "strokeColor": "#7d8b5a",
+                "titleY": 145,
+                "titleEnterMs": 0,
+                "diagramOffsetX": 0,
+                "diagramOffsetY": -75,
+                "diagramEnterMs": 450,
+                "diagram": {
+                  "kind": "flow",
+                  "steps": [
+                    {
+                      "label": "量房"
+                    },
+                    {
+                      "label": "设计"
+                    },
+                    {
+                      "label": "施工"
+                    },
+                    {
+                      "label": "验收"
+                    }
+                  ]
+                },
+                "annotations": [
+                  {
+                    "text": "工期与预算可控",
+                    "x": 500,
+                    "y": 730,
+                    "portraitY": 1260,
+                    "enterMs": 2000
+                  }
+                ]
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "90d374b4-e50a-4c1e-9546-8ab69f84ec51",
+          "at": "2026-10-25T10:26:39.737Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "3e256733-83d1-437a-9a72-e5cb54340f91",
+      "order": 3,
+      "locked": false,
+      "workingVersionId": "851df40d-694b-4ed0-a16d-ee95bb5b727c",
+      "contentVersions": [
+        {
+          "versionId": "851df40d-694b-4ed0-a16d-ee95bb5b727c",
+          "createdAt": "2026-10-25T10:26:39.737Z",
+          "durationMs": 4000,
+          "description": "里程碑：实施计划与完成状态",
+          "narrationText": "签约到开业，四个季度稳步推进。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "timeline-milestones",
+              "componentVersion": 1,
+              "durationMs": 4000,
+              "seed": 4411,
+              "background": "#241c14",
+              "params": {
+                "title": "改造里程碑",
+                "milestones": [
+                  {
+                    "date": "Q1",
+                    "label": "签约",
+                    "status": "done"
+                  },
+                  {
+                    "date": "Q2",
+                    "label": "拆除",
+                    "status": "done"
+                  },
+                  {
+                    "date": "Q3",
+                    "label": "重装",
+                    "status": "active"
+                  },
+                  {
+                    "date": "Q4",
+                    "label": "开业",
+                    "status": "pending"
+                  }
+                ],
+                "textColor": "#f5efe6",
+                "lineColor": "#7d8b5a",
+                "doneColor": "#8bc4a0",
+                "activeColor": "#d97a3d",
+                "pendingColor": "#8a7a6a",
+                "enterMs": 1400
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "851df40d-694b-4ed0-a16d-ee95bb5b727c",
+          "at": "2026-10-25T10:26:39.737Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "ba5edb3f-401a-4e17-8f62-cf195adef641",
+      "order": 4,
+      "locked": false,
+      "workingVersionId": "18710328-ee94-49ba-b4c3-715b5c0f7fef",
+      "contentVersions": [
+        {
+          "versionId": "18710328-ee94-49ba-b4c3-715b5c0f7fef",
+          "createdAt": "2026-10-25T10:26:39.737Z",
+          "durationMs": 3500,
+          "description": "户型：示意墙体调整",
+          "narrationText": "非承重墙移除，空间重新划分。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "explainer-composition",
+              "componentVersion": 1,
+              "durationMs": 3500,
+              "seed": 4403,
+              "background": "#241c14",
+              "params": {
+                "title": "户型调整示意",
+                "titleColor": "#f5efe6",
+                "textColor": "#f5efe6",
+                "boxColor": "#e3cfae",
+                "arrowColor": "#d97a3d",
+                "strokeColor": "#7d8b5a",
+                "titleY": 145,
+                "titleEnterMs": 0,
+                "diagramOffsetX": 0,
+                "diagramOffsetY": 20,
+                "diagramEnterMs": 450,
+                "diagram": {
+                  "kind": "drawing",
+                  "paths": [
+                    "M 220 300 L 780 300 L 780 620 L 220 620 Z",
+                    "M 500 300 L 500 620"
+                  ]
+                },
+                "annotations": [
+                  {
+                    "text": "非承重墙可移除",
+                    "x": 500,
+                    "y": 740,
+                    "portraitY": 1240,
+                    "enterMs": 1800
+                  }
+                ]
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "18710328-ee94-49ba-b4c3-715b5c0f7fef",
+          "at": "2026-10-25T10:26:39.737Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "6e347732-7cfb-41da-adf7-f77526cdf8c3",
+      "order": 5,
+      "locked": false,
+      "workingVersionId": "b8b701bd-e757-4863-b177-ae30377a6949",
+      "contentVersions": [
+        {
+          "versionId": "b8b701bd-e757-4863-b177-ae30377a6949",
+          "createdAt": "2026-10-25T10:26:39.737Z",
+          "durationMs": 3000,
+          "description": "提醒：两条关键原则",
+          "narrationText": "承重墙不能动，水电走顶更好修。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "sketch-note",
+              "componentVersion": 1,
+              "durationMs": 3000,
+              "seed": 4404,
+              "background": "#241c14",
+              "params": {
+                "title": "两个关键提醒",
+                "items": [
+                  {
+                    "text": "承重墙不可拆",
+                    "emphasis": "下划线"
+                  },
+                  {
+                    "text": "水电走顶易检修",
+                    "emphasis": "圈"
+                  }
+                ],
+                "inkColor": "#f5efe6",
+                "accentColor": "#d97a3d",
+                "writeMs": 900,
+                "drawMs": 700,
+                "staggerMs": 500
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "b8b701bd-e757-4863-b177-ae30377a6949",
+          "at": "2026-10-25T10:26:39.737Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "7f9a330e-6a9e-40c3-80b6-74d927fa3f8e",
+      "order": 6,
+      "locked": false,
+      "workingVersionId": "60705a6d-c735-4f57-83b5-08010325d9dc",
+      "contentVersions": [
+        {
+          "versionId": "60705a6d-c735-4f57-83b5-08010325d9dc",
+          "createdAt": "2026-10-25T10:26:39.737Z",
+          "durationMs": 3000,
+          "description": "收尾：邀请下一步",
+          "narrationText": "从方案到入住，从一次量房开始。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 3000,
+              "seed": 4405,
+              "background": "#241c14",
+              "params": {
+                "title": "从方案到入住",
+                "subtitle": "下一步：预约实地量房",
+                "titleColor": "#f5efe6",
+                "subtitleColor": "#e3cfae",
+                "entrance": "fade-up",
+                "enterMs": 450
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "gallery-template",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "60705a6d-c735-4f57-83b5-08010325d9dc",
+          "at": "2026-10-25T10:26:39.737Z",
+          "actor": "human"
+        }
+      ]
+    }
+  ],
+  "renderRecords": [
+    {
+      "renderId": "e7b2e256-3440-4c6c-9e7f-fab5375f7951",
+      "versionId": "96aaaf12-8d75-445d-a814-6b7a05c6bfff",
+      "contentDigest": "2a094406031b231c5810544106f9e06ce4959faf3abc13ebaab68a62561a3bc6",
+      "engineId": "remotion",
+      "engineVersion": "9",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "c719435a-06df-4f66-846d-1225d856e70e",
+        "versionId": "a3d52c59-8477-48fd-90bb-39ebcc6df915",
+        "digest": "9cfae4bffaffa89aeacb753c52226142caab1690b16b1c47430ef31bcad9dc64"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "039e7291-a6ab-41a6-a88e-9fff0549f637",
+      "versionId": "e28edcb9-a0af-45e0-aa27-0f8b9b814e15",
+      "contentDigest": "d62369193a16aff18e33524ba31d6a1d574c5cf6533504fa6c0770edf369a18f",
+      "engineId": "remotion",
+      "engineVersion": "9",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 96,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "c719435a-06df-4f66-846d-1225d856e70e",
+        "versionId": "a3d52c59-8477-48fd-90bb-39ebcc6df915",
+        "digest": "9cfae4bffaffa89aeacb753c52226142caab1690b16b1c47430ef31bcad9dc64"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "8789db49-0ba1-4916-b37b-86c8ebbcbf96",
+      "versionId": "90d374b4-e50a-4c1e-9546-8ab69f84ec51",
+      "contentDigest": "f68fe0877555a53dc3cd20df741aad5bdcdc2774f5d5e79d460712a0b808b90e",
+      "engineId": "remotion",
+      "engineVersion": "9",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 84,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "c719435a-06df-4f66-846d-1225d856e70e",
+        "versionId": "a3d52c59-8477-48fd-90bb-39ebcc6df915",
+        "digest": "9cfae4bffaffa89aeacb753c52226142caab1690b16b1c47430ef31bcad9dc64"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "9407eb2a-61cd-4b55-9db8-b7949850e3d2",
+      "versionId": "851df40d-694b-4ed0-a16d-ee95bb5b727c",
+      "contentDigest": "0e619ead2d514d28c90a93271eb84f69b3adfaf8d0c45ab37f83fcf96456f678",
+      "engineId": "remotion",
+      "engineVersion": "9",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 96,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "c719435a-06df-4f66-846d-1225d856e70e",
+        "versionId": "a3d52c59-8477-48fd-90bb-39ebcc6df915",
+        "digest": "9cfae4bffaffa89aeacb753c52226142caab1690b16b1c47430ef31bcad9dc64"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "3b0a382d-d26f-4fb6-908b-3e17e27ea877",
+      "versionId": "18710328-ee94-49ba-b4c3-715b5c0f7fef",
+      "contentDigest": "7463e636de13d6bf4af9ada25d64d67e9cb30c87f449b810afac0e98cf80e217",
+      "engineId": "remotion",
+      "engineVersion": "9",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 84,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "c719435a-06df-4f66-846d-1225d856e70e",
+        "versionId": "a3d52c59-8477-48fd-90bb-39ebcc6df915",
+        "digest": "9cfae4bffaffa89aeacb753c52226142caab1690b16b1c47430ef31bcad9dc64"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "b281ca07-6508-4a0c-9f2b-b70ce5d688c6",
+      "versionId": "b8b701bd-e757-4863-b177-ae30377a6949",
+      "contentDigest": "68d2a84f78ee652c38f0b495eba6ac203816b6270ec054fbf45cc72a3e98b4c4",
+      "engineId": "remotion",
+      "engineVersion": "9",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "c719435a-06df-4f66-846d-1225d856e70e",
+        "versionId": "a3d52c59-8477-48fd-90bb-39ebcc6df915",
+        "digest": "9cfae4bffaffa89aeacb753c52226142caab1690b16b1c47430ef31bcad9dc64"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "caa8f621-06d7-46f6-8d22-35fa42473b17",
+      "versionId": "60705a6d-c735-4f57-83b5-08010325d9dc",
+      "contentDigest": "7406e4fd3f5d8d79d86e738731cc10a56899c75dbffb5d5118f3340c002eefec",
+      "engineId": "remotion",
+      "engineVersion": "9",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "c719435a-06df-4f66-846d-1225d856e70e",
+        "versionId": "a3d52c59-8477-48fd-90bb-39ebcc6df915",
+        "digest": "9cfae4bffaffa89aeacb753c52226142caab1690b16b1c47430ef31bcad9dc64"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "1635791f-ef7a-4510-88bb-6d633866b22c",
+      "versionId": "96aaaf12-8d75-445d-a814-6b7a05c6bfff",
+      "contentDigest": "2a094406031b231c5810544106f9e06ce4959faf3abc13ebaab68a62561a3bc6",
+      "engineId": "remotion",
+      "engineVersion": "9",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "c719435a-06df-4f66-846d-1225d856e70e",
+        "versionId": "a3d52c59-8477-48fd-90bb-39ebcc6df915",
+        "digest": "9cfae4bffaffa89aeacb753c52226142caab1690b16b1c47430ef31bcad9dc64"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    },
+    {
+      "renderId": "8146a0db-383e-41b5-863a-bdee53de7aca",
+      "versionId": "e28edcb9-a0af-45e0-aa27-0f8b9b814e15",
+      "contentDigest": "d62369193a16aff18e33524ba31d6a1d574c5cf6533504fa6c0770edf369a18f",
+      "engineId": "remotion",
+      "engineVersion": "9",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 96,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "c719435a-06df-4f66-846d-1225d856e70e",
+        "versionId": "a3d52c59-8477-48fd-90bb-39ebcc6df915",
+        "digest": "9cfae4bffaffa89aeacb753c52226142caab1690b16b1c47430ef31bcad9dc64"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    },
+    {
+      "renderId": "608b697b-d4de-46f1-98f7-ad496ff79329",
+      "versionId": "90d374b4-e50a-4c1e-9546-8ab69f84ec51",
+      "contentDigest": "f68fe0877555a53dc3cd20df741aad5bdcdc2774f5d5e79d460712a0b808b90e",
+      "engineId": "remotion",
+      "engineVersion": "9",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 84,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "c719435a-06df-4f66-846d-1225d856e70e",
+        "versionId": "a3d52c59-8477-48fd-90bb-39ebcc6df915",
+        "digest": "9cfae4bffaffa89aeacb753c52226142caab1690b16b1c47430ef31bcad9dc64"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    },
+    {
+      "renderId": "3d6cb203-fee3-421a-ac6e-8db5e76c813f",
+      "versionId": "851df40d-694b-4ed0-a16d-ee95bb5b727c",
+      "contentDigest": "0e619ead2d514d28c90a93271eb84f69b3adfaf8d0c45ab37f83fcf96456f678",
+      "engineId": "remotion",
+      "engineVersion": "9",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 96,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "c719435a-06df-4f66-846d-1225d856e70e",
+        "versionId": "a3d52c59-8477-48fd-90bb-39ebcc6df915",
+        "digest": "9cfae4bffaffa89aeacb753c52226142caab1690b16b1c47430ef31bcad9dc64"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    },
+    {
+      "renderId": "9f9d6028-b62e-4ee4-b3a0-a18147dc9c6a",
+      "versionId": "18710328-ee94-49ba-b4c3-715b5c0f7fef",
+      "contentDigest": "7463e636de13d6bf4af9ada25d64d67e9cb30c87f449b810afac0e98cf80e217",
+      "engineId": "remotion",
+      "engineVersion": "9",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 84,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "c719435a-06df-4f66-846d-1225d856e70e",
+        "versionId": "a3d52c59-8477-48fd-90bb-39ebcc6df915",
+        "digest": "9cfae4bffaffa89aeacb753c52226142caab1690b16b1c47430ef31bcad9dc64"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    },
+    {
+      "renderId": "33ef2501-2b4f-429e-bc29-9342edf61f1f",
+      "versionId": "b8b701bd-e757-4863-b177-ae30377a6949",
+      "contentDigest": "68d2a84f78ee652c38f0b495eba6ac203816b6270ec054fbf45cc72a3e98b4c4",
+      "engineId": "remotion",
+      "engineVersion": "9",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "c719435a-06df-4f66-846d-1225d856e70e",
+        "versionId": "a3d52c59-8477-48fd-90bb-39ebcc6df915",
+        "digest": "9cfae4bffaffa89aeacb753c52226142caab1690b16b1c47430ef31bcad9dc64"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    },
+    {
+      "renderId": "3632675d-5463-4de4-88f5-5435ec257055",
+      "versionId": "60705a6d-c735-4f57-83b5-08010325d9dc",
+      "contentDigest": "7406e4fd3f5d8d79d86e738731cc10a56899c75dbffb5d5118f3340c002eefec",
+      "engineId": "remotion",
+      "engineVersion": "9",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "c719435a-06df-4f66-846d-1225d856e70e",
+        "versionId": "a3d52c59-8477-48fd-90bb-39ebcc6df915",
+        "digest": "9cfae4bffaffa89aeacb753c52226142caab1690b16b1c47430ef31bcad9dc64"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    }
+  ],
+  "deliveries": [],
+  "savedVersion": 2,
+  "styleBibleRef": {
+    "bibleId": "c719435a-06df-4f66-846d-1225d856e70e",
+    "versionId": "a3d52c59-8477-48fd-90bb-39ebcc6df915",
+    "digest": "9cfae4bffaffa89aeacb753c52226142caab1690b16b1c47430ef31bcad9dc64"
+  }
+}
