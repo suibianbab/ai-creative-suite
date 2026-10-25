@@ -10,6 +10,7 @@ import {
   mapGlobalFrame,
   type QuantizedTimeline,
   type ShotTransition,
+  type ThreeSceneSpec,
   transitionOverlayAt,
 } from "@acs/video-document";
 import {
@@ -280,7 +281,7 @@ export function ScenePreview({ spec }: { spec: SceneSpec }) {
 
 // —— P1 整片预览：rAF 驱动全局帧（24fps 帧图）→ mapGlobalFrame → 镜头本地帧 ——
 // P2.5-T3（spec §2.4 P1）：扩联合识媒体镜头。既有 spec 项不带 kind 字段、
-// 形状逐字节不变（判别用 "spec" in item）；media/missing 项带 kind。
+// 形状逐字节不变（判别用没有 kind）；media/three/missing 项带 kind。
 export type TimelinePreviewItem =
   | {
       spec: SceneSpec;
@@ -305,7 +306,106 @@ export type TimelinePreviewItem =
       reason: string;
       startFrame: number;
       frames: number;
+    }
+  | {
+      kind: "three";
+      spec: ThreeSceneSpec;
+      startFrame: number;
+      frames: number;
     };
+
+const threeFrameCache = new Map<string, string>();
+const threeFramePending = new Map<string, Promise<string>>();
+
+function ThreeStage({
+  item,
+  aspect,
+}: {
+  item: Extract<TimelinePreviewItem, { kind: "three" }>;
+  aspect: AspectTarget;
+}) {
+  const representativeFrame = Math.min(
+    Math.floor(item.frames / 2),
+    Math.ceil((item.spec.durationMs * EXPORT_FPS) / 1000) - 1,
+  );
+  const key = JSON.stringify([item.spec, aspect, representativeFrame]);
+  const [image, setImage] = useState<string | null>(
+    () => threeFrameCache.get(key) ?? null,
+  );
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    const cached = threeFrameCache.get(key);
+    if (cached) {
+      setImage(cached);
+      setError(null);
+      return;
+    }
+    let live = true;
+    setImage(null);
+    setError(null);
+    let pending = threeFramePending.get(key);
+    if (!pending) {
+      pending = (async () => {
+        const response = await fetch("/api/video/three-preview", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            spec: item.spec,
+            aspect,
+            frameIndex: representativeFrame,
+          }),
+        });
+        if (!response.ok) {
+          const payload = (await response.json()) as { error?: string };
+          throw new Error(payload.error ?? "3D 代表帧生成失败");
+        }
+        const bytes = new Uint8Array(await response.arrayBuffer());
+        let binary = "";
+        for (const byte of bytes) binary += String.fromCharCode(byte);
+        const url = `data:image/png;base64,${btoa(binary)}`;
+        if (threeFrameCache.size >= 12)
+          threeFrameCache.delete(threeFrameCache.keys().next().value!);
+        threeFrameCache.set(key, url);
+        return url;
+      })().finally(() => threeFramePending.delete(key));
+      threeFramePending.set(key, pending);
+    }
+    void pending.then(
+      (url) => {
+        if (live) setImage(url);
+      },
+      (cause) => {
+        if (live)
+          setError(
+            cause instanceof Error ? cause.message : "3D 代表帧生成失败",
+          );
+      },
+    );
+    return () => {
+      live = false;
+    };
+  }, [key, item.spec, aspect, representativeFrame]);
+  if (error)
+    return (
+      <div className="media-missing" role="alert">
+        3D 预览失败：{error}
+      </div>
+    );
+  if (!image)
+    return (
+      <div className="media-missing" role="status">
+        正在生成 3D 代表帧…
+      </div>
+    );
+  return (
+    <img
+      className="three-preview-image"
+      src={image}
+      alt={`${aspect === "portrait" ? "竖版" : "横版"} 3D 镜头代表帧`}
+      style={{ width: "100%", height: "100%", objectFit: "fill" }}
+    />
+  );
+}
 
 // P2/P3/P4：媒体镜头预览——muted <video> + cover/contain 裁切 + 帧驱动 seek
 //（80ms 节流防抖）；文件 404/解码错降级占位，不炸页。音频恒静音：
@@ -416,7 +516,7 @@ export function TimelinePreview({
   // 与出片同口径：24fps + 量化 span 帧数（不能用 30fps/ceil 重算，见 shotCanvasContext）。
   // 仅 spec 项有画布上下文；media/missing 项各自渲染。
   const activeContext =
-    active && "spec" in active
+    active && !("kind" in active)
       ? shotCanvasContext({
           durationMs: active.spec.durationMs,
           frames: active.frames,
@@ -427,13 +527,13 @@ export function TimelinePreview({
   const activeSpanMs =
     active === undefined
       ? 0
-      : "spec" in active
+      : !("kind" in active)
         ? active.spec.durationMs
         : active.kind === "media"
           ? active.outMs - active.inMs
           : 0;
   const activeNarration =
-    active === undefined || "spec" in active
+    active === undefined || !("kind" in active)
       ? active?.narrationText
       : active.kind === "media"
         ? active.narrationText
@@ -474,7 +574,7 @@ export function TimelinePreview({
     <div className="preview-box piece-preview">
       <div className="piece-stage" style={stageVars}>
         {active ? (
-          "spec" in active ? (
+          !("kind" in active) ? (
             activeContext ? (
               <SpecCanvas
                 key={mapping.shotIndex}
@@ -495,6 +595,8 @@ export function TimelinePreview({
               stageWidth={stage.width}
               stageHeight={stage.height}
             />
+          ) : active.kind === "three" ? (
+            <ThreeStage key={mapping.shotIndex} item={active} aspect={aspect} />
           ) : (
             <div
               className="media-missing"
@@ -557,7 +659,7 @@ export function TimelinePreview({
           onSafeGuideChange={setShowSafeGuide}
         />
         {items.some((item) =>
-          "spec" in item
+          !("kind" in item)
             ? item.narrationText !== undefined
             : item.kind === "media" && item.narrationText !== undefined,
         ) ? (
@@ -565,9 +667,14 @@ export function TimelinePreview({
             预览近似，出片按字级时间戳
           </span>
         ) : null}
-        {items.some((item) => !("spec" in item) && item.kind === "media") ? (
+        {items.some((item) => "kind" in item && item.kind === "media") ? (
           <span className="preview-subtitle-note">
             媒体镜头为帧驱动预览近似
+          </span>
+        ) : null}
+        {items.some((item) => "kind" in item && item.kind === "three") ? (
+          <span className="preview-subtitle-note">
+            3D 显示出片同源代表帧；动态请看最终视频
           </span>
         ) : null}
       </div>

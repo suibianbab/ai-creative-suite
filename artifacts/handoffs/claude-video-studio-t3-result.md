@@ -17,6 +17,6 @@
 
 ## 已知限制
 
-- 导出为 CLI（`node scripts/video/t3-export-interactive.mjs --project <json> --out <dir>`），工作台 UI 按钮待后续（导出链与现有 export-gif/export-shot-svg CLI 同模式）。
+- Codex 后续修复已增加工作台按钮，可选当前工作版本的 3D 镜头并将下载文件 SHA-256 记入交付账；CLI 仍可单独使用。
 - 交互运行时形状集只覆盖 orbit3d 的四种（未来组件新形状需扩展 app.js 的 `shapeGeometries` 映射）。
 - 拆解动画（内核弹出）保持 W4 演示语义，不与项目出片动画对齐。

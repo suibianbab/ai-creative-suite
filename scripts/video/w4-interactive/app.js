@@ -16,6 +16,9 @@ export function createApp(container, options = {}) {
     get rotationY() {
       return group.rotation.y;
     },
+    get cameraDistance() {
+      return camera.position.length();
+    },
   };
   const renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setSize(container.clientWidth, container.clientHeight);
@@ -34,7 +37,11 @@ export function createApp(container, options = {}) {
     0.1,
     50,
   );
-  camera.position.set(0, 1.6, 5.2);
+  // The source orbit3d rig uses larger zoom values for a smaller subject.
+  // This perspective derivative preserves that direction by moving the
+  // camera along its original view ray; it does not claim pixel parity.
+  const zoom = options.zoom ?? 1;
+  camera.position.set(0, 1.6 * zoom, 5.2 * zoom);
   camera.lookAt(0, 0, 0);
 
   const group = new THREE.Group();
@@ -73,7 +80,7 @@ export function createApp(container, options = {}) {
   if (typeof options.tilt === "number") group.rotation.x = options.tilt;
   const autoSpin =
     typeof options.spinPerFrame === "number"
-      ? options.spinPerFrame / 60 // spec 每帧@24fps → 60fps 页面近似
+      ? (options.spinPerFrame * 24) / 60 // spec 每帧@24fps → 60fps 页面近似
       : 0.004;
   scene.add(group);
   scene.add(new THREE.AmbientLight(0xffffff, 0.55));

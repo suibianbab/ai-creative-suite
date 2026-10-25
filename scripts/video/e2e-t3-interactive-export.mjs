@@ -16,6 +16,25 @@ const root = path.resolve(
 const out = path.join(root, ".tools/t3-export-e2e");
 const page1 = path.join(out, "index.html");
 const sha = (buf) => createHash("sha256").update(buf).digest("hex");
+const sourceProject = path.join(
+  root,
+  "artifacts/video-studio-t1-portrait-3d-2026-10-25/project-v2.json",
+);
+const buildPage = () =>
+  execFileSync(
+    process.execPath,
+    [
+      "scripts/video/t3-export-interactive.mjs",
+      "--project",
+      sourceProject,
+      "--out",
+      out,
+    ],
+    { cwd: root, stdio: "pipe" },
+  );
+// The test must work from an empty ignored .tools directory; never compare
+// the current source against an HTML left by a previous revision.
+buildPage();
 const htmlBefore = readFileSync(page1);
 
 const browser = await chromium.launch({ headless: true });
@@ -111,20 +130,7 @@ try {
 assert.deepEqual(errors, [], `console/page errors: ${errors.join(" | ")}`);
 
 // 重建逐字节一致。
-execFileSync(
-  process.execPath,
-  [
-    "scripts/video/t3-export-interactive.mjs",
-    "--project",
-    path.join(
-      root,
-      "artifacts/video-studio-t1-portrait-3d-2026-10-25/project-v2.json",
-    ),
-    "--out",
-    out,
-  ],
-  { cwd: root, stdio: "pipe" },
-);
+buildPage();
 assert.equal(
   sha(readFileSync(page1)),
   sha(htmlBefore),

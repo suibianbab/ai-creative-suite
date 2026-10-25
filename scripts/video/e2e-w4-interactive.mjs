@@ -15,6 +15,14 @@ const root = path.resolve(
 );
 const out = path.join(root, "artifacts/video-studio-w4-2026-10-24");
 const page1 = path.join(out, "interactive", "index.html");
+const buildPage = () =>
+  execFileSync(process.execPath, ["scripts/video/w4-interactive-build.mjs"], {
+    cwd: root,
+    stdio: "pipe",
+  });
+// Build from current source before capturing the baseline. A checked-in page
+// from an older runtime must not cause a false determinism failure.
+buildPage();
 const htmlBefore = readFileSync(page1);
 const sha = (buf) => createHash("sha256").update(buf).digest("hex");
 
@@ -100,10 +108,7 @@ try {
 assert.deepEqual(errors, [], `console/page errors: ${errors.join(" | ")}`);
 
 // 保存重开续编 = 源可复现：重建一次，产物逐字节一致。
-execFileSync(process.execPath, ["scripts/video/w4-interactive-build.mjs"], {
-  cwd: root,
-  stdio: "pipe",
-});
+buildPage();
 const htmlAfter = readFileSync(page1);
 assert.equal(
   sha(htmlAfter),

@@ -24,6 +24,7 @@ import {
 } from "./apply-plan";
 import { approvalStatus } from "./frame-approval";
 import { FrameApprovalPanel } from "./frame-approval-panel";
+import { buildInteractiveHtml, interactiveOptions } from "./interactive-export";
 import {
   importPortableVideoProject,
   importVideoProject,
@@ -102,6 +103,7 @@ export default function VideoStudioPage() {
   const [editor, setEditor] = useState<EditorState | null>(null);
   const [listMessage, setListMessage] = useState<string | null>(null);
   const [galleryBusy, setGalleryBusy] = useState<GallerySampleId | null>(null);
+  const [interactiveShotIndex, setInteractiveShotIndex] = useState<number>(-1);
   const [renderDownloads, setRenderDownloads] = useState<{
     projectId: string;
     signature: string;
@@ -144,6 +146,7 @@ export default function VideoStudioPage() {
   useEffect(() => {
     documentRef.current = editor?.document ?? null;
   }, [editor?.document]);
+  useEffect(() => setInteractiveShotIndex(-1), [editor?.document.id]);
 
   const useGallerySample = async (id: GallerySampleId) => {
     if (galleryBusy) return;
@@ -284,60 +287,39 @@ export default function VideoStudioPage() {
     }
   };
 
-  // P1-1：工作台交互页导出——取项目当前工作版本的第一个 three 镜头，
+  // P1-1：工作台交互页导出——取用户指定镜头的当前工作版本，
   // 客户端组装自包含 HTML（静态预编译运行时 + spec 参数），SHA-256 入账
   // 追加 DeliveryRecord 后保存项目。
-  const exportInteractivePage = async (state: EditorState) => {
+  const exportInteractivePage = async (
+    state: EditorState,
+    shotIndex: number,
+  ) => {
     const current = state.document;
-    const threeShot = current.shots.find((shot) => {
-      const working = shot.contentVersions.find(
-        (v) => v.versionId === shot.workingVersionId,
-      );
-      return working?.sceneSource.type === "three";
-    });
+    const threeShot = current.shots[shotIndex];
     if (!threeShot) {
-      setEditor({ ...state, message: "项目中没有 3D 镜头可导出交互页" });
+      setEditor({ ...state, message: "请先选择要导出的 3D 镜头" });
       return;
     }
     const working = threeShot.contentVersions.find(
       (v) => v.versionId === threeShot.workingVersionId,
     );
-    if (working?.sceneSource.type !== "three") return;
+    if (working?.sceneSource.type !== "three") {
+      setEditor({ ...state, message: "所选镜头不再是 3D 镜头，请重新选择" });
+      return;
+    }
     const spec = working.sceneSource.spec;
     setEditor({ ...state, busy: true, message: "正在生成交互页…" });
     try {
+      const options = interactiveOptions(spec);
       const bundleResponse = await fetch(
         "/samples/interactive-runtime.bundle.js",
       );
       if (!bundleResponse.ok)
         throw new Error("交互运行时不可用（请联系管理员）");
       const bundle = await bundleResponse.text();
-      const options = {
-        background: spec.background,
-        color: spec.params.color,
-        accent: spec.params.accent,
-        shape: spec.params.shape,
-        tilt: spec.params.tilt,
-        spinPerFrame: spec.params.spinPerFrame,
-        zoom: spec.params.zoom,
-      };
-      const escapeHtml = (text: unknown) =>
-        String(text)
-          .replaceAll("&", "&amp;")
-          .replaceAll("<", "&lt;")
-          .replaceAll(">", "&gt;")
-          .replaceAll('"', "&quot;");
-      const safeTitle = escapeHtml(current.title);
-      const html = `<!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>交互预览 · ${safeTitle}</title>
-<style>body{margin:0;background:${escapeHtml(spec.background)};color:#eef3f8;font-family:sans-serif}#stage{width:100vw;height:88vh;touch-action:none;cursor:grab}#hint{padding:12px 16px;font-size:14px;color:#9fb2c4}#state{color:${escapeHtml(spec.params.accent)};font-weight:700}.w4-status{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}</style>
-</head><body>
-<div id="stage" data-exploded="false" data-rotated="false" tabindex="0" role="group" aria-label="拖转 ${escapeHtml(spec.params.shape)} 主体，双击或回车拆解"></div>
-<p id="hint">拖拽转动；双击/回车切换 <span id="state">合拢</span>/拆解。源项目：${safeTitle}。衍生交互演示。</p>
-<script>${bundle}</script>
-<script>const app=W4App.createApp(document.getElementById("stage"),${JSON.stringify(options)});const sl=document.getElementById("state");document.getElementById("stage").addEventListener("w4:state",()=>{sl.textContent=app.state.exploded?"拆解":"合拢"});</script>
-</body></html>`;
+      const html = buildInteractiveHtml(bundle, current.title, options);
+      if (new TextEncoder().encode(html).byteLength > 8 * 1024 * 1024)
+        throw new Error("交互页超过 8 MiB 上限，未导出或入账");
       const blob = new Blob([html], { type: "text/html" });
       const digest = await crypto.subtle.digest(
         "SHA-256",
@@ -372,7 +354,7 @@ export default function VideoStudioPage() {
         ...state,
         document: saved,
         busy: false,
-        message: `已导出交互页 ${anchor.download}（SHA-256 ${sha256.slice(0, 12)}…），交付记录已入账`,
+        message: `镜头 ${shotIndex + 1} 已导出交互页 ${anchor.download}（SHA-256 ${sha256.slice(0, 12)}…），交付记录已入账`,
       });
       void refreshProjects().catch(() => {});
     } catch (error) {
@@ -541,6 +523,22 @@ export default function VideoStudioPage() {
 
   if (editor) {
     const { document, message, busy, sentence, plan, storyboard } = editor;
+    const interactiveShotChoices = document.shots.flatMap((shot, index) => {
+      const working = shot.contentVersions.find(
+        (version) => version.versionId === shot.workingVersionId,
+      );
+      return working?.sceneSource.type === "three"
+        ? [{ index, label: `镜头 ${index + 1}：${shot.shotId.slice(0, 8)}` }]
+        : [];
+    });
+    const chosenInteractiveShot =
+      interactiveShotChoices.length === 1
+        ? interactiveShotChoices[0]!.index
+        : interactiveShotChoices.some(
+              (choice) => choice.index === interactiveShotIndex,
+            )
+          ? interactiveShotIndex
+          : -1;
     // 镜头时间线（量化帧图 @24fps）：镜头卡 + 时间条 + 整片预览共用。
     // spec 解析走 shotWorkingSpec：unknown → validateSceneSpec，非法（导入件来自
     // 更新版本/手改）降级 null 走「不可预览」提示，不在渲染期抛错炸整页。
@@ -551,7 +549,7 @@ export default function VideoStudioPage() {
       shotWorkingMediaClip(shot),
     );
     // P3-B（Ruling 11/2）：3D 工作版本解析，与 shotSpecs/shotMediaClips 并列；
-    // 3D 镜头在预览里走 missing 占位（出片时烘焙，工作台不预览）。
+    // 3D 镜头在预览里取同一烘焙 harness 的代表帧。
     const shotThree = document.shots.map((shot) =>
       threeSceneFromVersion(
         shot.contentVersions.find(
@@ -611,11 +609,10 @@ export default function VideoStudioPage() {
                 frames: 0,
               };
         }
-        // P3-B（Ruling 11/3）：复用 missing 占位，不新增 kind、不改 scene-preview。
         if (three) {
           return {
-            kind: "missing",
-            reason: "3D 镜头：出片时烘焙，工作台不预览",
+            kind: "three",
+            spec: three,
             startFrame: 0,
             frames: 0,
           };
@@ -1406,20 +1403,38 @@ export default function VideoStudioPage() {
           >
             导出可移植项目包（含素材）
           </button>
-          {document.shots.some((shot) => {
-            const working = shot.contentVersions.find(
-              (v) => v.versionId === shot.workingVersionId,
-            );
-            return working?.sceneSource.type === "three";
-          }) ? (
-            <button
-              type="button"
-              className="editor-export-interactive"
-              disabled={busy}
-              onClick={() => void exportInteractivePage(editor)}
-            >
-              导出交互页（3D 镜头）
-            </button>
+          {interactiveShotChoices.length > 0 ? (
+            <>
+              <label className="interactive-shot-choice">
+                交互页镜头
+                <select
+                  className="interactive-shot-select"
+                  value={chosenInteractiveShot}
+                  onChange={(event) =>
+                    setInteractiveShotIndex(Number(event.target.value))
+                  }
+                >
+                  {interactiveShotChoices.length > 1 ? (
+                    <option value={-1}>请选择 3D 镜头</option>
+                  ) : null}
+                  {interactiveShotChoices.map((choice) => (
+                    <option key={choice.index} value={choice.index}>
+                      {choice.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button
+                type="button"
+                className="editor-export-interactive"
+                disabled={busy || chosenInteractiveShot < 0}
+                onClick={() =>
+                  void exportInteractivePage(editor, chosenInteractiveShot)
+                }
+              >
+                导出交互页（3D 镜头）
+              </button>
+            </>
           ) : null}
           <p className="shot-template-note">
             浏览器单文件包上限 32 MiB；更大的媒体项目可用现有 CLI

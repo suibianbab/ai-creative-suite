@@ -10,7 +10,7 @@
 4. **预览横竖**：预览区「横版/竖版」按钮切换。
 5. **保存重开**：「保存」→ 刷新 → 项目列表「打开」→ 镜头与转场全在。
 6. **导出 MP4**：「生成无声横竖版 MP4」→ 下载链接 ×2。
-7. **导出交互页**：导出项目 JSON → CLI `node scripts/video/t3-export-interactive.mjs --project <json> --out <dir>`。
+7. **导出交互页**：在「交互页镜头」选择 3D 镜头，点击「导出交互页（3D 镜头）」；页面离线可打开。CLI `node scripts/video/t3-export-interactive.mjs --project <json> --out <dir>` 仍供批处理使用。
 8. **核对交付记录**：导出 JSON 中 `renderRecords`（渲染记录）与 `deliveries`（交付记录）自动追加。
 
 ## 四态
