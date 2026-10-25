@@ -412,3 +412,35 @@ test("C1：出片中途失败时不留成功交付记录（500、无下载、作
     );
   });
 });
+
+test("C1 复核修复：并发 POST 只有一个进入出片（同步占位），另一个 409", async () => {
+  await withEnv("development", async () => {
+    const previousKey = process.env.DASHSCOPE_API_KEY;
+    delete process.env.DASHSCOPE_API_KEY;
+    try {
+      const makeRequest = () =>
+        POST(
+          new Request(url, {
+            method: "POST",
+            headers: sameOrigin,
+            body: JSON.stringify({ project: narratedProject, narrated: true }),
+          }),
+        );
+      const [first, second] = await Promise.all([makeRequest(), makeRequest()]);
+      const statuses = [first.status, second.status].sort();
+      // 无密钥 → 占位成功的那个停在 503；另一个必须被 409 挡下。
+      // 修复前：两个都能通过 active=false 检查 → 双 503。
+      assert.deepEqual(
+        statuses,
+        [409, 503],
+        `并发请求应为 [409, 503]，实际 [${first.status}, ${second.status}]`,
+      );
+      // 占位在请求完成后已释放：后续请求不再 409。
+      const third = await makeRequest();
+      assert.equal(third.status, 503);
+    } finally {
+      if (previousKey === undefined) delete process.env.DASHSCOPE_API_KEY;
+      else process.env.DASHSCOPE_API_KEY = previousKey;
+    }
+  });
+});

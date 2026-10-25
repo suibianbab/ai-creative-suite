@@ -149,6 +149,28 @@ try {
   report.touch.doubleTapExplode = { exploded: true, announced };
   await page.screenshot({ path: path.join(outDir, "touch-exploded.png") });
 
+  // Codex 复核 Important#5 回归：拖动后的快速单击不得被当作双击拆解。
+  // 复现口径：按下 → 拖 20px → 松开 → 350ms 内 40px 半径内单击 → 状态不变。
+  await page.waitForTimeout(400); // 脱离上一双击窗口，从合拢态开始验证
+  if ((await stage.getAttribute("data-exploded")) !== "true") {
+    await stage.dblclick(); // 保证起点为已拆解，末态仍应保持（翻转一次）
+  }
+  const dragBox = await stage.boundingBox();
+  const sx = dragBox.x + dragBox.width / 2;
+  const sy = dragBox.y + dragBox.height / 2;
+  await page.mouse.move(sx, sy);
+  await page.mouse.down();
+  await page.mouse.move(sx + 20, sy, { steps: 4 });
+  await page.mouse.up();
+  await page.mouse.click(sx + 15, sy + 5); // 拖动终点附近快速单击
+  await page.waitForTimeout(500); // 超过双击窗口再断言，防时序误判
+  assert.equal(
+    await stage.getAttribute("data-exploded"),
+    "true",
+    "拖动后的单击不得触发拆解切换（双击候选须按会话位移作废）",
+  );
+  report.touch.dragThenClickNoToggle = true;
+
   // 触摸取消（滚动手势接管）：拖转必须结束且自动旋转恢复。
   await cdp.send("Input.dispatchTouchEvent", {
     type: "touchStart",

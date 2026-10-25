@@ -26,11 +26,13 @@ cube.rotation_euler = (0.35, 0.0, 0.0)
 cube.driver_add("rotation_euler", 1)
 cube.animation_data.drivers[0].driver.expression = "frame*0.02"
 
-# 参照轴：0.08x2.2x0.08 @ (2.6,-0.2,0)，无照明（Emission 近似 MeshBasic）。
+# 参照轴：0.08x2.2x0.08 @ (2.6,-0.2,0)，长边沿 Y（与 Three 的
+# BoxGeometry(0.08, 2.2, 0.08) 同轴——Codex 复核 Important#2 修复：
+# 旧值长边在 Z 正对相机，只剩一个点）。
 bpy.ops.mesh.primitive_cube_add(size=1.0, location=(2.6, -0.2, 0))
 axis = bpy.context.active_object
 axis.name = "ReferenceAxis"
-axis.scale = (0.08, 0.08, 2.2)
+axis.scale = (0.08, 2.2, 0.08)
 amat = bpy.data.materials.new("AxisMat")
 amat.use_nodes = True
 nt = amat.node_tree

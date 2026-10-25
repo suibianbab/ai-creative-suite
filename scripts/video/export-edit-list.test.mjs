@@ -435,3 +435,171 @@ test("edit-list v2 CLI：输出 v2 文件、out 落在源目录内拒绝且源�
     rmSync(out, { recursive: true, force: true });
   }
 });
+
+// —— Codex 复核 Important#3：外来 v2 清单的伪造面逐一拒绝 ——
+test("Codex 复核：伪造 v2 清单（fps/穿越/坏摘要/假总帧/缺源/重复转场）全部拒绝", () => {
+  const store = mkdtempSync(path.join(tmpdir(), "c2-forge-store-"));
+  const dir = mkdtempSync(path.join(tmpdir(), "c2-forge-"));
+  try {
+    mkdirSync(path.join(store, "original"), { recursive: true });
+    const bytes = Buffer.from("codex-forge-source");
+    const sha = createHash("sha256").update(bytes).digest("hex");
+    const storeKey = `${sha.slice(0, 16)}.mp4`;
+    writeFileSync(path.join(store, "original", storeKey), bytes);
+    const sourceProject = path.join(
+      ROOT,
+      "artifacts/video-studio-stem-sample-final-2026-10-23/stem.video-project.json",
+    );
+    // 用导出器生成一份真实 v2（无转场基线），再做六类伪造。
+    execFileSync(
+      process.execPath,
+      [
+        "scripts/video/export-edit-list.mjs",
+        "--project",
+        sourceProject,
+        "--narration",
+        STEM_NARRATION,
+        "--media-store",
+        store,
+        "--out",
+        dir,
+      ],
+      { cwd: ROOT, encoding: "utf8" },
+    );
+    const base = JSON.parse(
+      readFileSync(path.join(dir, "edit-list.v2.json"), "utf8"),
+    );
+    validateEditList(base);
+    // v2 无转场清单没有 sourceSpans/renderSources（未 --render）——伪造
+    // renderSources 面需要含源版本：直接在 base 上补一份合法源再逐项破坏。
+    const totalFrames = base.timeline.at(-1).endFrame;
+    base.renderSources = {
+      landscape: {
+        file: "landscape.mp4",
+        sha256: "a".repeat(64),
+        bytes: 10,
+        totalFrames,
+      },
+      portrait: {
+        file: "portrait.mp4",
+        sha256: "b".repeat(64),
+        bytes: 10,
+        totalFrames,
+      },
+    };
+    for (const entry of base.timeline) {
+      entry.sourceSpans = [
+        {
+          aspect: "landscape",
+          file: "landscape.mp4",
+          startFrame: entry.startFrame,
+          endFrame: entry.endFrame,
+        },
+        {
+          aspect: "portrait",
+          file: "portrait.mp4",
+          startFrame: entry.startFrame,
+          endFrame: entry.endFrame,
+        },
+      ];
+    }
+    validateEditList(base);
+    const forged = (mutate) => {
+      const copy = structuredClone(base);
+      mutate(copy);
+      return copy;
+    };
+    for (const fps of [0, -24, 24.5]) {
+      assert.throws(
+        () =>
+          validateEditList(
+            forged((list) => {
+              list.fps = fps;
+            }),
+          ),
+        /fps/,
+        `fps=${fps} 须拒绝`,
+      );
+    }
+    assert.throws(
+      () =>
+        validateEditList(
+          forged((list) => {
+            list.renderSources.landscape.file = "../outside.mp4";
+            for (const entry of list.timeline)
+              for (const span of entry.sourceSpans)
+                if (span.aspect === "landscape") span.file = "../outside.mp4";
+          }),
+        ),
+      /file/,
+      "路径穿越须拒绝",
+    );
+    assert.throws(
+      () =>
+        validateEditList(
+          forged((list) => {
+            list.renderSources.landscape.file = "/abs/path.mp4";
+          }),
+        ),
+      /file/,
+      "绝对路径须拒绝",
+    );
+    assert.throws(
+      () =>
+        validateEditList(
+          forged((list) => {
+            list.renderSources.landscape.sha256 = "invalid";
+          }),
+        ),
+      /sha256/,
+      "坏摘要须拒绝",
+    );
+    assert.throws(
+      () =>
+        validateEditList(
+          forged((list) => {
+            list.renderSources.landscape.totalFrames = 1;
+          }),
+        ),
+      /totalFrames/,
+      "假总帧须拒绝",
+    );
+    assert.throws(
+      () =>
+        validateEditList(
+          forged((list) => {
+            delete list.renderSources.portrait;
+          }),
+        ),
+      /renderSources/,
+      "缺画幅源须拒绝",
+    );
+    // 同边界重复转场：在 boundary 0 放两条 1+1 帧的合法转场。
+    const dup = forged((list) => {
+      list.transitions = [
+        {
+          boundary: 0,
+          kind: "fade",
+          startFrame: base.timeline[0].endFrame - 1,
+          frames: 2,
+          halfOut: 1,
+          halfIn: 1,
+          baked: true,
+        },
+        {
+          boundary: 0,
+          kind: "fade",
+          startFrame: base.timeline[0].endFrame - 1,
+          frames: 2,
+          halfOut: 1,
+          halfIn: 1,
+          baked: true,
+        },
+      ];
+    });
+    assert.throws(() => validateEditList(dup), /boundary/, "重复转场须拒绝");
+  } finally {
+    rmSync(store, { recursive: true, force: true });
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

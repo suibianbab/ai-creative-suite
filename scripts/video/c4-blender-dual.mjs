@@ -134,11 +134,13 @@ cube.rotation_euler = (0.35, 0.0, 0.0)
 cube.driver_add("rotation_euler", 1)
 cube.animation_data.drivers[0].driver.expression = "frame*0.02"
 
-# 参照轴：0.08x2.2x0.08 @ (2.6,-0.2,0)，无照明（Emission 近似 MeshBasic）。
+# 参照轴：0.08x2.2x0.08 @ (2.6,-0.2,0)，长边沿 Y（与 Three 的
+# BoxGeometry(0.08, 2.2, 0.08) 同轴——Codex 复核 Important#2 修复：
+# 旧值长边在 Z 正对相机，只剩一个点）。
 bpy.ops.mesh.primitive_cube_add(size=1.0, location=(2.6, -0.2, 0))
 axis = bpy.context.active_object
 axis.name = "ReferenceAxis"
-axis.scale = (0.08, 0.08, 2.2)
+axis.scale = (0.08, 2.2, 0.08)
 amat = bpy.data.materials.new("AxisMat")
 amat.use_nodes = True
 nt = amat.node_tree
@@ -591,7 +593,7 @@ report.rigPort = {
   camera:
     "正交 ±4×±2.25（ortho_scale 8, sensor HORIZONTAL）@ (0,0,10) 朝原点 +Y 上",
   cube: "2×2×2 #4f9dff roughness 0.4 metal 0，tilt X=0.35rad，自转 frame×0.02",
-  axis: "0.08×0.08×2.2 #e8b04b（Emission 近似 MeshBasic）@ (2.6,-0.2,0)",
+  axis: "0.08×2.2×0.08 #e8b04b（Emission 近似 MeshBasic）@ (2.6,-0.2,0)",
   lights:
     "Sun energy 3.0 @ 方位(2.5,4,3)（近似 DirectionalLight 2.0）；世界环境强度 0.111 近似 AmbientLight 0.35——单位制不同，是近似移植非逐像素复刻",
   portraitMapping:

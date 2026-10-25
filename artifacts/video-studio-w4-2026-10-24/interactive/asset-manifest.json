@@ -1,12 +1,12 @@
 {
   "deliverable": "D:\\codex\\animate\\.claude\\worktrees\\video-studio-closure\\artifacts\\video-studio-w4-2026-10-24\\interactive\\index.html",
-  "bytes": 545532,
+  "bytes": 545675,
   "maxBytes": 8388608,
   "files": [
     {
       "path": "index.html",
-      "bytes": 545532,
-      "sha256": "a9a15dd53f060ffad5897111d49a66fa47605f9b8218884811d3cdcef4911856",
+      "bytes": 545675,
+      "sha256": "ed154c99cd53090c5edbee99ab34a0ed0c63abb71f047ca6a3cc2964ac5b7011",
       "source": "scripts/video/w4-interactive/app.js + 本构建脚本模板",
       "license": "three.js MIT（内联运行时）；页面与几何全部程序化自有"
     }

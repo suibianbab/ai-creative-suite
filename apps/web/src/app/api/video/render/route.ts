@@ -27,6 +27,19 @@ export async function POST(request: Request) {
       { error: "已有视频在出片，请完成后重试" },
       { status: 409 },
     );
+  // —— 并发占位（Codex 复核 Important#4）：检查与置位之间不得有任何
+  // await（JS 单线程下同步相邻即原子）；占位后的所有路径（含 400/409 之外的
+  // 413/400/503/500）都经外层 finally 释放，杜绝两个并发 POST 同时通过
+  // 最初的 active=false 后各自启动渲染。 ——
+  active = true;
+  try {
+    return await handleRender(request);
+  } finally {
+    active = false;
+  }
+}
+
+async function handleRender(request: Request) {
   let project;
   let bible = null;
   let narrated = false;
@@ -77,7 +90,6 @@ export async function POST(request: Request) {
       { error: "未配置 DASHSCOPE_API_KEY，无法生成有声版" },
       { status: 503 },
     );
-  active = true;
   try {
     const result = await renderLocalProject(project, bible, { narrated });
     return Response.json(result, { headers: { "Cache-Control": "no-store" } });
@@ -86,7 +98,5 @@ export async function POST(request: Request) {
       { error: error instanceof Error ? error.message : "出片失败" },
       { status: 500 },
     );
-  } finally {
-    active = false;
   }
 }

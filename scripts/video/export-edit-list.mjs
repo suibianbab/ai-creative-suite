@@ -213,6 +213,11 @@ export function buildEditList(
 }
 
 const isInteger = (value) => Number.isInteger(value);
+const SHA256_HEX = /^[0-9a-f]{64}$/;
+// renderSources/sourceSpans 文件名只允许受限相对名（无路径分隔、无 ..、
+// 无绝对路径）——消费端可在受限根目录内安全解析（Codex 复核 Important#3）。
+const SAFE_FILENAME = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/;
+const MAX_TIMELINE = 200;
 
 export function validateEditList(list) {
   if (
@@ -226,6 +231,37 @@ export function validateEditList(list) {
     list.aspects.length === 0
   )
     throw new Error("edit-list 形状无效（支持 formatVersion 1 与 2）");
+  if (list.timeline.length > MAX_TIMELINE)
+    throw new Error(`timeline 超过 ${MAX_TIMELINE} 条上限`);
+  if (!isInteger(list.fps) || list.fps < 1 || list.fps > 240)
+    throw new Error("fps 须为 1..240 的整数");
+  const totalFrames = list.timeline.at(-1).endFrame;
+  // v2 且带切片引用时，renderSources 是消费端的路径/摘要信任根：
+  // 逐画幅校验受限文件名、SHA-256、非负字节与总帧对账。
+  if (list.formatVersion === 2 && list.renderSources !== undefined) {
+    if (typeof list.renderSources !== "object" || list.renderSources === null)
+      throw new Error("renderSources 须为对象");
+    const referenced = new Set();
+    for (const entry of list.timeline)
+      for (const span of entry.sourceSpans ?? []) referenced.add(span.aspect);
+    for (const aspect of referenced) {
+      const source = list.renderSources[aspect];
+      if (!source || typeof source !== "object")
+        throw new Error(`renderSources[${aspect}] 缺失（被 sourceSpans 引用）`);
+      if (typeof source.file !== "string" || !SAFE_FILENAME.test(source.file))
+        throw new Error(
+          `renderSources[${aspect}].file 须为受限相对文件名（无路径分隔/..）`,
+        );
+      if (typeof source.sha256 !== "string" || !SHA256_HEX.test(source.sha256))
+        throw new Error(`renderSources[${aspect}].sha256 须为 64 位十六进制`);
+      if (!isInteger(source.bytes) || source.bytes < 0)
+        throw new Error(`renderSources[${aspect}].bytes 须为非负整数`);
+      if (!isInteger(source.totalFrames) || source.totalFrames !== totalFrames)
+        throw new Error(
+          `renderSources[${aspect}].totalFrames 须与时间线总帧数一致（${totalFrames}）`,
+        );
+    }
+  }
   let expectedStart = 0;
   const seenShots = new Set();
   for (const [index, entry] of list.timeline.entries()) {
@@ -266,7 +302,10 @@ export function validateEditList(list) {
   if (list.formatVersion === 2) {
     if (!Array.isArray(list.transitions))
       throw new Error("v2 清单的 transitions 须为数组（无转场为空数组）");
+    if (list.transitions.length > list.timeline.length)
+      throw new Error("transitions 条数不得超过镜头数");
     const borrowed = list.timeline.map(() => 0);
+    const seenBoundaries = new Set();
     for (const [index, transition] of list.transitions.entries()) {
       const field = `transitions[${index}]`;
       const left = list.timeline[transition.boundary];
@@ -280,6 +319,9 @@ export function validateEditList(list) {
         !isInteger(transition.frames)
       )
         throw new Error(`${field} 形状无效（boundary/kind/startFrame/frames）`);
+      if (seenBoundaries.has(transition.boundary))
+        throw new Error(`${field}.boundary 与前条重复（每边界至多一条转场）`);
+      seenBoundaries.add(transition.boundary);
       if (
         !isInteger(transition.halfOut) ||
         !isInteger(transition.halfIn) ||

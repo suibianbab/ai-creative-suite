@@ -41,6 +41,31 @@
       ]
     },
     {
+      "id": "VID-054",
+      "tier": "integration",
+      "title": "W4 interactive page touch, keyboard a11y and dual-renderer perf",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/e2e-w4-touch-a11y.mjs"],
+      "requiresPorts": [],
+      "checks": [
+        "Touch drag/two-finger/double-tap via CDP pipeline, drag-then-click must not toggle explode (pairing invalidated by session movement)",
+        "Keyboard-only rotation and explode with aria-live announcements; offline self-contained rebuild stays byte-identical under the 8 MiB cap",
+        "Headless software-renderer and headed GPU frame-rate readings recorded separately; real-device touch remains untested"
+      ]
+    },
+    {
+      "id": "VID-055",
+      "tier": "smoke",
+      "title": "C4 Blender same-rig smoke (reference axis along Y)",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/c4-blender-dual.mjs", "--smoke"],
+      "requiresPorts": [],
+      "checks": [
+        "Portable Blender renders one frame with exact background color, visible blue cube pixels and a visible gold reference bar (axis along Y matching the Three rig)",
+        "Full keys/motion phases are long-running; the smoke gate catches rig regressions cheaply"
+      ]
+    },
+    {
       "id": "VID-050",
       "tier": "browser-video",
       "title": "Shot recipe catalog apply-edit-save-reopen and dual-aspect render",

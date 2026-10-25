@@ -73,6 +73,13 @@ export function createApp(container, options = {}) {
   let lastTapAt = -Infinity;
   let lastTapX = 0;
   let lastTapY = 0;
+  // 双击候选只对「未发生有效位移的轻点」有效（Codex 复核 Important#5）：
+  // 拖转或被取消的指针会话不是 tap，结束时要作废候选，否则拖动后 350ms
+  // 内的单击会与拖动起点配对而误触发拆解。
+  let sessionMoved = false;
+  let sessionStartX = 0;
+  let sessionStartY = 0;
+  const TAP_SLOP = 6;
   const DOUBLE_TAP_MS = 350;
   const DOUBLE_TAP_RADIUS = 40;
 
@@ -96,6 +103,9 @@ export function createApp(container, options = {}) {
     if (activePointerId !== null) return;
     activePointerId = event.pointerId;
     dragging = true;
+    sessionMoved = false;
+    sessionStartX = event.clientX;
+    sessionStartY = event.clientY;
     lastX = event.clientX;
     lastY = event.clientY;
     // 双击/双触统一检测：鼠标连击与触摸双触都表现为两次 pointerdown。
@@ -115,6 +125,12 @@ export function createApp(container, options = {}) {
     if (!dragging || event.pointerId !== activePointerId) return;
     const dx = event.clientX - lastX;
     const dy = event.clientY - lastY;
+    // 累计位移判拖动（每步增量可能小于 slop，逐步判定会漏——真 RED 实测）。
+    if (
+      Math.hypot(event.clientX - sessionStartX, event.clientY - sessionStartY) >
+      TAP_SLOP
+    )
+      sessionMoved = true;
     group.rotation.y += dx * 0.01;
     group.rotation.x += dy * 0.01;
     // 先取增量再更新基准（修复旧实现恒加 0 的顺序缺陷）。
@@ -127,6 +143,9 @@ export function createApp(container, options = {}) {
     if (event.pointerId !== activePointerId) return;
     dragging = false;
     activePointerId = null;
+    // 拖动过或被系统取消的会话不是有效 tap：作废双击候选，
+    // 防止后续快速单击与拖动起点误配对而触发拆解。
+    if (sessionMoved || event.type === "pointercancel") lastTapAt = -Infinity;
   };
   const onKey = (event) => {
     if (event.altKey || event.ctrlKey || event.metaKey) return;
