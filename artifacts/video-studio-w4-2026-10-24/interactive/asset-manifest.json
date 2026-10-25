@@ -1,0 +1,16 @@
+{
+  "deliverable": "D:\\codex\\animate\\.claude\\worktrees\\video-next-batch\\artifacts\\video-studio-w4-2026-10-24\\interactive\\index.html",
+  "bytes": 548155,
+  "maxBytes": 8388608,
+  "files": [
+    {
+      "path": "index.html",
+      "bytes": 548155,
+      "sha256": "2453d20b20ace661c530a3a3ec763ce94757b60b555f9263f4e7db744106e01e",
+      "source": "scripts/video/w4-interactive/app.js + 本构建脚本模板",
+      "license": "three.js MIT（内联运行时）；页面与几何全部程序化自有"
+    }
+  ],
+  "runtime": "three@0.186.1 (MIT) 经 esbuild@0.28.1 IIFE 内联",
+  "rebuild": "node scripts/video/w4-interactive-build.mjs"
+}

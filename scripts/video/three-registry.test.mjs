@@ -100,7 +100,7 @@ test("orbit3d：shape/颜色/spinPerFrame/tilt/zoom 越界逐个拒绝", () => {
 
 test("orbit3d：createRig + pose 的旋转角只由帧号决定", () => {
   const params = orbit3d.validateParams({});
-  const rig = orbit3d.createRig({
+  const rig = orbit3d.orbit3dV2.createRig({
     THREE,
     params,
     width: 1280,
@@ -146,7 +146,7 @@ test("orbit3d：createRig + pose 的旋转角只由帧号决定", () => {
     color: "#112233",
     accent: "#445566",
   });
-  const customRig = orbit3d.createRig({
+  const customRig = orbit3d.orbit3dV2.createRig({
     THREE,
     params: custom,
     width: 1280,
@@ -169,7 +169,7 @@ test("orbit3d：createRig 的几何随 shape 变化", () => {
     icosahedron: "IcosahedronGeometry",
   };
   for (const [shape, geometryType] of Object.entries(expected)) {
-    const rig = orbit3d.createRig({
+    const rig = orbit3d.orbit3dV2.createRig({
       THREE,
       params: orbit3d.validateParams({ shape }),
       width: 1280,
@@ -222,4 +222,73 @@ test("validateThreeSpec：返回规范化 params（补齐默认值）", () => {
   assert.equal(spec.durationMs, 4000);
   assert.equal(spec.seed, 7);
   assert.equal(spec.background, "#101820");
+});
+
+// —— T1：orbit3d@2 竖版方形像素取景（水平视轴恒 8×zoom，垂直随画幅）——
+test("T1：orbit3d@2 注册且横竖视轴公式正确；@1 行为不变", async () => {
+  const orbit3dModule = await import("./three/components/orbit3d.mjs");
+  const registry = createThreeRegistry([
+    orbit3dModule.orbit3dV1,
+    orbit3dModule.orbit3dV2,
+  ]);
+  assert.deepEqual(registry.list().sort(), ["orbit3d@1", "orbit3d@2"]);
+
+  const frustum = (rig) => ({
+    w: rig.camera.right - rig.camera.left,
+    h: rig.camera.top - rig.camera.bottom,
+  });
+  // 横版 1280×720：@2 与 @1 视轴逐值一致（水平 8，垂直 4.5——字节不变承诺）。
+  const v1Landscape = orbit3dModule.orbit3dV1.createRig({
+    THREE,
+    params: {},
+    background: "#101820",
+  });
+  const v2Landscape = orbit3dModule.orbit3dV2.createRig({
+    THREE,
+    params: {},
+    background: "#101820",
+    width: 1280,
+    height: 720,
+  });
+  assert.deepEqual(frustum(v2Landscape), frustum(v1Landscape));
+
+  // 竖版 720×1280：水平仍 8，垂直 = 8×(1280/720) ≈ 14.22（方形像素）。
+  const v2Portrait = orbit3dModule.orbit3dV2.createRig({
+    THREE,
+    params: {},
+    background: "#101820",
+    width: 720,
+    height: 1280,
+  });
+  const pf = frustum(v2Portrait);
+  assert.equal(pf.w, 8);
+  assert.ok(Math.abs(pf.h - 8 * (1280 / 720)) < 1e-9);
+
+  // zoom 语义保留：水平视轴 = 8×zoom。
+  const zoomed = orbit3dModule.orbit3dV2.createRig({
+    THREE,
+    params: { zoom: 2 },
+    background: "#101820",
+    width: 720,
+    height: 1280,
+  });
+  assert.equal(frustum(zoomed).w, 16);
+
+  // @1 不接受宽高也照常（旧渲染路径），且无宽高时 @2 回落 16:9 基线。
+  const v2Default = orbit3dModule.orbit3dV2.createRig({
+    THREE,
+    params: {},
+    background: "#101820",
+  });
+  assert.deepEqual(frustum(v2Default), frustum(v1Landscape));
+
+  // validateThreeSpec 接受 componentVersion 2。
+  const spec = validateThreeSpec(
+    {
+      ...FULL_SPEC,
+      componentVersion: 2,
+    },
+    registry,
+  );
+  assert.equal(spec.componentVersion, 2);
 });

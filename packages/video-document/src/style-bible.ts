@@ -94,6 +94,29 @@ export function validateStyleBible(value: unknown): StyleBible {
       version.lightingPreset !== "orbit3d-fixed-soft-studio"
     )
       throw new Error(`${field} 字体或灯光预设尚未被当前渲染器支持`);
+    // W2 派生来源：可选；引用须指向同一 Bible 的既有版本，备注 1..200 字。
+    if (version.derivedFrom !== undefined) {
+      const derived = version.derivedFrom as {
+        versionId?: unknown;
+        note?: unknown;
+      };
+      if (!record(derived)) throw new Error(`${field}.derivedFrom 须为对象`);
+      if (
+        typeof derived.versionId !== "string" ||
+        !UUID.test(derived.versionId) ||
+        derived.versionId === version.versionId ||
+        !value.versions.some((item) => item.versionId === derived.versionId)
+      )
+        throw new Error(
+          `${field}.derivedFrom.versionId 须指向本 Bible 其它版本`,
+        );
+      if (
+        typeof derived.note !== "string" ||
+        derived.note.trim().length < 1 ||
+        derived.note.length > 200
+      )
+        throw new Error(`${field}.derivedFrom.note 须为 1..200 字`);
+    }
   }
   if (
     typeof value.currentVersionId !== "string" ||

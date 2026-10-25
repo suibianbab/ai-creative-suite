@@ -4,6 +4,7 @@ import {
   validateVideoProject,
   workingStyleIssues,
 } from "@acs/video-document";
+import { approvalStatus } from "../../../video-studio/frame-approval";
 import { isSameOriginRequest } from "../../same-origin";
 import { renderLocalProject } from "./render-local";
 
@@ -26,6 +27,19 @@ export async function POST(request: Request) {
       { error: "已有视频在出片，请完成后重试" },
       { status: 409 },
     );
+  // —— 并发占位（Codex 复核 Important#4）：检查与置位之间不得有任何
+  // await（JS 单线程下同步相邻即原子）；占位后的所有路径（含 400/409 之外的
+  // 413/400/503/500）都经外层 finally 释放，杜绝两个并发 POST 同时通过
+  // 最初的 active=false 后各自启动渲染。 ——
+  active = true;
+  try {
+    return await handleRender(request);
+  } finally {
+    active = false;
+  }
+}
+
+async function handleRender(request: Request) {
   let project;
   let bible = null;
   let narrated = false;
@@ -56,6 +70,15 @@ export async function POST(request: Request) {
       const issues = workingStyleIssues(project, version);
       if (issues.length) throw new Error(issues.join("；"));
     }
+    // —— C1 服务端闸门：W2 代表帧确认不能只靠工作台前置检查，直连本 API
+    //（CLI/外部 POST）同样要在真实出片前复验每条确认绑定的内容版本、风格
+    // 版本与双画幅帧摘要（approvalStatus 重渲染比对，不信任何客户端布尔）。
+    // 无确认记录 = 功能未启用，不拦截（旧项目兼容契约，同工作台口径）。 ——
+    const approval = await approvalStatus(project);
+    if (!approval.valid)
+      throw new Error(
+        `代表帧确认已失效，未导出：${approval.reasons.join("；")}`,
+      );
   } catch (error) {
     return Response.json(
       { error: error instanceof Error ? error.message : "项目无效" },
@@ -67,7 +90,6 @@ export async function POST(request: Request) {
       { error: "未配置 DASHSCOPE_API_KEY，无法生成有声版" },
       { status: 503 },
     );
-  active = true;
   try {
     const result = await renderLocalProject(project, bible, { narrated });
     return Response.json(result, { headers: { "Cache-Control": "no-store" } });
@@ -76,7 +98,5 @@ export async function POST(request: Request) {
       { error: error instanceof Error ? error.message : "出片失败" },
       { status: 500 },
     );
-  } finally {
-    active = false;
   }
 }

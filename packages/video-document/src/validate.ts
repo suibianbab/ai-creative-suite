@@ -920,5 +920,73 @@ export function validateVideoProject(value: unknown): VideoProject {
       seen.add(boundary);
     }
   }
+  // —— W2 风格代表帧确认：可变当前态，查形状/归属/去重；语义时效
+  // （内容/风格/帧摘要是否仍匹配）由工作台运行时判定，不在此断言 ——
+  if (parsed.styleFrameApprovals !== undefined) {
+    if (
+      !Array.isArray(parsed.styleFrameApprovals) ||
+      parsed.styleFrameApprovals.length > parsed.shots.length
+    ) {
+      fail(
+        "styleFrameApprovals must be an array of at most one entry per shot",
+      );
+    }
+    // 有确认必须有风格引用：否则导出闸门永久失效且确认面板无从渲染。
+    if (parsed.styleFrameApprovals.length > 0 && !parsed.styleBibleRef)
+      fail("styleFrameApprovals 须伴随 styleBibleRef（确认绑定风格版本）");
+    const seenShots = new Set<string>();
+    for (const [index, approval] of parsed.styleFrameApprovals.entries()) {
+      const field = `styleFrameApprovals[${index}]`;
+      if (!isRecord(approval)) fail(`${field} must be an object`);
+      const shot = parsed.shots.find((item) => item.shotId === approval.shotId);
+      if (!shot) fail(`${field}.shotId 须指向项目内镜头`);
+      if (seenShots.has(approval.shotId as string))
+        fail(`${field}.shotId 与前条重复（每镜头至多一条确认）`);
+      seenShots.add(approval.shotId as string);
+      if (
+        !Array.isArray(shot?.contentVersions) ||
+        !shot.contentVersions.some(
+          (version: { versionId: string }) =>
+            version.versionId === approval.contentVersionId,
+        )
+      )
+        fail(`${field}.contentVersionId 须属于该镜头的内容版本`);
+      const ref = approval.styleBibleRef;
+      if (
+        !isRecord(ref) ||
+        typeof ref.bibleId !== "string" ||
+        !UUID.test(ref.bibleId) ||
+        typeof ref.versionId !== "string" ||
+        !UUID.test(ref.versionId) ||
+        typeof ref.digest !== "string" ||
+        !SHA256_HEX.test(ref.digest)
+      )
+        fail(`${field}.styleBibleRef 形状无效`);
+      if (
+        !Array.isArray(approval.frames) ||
+        approval.frames.length !== 2 ||
+        (approval.frames as unknown[]).some((frame) => !isRecord(frame)) ||
+        new Set(
+          (approval.frames as Array<{ aspect?: string }>).map(
+            (frame) => frame.aspect,
+          ),
+        ).size !== 2 ||
+        (
+          approval.frames as Array<{ aspect?: string; svgSha256?: string }>
+        ).some(
+          (frame) =>
+            (frame.aspect !== "landscape" && frame.aspect !== "portrait") ||
+            typeof frame.svgSha256 !== "string" ||
+            !SHA256_HEX.test(frame.svgSha256),
+        )
+      )
+        fail(`${field}.frames 须为横竖各一条且 svgSha256 为 SHA-256`);
+      if (
+        typeof approval.confirmedAt !== "string" ||
+        !ISO_8601.test(approval.confirmedAt)
+      )
+        fail(`${field}.confirmedAt 须为 ISO 时间`);
+    }
+  }
   return parsed as VideoProject;
 }

@@ -1,0 +1,1 @@
+{"shots":[{"spec":{"specVersion":1,"componentId":"bar-chart","componentVersion":1,"durationMs":2800,"seed":4602,"background":"#122137","params":{"title":"月度对比","bars":[{"label":"一月","value":3},{"label":"二月","value":6},{"label":"三月","value":9}],"barColor":"#4a9fdb","accentColor":"#ffbc60","textColor":"#f5f7fa","enterMs":1400}},"startFrame":0,"frames":67}]}

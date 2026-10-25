@@ -1,0 +1,9 @@
+{
+  "object": "procedural-box",
+  "bakeMs": 4805,
+  "renderMs": 45345,
+  "frames": {
+    "landscape": 96,
+    "portrait": 96
+  }
+}

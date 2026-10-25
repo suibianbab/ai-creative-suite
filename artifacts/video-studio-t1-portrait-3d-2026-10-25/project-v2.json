@@ -1,0 +1,201 @@
+{
+  "schemaVersion": 1,
+  "id": "9f6f7e0a-4d2b-4c1e-9a57-2f3d4b6c8e01",
+  "title": "3D 镜头烘焙样例",
+  "brief": {
+    "sentence": "做一个2秒的3D示意视频，1个3D镜头 + 1个文字镜头",
+    "aspectTargets": [
+      "landscape",
+      "portrait"
+    ]
+  },
+  "shots": [
+    {
+      "shotId": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "order": 0,
+      "locked": false,
+      "workingVersionId": "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
+      "contentVersions": [
+        {
+          "versionId": "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
+          "createdAt": "2026-10-21T00:00:00.000Z",
+          "durationMs": 3000,
+          "description": "T1 orbit3d@2 竖版取景",
+          "narrationText": "竖版取景验证。",
+          "sceneSource": {
+            "type": "three",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "orbit3d",
+              "componentVersion": 2,
+              "durationMs": 3000,
+              "seed": 20261021,
+              "background": "#101820",
+              "params": {
+                "shape": "box",
+                "color": "#4f9dff",
+                "accent": "#e8b04b",
+                "spinPerFrame": 0.02,
+                "tilt": 0.35,
+                "zoom": 1
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "three-registry",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
+          "at": "2026-10-21T00:00:00.000Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "c3d4e5f6-a7b8-4c9d-8e1f-2a3b4c5d6e7f",
+      "order": 1,
+      "locked": false,
+      "workingVersionId": "d4e5f6a7-b8c9-4d0e-9f2a-3b4c5d6e7f80",
+      "contentVersions": [
+        {
+          "versionId": "d4e5f6a7-b8c9-4d0e-9f2a-3b4c5d6e7f80",
+          "createdAt": "2026-10-21T00:00:00.000Z",
+          "durationMs": 1000,
+          "description": "收尾（文字动画）",
+          "narrationText": "谢谢观看。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 1000,
+              "seed": 20261022,
+              "background": "#ffffff",
+              "params": {
+                "title": "3D 示意",
+                "subtitle": "谢谢观看",
+                "titleColor": "#1b2c29",
+                "subtitleColor": "#5d7469",
+                "entrance": "fade-up",
+                "enterMs": 900
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-rules",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "d4e5f6a7-b8c9-4d0e-9f2a-3b4c5d6e7f80",
+          "at": "2026-10-21T00:00:00.000Z",
+          "actor": "human"
+        }
+      ]
+    }
+  ],
+  "mediaAssets": [],
+  "renderRecords": [
+    {
+      "renderId": "5d39b988-7579-424b-9e03-5668d84de554",
+      "versionId": "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
+      "contentDigest": "ad78ae66eff6d5530d7ad740f4e952bfc1b938b7393c2a74f51eb7e240786116",
+      "three": {
+        "componentId": "orbit3d",
+        "componentVersion": 2,
+        "threeVersion": "0.186.1",
+        "chromiumVersion": "156.0.8078.4",
+        "glRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+        "framesDigest": "59b4695728acb9455a9bb8cb7f424cf0d942b332085f9bff48b0d72cef3de567",
+        "clipSha256": "d373cbe8539db7f63da081aadace4fb791a1a7d8646ab8dc8fb7e33681c3c2a0"
+      },
+      "engineId": "remotion",
+      "engineVersion": "8",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render-v2/landscape.mp4"
+    },
+    {
+      "renderId": "51c5b718-3797-497e-97ab-47a94404a135",
+      "versionId": "d4e5f6a7-b8c9-4d0e-9f2a-3b4c5d6e7f80",
+      "contentDigest": "f8b2cfe9b4911095806a91b121bd162741fd25b96238a07152ffd180557ce93f",
+      "engineId": "remotion",
+      "engineVersion": "8",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 24,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render-v2/landscape.mp4"
+    },
+    {
+      "renderId": "fb5e50f8-2215-4d74-b650-912fcf9e4a18",
+      "versionId": "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
+      "contentDigest": "ad78ae66eff6d5530d7ad740f4e952bfc1b938b7393c2a74f51eb7e240786116",
+      "three": {
+        "componentId": "orbit3d",
+        "componentVersion": 2,
+        "threeVersion": "0.186.1",
+        "chromiumVersion": "156.0.8078.4",
+        "glRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+        "framesDigest": "413f3a901cc40d39902166bf2f9c6d3b4eb9270460bcde39ed425d546f12ce45",
+        "clipSha256": "63fd17fd5cf74412e765e172f7742b69e9c795a28a08ae822560681ba0cc66de"
+      },
+      "engineId": "remotion",
+      "engineVersion": "8",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render-v2/portrait.mp4"
+    },
+    {
+      "renderId": "41372ab6-14ed-45c0-958a-0029dce6eac0",
+      "versionId": "d4e5f6a7-b8c9-4d0e-9f2a-3b4c5d6e7f80",
+      "contentDigest": "f8b2cfe9b4911095806a91b121bd162741fd25b96238a07152ffd180557ce93f",
+      "engineId": "remotion",
+      "engineVersion": "8",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 24,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render-v2/portrait.mp4"
+    }
+  ],
+  "deliveries": [],
+  "savedVersion": 2
+}

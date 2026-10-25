@@ -2,6 +2,147 @@
   "schemaVersion": 1,
   "automated": [
     {
+      "id": "VID-051",
+      "tier": "browser-video",
+      "title": "Style representative-frame approval, invalidation and export gate",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/e2e-frame-approval.mjs"],
+      "requiresPorts": [3210],
+      "checks": [
+        "Confirm dual-aspect representative frames for a shot, edit the shot, and watch the approval stale with a reason while export is blocked without download links",
+        "Re-confirm to open the gate and complete a real silent dual-aspect render with two download links; derive a new style version with a note and see stale-then-reconfirm again",
+        "Save, reload and reopen: approvals persist in the exported project JSON and the badge stays accurate; browser console clean"
+      ]
+    },
+    {
+      "id": "VID-052",
+      "tier": "integration",
+      "title": "Self-contained interactive 3D sample: offline, state change, iframe, rebuild parity",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/e2e-w4-interactive.mjs"],
+      "requiresPorts": [],
+      "checks": [
+        "Open the single-file interactive page offline via file://, toggle explode by double-click and rotate by drag, with DOM state attributes reflecting the change",
+        "Headless frame rate stays at or above 15 fps and the page works inside an iframe host",
+        "Rebuilding from source is byte-identical and the page stays under the 8 MiB self-contained cap with an asset manifest recording sources and licenses"
+      ]
+    },
+    {
+      "id": "VID-053",
+      "tier": "smoke",
+      "title": "Neutral edit-list export: seamless authoritative timeline and atomic write",
+      "cwd": ".",
+      "argv": ["node", "--test", "scripts/video/export-edit-list.test.mjs"],
+      "requiresPorts": [],
+      "checks": [
+        "The versioned acs-edit-list v1 export yields a seamless authoritative timeline with narration text, audio track and word-timing references digested, and the media ledger",
+        "Deterministic re-export matches field-for-field; broken/empty/malformed lists are rejected by the validator",
+        "CLI export is atomic (no partial file on failure) and old projects remain readable"
+      ]
+    },
+    {
+      "id": "VID-054",
+      "tier": "integration",
+      "title": "W4 interactive page touch, keyboard a11y and dual-renderer perf",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/e2e-w4-touch-a11y.mjs"],
+      "requiresPorts": [],
+      "checks": [
+        "Touch drag/two-finger/double-tap via CDP pipeline, drag-then-click must not toggle explode (pairing invalidated by session movement)",
+        "Keyboard-only rotation and explode with aria-live announcements; offline self-contained rebuild stays byte-identical under the 8 MiB cap",
+        "Headless software-renderer and headed GPU frame-rate readings recorded separately; real-device touch remains untested"
+      ]
+    },
+    {
+      "id": "VID-055",
+      "tier": "smoke",
+      "title": "C4 Blender same-rig smoke (reference axis along Y)",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/c4-blender-dual.mjs", "--smoke"],
+      "requiresPorts": [],
+      "checks": [
+        "Portable Blender renders one frame with exact background color, visible blue cube pixels and a visible gold reference bar (axis along Y matching the Three rig)",
+        "Full keys/motion phases are long-running; the smoke gate catches rig regressions cheaply"
+      ]
+    },
+    {
+      "id": "VID-056",
+      "tier": "integration",
+      "title": "Portrait 3D square-pixel framing (orbit3d@2 vs @1 baseline)",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/t1-portrait-3d-verify.mjs"],
+      "requiresPorts": [],
+      "checks": [
+        "Same three spec rendered as orbit3d@2 and @1 in both aspects: content bbox aspect ratio matches across aspects within 10% for v2 (square pixels) while v1 portrait shows the ~3.16x vertical stretch",
+        "Landscape output of @2 is frame-identical to @1 (formula reproduces legacy frustum values); early/mid/late keyframes and old-vs-new side-by-side retained"
+      ]
+    },
+    {
+      "id": "VID-057",
+      "tier": "browser-video",
+      "title": "Workbench transition editing with borrow-frame summary and export reconciliation",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/e2e-transitions-editor.mjs"],
+      "requiresPorts": [3210],
+      "checks": [
+        "Import the retained STEM transition project (bible first), add a second fade at another boundary with the borrow-frame summary visible, adjust duration, delete one, save and reopen with kinds persisted",
+        "Real dual-aspect silent render of the multi-transition version extracts pre/mid/post frames per window",
+        "v2 edit-list transitions match render-manifest windows field-by-field (boundary/startFrame/frames/halfOut/halfIn)"
+      ]
+    },
+    {
+      "id": "VID-058",
+      "tier": "integration",
+      "title": "Interactive 3D page exported from a real project three shot",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/e2e-t3-interactive-export.mjs"],
+      "requiresPorts": [],
+      "checks": [
+        "Export uses the project working version spec params (shape/color/accent/tilt/spinPerFrame) and a registered three component, producing a self-contained page under 8 MiB",
+        "Offline file:// open: explode/collapse by double-click and keyboard Enter, drag rotation, drag-then-click no-toggle, aria-live announcements, iframe embedding",
+        "Rebuild from the same project is byte-identical; the base W4 demo page and its touch/a11y e2e continue to pass"
+      ]
+    },
+    {
+      "id": "VID-059",
+      "tier": "integration",
+      "title": "Before-after compare and milestone timeline layouts render in both aspects",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/t4-layout-demo.mjs"],
+      "requiresPorts": [],
+      "checks": [
+        "A non-STEM project using compare-split (before/after panels, delta badge) and timeline-milestones (node statuses) recipes renders dual-aspect H.264 with all four shots",
+        "Both new components validate bounded params (title lengths, milestone counts, status enum, colors)",
+        "Existing recipe catalog continues to build (web suite covers the five-recipe list)"
+      ]
+    },
+    {
+      "id": "VID-060",
+      "tier": "browser-video",
+      "title": "Full experience chain: create, edit recipes, transition, preview, export MP4, export interactive",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/e2e-t5-experience.mjs"],
+      "requiresPorts": [3210],
+      "checks": [
+        "Create project, apply text + compare-split + timeline-milestones recipes plus a 3D template shot, add a fade transition with borrow summary, toggle both aspect previews, save and reopen with all four shots persisted",
+        "Real workbench MP4 export produces two download links with render records written back; exported project JSON retains transitions",
+        "Workbench interactive page export downloads a self-contained page, appends a delivery record, and records a SHA-256 matching the downloaded bytes; CLI export remains independently available"
+      ]
+    },
+    {
+      "id": "VID-061",
+      "tier": "browser-video",
+      "title": "Three preview and selected interactive export with hostile-project rejection",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/e2e-three-preview-and-export.mjs"],
+      "requiresPorts": [3210],
+      "checks": [
+        "A two-Three-shot project shows landscape and portrait representative PNG frames generated by the same bake harness as MP4 output",
+        "The workbench requires an explicit shot choice, exports the selected working version, and its delivery digest matches the offline HTML file",
+        "An importable project with an HTML-closing shape value is rejected before download or delivery write"
+      ]
+    },
+    {
       "id": "VID-050",
       "tier": "browser-video",
       "title": "Shot recipe catalog apply-edit-save-reopen and dual-aspect render",

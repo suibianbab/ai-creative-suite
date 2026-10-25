@@ -36,7 +36,8 @@ export function buildThreeSceneVersion({
     spec: {
       specVersion: 1,
       componentId: DEFAULT_THREE_COMPONENT_ID,
-      componentVersion: 1,
+      // T1：新镜头用 orbit3d@2（竖版方形像素取景）。@1 保留给旧项目历史渲染。
+      componentVersion: 2,
       durationMs,
       seed,
       background: DEFAULT_THREE_BACKGROUND,

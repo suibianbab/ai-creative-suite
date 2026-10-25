@@ -1,0 +1,44 @@
+{
+  "pass": true,
+  "constraints": {
+    "selfContained": true,
+    "offline": true,
+    "maxBytes": 8388608
+  },
+  "bytes": 548155,
+  "touch": {
+    "dragRotate": {
+      "rotated": true,
+      "spins": 0.96
+    },
+    "multiTouchIgnored": true,
+    "doubleTapExplode": {
+      "exploded": true,
+      "announced": "已拆解"
+    },
+    "dragThenClickNoToggle": true,
+    "cancelResumesAutoRotate": true
+  },
+  "a11y": {
+    "focusable": true,
+    "label": "3D 演示主体：拖拽或方向键转动，双击、回车或空格拆解",
+    "liveRegion": "polite",
+    "keyboard": {
+      "arrowsRotate": true,
+      "enterSpaceToggle": true
+    }
+  },
+  "perf": {
+    "headless": {
+      "loadMs": 131,
+      "fps": 60.5,
+      "glRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+    },
+    "headedGpu": {
+      "loadMs": 255,
+      "fps": 60,
+      "glRenderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4060 (0x00002882) Direct3D11 vs_5_0 ps_5_0, D3D11)"
+    },
+    "realDevice": "真机触屏未测（无设备）"
+  }
+}

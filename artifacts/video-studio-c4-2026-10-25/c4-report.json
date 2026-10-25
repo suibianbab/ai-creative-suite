@@ -1,0 +1,112 @@
+{
+  "protocol": "W3 BLENDER-ROUTE.md（C4 执行轮）",
+  "blenderExecutable": "D:/codex/animate/.tools/blender-5.2.2-windows-x64/blender.exe",
+  "blender": "Blender 5.2.2 LTS",
+  "subject": "非品牌程序化演示立方体（orbit3d@1 rig 参数级移植）",
+  "license": {
+    "scene": "自有程序化（本脚本生成 .blend；无外部模型/纹理）",
+    "blender": "Blender 5.2.2 LTS（GPL 工具，产物 .blend/png/mp4 为数据，不感染 GPL）"
+  },
+  "determinism": {
+    "engine": "CYCLES",
+    "samples": 48,
+    "seed": 0,
+    "adaptiveSampling": false
+  },
+  "frames": 72,
+  "mode": "keyframes(14/36/65) + motion-segment(24..47) per aspect",
+  "timeBoxRuling": "仅渲染每画幅 3 张关键帧与 24 帧运动段；72×2 全长仍未渲染。全长成本只按本轮双画幅 motion 实测帧时外推，设备归因另见 deviceInvestigation。",
+  "aspects": {
+    "landscape": {
+      "keysRenderMs": 52341,
+      "keysMsPerFrame": 17447,
+      "keyframes": 3,
+      "motionFrames": 24,
+      "gpuBaseline": {
+        "memoryUsed": 2093,
+        "utilization": 13
+      },
+      "gpuPeakMemoryUsedMib": 2093,
+      "gpuPeakUtilizationPercent": 24,
+      "mp4": "motion-landscape.mp4",
+      "motionRenderMs": 110812,
+      "motionMsPerFrame": 4617,
+      "keysTimingNote": "轴修复后本轮重新渲染 3 张关键帧；含进程启动开销，全长外推仅用 motion 实测"
+    },
+    "portrait": {
+      "keysRenderMs": 10908,
+      "keysMsPerFrame": 3636,
+      "keyframes": 3,
+      "motionFrames": 24,
+      "gpuBaseline": {
+        "memoryUsed": 2093,
+        "utilization": 7
+      },
+      "gpuPeakMemoryUsedMib": 2093,
+      "gpuPeakUtilizationPercent": 21,
+      "motionRenderMs": 37288,
+      "motionMsPerFrame": 1554,
+      "mp4": "motion-portrait.mp4",
+      "keysTimingNote": "轴修复后本轮重新渲染 3 张关键帧；含进程启动开销，全长外推仅用 motion 实测"
+    }
+  },
+  "commands": [
+    "blender --background scene.blend --python render_dual.py -- landscape landscape motion",
+    "blender --background scene.blend --python render_dual.py -- portrait portrait motion"
+  ],
+  "gpuMonitorNote": "nvidia-smi 整卡观测（非 Blender 独占归因），口径同 2026-10-09 host-run-report",
+  "attempts": [
+    {
+      "note": "首轮未显式勾选 OPTIX compute device（工厂默认偏好为空），scene.cycles.device=GPU 会静默回退 CPU：实测约 40-45s/帧、GPU 占用 8%（nvidia-smi）、blender 进程 CPU 时间快速累积。修正：build_scene.py 显式启用 OPTIX 设备后重跑。",
+      "outcome": "已中止首轮（无产物入库），CPU 回退速率作为环境实测记录"
+    },
+    {
+      "note": "轴向修复前的历史轮：运动段横版 470.266s/24 帧、竖版 149.625s/24 帧，CPU 探针 36.329s，nvidia-smi 整卡峰值约 12-13%；产物因轴向错误作废。数值仅供帧时波动对照，不作当前设备归因。",
+      "outcome": "已由轴修复后的关键帧、运动段和并排图替代"
+    }
+  ],
+  "cpuProbe": {
+    "frame": 36,
+    "seconds": 10.461,
+    "note": "单帧 CPU 设备计时（i5-14400F，48 samples，1280x720）"
+  },
+  "deviceInvestigation": {
+    "configured": "OPTIX（prefs.compute_device_type=OPTIX，RTX 4060 OPTIX 项 use=True，scene.cycles.device=GPU，probe 输出留痕）",
+    "nvidia": "RTX 4060 / driver 595.95 / CUDA 13.2",
+    "observed": "轴修复前帧时波动较大；本轮整卡峰值与横/竖 motion 帧时见 aspects。nvidia-smi 整卡采样不能独立判定 Blender GPU 占比。",
+    "open": "工厂默认偏好不勾 compute device 时 GPU 设置被静默忽略（已修）；当前 OPTIX 已启用，但 GPU 独占归因和帧时波动原因仍待环境复查。"
+  },
+  "buildSceneMs": 780,
+  "threeRouteBaseline": {
+    "summary": "artifacts/video-studio-w3-2026-10-24/three-route/spike-summary.json",
+    "bakeMs": 4805,
+    "renderMs": 45345,
+    "framesPerAspect": 96,
+    "note": "Three 基线为 96 帧（立方体段 72 + 尾随 1s spec 镜头）；Blender 轮按关键帧+运动段对照（见 mode/timeBoxRuling），取帧时刻 0.6/1.5/2.7s 与 Three spike 一致"
+  },
+  "fullAnimationExtrapolated": {
+    "frames": 144,
+    "estimatedMinutes": 7,
+    "basis": "每画幅实测 motionMsPerFrame 的均值（SKIP 计时不参与）"
+  },
+  "rigPort": {
+    "camera": "正交 ±4×±2.25（ortho_scale 8, sensor HORIZONTAL）@ (0,0,10) 朝原点 +Y 上",
+    "cube": "2×2×2 #4f9dff roughness 0.4 metal 0，tilt X=0.35rad，自转 frame×0.02",
+    "axis": "0.08×2.2×0.08 #e8b04b（Emission 近似 MeshBasic）@ (2.6,-0.2,0)",
+    "lights": "Sun energy 3.0 @ 方位(2.5,4,3)（近似 DirectionalLight 2.0）；世界环境强度 0.111 近似 AmbientLight 0.35——单位制不同，是近似移植非逐像素复刻",
+    "portraitMapping": "Three 竖版实测为同一 16:9 视锥拉伸映射到 9:16（内容宽高比 0.45 vs 横版 1.43，实测吻合 3.16× 纵向拉伸）；Blender 轮先渲 720×405 再拉伸复刻同映射"
+  },
+  "devices": [
+    ["NVIDIA GeForce RTX 4060", "CUDA"],
+    ["Intel Core i5-14400F", "CPU"],
+    ["NVIDIA GeForce RTX 4060", "OPTIX"]
+  ],
+  "devicesNote": "沿用初轮 probe_devices.py 独立探测输出；当前脚本已改为 JSON 输出以避免旧 CPU probe 的解析失败，下一次运行会刷新。OPTIX 项在偏好中已 use=True。",
+  "identityCheck": {
+    "bboxIoU": {
+      "landscape": 0.904,
+      "portrait": 0.904,
+      "basis": "64×36 灰度网格 >40 判非背景；2026-10-25 09:38 重渲帧实测（旧 0.625/0.615 为错误轴渲染，作废）"
+    }
+  }
+}

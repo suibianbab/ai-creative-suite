@@ -22,6 +22,9 @@ import {
   describeStoryboardAppend,
   storyboardConfirmLines,
 } from "./apply-plan";
+import { approvalStatus } from "./frame-approval";
+import { FrameApprovalPanel } from "./frame-approval-panel";
+import { buildInteractiveHtml, interactiveOptions } from "./interactive-export";
 import {
   importPortableVideoProject,
   importVideoProject,
@@ -61,7 +64,9 @@ import { shotWorkingMediaClip, shotWorkingSpec } from "./shot-specs";
 import { importStockForShot } from "./stock-apply";
 import { StyleBiblePanel } from "./style-bible-panel";
 import { threeSceneFromVersion } from "./three-templates";
+// T2 借帧窗口摘要复用预览/出片同一帧数学（不写第二套）。
 import {
+  previewTransitionWindows,
   type TransitionDraftRow,
   transitionsAfterEdit,
   transitionsDraftFromProject,
@@ -98,6 +103,7 @@ export default function VideoStudioPage() {
   const [editor, setEditor] = useState<EditorState | null>(null);
   const [listMessage, setListMessage] = useState<string | null>(null);
   const [galleryBusy, setGalleryBusy] = useState<GallerySampleId | null>(null);
+  const [interactiveShotIndex, setInteractiveShotIndex] = useState<number>(-1);
   const [renderDownloads, setRenderDownloads] = useState<{
     projectId: string;
     signature: string;
@@ -140,6 +146,7 @@ export default function VideoStudioPage() {
   useEffect(() => {
     documentRef.current = editor?.document ?? null;
   }, [editor?.document]);
+  useEffect(() => setInteractiveShotIndex(-1), [editor?.document.id]);
 
   const useGallerySample = async (id: GallerySampleId) => {
     if (galleryBusy) return;
@@ -198,6 +205,17 @@ export default function VideoStudioPage() {
 
   const renderFromWorkbench = async (state: EditorState, narrated = false) => {
     const project = state.document;
+    // W2 导出闸门：已启用代表帧确认的项目，任何确认失效即阻断导出，
+    // 并给出失效原因；未启用（无确认记录）的项目不受影响。
+    const approval = await approvalStatus(project);
+    if (!approval.valid) {
+      setEditor({
+        ...state,
+        busy: false,
+        message: `代表帧确认已失效，未导出：${approval.reasons.join("；")}`,
+      });
+      return;
+    }
     setEditor({
       ...state,
       busy: true,
@@ -266,6 +284,85 @@ export default function VideoStudioPage() {
             }
           : current,
       );
+    }
+  };
+
+  // P1-1：工作台交互页导出——取用户指定镜头的当前工作版本，
+  // 客户端组装自包含 HTML（静态预编译运行时 + spec 参数），SHA-256 入账
+  // 追加 DeliveryRecord 后保存项目。
+  const exportInteractivePage = async (
+    state: EditorState,
+    shotIndex: number,
+  ) => {
+    const current = state.document;
+    const threeShot = current.shots[shotIndex];
+    if (!threeShot) {
+      setEditor({ ...state, message: "请先选择要导出的 3D 镜头" });
+      return;
+    }
+    const working = threeShot.contentVersions.find(
+      (v) => v.versionId === threeShot.workingVersionId,
+    );
+    if (working?.sceneSource.type !== "three") {
+      setEditor({ ...state, message: "所选镜头不再是 3D 镜头，请重新选择" });
+      return;
+    }
+    const spec = working.sceneSource.spec;
+    setEditor({ ...state, busy: true, message: "正在生成交互页…" });
+    try {
+      const options = interactiveOptions(spec);
+      const bundleResponse = await fetch(
+        "/samples/interactive-runtime.bundle.js",
+      );
+      if (!bundleResponse.ok)
+        throw new Error("交互运行时不可用（请联系管理员）");
+      const bundle = await bundleResponse.text();
+      const html = buildInteractiveHtml(bundle, current.title, options);
+      if (new TextEncoder().encode(html).byteLength > 8 * 1024 * 1024)
+        throw new Error("交互页超过 8 MiB 上限，未导出或入账");
+      const blob = new Blob([html], { type: "text/html" });
+      const digest = await crypto.subtle.digest(
+        "SHA-256",
+        await blob.arrayBuffer(),
+      );
+      const sha256 = Array.from(new Uint8Array(digest), (b) =>
+        b.toString(16).padStart(2, "0"),
+      ).join("");
+      const url = URL.createObjectURL(blob);
+      const anchor = window.document.createElement("a");
+      anchor.href = url;
+      anchor.download = `${current.id}-interactive.html`;
+      anchor.click();
+      URL.revokeObjectURL(url);
+      // DeliveryRecord 追加 + 保存（P1-1 核心）。
+      const deliveryRecord = {
+        deliveryId: crypto.randomUUID(),
+        at: new Date().toISOString(),
+        versionIds: [threeShot.workingVersionId],
+        renderIds: [],
+        frameMap: [],
+        kind: "interactive-html" as const,
+        outputRef: anchor.download,
+        digest: sha256,
+      };
+      const delivered = {
+        ...current,
+        deliveries: [...current.deliveries, deliveryRecord],
+      };
+      const saved = await saveVideoProject(delivered);
+      setEditor({
+        ...state,
+        document: saved,
+        busy: false,
+        message: `镜头 ${shotIndex + 1} 已导出交互页 ${anchor.download}（SHA-256 ${sha256.slice(0, 12)}…），交付记录已入账`,
+      });
+      void refreshProjects().catch(() => {});
+    } catch (error) {
+      setEditor({
+        ...state,
+        busy: false,
+        message: error instanceof Error ? error.message : "交互页导出失败",
+      });
     }
   };
 
@@ -426,6 +523,22 @@ export default function VideoStudioPage() {
 
   if (editor) {
     const { document, message, busy, sentence, plan, storyboard } = editor;
+    const interactiveShotChoices = document.shots.flatMap((shot, index) => {
+      const working = shot.contentVersions.find(
+        (version) => version.versionId === shot.workingVersionId,
+      );
+      return working?.sceneSource.type === "three"
+        ? [{ index, label: `镜头 ${index + 1}：${shot.shotId.slice(0, 8)}` }]
+        : [];
+    });
+    const chosenInteractiveShot =
+      interactiveShotChoices.length === 1
+        ? interactiveShotChoices[0]!.index
+        : interactiveShotChoices.some(
+              (choice) => choice.index === interactiveShotIndex,
+            )
+          ? interactiveShotIndex
+          : -1;
     // 镜头时间线（量化帧图 @24fps）：镜头卡 + 时间条 + 整片预览共用。
     // spec 解析走 shotWorkingSpec：unknown → validateSceneSpec，非法（导入件来自
     // 更新版本/手改）降级 null 走「不可预览」提示，不在渲染期抛错炸整页。
@@ -436,7 +549,7 @@ export default function VideoStudioPage() {
       shotWorkingMediaClip(shot),
     );
     // P3-B（Ruling 11/2）：3D 工作版本解析，与 shotSpecs/shotMediaClips 并列；
-    // 3D 镜头在预览里走 missing 占位（出片时烘焙，工作台不预览）。
+    // 3D 镜头在预览里取同一烘焙 harness 的代表帧。
     const shotThree = document.shots.map((shot) =>
       threeSceneFromVersion(
         shot.contentVersions.find(
@@ -496,11 +609,10 @@ export default function VideoStudioPage() {
                 frames: 0,
               };
         }
-        // P3-B（Ruling 11/3）：复用 missing 占位，不新增 kind、不改 scene-preview。
         if (three) {
           return {
-            kind: "missing",
-            reason: "3D 镜头：出片时烘焙，工作台不预览",
+            kind: "three",
+            spec: three,
             startFrame: 0,
             frames: 0,
           };
@@ -636,6 +748,17 @@ export default function VideoStudioPage() {
               setEditor({ ...editor, document: next, message: note })
             }
           />
+
+          {/* W2 风格代表帧确认：链接风格的项目导出前先确认双画幅代表帧，
+              内容或风格变化后确认失效并阻断导出（见 renderFromWorkbench）。 */}
+          {document.styleBibleRef ? (
+            <FrameApprovalPanel
+              project={document}
+              onApply={(next, note) =>
+                setEditor({ ...editor, document: next, message: note })
+              }
+            />
+          ) : null}
 
           {/* P2.5-T3 U4/X1：素材面板——上传入账本 + 逐条列出（含同内容提示）。
               挂在标题下方、规划器上方：先有素材，才有媒体镜头可编辑。 */}
@@ -1086,59 +1209,82 @@ export default function VideoStudioPage() {
               {document.shots.length > 1 ? (
                 <div className="transitions-editor">
                   <h4>转场</h4>
-                  {transitionRows.map((row) => (
-                    <div
-                      key={row.boundary}
-                      className="transition-row"
-                      data-boundary={row.boundary}
-                    >
-                      <span className="transition-boundary">
-                        镜头 {row.boundary + 1} → {row.boundary + 2}
-                      </span>
-                      <select
-                        className="transition-kind"
-                        value={row.kind}
-                        onChange={(event) => {
-                          const kind =
-                            event.target.value === "fade" ? "fade" : "none";
-                          applyTransitionRows(
-                            transitionRows.map((candidate) =>
-                              candidate.boundary === row.boundary
-                                ? { ...candidate, kind }
-                                : candidate,
-                            ),
-                          );
-                        }}
+                  {transitionRows.map((row) => {
+                    // T2 借帧窗口摘要：与预览/出片同 helper（previewTransitionWindows
+                    // → resolveTransitionWindows），不写第二套帧数学。fade 行显示
+                    // halfOut/halfIn 与全局窗口帧段；装配失败行沿用 error 提示。
+                    let borrowSummary: string | null = null;
+                    if (row.kind === "fade" && pieceTimeline) {
+                      const preview = previewTransitionWindows(
+                        document.transitions,
+                        pieceTimeline.shots,
+                        24,
+                      );
+                      const window = preview.windows.find(
+                        (candidate) => candidate.boundary === row.boundary,
+                      );
+                      if (window)
+                        borrowSummary = `借帧 左尾 ${window.halfOut} + 右头 ${window.halfIn}＝${window.frames} 帧（全局第 ${window.startFrame + 1}–${window.startFrame + window.frames} 帧叠黑；${row.durationMs}ms）`;
+                    }
+                    return (
+                      <div
+                        key={row.boundary}
+                        className="transition-row"
+                        data-boundary={row.boundary}
                       >
-                        <option value="none">无</option>
-                        <option value="fade">淡入淡出</option>
-                      </select>
-                      <label className="transition-duration-label">
-                        时长
-                        <input
-                          className="transition-duration"
-                          type="number"
-                          min={100}
-                          max={2000}
-                          step={100}
-                          value={row.durationMs}
+                        <span className="transition-boundary">
+                          镜头 {row.boundary + 1} → {row.boundary + 2}
+                        </span>
+                        <select
+                          className="transition-kind"
+                          value={row.kind}
                           onChange={(event) => {
+                            const kind =
+                              event.target.value === "fade" ? "fade" : "none";
                             applyTransitionRows(
                               transitionRows.map((candidate) =>
                                 candidate.boundary === row.boundary
-                                  ? {
-                                      ...candidate,
-                                      durationMs: Number(event.target.value),
-                                    }
+                                  ? { ...candidate, kind }
                                   : candidate,
                               ),
                             );
                           }}
-                        />
-                        ms
-                      </label>
-                    </div>
-                  ))}
+                        >
+                          <option value="none">无</option>
+                          <option value="fade">淡入淡出</option>
+                        </select>
+                        <label className="transition-duration-label">
+                          时长
+                          <input
+                            className="transition-duration"
+                            type="number"
+                            min={100}
+                            max={2000}
+                            step={100}
+                            value={row.durationMs}
+                            onChange={(event) => {
+                              applyTransitionRows(
+                                transitionRows.map((candidate) =>
+                                  candidate.boundary === row.boundary
+                                    ? {
+                                        ...candidate,
+                                        durationMs: Number(event.target.value),
+                                      }
+                                    : candidate,
+                                ),
+                              );
+                            }}
+                          />
+                          ms
+                        </label>
+                        {borrowSummary ? (
+                          <p className="transition-borrow-summary">
+                            {borrowSummary}
+                          </p>
+                        ) : null}
+                      </div>
+                    );
+                  })}
                   {transitionError ? (
                     <p className="transition-error">{transitionError}</p>
                   ) : null}
@@ -1257,6 +1403,39 @@ export default function VideoStudioPage() {
           >
             导出可移植项目包（含素材）
           </button>
+          {interactiveShotChoices.length > 0 ? (
+            <>
+              <label className="interactive-shot-choice">
+                交互页镜头
+                <select
+                  className="interactive-shot-select"
+                  value={chosenInteractiveShot}
+                  onChange={(event) =>
+                    setInteractiveShotIndex(Number(event.target.value))
+                  }
+                >
+                  {interactiveShotChoices.length > 1 ? (
+                    <option value={-1}>请选择 3D 镜头</option>
+                  ) : null}
+                  {interactiveShotChoices.map((choice) => (
+                    <option key={choice.index} value={choice.index}>
+                      {choice.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button
+                type="button"
+                className="editor-export-interactive"
+                disabled={busy || chosenInteractiveShot < 0}
+                onClick={() =>
+                  void exportInteractivePage(editor, chosenInteractiveShot)
+                }
+              >
+                导出交互页（3D 镜头）
+              </button>
+            </>
+          ) : null}
           <p className="shot-template-note">
             浏览器单文件包上限 32 MiB；更大的媒体项目可用现有 CLI
             目录包。历史渲染记录可能包含原电脑路径，分享前请检查项目数据。

@@ -49,6 +49,7 @@ export function StyleBiblePanel({
     useState<StyleBibleVersion["palette"]>(DEFAULT_PALETTE);
   const [selected, setSelected] = useState("");
   const [message, setMessage] = useState("");
+  const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const importRef = useRef<HTMLInputElement>(null);
   const bibleId = project.styleBibleRef?.bibleId;
@@ -207,12 +208,28 @@ export function StyleBiblePanel({
           >
             切换并应用选中版本
           </button>
+          <label className="derive-note-field">
+            派生说明（选填，填写即标记为派生版本）
+            <input
+              className="derive-note-input"
+              value={note}
+              maxLength={200}
+              placeholder="例如：把 secondary 换成暖木色"
+              disabled={busy}
+              onChange={(event) => setNote(event.target.value)}
+            />
+          </label>
           <button
             type="button"
+            className="bible-derive"
             disabled={busy}
             onClick={() =>
               run(async () => {
                 const versionId = crypto.randomUUID();
+                const source = record.document.versions.find(
+                  (item) => item.versionId === selected,
+                );
+                const noteValue = note.trim();
                 const bible: StyleBible = {
                   ...record.document,
                   currentVersionId: versionId,
@@ -225,20 +242,31 @@ export function StyleBiblePanel({
                       palette: draft,
                       fontFamily: "NotoSansSC",
                       lightingPreset: "orbit3d-fixed-soft-studio",
+                      // W2 派生：从当前选中版本派生并记录改动说明；旧项目
+                      // 引用旧版本不受影响（版本不可变，digest 随之更新）。
+                      ...(source && noteValue
+                        ? {
+                            derivedFrom: {
+                              versionId: source.versionId,
+                              note: noteValue,
+                            },
+                          }
+                        : {}),
                     },
                   ],
                 };
                 const next = await applyStyleBible(project, bible, versionId);
                 const saved = await saveStyleBible(bible, record.revision);
                 setRecord(saved);
+                setNote("");
                 onApply(
                   next,
-                  `风格版本 v${bible.versions.length} 已保存并应用；请保存项目及导出新版风格 JSON`,
+                  `风格版本 v${bible.versions.length} 已保存并应用${source && noteValue ? "（派生自已选版本）" : ""}；请保存项目及导出新版风格 JSON`,
                 );
               })
             }
           >
-            将当前颜色保存为新版本并应用
+            将当前颜色保存为（派生）新版本并应用
           </button>
           <button
             type="button"

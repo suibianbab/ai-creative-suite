@@ -91,7 +91,27 @@ function createGeometry(THREE, shape) {
 
 // 构建场景图：固定光照、固定参照轴、可配主体。
 // 相机取景与 P3-B 快验一致（正交相机、16:9 视野、zoom 缩放）。
-export function createRig({ THREE, params, background }) {
+// @1 保持历史行为（固定 ±4×±2.25 视锥）——旧 spec 的渲染逐字节不变。
+export const orbit3dV1 = {
+  componentId,
+  version: 1,
+  validateParams,
+  createRig: createRigV1,
+};
+
+// @2（T1 竖版取景修复）：水平视轴恒 8×zoom，垂直 = 8×zoom×(height/width)。
+// 横版 1280×720 时公式值与 @1 逐值相同（水平输出不变）；竖版 720×1280 时
+// 垂直视轴 8×(1280/720) ≈ 14.22——方形像素，主体比例与横版一致（旧 @1
+// 把 16:9 视锥直接映射 9:16 画布导致 ~3.16× 纵向拉伸）。宽高缺省时回落
+// 16:9 基线。参数表与 @1 完全相同（可编辑 rig 不变）。
+export const orbit3dV2 = {
+  componentId,
+  version: 2,
+  validateParams,
+  createRig: createRigV2,
+};
+
+function createRigV1({ THREE, params, background }) {
   if (!THREE || typeof THREE.Scene !== "function") {
     throw new Error("orbit3d.createRig 需要传入 three 命名空间（THREE）");
   }
@@ -139,6 +159,27 @@ export function createRig({ THREE, params, background }) {
   scene.add(mesh);
 
   return { scene, camera, mesh, params: normalized };
+}
+
+// @2 装配：场景图与 @1 共用 buildScene，只有相机视锥按画幅计算。
+function createRigV2({ THREE, params, background, width, height }) {
+  const rig = createRigV1({ THREE, params, background });
+  const { zoom } = rig.params;
+  const aspect =
+    Number.isInteger(width) &&
+    Number.isInteger(height) &&
+    width > 0 &&
+    height > 0
+      ? height / width
+      : 720 / 1280; // 缺省 = 横版基线（与 @1 逐值一致）
+  const horizontal = 4 * zoom; // 半宽；水平视轴恒 8×zoom
+  const vertical = horizontal * aspect;
+  rig.camera.left = -horizontal;
+  rig.camera.right = horizontal;
+  rig.camera.top = vertical;
+  rig.camera.bottom = -vertical;
+  rig.camera.updateProjectionMatrix();
+  return rig;
 }
 
 // 逐帧姿态：旋转角只由帧号与参数决定，不读时钟、不用 fps/时长。

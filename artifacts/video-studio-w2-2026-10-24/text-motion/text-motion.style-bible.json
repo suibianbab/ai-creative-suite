@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "86a2d02e-61a6-4069-987a-fe2859ac4529",
+  "currentVersionId": "9f52d104-8162-4c55-9459-48e127decd0a",
+  "versions": [
+    {
+      "versionId": "9f52d104-8162-4c55-9459-48e127decd0a",
+      "createdAt": "2026-10-24T10:57:13.053Z",
+      "name": "对照 · 深蓝文字",
+      "palette": {
+        "background": "#101f34",
+        "foreground": "#f3f5f7",
+        "secondary": "#b4d8e4",
+        "accent": "#f5b652",
+        "object": "#42a5a0"
+      },
+      "fontFamily": "NotoSansSC",
+      "lightingPreset": "orbit3d-fixed-soft-studio"
+    }
+  ]
+}

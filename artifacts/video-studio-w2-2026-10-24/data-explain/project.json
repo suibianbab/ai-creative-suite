@@ -1,0 +1,188 @@
+{
+  "schemaVersion": 1,
+  "id": "7d0ac4fe-8e3f-42cc-9d2c-dea471fe6545",
+  "title": "W2 对照 · data-explain",
+  "brief": {
+    "sentence": "W2 内部对照",
+    "aspectTargets": [
+      "landscape",
+      "portrait"
+    ],
+    "applications": [
+      {
+        "sentence": "镜头配方 recipe-data-bar：数据对比结论：柱状图讲清一组数字",
+        "appendedShotCount": 1,
+        "appendedDurationMs": 2800,
+        "filmShotCountAfter": 1,
+        "filmTotalMsAfter": 2800,
+        "appliedAt": "2026-10-24T10:57:40.349Z"
+      }
+    ]
+  },
+  "shots": [
+    {
+      "shotId": "138bbe18-2465-4608-86a7-9346b290e3de",
+      "order": 0,
+      "locked": false,
+      "workingVersionId": "2a3a4a5f-146f-48f1-9cd9-07e45af62c96",
+      "contentVersions": [
+        {
+          "versionId": "8e85964a-da08-4f99-96bb-43481839c2b0",
+          "createdAt": "2026-10-24T10:57:40.349Z",
+          "durationMs": 2800,
+          "description": "配方镜头：数据对比结论：柱状图讲清一组数字",
+          "narrationText": "用一组数字，讲清对比结论。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "bar-chart",
+              "componentVersion": 1,
+              "durationMs": 2800,
+              "seed": 4602,
+              "background": "#ffffff",
+              "params": {
+                "title": "月度对比",
+                "bars": [
+                  {
+                    "label": "一月",
+                    "value": 3
+                  },
+                  {
+                    "label": "二月",
+                    "value": 6
+                  },
+                  {
+                    "label": "三月",
+                    "value": 9
+                  }
+                ],
+                "barColor": "#2f6f4f",
+                "accentColor": "#d9822b",
+                "textColor": "#1b2c29",
+                "enterMs": 1400
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "shot-recipe",
+            "engineVersion": "1"
+          }
+        },
+        {
+          "versionId": "2a3a4a5f-146f-48f1-9cd9-07e45af62c96",
+          "createdAt": "2026-10-24T10:57:40.349Z",
+          "durationMs": 2800,
+          "description": "配方镜头：数据对比结论：柱状图讲清一组数字（人工修订）",
+          "narrationText": "用一组数字，讲清对比结论。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "bar-chart",
+              "componentVersion": 1,
+              "durationMs": 2800,
+              "seed": 4602,
+              "background": "#122137",
+              "params": {
+                "title": "月度对比",
+                "bars": [
+                  {
+                    "label": "一月",
+                    "value": 3
+                  },
+                  {
+                    "label": "二月",
+                    "value": 6
+                  },
+                  {
+                    "label": "三月",
+                    "value": 9
+                  }
+                ],
+                "barColor": "#4a9fdb",
+                "accentColor": "#ffbc60",
+                "textColor": "#f5f7fa",
+                "enterMs": 1400
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "human-edit",
+            "engineVersion": "1",
+            "parentVersionId": "8e85964a-da08-4f99-96bb-43481839c2b0"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "8e85964a-da08-4f99-96bb-43481839c2b0",
+          "at": "2026-10-24T10:57:40.349Z",
+          "actor": "human"
+        },
+        {
+          "kind": "submitted",
+          "versionId": "2a3a4a5f-146f-48f1-9cd9-07e45af62c96",
+          "at": "2026-10-24T10:57:40.349Z",
+          "actor": "human"
+        }
+      ]
+    }
+  ],
+  "renderRecords": [
+    {
+      "renderId": "d1ae8c69-b3fe-41c5-a542-fdfca09f3c08",
+      "versionId": "2a3a4a5f-146f-48f1-9cd9-07e45af62c96",
+      "contentDigest": "5e5dbe49ae7961b8699d9cd23a6ac70aaa9efce08eda958791484c32cfee66e9",
+      "engineId": "remotion",
+      "engineVersion": "8",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 67,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "0ec0b3fd-590b-4c59-8431-824f6a6102c7",
+        "versionId": "debb0cca-5fa3-4a08-aef5-921c928dea6d",
+        "digest": "11ca5763762697b142df88b52af4db18b852e85158a94b23fabbfbaeaaf42aee"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "ece2b2d2-3c01-4ddc-abe6-bb766b8e8953",
+      "versionId": "2a3a4a5f-146f-48f1-9cd9-07e45af62c96",
+      "contentDigest": "5e5dbe49ae7961b8699d9cd23a6ac70aaa9efce08eda958791484c32cfee66e9",
+      "engineId": "remotion",
+      "engineVersion": "8",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 67,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "0ec0b3fd-590b-4c59-8431-824f6a6102c7",
+        "versionId": "debb0cca-5fa3-4a08-aef5-921c928dea6d",
+        "digest": "11ca5763762697b142df88b52af4db18b852e85158a94b23fabbfbaeaaf42aee"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    }
+  ],
+  "deliveries": [],
+  "savedVersion": 2,
+  "styleBibleRef": {
+    "bibleId": "0ec0b3fd-590b-4c59-8431-824f6a6102c7",
+    "versionId": "debb0cca-5fa3-4a08-aef5-921c928dea6d",
+    "digest": "11ca5763762697b142df88b52af4db18b852e85158a94b23fabbfbaeaaf42aee"
+  }
+}
