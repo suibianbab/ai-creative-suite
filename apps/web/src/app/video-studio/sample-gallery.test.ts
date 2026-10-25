@@ -160,13 +160,13 @@ test("家装方案样片：五镜头、挂独立暖木 bible、流程与线描�
   const { project, bible } = await createGallerySample("renovation");
   assert(bible);
   validateVideoProject(project);
-  assert.equal(project.shots.length, 5);
+  assert.equal(project.shots.length, 7);
   assert.equal(
     project.shots.reduce(
       (ms, shot) => ms + shot.contentVersions[0]!.durationMs,
       0,
     ),
-    16_000,
+    24_000,
   );
   assert(
     project.shots.every((shot) =>
@@ -186,9 +186,19 @@ test("家装方案样片：五镜头、挂独立暖木 bible、流程与线描�
         kinds.push(
           (scene.params as { diagram: { kind: string } }).diagram.kind,
         );
+      else if (
+        scene.componentId === "compare-split" ||
+        scene.componentId === "timeline-milestones"
+      )
+        kinds.push(scene.componentId);
     }
   }
-  assert.deepEqual(kinds, ["flow", "drawing"]);
+  assert.deepEqual(kinds, [
+    "compare-split",
+    "flow",
+    "timeline-milestones",
+    "drawing",
+  ]);
 });
 
 test("设备操作样片：五镜头、挂独立蓝灰 bible、含维护参数数字镜头", async () => {
@@ -273,8 +283,18 @@ test("新样片切换深浅 Style Bible 后仍可校验且标题正文对比达�
       );
       validateVideoProject(restyled);
       assert.deepEqual(workingStyleIssues(restyled, version), []);
-      // The flow shot (index 1) carries title/text/box colors.
-      const shot = restyled.shots[1]!;
+      // Use the first explainer-composition shot (carries title/text/box colors).
+      // Renovation now has compare-split at index 1, flow at index 2.
+      const shot = restyled.shots.find((item) => {
+        const w = item.contentVersions.find(
+          (v) => v.versionId === item.workingVersionId,
+        );
+        return (
+          w?.sceneSource.type === "spec" &&
+          (w.sceneSource.spec as { componentId: string }).componentId ===
+            "explainer-composition"
+        );
+      })!;
       const current = shot.contentVersions.find(
         (item) => item.versionId === shot.workingVersionId,
       )!;
