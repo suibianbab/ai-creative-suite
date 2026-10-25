@@ -603,3 +603,48 @@ test("Codex 复核：伪造 v2 清单（fps/穿越/坏摘要/假总帧/缺源/�
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test("Codex r2：剥离根字段绕过（删 renderSources / 无账本切片穿越）拒绝；纯编辑清单通过", () => {
+  const artifact = path.join(
+    ROOT,
+    "artifacts/video-studio-c2-2026-10-25/edit-list.v2.json",
+  );
+  const base = JSON.parse(readFileSync(artifact, "utf8"));
+  validateEditList(base);
+  const forged = (mutate) => {
+    const copy = structuredClone(base);
+    mutate(copy);
+    return copy;
+  };
+  // r2 反例 1：删除 renderSources（sourceSpans 仍在）。
+  assert.throws(
+    () =>
+      validateEditList(
+        forged((list) => {
+          delete list.renderSources;
+        }),
+      ),
+    /renderSources/,
+    "删源账本须拒绝",
+  );
+  // r2 反例 3：删 renderSources 且 sourceSpans[0].file 穿越——须被切片
+  // 自身的受限文件名校验拦住。
+  assert.throws(
+    () =>
+      validateEditList(
+        forged((list) => {
+          delete list.renderSources;
+          list.timeline[0].sourceSpans[0].file = "../escape.mp4";
+        }),
+      ),
+    /sourceSpans|renderSources/,
+    "无账本 + 切片穿越须拒绝",
+  );
+  // 对照组：真正干净的纯编辑清单（无 spans 无 sources）通过。
+  const pure = forged((list) => {
+    delete list.renderSources;
+    delete list.slicePlan;
+    for (const entry of list.timeline) delete entry.sourceSpans;
+  });
+  assert.equal(validateEditList(pure), true, "纯编辑清单合法");
+});

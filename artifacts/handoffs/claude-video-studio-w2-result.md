@@ -2,6 +2,8 @@
 
 分支 `claude/video-studio-w2-w5`（基线 `origin/main@be77030`，含终审修复 `f8bc8a9`）。需求源：`artifacts/handoffs/claude-video-studio-continuation-2026-10-24.md` §W2；实施计划 `docs/superpowers/plans/2026-10-24-w2-frame-approval.md`。证据根目录：`artifacts/video-studio-w2-2026-10-24/`。
 
+**承诺口径（Codex r1/r2 复核后收窄）**：代表帧确认是**选用的失效提醒闸门**——已启用确认的项目，任何带着失效确认的出片请求（工作台或直连 API）都会被拦下并给出原因；**不是**「确认后才能出片」的强制边界（本地开发无鉴权，调用方可删字段回到未启用语义）。工作台正常路径（先保存后出片）不受影响。
+
 **终审修复（新上下文评审 10 项全修）**：确认帧渲染前过 validateSceneSpec 且 background 经 escapeSvg（导入项目的 XSS 面）；random 源改为 seededRandom(spec.seed) 与预览/出片同源；schema 规定 approvals 必须伴随 styleBibleRef（杜绝「确认失效却无面板可救」死局）；frames/derivedFrom 空元素给字段错误；e2e 补派生前导出的 CLI 真实重渲、digest 双不等断言、显式镜头配对；面板帧绑定生成时身份（过期画面不可确认）。修后全套：189/163/306、typecheck、Biome、e2e exit 0。
 
 ## 交付内容

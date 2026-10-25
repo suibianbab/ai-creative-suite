@@ -264,6 +264,17 @@ export function validateEditList(list) {
   }
   let expectedStart = 0;
   const seenShots = new Set();
+  // 切片引用存在与否决定源账本是否必须（Codex r2 Important#3）：
+  // 纯编辑清单可两者皆无；任一 sourceSpans 存在 → renderSources 必须齐全。
+  const anySpans = list.timeline.some(
+    (entry) => entry.sourceSpans !== undefined,
+  );
+  if (
+    list.formatVersion === 2 &&
+    anySpans &&
+    (list.renderSources === undefined || list.renderSources === null)
+  )
+    throw new Error("sourceSpans 存在时 renderSources 不可缺（切片引用账本）");
   for (const [index, entry] of list.timeline.entries()) {
     const field = `timeline[${index}]`;
     if (typeof entry.shotId !== "string" || seenShots.has(entry.shotId))
@@ -282,16 +293,19 @@ export function validateEditList(list) {
           !span ||
           !list.aspects.includes(span.aspect) ||
           typeof span.file !== "string" ||
+          !SAFE_FILENAME.test(span.file) ||
           span.startFrame !== entry.startFrame ||
           span.endFrame !== entry.endFrame
         )
           throw new Error(
-            `${spanField} 须与条目帧区间一致并带画幅与文件名（sourceSpans）`,
+            `${spanField} 须与条目帧区间一致且文件名为受限相对名（无路径分隔/..）`,
           );
-        if (
-          list.renderSources?.[span.aspect] &&
-          list.renderSources[span.aspect].file !== span.file
-        )
+        const source = list.renderSources?.[span.aspect];
+        if (!source)
+          throw new Error(
+            `${spanField} 引用的 renderSources[${span.aspect}] 缺失`,
+          );
+        if (source.file !== span.file)
           throw new Error(
             `${spanField}.file 未在 renderSources[${span.aspect}] 中（renderSources）`,
           );

@@ -314,15 +314,31 @@ print("SMOKE_OK")
     );
   let blue = 0;
   let gold = 0;
-  for (let i = 0; i + 2 < rgb.length; i += 3) {
+  let goldMinY = 180;
+  let goldMaxY = -1;
+  for (let i = 0, p = 0; i + 2 < rgb.length; i += 3, p += 1) {
     const [r, g, b] = [rgb[i], rgb[i + 1], rgb[i + 2]];
+    const x = p % 320;
+    const y = Math.floor(p / 320);
     if (b > r + 20 && b > 80) blue += 1;
-    if (r > 150 && g > 110 && b < 110) gold += 1;
+    if (r > 150 && g > 110 && b < 110) {
+      gold += 1;
+      if (y < goldMinY) goldMinY = y;
+      if (y > goldMaxY) goldMaxY = y;
+    }
+    void x;
   }
   if (blue < 100) throw new Error(`冒烟帧主体蓝色像素过少：${blue}`);
-  if (gold < 1) throw new Error("冒烟帧未见参照轴金色像素");
+  // 参照轴形状断言（Codex r2 Important#2）：Y 向长轴高 2.2 单位 / 视锥高
+  // 4.5 → 320×180 帧上 ≈88px 竖向跨度。旧 Z 轴错误只留 ~2px 小点；阈值
+  // 60px 在正确轴（88）与错误点（~2）之间留 40× 区分度。
+  const goldSpan = goldMaxY - goldMinY + 1;
+  if (gold < 50 || goldSpan < 60)
+    throw new Error(
+      `冒烟帧参照轴须为竖直长条（金 ${gold}px、竖向跨度 ${goldSpan}px ≥60）——疑似轴向回归`,
+    );
   console.log(
-    `SMOKE PASS → ${smokePng}（背景 #101820 精确、蓝 ${blue}px、金 ${gold}px）`,
+    `SMOKE PASS → ${smokePng}（背景 #101820 精确、蓝 ${blue}px、金 ${gold}px 竖跨 ${goldSpan}px）`,
   );
   process.exit(0);
 }
@@ -578,17 +594,28 @@ report.threeRouteBaseline = {
   framesPerAspect: 96,
   note: "Three 基线为 96 帧（立方体段 72 + 尾随 1s spec 镜头）；Blender 轮按关键帧+运动段对照（见 mode/timeBoxRuling），取帧时刻 0.6/1.5/2.7s 与 Three spike 一致",
 };
-const perFrame =
-  (report.aspects.landscape?.keysMsPerFrame ??
-    report.aspects.landscape?.motionMsPerFrame ??
-    0) ||
-  (report.aspects.landscape?.motionMsPerFrame ?? 0);
-if (perFrame > 0)
+// 外推只用**真实渲染**的每帧成本（Codex r2 Important#4：keys 相被 SKIP
+// 时 keysMsPerFrame 只含进程启动 ~0.2s/帧，曾把 47 分钟外推成 0）。
+// 每画幅优先 motionMsPerFrame；缺失即标 unknown，绝不以 SKIP 计时冒充。
+const motionPerAspect = ["landscape", "portrait"]
+  .map((aspect) => report.aspects[aspect]?.motionMsPerFrame ?? undefined)
+  .filter((value) => Number.isFinite(value) && value > 0);
+if (motionPerAspect.length === 2) {
+  const avgPerFrame =
+    motionPerAspect.reduce((sum, value) => sum + value, 0) /
+    motionPerAspect.length;
   report.fullAnimationExtrapolated = {
     frames: FRAMES * 2,
-    estimatedMinutes: Math.round((perFrame * FRAMES * 2) / 60000),
-    note: "按实测每帧成本外推 72×2 全长（关键帧与运动段每帧成本取实测代表值）",
+    estimatedMinutes: Math.round((avgPerFrame * FRAMES * 2) / 60000),
+    basis: "每画幅实测 motionMsPerFrame 的均值（SKIP 计时不参与）",
   };
+} else {
+  report.fullAnimationExtrapolated = {
+    frames: FRAMES * 2,
+    estimatedMinutes: null,
+    note: "本轮无完整的双画幅 motion 实测计时，外推未知（不以 SKIP 关键帧启动计时冒充）",
+  };
+}
 report.rigPort = {
   camera:
     "正交 ±4×±2.25（ortho_scale 8, sensor HORIZONTAL）@ (0,0,10) 朝原点 +Y 上",

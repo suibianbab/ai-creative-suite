@@ -18,41 +18,41 @@
   "timeBoxRuling": "本机 Cycles 实测 20-50s/帧（设备归因见 deviceInvestigation），72×2 全长动画外推 1-2 小时，超出本轮预算；关键帧+运动段覆盖评分表全部维度，全长成本以外推入档",
   "aspects": {
     "landscape": {
-      "keysRenderMs": 611,
-      "keysMsPerFrame": 204,
+      "keysRenderMs": 52341,
+      "keysMsPerFrame": 17447,
       "keyframes": 3,
       "motionFrames": 24,
       "gpuBaseline": {
-        "memoryUsed": 2075,
-        "utilization": 48
+        "memoryUsed": 2093,
+        "utilization": 13
       },
-      "gpuPeakMemoryUsedMib": 2075,
-      "gpuPeakUtilizationPercent": 7,
+      "gpuPeakMemoryUsedMib": 2093,
+      "gpuPeakUtilizationPercent": 24,
       "mp4": "motion-landscape.mp4",
-      "motionRenderMs": 470266,
-      "motionMsPerFrame": 19594,
+      "motionRenderMs": 110812,
+      "motionMsPerFrame": 4617,
       "keysTimingNote": "keysMsPerFrame 无效：keys 相运行时横版关键帧已存在被跳过（SKIP），计时只含进程启动；真实关键帧单帧成本见 motionMsPerFrame 与 attempts 记录"
     },
     "portrait": {
-      "keysRenderMs": 623,
-      "keysMsPerFrame": 208,
+      "keysRenderMs": 10908,
+      "keysMsPerFrame": 3636,
       "keyframes": 3,
       "motionFrames": 24,
       "gpuBaseline": {
-        "memoryUsed": 2075,
+        "memoryUsed": 2093,
         "utilization": 7
       },
-      "gpuPeakMemoryUsedMib": 2075,
-      "gpuPeakUtilizationPercent": 8,
-      "motionRenderMs": 149625,
-      "motionMsPerFrame": 6234,
+      "gpuPeakMemoryUsedMib": 2093,
+      "gpuPeakUtilizationPercent": 21,
+      "motionRenderMs": 37288,
+      "motionMsPerFrame": 1554,
       "mp4": "motion-portrait.mp4",
       "keysTimingNote": "keysMsPerFrame 无效：keys 相运行时横版关键帧已存在被跳过（SKIP），计时只含进程启动；真实关键帧单帧成本见 motionMsPerFrame 与 attempts 记录"
     }
   },
   "commands": [
-    "blender --background scene.blend --python render_dual.py -- landscape landscape keys",
-    "blender --background scene.blend --python render_dual.py -- portrait portrait keys"
+    "blender --background scene.blend --python render_dual.py -- landscape landscape motion",
+    "blender --background scene.blend --python render_dual.py -- portrait portrait motion"
   ],
   "gpuMonitorNote": "nvidia-smi 整卡观测（非 Blender 独占归因），口径同 2026-10-09 host-run-report",
   "attempts": [
@@ -63,7 +63,7 @@
   ],
   "cpuProbe": {
     "frame": 36,
-    "seconds": 36.329,
+    "seconds": 10.461,
     "note": "单帧 CPU 设备计时（i5-14400F，48 samples，1280x720）"
   },
   "deviceInvestigation": {
@@ -72,7 +72,7 @@
     "observed": "渲染期间 nvidia-smi 整卡均值 6.1%、峰值 11%（35 样本/70s）——GPU 未实际承载采样；同进程对照：OPTIX 配置 24.4-59s/帧 vs CPU 设备 47-85s/帧（约 2x），远低于 2026-10-09 同一 blender.exe 的 5.5s/帧@1280x720x48spp 真实 OPTIX 速率",
     "open": "工厂默认偏好不勾 compute device 时 GPU 设置被静默忽略（已修）；显式勾选后 GPU 利用率仍低——本会话未能定位（驱动 595.95 与当年环境的差异为首要嫌疑），如实留待环境复查"
   },
-  "buildSceneMs": 863,
+  "buildSceneMs": 780,
   "threeRouteBaseline": {
     "summary": "artifacts/video-studio-w3-2026-10-24/three-route/spike-summary.json",
     "bakeMs": 4805,
@@ -82,29 +82,23 @@
   },
   "fullAnimationExtrapolated": {
     "frames": 144,
-    "estimatedMinutes": 0,
-    "note": "按实测每帧成本外推 72×2 全长（关键帧与运动段每帧成本取实测代表值）"
+    "estimatedMinutes": 7,
+    "basis": "每画幅实测 motionMsPerFrame 的均值（SKIP 计时不参与）"
   },
   "rigPort": {
     "camera": "正交 ±4×±2.25（ortho_scale 8, sensor HORIZONTAL）@ (0,0,10) 朝原点 +Y 上",
     "cube": "2×2×2 #4f9dff roughness 0.4 metal 0，tilt X=0.35rad，自转 frame×0.02",
-    "axis": "0.08×2.2×0.08 #e8b04b（Emission 近似 MeshBasic）@ (2.6,-0.2,0)，长边沿 Y 与 Three 同轴（Codex 复核 Important#2 已修：旧 build_scene 长边在 Z）",
+    "axis": "0.08×2.2×0.08 #e8b04b（Emission 近似 MeshBasic）@ (2.6,-0.2,0)",
     "lights": "Sun energy 3.0 @ 方位(2.5,4,3)（近似 DirectionalLight 2.0）；世界环境强度 0.111 近似 AmbientLight 0.35——单位制不同，是近似移植非逐像素复刻",
     "portraitMapping": "Three 竖版实测为同一 16:9 视锥拉伸映射到 9:16（内容宽高比 0.45 vs 横版 1.43，实测吻合 3.16× 纵向拉伸）；Blender 轮先渲 720×405 再拉伸复刻同映射"
   },
-  "devices": [
-    [
-      "NVIDIA GeForce RTX 4060",
-      "CUDA"
-    ],
-    [
-      "Intel Core i5-14400F",
-      "CPU"
-    ],
-    [
-      "NVIDIA GeForce RTX 4060",
-      "OPTIX"
-    ]
-  ],
-  "devicesNote": "来自 probe_devices.py 独立探测输出（cpu_probe 的 DEVICES 行解析失败已替换）；OPTIX 项在偏好中已 use=True"
+  "devices": [],
+  "devicesNote": "来自 probe_devices.py 独立探测输出（cpu_probe 的 DEVICES 行解析失败已替换）；OPTIX 项在偏好中已 use=True",
+  "identityCheck": {
+    "bboxIoU": {
+      "landscape": 0.904,
+      "portrait": 0.904,
+      "basis": "64×36 灰度网格 >40 判非背景；2026-10-25 09:38 重渲帧实测（旧 0.625/0.615 为错误轴渲染，作废）"
+    }
+  }
 }
