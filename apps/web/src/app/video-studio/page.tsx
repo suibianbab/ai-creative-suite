@@ -63,7 +63,9 @@ import { shotWorkingMediaClip, shotWorkingSpec } from "./shot-specs";
 import { importStockForShot } from "./stock-apply";
 import { StyleBiblePanel } from "./style-bible-panel";
 import { threeSceneFromVersion } from "./three-templates";
+// T2 借帧窗口摘要复用预览/出片同一帧数学（不写第二套）。
 import {
+  previewTransitionWindows,
   type TransitionDraftRow,
   transitionsAfterEdit,
   transitionsDraftFromProject,
@@ -1110,59 +1112,82 @@ export default function VideoStudioPage() {
               {document.shots.length > 1 ? (
                 <div className="transitions-editor">
                   <h4>转场</h4>
-                  {transitionRows.map((row) => (
-                    <div
-                      key={row.boundary}
-                      className="transition-row"
-                      data-boundary={row.boundary}
-                    >
-                      <span className="transition-boundary">
-                        镜头 {row.boundary + 1} → {row.boundary + 2}
-                      </span>
-                      <select
-                        className="transition-kind"
-                        value={row.kind}
-                        onChange={(event) => {
-                          const kind =
-                            event.target.value === "fade" ? "fade" : "none";
-                          applyTransitionRows(
-                            transitionRows.map((candidate) =>
-                              candidate.boundary === row.boundary
-                                ? { ...candidate, kind }
-                                : candidate,
-                            ),
-                          );
-                        }}
+                  {transitionRows.map((row) => {
+                    // T2 借帧窗口摘要：与预览/出片同 helper（previewTransitionWindows
+                    // → resolveTransitionWindows），不写第二套帧数学。fade 行显示
+                    // halfOut/halfIn 与全局窗口帧段；装配失败行沿用 error 提示。
+                    let borrowSummary: string | null = null;
+                    if (row.kind === "fade" && pieceTimeline) {
+                      const preview = previewTransitionWindows(
+                        document.transitions,
+                        pieceTimeline.shots,
+                        24,
+                      );
+                      const window = preview.windows.find(
+                        (candidate) => candidate.boundary === row.boundary,
+                      );
+                      if (window)
+                        borrowSummary = `借帧 左尾 ${window.halfOut} + 右头 ${window.halfIn}＝${window.frames} 帧（全局第 ${window.startFrame + 1}–${window.startFrame + window.frames} 帧叠黑；${row.durationMs}ms）`;
+                    }
+                    return (
+                      <div
+                        key={row.boundary}
+                        className="transition-row"
+                        data-boundary={row.boundary}
                       >
-                        <option value="none">无</option>
-                        <option value="fade">淡入淡出</option>
-                      </select>
-                      <label className="transition-duration-label">
-                        时长
-                        <input
-                          className="transition-duration"
-                          type="number"
-                          min={100}
-                          max={2000}
-                          step={100}
-                          value={row.durationMs}
+                        <span className="transition-boundary">
+                          镜头 {row.boundary + 1} → {row.boundary + 2}
+                        </span>
+                        <select
+                          className="transition-kind"
+                          value={row.kind}
                           onChange={(event) => {
+                            const kind =
+                              event.target.value === "fade" ? "fade" : "none";
                             applyTransitionRows(
                               transitionRows.map((candidate) =>
                                 candidate.boundary === row.boundary
-                                  ? {
-                                      ...candidate,
-                                      durationMs: Number(event.target.value),
-                                    }
+                                  ? { ...candidate, kind }
                                   : candidate,
                               ),
                             );
                           }}
-                        />
-                        ms
-                      </label>
-                    </div>
-                  ))}
+                        >
+                          <option value="none">无</option>
+                          <option value="fade">淡入淡出</option>
+                        </select>
+                        <label className="transition-duration-label">
+                          时长
+                          <input
+                            className="transition-duration"
+                            type="number"
+                            min={100}
+                            max={2000}
+                            step={100}
+                            value={row.durationMs}
+                            onChange={(event) => {
+                              applyTransitionRows(
+                                transitionRows.map((candidate) =>
+                                  candidate.boundary === row.boundary
+                                    ? {
+                                        ...candidate,
+                                        durationMs: Number(event.target.value),
+                                      }
+                                    : candidate,
+                                ),
+                              );
+                            }}
+                          />
+                          ms
+                        </label>
+                        {borrowSummary ? (
+                          <p className="transition-borrow-summary">
+                            {borrowSummary}
+                          </p>
+                        ) : null}
+                      </div>
+                    );
+                  })}
                   {transitionError ? (
                     <p className="transition-error">{transitionError}</p>
                   ) : null}

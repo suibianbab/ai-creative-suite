@@ -78,6 +78,19 @@
       ]
     },
     {
+      "id": "VID-057",
+      "tier": "browser-video",
+      "title": "Workbench transition editing with borrow-frame summary and export reconciliation",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/e2e-transitions-editor.mjs"],
+      "requiresPorts": [3210],
+      "checks": [
+        "Import the retained STEM transition project (bible first), add a second fade at another boundary with the borrow-frame summary visible, adjust duration, delete one, save and reopen with kinds persisted",
+        "Real dual-aspect silent render of the multi-transition version extracts pre/mid/post frames per window",
+        "v2 edit-list transitions match render-manifest windows field-by-field (boundary/startFrame/frames/halfOut/halfIn)"
+      ]
+    },
+    {
       "id": "VID-050",
       "tier": "browser-video",
       "title": "Shot recipe catalog apply-edit-save-reopen and dual-aspect render",
