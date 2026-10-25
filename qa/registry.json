@@ -1800,6 +1800,19 @@
         "RenderRecord 含 three 七字段，validateVideoProject 重校验通过、mediaAssets 长度不变",
         "artifacts/tts-usage.jsonl 行数仍为 34；运行后系统临时目录无本次运行新增的 acs-three-* 残留"
       ]
+    },
+    {
+      "id": "VID-062",
+      "tier": "browser-video",
+      "title": "Editable compare-split and timeline-milestones full browser chain",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/e2e-b2-editable-layouts.mjs"],
+      "requiresPorts": [3210],
+      "checks": [
+        "Create both layout shots from recipes, edit non-title fields (compare values/delta direction/text, milestone date/label/status), save and reload with data persisted",
+        "Rollback compare-split to recipe version restores original values",
+        "Dual-aspect MP4 export succeeds with keyframes extracted for visual review"
+      ]
     }
   ],
   "manual": [
