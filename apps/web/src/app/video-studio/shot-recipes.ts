@@ -247,6 +247,128 @@ export const SHOT_RECIPES: readonly ShotRecipe[] = [
       return { error: "商品画面配方经「添加到项目」按所选素材编译" };
     },
   },
+  {
+    id: "recipe-compare-split",
+    version: 1,
+    purpose: "前后对比：左旧右新分栏，差值徽章直观展示改善/恶化",
+    topics: ["对比", "数据"],
+    aspects: ["landscape", "portrait"],
+    durationMs: { min: 2400, defaultMs: 3200, max: 5000 },
+    componentId: "compare-split",
+    placeholders: {
+      title: { label: "对比标题", example: "上线前后响应速度" },
+      beforeValue: { label: "前值", example: "8.2 秒" },
+      afterValue: { label: "后值", example: "1.4 秒" },
+    },
+    requiresAsset: false,
+    license: "仓库自有程序化布局，无第三方素材",
+    previewFrame: 60,
+    verified: true,
+    build(inputs) {
+      const durationMs = Math.min(
+        this.durationMs.max,
+        Math.max(
+          this.durationMs.min,
+          inputs.durationMs ?? this.durationMs.defaultMs,
+        ),
+      );
+      const title = inputs.title?.trim() || "前后对比";
+      const beforeValue = inputs.subtitle?.trim() || "旧数据";
+      const afterValue = inputs.labels?.[0]?.trim() || "新数据";
+      return {
+        spec: baseSpec(
+          "compare-split",
+          durationMs,
+          {
+            title,
+            metricLabel: "关键指标",
+            beforeLabel: "改造前",
+            beforeValue,
+            beforeNote: "原始基线",
+            afterLabel: "改造后",
+            afterValue,
+            afterNote: "优化结果",
+            deltaText: `${beforeValue} → ${afterValue}`,
+            deltaPositive: true,
+            textColor: "#1b2c29",
+            panelColor: "#e8f0eb",
+            accentColor: "#d9822b",
+            positiveColor: "#2f6f4f",
+            negativeColor: "#b3261e",
+            enterMs: 1200,
+          },
+          4701,
+        ),
+      };
+    },
+  },
+  {
+    id: "recipe-timeline-milestones",
+    version: 1,
+    purpose: "里程碑时间轴：节点式展示项目/计划的各阶段与完成状态",
+    topics: ["规划", "通用"],
+    aspects: ["landscape", "portrait"],
+    durationMs: { min: 2400, defaultMs: 3600, max: 6000 },
+    componentId: "timeline-milestones",
+    placeholders: {
+      title: { label: "时间轴标题", example: "产品路线图" },
+      labels: {
+        label: "节点标签（逗号分隔，2–6 个）",
+        example: "调研, 设计, 开发, 上线",
+      },
+    },
+    requiresAsset: false,
+    license: "仓库自有程序化布局，无第三方素材",
+    previewFrame: 60,
+    verified: true,
+    build(inputs) {
+      const durationMs = Math.min(
+        this.durationMs.max,
+        Math.max(
+          this.durationMs.min,
+          inputs.durationMs ?? this.durationMs.defaultMs,
+        ),
+      );
+      const labels = inputs.labels?.map((l) => l.trim()).filter(Boolean) ?? [
+        "调研",
+        "设计",
+        "开发",
+        "上线",
+      ];
+      if (labels.length < 2 || labels.length > 6)
+        return { error: "里程碑数量须为 2..6 个" };
+      const title = inputs.title?.trim() || "里程碑";
+      const statuses: Array<"done" | "active" | "pending"> = labels.map(
+        (_, i) =>
+          i < labels.length - 2
+            ? "done"
+            : i === labels.length - 2
+              ? "active"
+              : "pending",
+      );
+      return {
+        spec: baseSpec(
+          "timeline-milestones",
+          durationMs,
+          {
+            title,
+            milestones: labels.map((label, i) => ({
+              date: `Q${i + 1}`,
+              label,
+              status: statuses[i],
+            })),
+            textColor: "#1b2c29",
+            lineColor: "#c8d4cd",
+            doneColor: "#2f6f4f",
+            activeColor: "#d9822b",
+            pendingColor: "#9aa8a0",
+            enterMs: 1400,
+          },
+          4702,
+        ),
+      };
+    },
+  },
 ];
 
 const DEFAULT_NARRATION: Record<string, string> = {

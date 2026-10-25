@@ -104,6 +104,19 @@
       ]
     },
     {
+      "id": "VID-059",
+      "tier": "integration",
+      "title": "Before-after compare and milestone timeline layouts render in both aspects",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/t4-layout-demo.mjs"],
+      "requiresPorts": [],
+      "checks": [
+        "A non-STEM project using compare-split (before/after panels, delta badge) and timeline-milestones (node statuses) recipes renders dual-aspect H.264 with all four shots",
+        "Both new components validate bounded params (title lengths, milestone counts, status enum, colors)",
+        "Existing recipe catalog continues to build (web suite covers the five-recipe list)"
+      ]
+    },
+    {
       "id": "VID-050",
       "tier": "browser-video",
       "title": "Shot recipe catalog apply-edit-save-reopen and dual-aspect render",

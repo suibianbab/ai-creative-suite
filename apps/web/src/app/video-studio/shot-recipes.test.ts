@@ -59,7 +59,13 @@ const META_KEYS = [
 test("三条配方元数据完备且为双画幅已验证状态", () => {
   assert.deepEqual(
     SHOT_RECIPES.map((recipe) => recipe.id),
-    ["recipe-text-point", "recipe-data-bar", "recipe-product-clip"],
+    [
+      "recipe-text-point",
+      "recipe-data-bar",
+      "recipe-product-clip",
+      "recipe-compare-split",
+      "recipe-timeline-milestones",
+    ],
   );
   for (const recipe of SHOT_RECIPES) {
     for (const key of META_KEYS)

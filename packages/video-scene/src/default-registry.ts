@@ -1,5 +1,6 @@
 import { barChart } from "./components/bar-chart.js";
 import { basicShapes } from "./components/basic-shapes.js";
+import { compareSplit } from "./components/compare-split.js";
 import { explainerComposition } from "./components/explainer-composition.js";
 import { flowDiagram } from "./components/flow-diagram.js";
 import { flowSteps } from "./components/flow-steps.js";
@@ -13,6 +14,7 @@ import { numberCounter } from "./components/number-counter.js";
 import { sketchNote } from "./components/sketch-note.js";
 import { stickFigure } from "./components/stick-figure.js";
 import { textAnimation } from "./components/text-animation.js";
+import { timelineMilestones } from "./components/timeline-milestones.js";
 import { createRegistry, type SceneRegistry } from "./registry.js";
 
 // 平台默认注册表：文字动画 / 线描 / 基础图形，全部 version 1。
@@ -24,6 +26,8 @@ import { createRegistry, type SceneRegistry } from "./registry.js";
 // v5（P2-④ 火柴人）：追加 stick-figure，同一分支内原子落地。
 // v6（P2-⑤ 手绘）：追加 sketch-note，同一分支内原子落地。
 // v7（P2-⑥ 加载）：追加 loading-dots / loading-progress，同一分支内原子落地。
+// v9（T4 构图缺口）：追加 compare-split（前后对比）/ timeline-milestones
+// （里程碑时间轴），复用既有 SvgNode/fitFontSize/ easing 基建。
 export const defaultRegistry: SceneRegistry = createRegistry(
   [
     textAnimation,
@@ -41,6 +45,8 @@ export const defaultRegistry: SceneRegistry = createRegistry(
     loadingDots,
     loadingProgress,
     explainerComposition,
+    compareSplit,
+    timelineMilestones,
   ],
-  8,
+  9,
 );

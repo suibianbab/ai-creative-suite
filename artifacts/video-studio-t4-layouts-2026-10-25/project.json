@@ -1,0 +1,649 @@
+{
+  "schemaVersion": 1,
+  "id": "91c14cd2-1299-4afb-a7ec-02c5430dd1b0",
+  "title": "门店改造季报",
+  "brief": {
+    "sentence": "T4 布局验收",
+    "aspectTargets": [
+      "landscape",
+      "portrait"
+    ],
+    "applications": [
+      {
+        "sentence": "镜头配方 recipe-text-point：开场提问或收尾点题：一句话抓住注意力",
+        "appendedShotCount": 1,
+        "appendedDurationMs": 3000,
+        "filmShotCountAfter": 1,
+        "filmTotalMsAfter": 3000,
+        "appliedAt": "2026-10-25T03:33:19.052Z"
+      },
+      {
+        "sentence": "镜头配方 recipe-compare-split：前后对比：左旧右新分栏，差值徽章直观展示改善/恶化",
+        "appendedShotCount": 1,
+        "appendedDurationMs": 3200,
+        "filmShotCountAfter": 2,
+        "filmTotalMsAfter": 6200,
+        "appliedAt": "2026-10-25T03:33:19.053Z"
+      },
+      {
+        "sentence": "镜头配方 recipe-timeline-milestones：里程碑时间轴：节点式展示项目/计划的各阶段与完成状态",
+        "appendedShotCount": 1,
+        "appendedDurationMs": 3600,
+        "filmShotCountAfter": 3,
+        "filmTotalMsAfter": 9800,
+        "appliedAt": "2026-10-25T03:33:19.053Z"
+      },
+      {
+        "sentence": "镜头配方 recipe-text-point：开场提问或收尾点题：一句话抓住注意力",
+        "appendedShotCount": 1,
+        "appendedDurationMs": 3000,
+        "filmShotCountAfter": 4,
+        "filmTotalMsAfter": 12800,
+        "appliedAt": "2026-10-25T03:33:19.053Z"
+      }
+    ]
+  },
+  "shots": [
+    {
+      "shotId": "5c934afd-84aa-49c5-9ef2-7964fc77920e",
+      "order": 0,
+      "locked": false,
+      "workingVersionId": "527fe362-0966-4c3d-81df-d2f626be2c12",
+      "contentVersions": [
+        {
+          "versionId": "b5c4af22-2630-43e0-bb93-041996387efd",
+          "createdAt": "2026-10-25T03:33:19.052Z",
+          "durationMs": 3000,
+          "description": "配方镜头：开场提问或收尾点题：一句话抓住注意力",
+          "narrationText": "一句话开场，点出主题。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 3000,
+              "seed": 4601,
+              "background": "#ffffff",
+              "params": {
+                "title": "门店改造季报",
+                "subtitle": "两个关键变化",
+                "titleColor": "#1b2c29",
+                "subtitleColor": "#5d7469",
+                "entrance": "fade-up",
+                "enterMs": 450
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "shot-recipe",
+            "engineVersion": "1"
+          }
+        },
+        {
+          "versionId": "527fe362-0966-4c3d-81df-d2f626be2c12",
+          "createdAt": "2026-10-25T03:33:19.053Z",
+          "durationMs": 3000,
+          "description": "配方镜头：开场提问或收尾点题：一句话抓住注意力（人工修订）",
+          "narrationText": "一句话开场，点出主题。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 3000,
+              "seed": 4601,
+              "background": "#241c14",
+              "params": {
+                "title": "门店改造季报",
+                "subtitle": "两个关键变化",
+                "titleColor": "#f5efe6",
+                "subtitleColor": "#e3cfae",
+                "entrance": "fade-up",
+                "enterMs": 450
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "human-edit",
+            "engineVersion": "1",
+            "parentVersionId": "b5c4af22-2630-43e0-bb93-041996387efd"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "b5c4af22-2630-43e0-bb93-041996387efd",
+          "at": "2026-10-25T03:33:19.052Z",
+          "actor": "human"
+        },
+        {
+          "kind": "submitted",
+          "versionId": "527fe362-0966-4c3d-81df-d2f626be2c12",
+          "at": "2026-10-25T03:33:19.053Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "d98e01f3-7fbd-498c-b625-f16865f4267c",
+      "order": 1,
+      "locked": false,
+      "workingVersionId": "333e04d5-9272-483a-b41a-5f0330e8de31",
+      "contentVersions": [
+        {
+          "versionId": "dad3dbce-7879-4192-a6a8-0a1d0150f202",
+          "createdAt": "2026-10-25T03:33:19.053Z",
+          "durationMs": 3200,
+          "description": "配方镜头：前后对比：左旧右新分栏，差值徽章直观展示改善/恶化",
+          "narrationText": "前后对比：左旧右新分栏，差值徽章直观展示改善/恶化",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "compare-split",
+              "componentVersion": 1,
+              "durationMs": 3200,
+              "seed": 4701,
+              "background": "#ffffff",
+              "params": {
+                "title": "等单时长对比",
+                "metricLabel": "关键指标",
+                "beforeLabel": "改造前",
+                "beforeValue": "12 分钟",
+                "beforeNote": "原始基线",
+                "afterLabel": "改造后",
+                "afterValue": "3 分钟",
+                "afterNote": "优化结果",
+                "deltaText": "12 分钟 → 3 分钟",
+                "deltaPositive": true,
+                "textColor": "#1b2c29",
+                "panelColor": "#e8f0eb",
+                "accentColor": "#d9822b",
+                "positiveColor": "#2f6f4f",
+                "negativeColor": "#b3261e",
+                "enterMs": 1200
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "shot-recipe",
+            "engineVersion": "1"
+          }
+        },
+        {
+          "versionId": "333e04d5-9272-483a-b41a-5f0330e8de31",
+          "createdAt": "2026-10-25T03:33:19.053Z",
+          "durationMs": 3200,
+          "description": "配方镜头：前后对比：左旧右新分栏，差值徽章直观展示改善/恶化（人工修订）",
+          "narrationText": "前后对比：左旧右新分栏，差值徽章直观展示改善/恶化",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "compare-split",
+              "componentVersion": 1,
+              "durationMs": 3200,
+              "seed": 4701,
+              "background": "#241c14",
+              "params": {
+                "title": "等单时长对比",
+                "metricLabel": "关键指标",
+                "beforeLabel": "改造前",
+                "beforeValue": "12 分钟",
+                "beforeNote": "原始基线",
+                "afterLabel": "改造后",
+                "afterValue": "3 分钟",
+                "afterNote": "优化结果",
+                "deltaText": "12 分钟 → 3 分钟",
+                "deltaPositive": true,
+                "textColor": "#f5efe6",
+                "panelColor": "#e8f0eb",
+                "accentColor": "#d97a3d",
+                "positiveColor": "#2f6f4f",
+                "negativeColor": "#b3261e",
+                "enterMs": 1200
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "human-edit",
+            "engineVersion": "1",
+            "parentVersionId": "dad3dbce-7879-4192-a6a8-0a1d0150f202"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "dad3dbce-7879-4192-a6a8-0a1d0150f202",
+          "at": "2026-10-25T03:33:19.053Z",
+          "actor": "human"
+        },
+        {
+          "kind": "submitted",
+          "versionId": "333e04d5-9272-483a-b41a-5f0330e8de31",
+          "at": "2026-10-25T03:33:19.053Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "3f7b0f4d-dd8f-400a-8b3a-eba265c00965",
+      "order": 2,
+      "locked": false,
+      "workingVersionId": "f167f023-bfbe-47db-b2d4-5034d1bd1bd2",
+      "contentVersions": [
+        {
+          "versionId": "d605ff40-620b-49bf-b62e-c8b14d3dcd43",
+          "createdAt": "2026-10-25T03:33:19.053Z",
+          "durationMs": 3600,
+          "description": "配方镜头：里程碑时间轴：节点式展示项目/计划的各阶段与完成状态",
+          "narrationText": "里程碑时间轴：节点式展示项目/计划的各阶段与完成状态",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "timeline-milestones",
+              "componentVersion": 1,
+              "durationMs": 3600,
+              "seed": 4702,
+              "background": "#ffffff",
+              "params": {
+                "title": "改造里程碑",
+                "milestones": [
+                  {
+                    "date": "Q1",
+                    "label": "签约",
+                    "status": "done"
+                  },
+                  {
+                    "date": "Q2",
+                    "label": "拆除",
+                    "status": "done"
+                  },
+                  {
+                    "date": "Q3",
+                    "label": "重装",
+                    "status": "done"
+                  },
+                  {
+                    "date": "Q4",
+                    "label": "验收",
+                    "status": "active"
+                  },
+                  {
+                    "date": "Q5",
+                    "label": "开业",
+                    "status": "pending"
+                  }
+                ],
+                "textColor": "#1b2c29",
+                "lineColor": "#c8d4cd",
+                "doneColor": "#2f6f4f",
+                "activeColor": "#d9822b",
+                "pendingColor": "#9aa8a0",
+                "enterMs": 1400
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "shot-recipe",
+            "engineVersion": "1"
+          }
+        },
+        {
+          "versionId": "f167f023-bfbe-47db-b2d4-5034d1bd1bd2",
+          "createdAt": "2026-10-25T03:33:19.053Z",
+          "durationMs": 3600,
+          "description": "配方镜头：里程碑时间轴：节点式展示项目/计划的各阶段与完成状态（人工修订）",
+          "narrationText": "里程碑时间轴：节点式展示项目/计划的各阶段与完成状态",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "timeline-milestones",
+              "componentVersion": 1,
+              "durationMs": 3600,
+              "seed": 4702,
+              "background": "#241c14",
+              "params": {
+                "title": "改造里程碑",
+                "milestones": [
+                  {
+                    "date": "Q1",
+                    "label": "签约",
+                    "status": "done"
+                  },
+                  {
+                    "date": "Q2",
+                    "label": "拆除",
+                    "status": "done"
+                  },
+                  {
+                    "date": "Q3",
+                    "label": "重装",
+                    "status": "done"
+                  },
+                  {
+                    "date": "Q4",
+                    "label": "验收",
+                    "status": "active"
+                  },
+                  {
+                    "date": "Q5",
+                    "label": "开业",
+                    "status": "pending"
+                  }
+                ],
+                "textColor": "#f5efe6",
+                "lineColor": "#7d8b5a",
+                "doneColor": "#2f6f4f",
+                "activeColor": "#d9822b",
+                "pendingColor": "#9aa8a0",
+                "enterMs": 1400
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "human-edit",
+            "engineVersion": "1",
+            "parentVersionId": "d605ff40-620b-49bf-b62e-c8b14d3dcd43"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "d605ff40-620b-49bf-b62e-c8b14d3dcd43",
+          "at": "2026-10-25T03:33:19.053Z",
+          "actor": "human"
+        },
+        {
+          "kind": "submitted",
+          "versionId": "f167f023-bfbe-47db-b2d4-5034d1bd1bd2",
+          "at": "2026-10-25T03:33:19.053Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "3f08be9a-d310-44d6-8ae3-ebdebcde395d",
+      "order": 3,
+      "locked": false,
+      "workingVersionId": "42b2bf06-6247-45b4-b531-c0ccc2c539cc",
+      "contentVersions": [
+        {
+          "versionId": "9084c4b8-df64-40d2-bd4d-db3a2f65a26c",
+          "createdAt": "2026-10-25T03:33:19.053Z",
+          "durationMs": 3000,
+          "description": "配方镜头：开场提问或收尾点题：一句话抓住注意力",
+          "narrationText": "一句话开场，点出主题。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 3000,
+              "seed": 4601,
+              "background": "#ffffff",
+              "params": {
+                "title": "下季目标",
+                "subtitle": "翻台率再提 20%",
+                "titleColor": "#1b2c29",
+                "subtitleColor": "#5d7469",
+                "entrance": "fade-up",
+                "enterMs": 450
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "shot-recipe",
+            "engineVersion": "1"
+          }
+        },
+        {
+          "versionId": "42b2bf06-6247-45b4-b531-c0ccc2c539cc",
+          "createdAt": "2026-10-25T03:33:19.053Z",
+          "durationMs": 3000,
+          "description": "配方镜头：开场提问或收尾点题：一句话抓住注意力（人工修订）",
+          "narrationText": "一句话开场，点出主题。",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 3000,
+              "seed": 4601,
+              "background": "#241c14",
+              "params": {
+                "title": "下季目标",
+                "subtitle": "翻台率再提 20%",
+                "titleColor": "#f5efe6",
+                "subtitleColor": "#e3cfae",
+                "entrance": "fade-up",
+                "enterMs": 450
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "human-edit",
+            "engineVersion": "1",
+            "parentVersionId": "9084c4b8-df64-40d2-bd4d-db3a2f65a26c"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "9084c4b8-df64-40d2-bd4d-db3a2f65a26c",
+          "at": "2026-10-25T03:33:19.053Z",
+          "actor": "human"
+        },
+        {
+          "kind": "submitted",
+          "versionId": "42b2bf06-6247-45b4-b531-c0ccc2c539cc",
+          "at": "2026-10-25T03:33:19.053Z",
+          "actor": "human"
+        }
+      ]
+    }
+  ],
+  "renderRecords": [
+    {
+      "renderId": "2a178e16-d8a1-4cf8-912e-08fc8c000819",
+      "versionId": "527fe362-0966-4c3d-81df-d2f626be2c12",
+      "contentDigest": "c9b92740bb7268cfd0fe1bbd331e4fa39bac9eb1eda23ccdc673afe9819eaca7",
+      "engineId": "remotion",
+      "engineVersion": "9",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "fe03d1e5-6ec2-4f17-813c-d0393cececc6",
+        "versionId": "e4e3b2d9-aa8b-4546-8cca-cd1a2f79e367",
+        "digest": "b48b292e0f805b481deeff19bdb3a881fc65fa7887e698505e41a7ab5535fc48"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "cefa0012-4814-44d9-8c9b-4e77047e3bef",
+      "versionId": "333e04d5-9272-483a-b41a-5f0330e8de31",
+      "contentDigest": "29146a2d8676cf9745a9d6bd2fa8aff3c9c2f7f08b3b8d7d955cf7c21c55caae",
+      "engineId": "remotion",
+      "engineVersion": "9",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 77,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "fe03d1e5-6ec2-4f17-813c-d0393cececc6",
+        "versionId": "e4e3b2d9-aa8b-4546-8cca-cd1a2f79e367",
+        "digest": "b48b292e0f805b481deeff19bdb3a881fc65fa7887e698505e41a7ab5535fc48"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "2d6f9d82-1581-45e6-ba64-59736b3d7ab0",
+      "versionId": "f167f023-bfbe-47db-b2d4-5034d1bd1bd2",
+      "contentDigest": "1b9bca057627299345bea1db1bc53e833a6f38b0f36dad07658ff43ef2463648",
+      "engineId": "remotion",
+      "engineVersion": "9",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 86,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "fe03d1e5-6ec2-4f17-813c-d0393cececc6",
+        "versionId": "e4e3b2d9-aa8b-4546-8cca-cd1a2f79e367",
+        "digest": "b48b292e0f805b481deeff19bdb3a881fc65fa7887e698505e41a7ab5535fc48"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "1255deb1-fc87-4fd8-a518-1928d300ddcf",
+      "versionId": "42b2bf06-6247-45b4-b531-c0ccc2c539cc",
+      "contentDigest": "ccfcfb43b88c3f8bbab7bd7027be9b255dafe7846a170d08ea89a70c69b454d9",
+      "engineId": "remotion",
+      "engineVersion": "9",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "fe03d1e5-6ec2-4f17-813c-d0393cececc6",
+        "versionId": "e4e3b2d9-aa8b-4546-8cca-cd1a2f79e367",
+        "digest": "b48b292e0f805b481deeff19bdb3a881fc65fa7887e698505e41a7ab5535fc48"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "ffa47a17-3aeb-4af7-8e52-9266b205b366",
+      "versionId": "527fe362-0966-4c3d-81df-d2f626be2c12",
+      "contentDigest": "c9b92740bb7268cfd0fe1bbd331e4fa39bac9eb1eda23ccdc673afe9819eaca7",
+      "engineId": "remotion",
+      "engineVersion": "9",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "fe03d1e5-6ec2-4f17-813c-d0393cececc6",
+        "versionId": "e4e3b2d9-aa8b-4546-8cca-cd1a2f79e367",
+        "digest": "b48b292e0f805b481deeff19bdb3a881fc65fa7887e698505e41a7ab5535fc48"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    },
+    {
+      "renderId": "6061ce8c-2dd2-418e-8f6b-694882b5bebc",
+      "versionId": "333e04d5-9272-483a-b41a-5f0330e8de31",
+      "contentDigest": "29146a2d8676cf9745a9d6bd2fa8aff3c9c2f7f08b3b8d7d955cf7c21c55caae",
+      "engineId": "remotion",
+      "engineVersion": "9",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 77,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "fe03d1e5-6ec2-4f17-813c-d0393cececc6",
+        "versionId": "e4e3b2d9-aa8b-4546-8cca-cd1a2f79e367",
+        "digest": "b48b292e0f805b481deeff19bdb3a881fc65fa7887e698505e41a7ab5535fc48"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    },
+    {
+      "renderId": "4274c87c-6097-4627-8303-d324fe116d56",
+      "versionId": "f167f023-bfbe-47db-b2d4-5034d1bd1bd2",
+      "contentDigest": "1b9bca057627299345bea1db1bc53e833a6f38b0f36dad07658ff43ef2463648",
+      "engineId": "remotion",
+      "engineVersion": "9",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 86,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "fe03d1e5-6ec2-4f17-813c-d0393cececc6",
+        "versionId": "e4e3b2d9-aa8b-4546-8cca-cd1a2f79e367",
+        "digest": "b48b292e0f805b481deeff19bdb3a881fc65fa7887e698505e41a7ab5535fc48"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    },
+    {
+      "renderId": "74ec14e2-9967-46ba-a176-2b9ff4503861",
+      "versionId": "42b2bf06-6247-45b4-b531-c0ccc2c539cc",
+      "contentDigest": "ccfcfb43b88c3f8bbab7bd7027be9b255dafe7846a170d08ea89a70c69b454d9",
+      "engineId": "remotion",
+      "engineVersion": "9",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "styleBibleRef": {
+        "bibleId": "fe03d1e5-6ec2-4f17-813c-d0393cececc6",
+        "versionId": "e4e3b2d9-aa8b-4546-8cca-cd1a2f79e367",
+        "digest": "b48b292e0f805b481deeff19bdb3a881fc65fa7887e698505e41a7ab5535fc48"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    }
+  ],
+  "deliveries": [],
+  "savedVersion": 2,
+  "styleBibleRef": {
+    "bibleId": "fe03d1e5-6ec2-4f17-813c-d0393cececc6",
+    "versionId": "e4e3b2d9-aa8b-4546-8cca-cd1a2f79e367",
+    "digest": "b48b292e0f805b481deeff19bdb3a881fc65fa7887e698505e41a7ab5535fc48"
+  }
+}

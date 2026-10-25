@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "fe03d1e5-6ec2-4f17-813c-d0393cececc6",
+  "currentVersionId": "e4e3b2d9-aa8b-4546-8cca-cd1a2f79e367",
+  "versions": [
+    {
+      "versionId": "e4e3b2d9-aa8b-4546-8cca-cd1a2f79e367",
+      "createdAt": "2026-10-25T03:33:19.051Z",
+      "name": "暖木改造",
+      "palette": {
+        "background": "#241c14",
+        "foreground": "#f5efe6",
+        "secondary": "#e3cfae",
+        "accent": "#d97a3d",
+        "object": "#7d8b5a"
+      },
+      "fontFamily": "NotoSansSC",
+      "lightingPreset": "orbit3d-fixed-soft-studio"
+    }
+  ]
+}
