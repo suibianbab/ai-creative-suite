@@ -117,6 +117,19 @@
       ]
     },
     {
+      "id": "VID-060",
+      "tier": "browser-video",
+      "title": "Full experience chain: create, edit recipes, transition, preview, export MP4, export interactive",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/e2e-t5-experience.mjs"],
+      "requiresPorts": [3210],
+      "checks": [
+        "Create project, apply text + compare-split + timeline-milestones recipes plus a 3D template shot, add a fade transition with borrow summary, toggle both aspect previews, save and reopen with all four shots persisted",
+        "Real workbench MP4 export produces two download links with render records written back; exported project JSON retains transitions",
+        "CLI interactive page export from the same project produces a self-contained page under 8 MiB with manifest referencing the three component"
+      ]
+    },
+    {
       "id": "VID-050",
       "tier": "browser-video",
       "title": "Shot recipe catalog apply-edit-save-reopen and dual-aspect render",

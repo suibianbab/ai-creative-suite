@@ -60,6 +60,18 @@ function RecipeInputsForm({
       if (parsedValues.length > 0) inputs.values = parsedValues;
     } else if (recipe.componentId === "media-clip") {
       if (assetId) inputs.assetId = assetId;
+    } else if (recipe.componentId === "compare-split") {
+      if (title.trim()) inputs.title = title.trim();
+      if (subtitle.trim()) inputs.subtitle = subtitle.trim();
+      const first = labels.split(/[,，]/)[0]?.trim();
+      if (first) inputs.labels = [first];
+    } else if (recipe.componentId === "timeline-milestones") {
+      if (title.trim()) inputs.title = title.trim();
+      const parsedLabels = labels
+        .split(/[,，]/)
+        .map((item) => item.trim())
+        .filter(Boolean);
+      if (parsedLabels.length > 0) inputs.labels = parsedLabels;
     }
     const failure = onApply(recipe.id, inputs);
     setError(failure);
@@ -118,6 +130,63 @@ function RecipeInputsForm({
               value={values}
               placeholder={recipe.placeholders.values?.example}
               onChange={(event) => setValues(event.target.value)}
+            />
+          </label>
+        </>
+      ) : null}
+      {recipe.componentId === "compare-split" ? (
+        <>
+          <label className="recipe-field">
+            对比标题
+            <input
+              className="recipe-title-input"
+              value={title}
+              maxLength={30}
+              placeholder={recipe.placeholders.title?.example}
+              onChange={(event) => setTitle(event.target.value)}
+            />
+          </label>
+          <label className="recipe-field">
+            前值（改造前）
+            <input
+              className="recipe-subtitle-input"
+              value={subtitle}
+              maxLength={12}
+              placeholder={recipe.placeholders.beforeValue?.example}
+              onChange={(event) => setSubtitle(event.target.value)}
+            />
+          </label>
+          <label className="recipe-field">
+            后值（改造后）
+            <input
+              className="recipe-labels-input"
+              value={labels}
+              maxLength={12}
+              placeholder={recipe.placeholders.afterValue?.example}
+              onChange={(event) => setLabels(event.target.value)}
+            />
+          </label>
+        </>
+      ) : null}
+      {recipe.componentId === "timeline-milestones" ? (
+        <>
+          <label className="recipe-field">
+            时间轴标题
+            <input
+              className="recipe-title-input"
+              value={title}
+              maxLength={30}
+              placeholder={recipe.placeholders.title?.example}
+              onChange={(event) => setTitle(event.target.value)}
+            />
+          </label>
+          <label className="recipe-field">
+            节点标签（逗号分隔，2–6 个）
+            <input
+              className="recipe-labels-input"
+              value={labels}
+              placeholder={recipe.placeholders.labels?.example}
+              onChange={(event) => setLabels(event.target.value)}
             />
           </label>
         </>
