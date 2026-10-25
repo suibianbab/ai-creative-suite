@@ -15,7 +15,7 @@
   },
   "frames": 72,
   "mode": "keyframes(14/36/65) + motion-segment(24..47) per aspect",
-  "timeBoxRuling": "本机 Cycles 实测 20-50s/帧（设备归因见 deviceInvestigation），72×2 全长动画外推 1-2 小时，超出本轮预算；关键帧+运动段覆盖评分表全部维度，全长成本以外推入档",
+  "timeBoxRuling": "仅渲染每画幅 3 张关键帧与 24 帧运动段；72×2 全长仍未渲染。全长成本只按本轮双画幅 motion 实测帧时外推，设备归因另见 deviceInvestigation。",
   "aspects": {
     "landscape": {
       "keysRenderMs": 52341,
@@ -31,7 +31,7 @@
       "mp4": "motion-landscape.mp4",
       "motionRenderMs": 110812,
       "motionMsPerFrame": 4617,
-      "keysTimingNote": "keysMsPerFrame 无效：keys 相运行时横版关键帧已存在被跳过（SKIP），计时只含进程启动；真实关键帧单帧成本见 motionMsPerFrame 与 attempts 记录"
+      "keysTimingNote": "轴修复后本轮重新渲染 3 张关键帧；含进程启动开销，全长外推仅用 motion 实测"
     },
     "portrait": {
       "keysRenderMs": 10908,
@@ -47,7 +47,7 @@
       "motionRenderMs": 37288,
       "motionMsPerFrame": 1554,
       "mp4": "motion-portrait.mp4",
-      "keysTimingNote": "keysMsPerFrame 无效：keys 相运行时横版关键帧已存在被跳过（SKIP），计时只含进程启动；真实关键帧单帧成本见 motionMsPerFrame 与 attempts 记录"
+      "keysTimingNote": "轴修复后本轮重新渲染 3 张关键帧；含进程启动开销，全长外推仅用 motion 实测"
     }
   },
   "commands": [
@@ -59,6 +59,10 @@
     {
       "note": "首轮未显式勾选 OPTIX compute device（工厂默认偏好为空），scene.cycles.device=GPU 会静默回退 CPU：实测约 40-45s/帧、GPU 占用 8%（nvidia-smi）、blender 进程 CPU 时间快速累积。修正：build_scene.py 显式启用 OPTIX 设备后重跑。",
       "outcome": "已中止首轮（无产物入库），CPU 回退速率作为环境实测记录"
+    },
+    {
+      "note": "轴向修复前的历史轮：运动段横版 470.266s/24 帧、竖版 149.625s/24 帧，CPU 探针 36.329s，nvidia-smi 整卡峰值约 12-13%；产物因轴向错误作废。数值仅供帧时波动对照，不作当前设备归因。",
+      "outcome": "已由轴修复后的关键帧、运动段和并排图替代"
     }
   ],
   "cpuProbe": {
@@ -69,8 +73,8 @@
   "deviceInvestigation": {
     "configured": "OPTIX（prefs.compute_device_type=OPTIX，RTX 4060 OPTIX 项 use=True，scene.cycles.device=GPU，probe 输出留痕）",
     "nvidia": "RTX 4060 / driver 595.95 / CUDA 13.2",
-    "observed": "渲染期间 nvidia-smi 整卡均值 6.1%、峰值 11%（35 样本/70s）——GPU 未实际承载采样；同进程对照：OPTIX 配置 24.4-59s/帧 vs CPU 设备 47-85s/帧（约 2x），远低于 2026-10-09 同一 blender.exe 的 5.5s/帧@1280x720x48spp 真实 OPTIX 速率",
-    "open": "工厂默认偏好不勾 compute device 时 GPU 设置被静默忽略（已修）；显式勾选后 GPU 利用率仍低——本会话未能定位（驱动 595.95 与当年环境的差异为首要嫌疑），如实留待环境复查"
+    "observed": "轴修复前帧时波动较大；本轮整卡峰值与横/竖 motion 帧时见 aspects。nvidia-smi 整卡采样不能独立判定 Blender GPU 占比。",
+    "open": "工厂默认偏好不勾 compute device 时 GPU 设置被静默忽略（已修）；当前 OPTIX 已启用，但 GPU 独占归因和帧时波动原因仍待环境复查。"
   },
   "buildSceneMs": 780,
   "threeRouteBaseline": {
@@ -92,8 +96,12 @@
     "lights": "Sun energy 3.0 @ 方位(2.5,4,3)（近似 DirectionalLight 2.0）；世界环境强度 0.111 近似 AmbientLight 0.35——单位制不同，是近似移植非逐像素复刻",
     "portraitMapping": "Three 竖版实测为同一 16:9 视锥拉伸映射到 9:16（内容宽高比 0.45 vs 横版 1.43，实测吻合 3.16× 纵向拉伸）；Blender 轮先渲 720×405 再拉伸复刻同映射"
   },
-  "devices": [],
-  "devicesNote": "来自 probe_devices.py 独立探测输出（cpu_probe 的 DEVICES 行解析失败已替换）；OPTIX 项在偏好中已 use=True",
+  "devices": [
+    ["NVIDIA GeForce RTX 4060", "CUDA"],
+    ["Intel Core i5-14400F", "CPU"],
+    ["NVIDIA GeForce RTX 4060", "OPTIX"]
+  ],
+  "devicesNote": "沿用初轮 probe_devices.py 独立探测输出；当前脚本已改为 JSON 输出以避免旧 CPU probe 的解析失败，下一次运行会刷新。OPTIX 项在偏好中已 use=True。",
   "identityCheck": {
     "bboxIoU": {
       "landscape": 0.904,

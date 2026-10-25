@@ -230,9 +230,8 @@ print("SCENE_SAVED")
 `;
 
 // —— render_dual.py：按画幅渲染对照关键帧（14/36/65）+ 中段 1s 运动序列
-//（24..47 帧）。时间盒裁决：本机 Cycles 实测 20-50s/帧（设备归因见报告
-// deviceInvestigation），72×2 全长动画外推 1-2 小时，超出本轮预算；对照
-// 时刻的关键帧 + 运动段已覆盖评分表全部维度。——
+//（24..47 帧）。时间盒只渲关键帧与运动段；72×2 全长仍为外推，
+// 不把某次设备负载下的帧时写死在协议中。——
 const renderDual = `
 import bpy, os, sys, time
 argv = sys.argv[sys.argv.index("--") + 1:]
@@ -362,7 +361,7 @@ const report = {
   frames: FRAMES,
   mode: "keyframes(14/36/65) + motion-segment(24..47) per aspect",
   timeBoxRuling:
-    "本机 Cycles 实测 20-50s/帧（设备归因见 deviceInvestigation），72×2 全长动画外推 1-2 小时，超出本轮预算；关键帧+运动段覆盖评分表全部维度，全长成本以外推入档",
+    "仅渲染每画幅 3 张关键帧与 24 帧运动段；72×2 全长仍未渲染。全长成本只按本轮双画幅 motion 实测帧时外推，设备归因另见 deviceInvestigation。",
   aspects: {},
   commands: [],
   gpuMonitorNote:
@@ -372,6 +371,10 @@ const report = {
       note: "首轮未显式勾选 OPTIX compute device（工厂默认偏好为空），scene.cycles.device=GPU 会静默回退 CPU：实测约 40-45s/帧、GPU 占用 8%（nvidia-smi）、blender 进程 CPU 时间快速累积。修正：build_scene.py 显式启用 OPTIX 设备后重跑。",
       outcome: "已中止首轮（无产物入库），CPU 回退速率作为环境实测记录",
     },
+    {
+      note: "轴向修复前的历史轮：运动段横版 470.266s/24 帧、竖版 149.625s/24 帧，CPU 探针 36.329s，nvidia-smi 整卡峰值约 12-13%；产物因轴向错误作废。数值仅供帧时波动对照，不作当前设备归因。",
+      outcome: "已由轴修复后的关键帧、运动段和并排图替代",
+    },
   ],
   cpuProbe: null,
   deviceInvestigation: {
@@ -379,8 +382,8 @@ const report = {
       "OPTIX（prefs.compute_device_type=OPTIX，RTX 4060 OPTIX 项 use=True，scene.cycles.device=GPU，probe 输出留痕）",
     nvidia: "RTX 4060 / driver 595.95 / CUDA 13.2",
     observed:
-      "渲染期间 nvidia-smi 整卡均值 6.1%、峰值 11%（35 样本/70s）——GPU 未实际承载采样；同进程对照：OPTIX 配置 24.4-59s/帧 vs CPU 设备 47-85s/帧（约 2x），远低于 2026-10-09 同一 blender.exe 的 5.5s/帧@1280x720x48spp 真实 OPTIX 速率",
-    open: "工厂默认偏好不勾 compute device 时 GPU 设置被静默忽略（已修）；显式勾选后 GPU 利用率仍低——本会话未能定位（驱动 595.95 与当年环境的差异为首要嫌疑），如实留待环境复查",
+      "轴修复前帧时波动较大；本轮整卡峰值与横/竖 motion 帧时见 aspects。nvidia-smi 整卡采样不能独立判定 Blender GPU 占比。",
+    open: "工厂默认偏好不勾 compute device 时 GPU 设置被静默忽略（已修）；当前 OPTIX 已启用，但 GPU 独占归因和帧时波动原因仍待环境复查。",
   },
 };
 
@@ -406,11 +409,12 @@ const renderPhase = async (mode) => {
     const outDir = path.join(WORK, aspect);
     const monitor = new GpuMonitor();
     const started = Date.now();
+    let renderOutput = "";
     monitor.start();
     try {
       const command = `blender --background scene.blend --python render_dual.py -- ${aspect} ${aspect} ${mode}`;
       report.commands.push(command);
-      await run(
+      renderOutput = await run(
         [
           "--background",
           path.join(WORK, "scene.blend"),
@@ -437,11 +441,22 @@ const renderPhase = async (mode) => {
       throw new Error(`${aspect} 关键帧数不符：${keys.length}`);
     if (mode !== "keys" && motion.length !== 24)
       throw new Error(`${aspect} 运动段帧数不符：${motion.length}`);
-    const framesRendered = mode === "keys" ? keys.length : motion.length;
+    const prefix = mode === "keys" ? "key" : "motion";
+    const framesRendered = [
+      ...renderOutput.matchAll(new RegExp(`FRAME_DONE ${prefix} \\d+ `, "g")),
+    ].length;
     report.aspects[aspect] = {
       ...(report.aspects[aspect] ?? {}),
-      [`${mode}RenderMs`]: elapsed,
-      [`${mode}MsPerFrame`]: Math.round(elapsed / framesRendered),
+      ...(framesRendered > 0
+        ? {
+            [`${mode}RenderMs`]: elapsed,
+            [`${mode}MsPerFrame`]: Math.round(elapsed / framesRendered),
+          }
+        : {}),
+      [`${mode}TimingNote`]:
+        framesRendered > 0
+          ? `本轮实际渲染 ${framesRendered} 帧（含启动开销）；全长外推仅用双画幅 motion 实测`
+          : "本轮全部 SKIP，未产生新的有效帧时；沿用已记录的实测值",
       keyframes: keys.length,
       motionFrames: motion.length,
       gpuBaseline: monitor.baseline,
@@ -468,8 +483,9 @@ argv = sys.argv[sys.argv.index("--") + 1:]
 scene = bpy.context.scene
 prefs = bpy.context.preferences.addons["cycles"].preferences
 prefs.get_devices()
-devices = [(d.name, d.type) for d in prefs.devices]
-print("DEVICES", devices)
+import json
+devices = [[d.name, d.type] for d in prefs.devices]
+print("DEVICES_JSON", json.dumps(devices))
 scene.cycles.device = "CPU"
 scene.frame_set(36)
 import time
@@ -489,13 +505,8 @@ print("CPU_FRAME_SECONDS", round(time.time() - t0, 3))
     ],
     { cwd: WORK },
   );
-  report.devices = JSON.parse(
-    (cpuOut.match(/DEVICES (\[\[.*?\]\])/)?.[1] ?? "[]")
-      .replace(/'/g, '"')
-      .replace(/\(/g, "[")
-      .replace(/\)/g, "]")
-      .replace(/\]\s*,\s*\[/g, "],["),
-  );
+  const devicesJson = cpuOut.match(/^DEVICES_JSON (.+)$/m)?.[1];
+  if (devicesJson) report.devices = JSON.parse(devicesJson);
   report.cpuProbe = {
     frame: 36,
     seconds: Number(cpuOut.match(/CPU_FRAME_SECONDS ([\d.]+)/)?.[1] ?? 0),

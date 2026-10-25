@@ -236,18 +236,55 @@ export function validateEditList(list) {
   if (!isInteger(list.fps) || list.fps < 1 || list.fps > 240)
     throw new Error("fps 须为 1..240 的整数");
   const totalFrames = list.timeline.at(-1).endFrame;
-  // v2 且带切片引用时，renderSources 是消费端的路径/摘要信任根：
-  // 逐画幅校验受限文件名、SHA-256、非负字节与总帧对账。
-  if (list.formatVersion === 2 && list.renderSources !== undefined) {
-    if (typeof list.renderSources !== "object" || list.renderSources === null)
+  // v2 只有两种合法状态：纯编辑清单三项皆无；可切片清单三项皆有，
+  // 且每镜、每目标画幅都必须有引用。不能靠剥离一部分字段静默丢镜头。
+  const hasRenderSources = list.renderSources !== undefined;
+  const hasSlicePlan = list.slicePlan !== undefined;
+  const hasAnySpans = list.timeline.some(
+    (entry) => entry.sourceSpans !== undefined,
+  );
+  const hasSliceBundle = hasRenderSources || hasSlicePlan || hasAnySpans;
+  if (list.formatVersion === 2 && hasSliceBundle) {
+    if (!hasRenderSources || !hasSlicePlan || !hasAnySpans)
+      throw new Error(
+        "v2 切片清单须同时包含 renderSources、slicePlan 和每镜 sourceSpans",
+      );
+    if (
+      typeof list.renderSources !== "object" ||
+      list.renderSources === null ||
+      Array.isArray(list.renderSources)
+    )
       throw new Error("renderSources 须为对象");
-    const referenced = new Set();
-    for (const entry of list.timeline)
-      for (const span of entry.sourceSpans ?? []) referenced.add(span.aspect);
-    for (const aspect of referenced) {
+    if (
+      typeof list.slicePlan !== "object" ||
+      list.slicePlan === null ||
+      Array.isArray(list.slicePlan)
+    )
+      throw new Error("slicePlan 须为对象");
+    if (
+      typeof list.slicePlan.method !== "string" ||
+      !list.slicePlan.method.trim() ||
+      typeof list.slicePlan.commandTemplate !== "string" ||
+      !list.slicePlan.commandTemplate.trim() ||
+      !list.slicePlan.params ||
+      typeof list.slicePlan.params !== "object" ||
+      Array.isArray(list.slicePlan.params)
+    )
+      throw new Error("slicePlan 须包含 method、commandTemplate 和 params");
+    if (new Set(list.aspects).size !== list.aspects.length)
+      throw new Error("aspects 不得重复");
+    if (
+      Object.keys(list.renderSources).length !== list.aspects.length ||
+      Object.keys(list.renderSources).some(
+        (aspect) => !list.aspects.includes(aspect),
+      )
+    )
+      throw new Error("renderSources 画幅集合须与 aspects 完全一致");
+    // renderSources 是消费端的路径/摘要信任根：逐目标画幅校验。
+    for (const aspect of list.aspects) {
       const source = list.renderSources[aspect];
       if (!source || typeof source !== "object")
-        throw new Error(`renderSources[${aspect}] 缺失（被 sourceSpans 引用）`);
+        throw new Error(`renderSources[${aspect}] 缺失`);
       if (typeof source.file !== "string" || !SAFE_FILENAME.test(source.file))
         throw new Error(
           `renderSources[${aspect}].file 须为受限相对文件名（无路径分隔/..）`,
@@ -264,17 +301,6 @@ export function validateEditList(list) {
   }
   let expectedStart = 0;
   const seenShots = new Set();
-  // 切片引用存在与否决定源账本是否必须（Codex r2 Important#3）：
-  // 纯编辑清单可两者皆无；任一 sourceSpans 存在 → renderSources 必须齐全。
-  const anySpans = list.timeline.some(
-    (entry) => entry.sourceSpans !== undefined,
-  );
-  if (
-    list.formatVersion === 2 &&
-    anySpans &&
-    (list.renderSources === undefined || list.renderSources === null)
-  )
-    throw new Error("sourceSpans 存在时 renderSources 不可缺（切片引用账本）");
   for (const [index, entry] of list.timeline.entries()) {
     const field = `timeline[${index}]`;
     if (typeof entry.shotId !== "string" || seenShots.has(entry.shotId))
@@ -284,9 +310,12 @@ export function validateEditList(list) {
       throw new Error(`${field}.startFrame 须无缝衔接（权威时间线）`);
     if (entry.endFrame <= entry.startFrame)
       throw new Error(`${field} 帧区间须为正`);
-    if (list.formatVersion === 2 && entry.sourceSpans !== undefined) {
+    if (list.formatVersion === 2 && hasSliceBundle) {
       if (!Array.isArray(entry.sourceSpans))
-        throw new Error(`${field}.sourceSpans 须为数组`);
+        throw new Error(`${field}.sourceSpans 须为数组（每镜不可缺）`);
+      if (entry.sourceSpans.length !== list.aspects.length)
+        throw new Error(`${field}.sourceSpans 须覆盖每个目标画幅且不可重复`);
+      const spanAspects = new Set();
       for (const [spanIndex, span] of entry.sourceSpans.entries()) {
         const spanField = `${field}.sourceSpans[${spanIndex}]`;
         if (
@@ -300,6 +329,9 @@ export function validateEditList(list) {
           throw new Error(
             `${spanField} 须与条目帧区间一致且文件名为受限相对名（无路径分隔/..）`,
           );
+        if (spanAspects.has(span.aspect))
+          throw new Error(`${spanField}.aspect 重复`);
+        spanAspects.add(span.aspect);
         const source = list.renderSources?.[span.aspect];
         if (!source)
           throw new Error(

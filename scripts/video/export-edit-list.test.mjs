@@ -487,6 +487,15 @@ test("Codex 复核：伪造 v2 清单（fps/穿越/坏摘要/假总帧/缺源/�
         totalFrames,
       },
     };
+    base.slicePlan = JSON.parse(
+      readFileSync(
+        path.join(
+          ROOT,
+          "artifacts/video-studio-c2-2026-10-25/edit-list.v2.json",
+        ),
+        "utf8",
+      ),
+    ).slicePlan;
     for (const entry of base.timeline) {
       entry.sourceSpans = [
         {
@@ -647,4 +656,78 @@ test("Codex r2：剥离根字段绕过（删 renderSources / 无账本切片穿�
     for (const entry of list.timeline) delete entry.sourceSpans;
   });
   assert.equal(validateEditList(pure), true, "纯编辑清单合法");
+});
+
+test("Codex r3：切片清单必须逐镜覆盖每个目标画幅，账本与计划不可局部剥离", () => {
+  const base = JSON.parse(
+    readFileSync(
+      path.join(ROOT, "artifacts/video-studio-c2-2026-10-25/edit-list.v2.json"),
+      "utf8",
+    ),
+  );
+  const forged = (mutate) => {
+    const copy = structuredClone(base);
+    mutate(copy);
+    return copy;
+  };
+  const cases = [
+    ["首镜缺 sourceSpans", (list) => delete list.timeline[0].sourceSpans],
+    [
+      "竖版从全部镜头及源账本中消失但 aspects 仍列竖版",
+      (list) => {
+        delete list.renderSources.portrait;
+        for (const entry of list.timeline)
+          entry.sourceSpans = entry.sourceSpans.filter(
+            (span) => span.aspect !== "portrait",
+          );
+      },
+    ],
+    [
+      "只留源账本与切片计划",
+      (list) => {
+        for (const entry of list.timeline) delete entry.sourceSpans;
+      },
+    ],
+    [
+      "只留切片计划",
+      (list) => {
+        delete list.renderSources;
+        for (const entry of list.timeline) delete entry.sourceSpans;
+      },
+    ],
+    ["缺切片计划", (list) => delete list.slicePlan],
+    [
+      "空切片计划",
+      (list) => {
+        list.slicePlan = {};
+      },
+    ],
+    [
+      "同镜重复横版",
+      (list) => {
+        list.timeline[0].sourceSpans[1] = structuredClone(
+          list.timeline[0].sourceSpans[0],
+        );
+      },
+    ],
+    [
+      "同镜空切片数组",
+      (list) => {
+        list.timeline[0].sourceSpans = [];
+      },
+    ],
+  ];
+  for (const [name, mutate] of cases)
+    assert.throws(
+      () => validateEditList(forged(mutate)),
+      /renderSources|slicePlan|sourceSpans|aspect/,
+      `${name} 须拒绝`,
+    );
+  assert.equal(validateEditList(base), true);
+  const pure = forged((list) => {
+    delete list.renderSources;
+    delete list.slicePlan;
+    for (const entry of list.timeline) delete entry.sourceSpans;
+  });
+  assert.equal(validateEditList(pure), true);
 });
