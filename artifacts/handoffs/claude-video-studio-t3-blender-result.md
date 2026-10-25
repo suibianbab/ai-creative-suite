@@ -1,56 +1,59 @@
-# Task 3 交付报告：Blender 与 Three 同对象双画幅对照（2026-10-25）
+# Task 3 交付报告：Blender 与 Three 路线对照（2026-10-25 修订）
 
-分支 `claude/video-batch-2-t34`（基线 `main@799616a`）。任务源：`claude-video-studio-next-batch-2026-10-25.md` §3。
+分支 `claude/video-batch-2-t34`（基线 `main@799616a`）。任务源：§3。本轮修订按 Codex 复核意见修正口径。
 
-## 环境与资产
+## FORM 01 可行性核查（复核 Important#1）
 
-- **Blender**：便携 5.2.2（`D:/codex/animate/.tools/blender-5.2.2-windows-x64/blender.exe`，来源与 SHA 留档 `artifacts/blender-gpu-spike-2026-10-09/REVIEW.md`）
-- **同一对象**：非品牌演示立方体——Blender `build_scene.py` 与 Three `orbit3d@1` rig 参数级对齐（正交相机 ±4×±2.25、立方体 2×2×2 #4f9dff roughness 0.4、tilt 0.35rad、自转 frame×0.02、参照轴 0.08×2.2×0.08 Y 向）
-- **来源**：C4 执行轮（已并入 main，含轴修复后的正确渲染）
+**结论：Three 封闭注册表无法表达 FORM 01，不可比。**
 
-## 双画幅对照
+- **资产位置**：`D:/codex/animate/artifacts/fictional-product-ad-2026-10-09/`——`render/form01_scene.blend`（可编辑主场景）、`portrait/draft/form01_scene.blend`（竖版独立取景）、72 帧横版 + 6s H.264/AAC、竖版独立导出、`REVIEW.md` 成本记录（Blender 5.2.2 Cycles OptiX，横版 381s 端到端）。
+- **不可比原因**：Three 封闭注册表 `orbit3d@1/@2` 的 `validateParams` 仅接受 `shape ∈ {box, sphere, torus, icosahedron}` + 标准材质（`MeshStandardMaterial`、uniform color、roughness/metalness 标量）。FORM 01 香水瓶需要：
+  1. **玻璃透明材质**（`Transmission`/`IOR`）——Three 路线不支持
+  2. **多部件装配**（瓶身 + 瓶盖 + 标签）——orbit3d 单 mesh，无装配
+  3. **曲线瓶身几何**——封闭 shape 集合无自由几何入口
+  4. **弧形影棚背景幕**——orbit3d 无背景几何
 
-| 维度 | Three 路线 | Blender 路线 | 结论 |
-|---|---|---|---|
-| 关键帧 | 0.6/1.5/2.7s 双画幅 6 帧 | 14/36/65 帧双画幅 6 帧 | 主体与参照轴几何一致（bbox IoU **0.904** 横竖同值） |
-| 运动段 | — | 24 帧双画幅 MP4 | 自转姿态逐帧与 Three 同式（`frame*0.02` 驱动表达式） |
-| 竖版 | Three 竖版经 orbit3d@2 修复后方形像素 | Blender 竖版 720×405→拉伸 720×1280（精确复刻 Three 映射） | 竖版两路线同一映射策略，可比 |
+按任务源约定"不为对照擅自扩充生产组件"，不做 Three 侧的 FORM 01 适配。
 
-## 制作成本
+## 可行的同对象对照：C4 程序化立方体（口径收窄）
+
+在两种路线**都能**表达的对象范围内，C4 演示立方体是唯一已完成的对照。数据来自已入 main 的 C4 产物（含轴修复后正确渲染）：
 
 | 指标 | Three 路线 | Blender 路线 |
 |---|---|---|
-| 烘焙（96 帧/画幅） | 4.8s（bake-three，SwiftShader） | — |
-| 出片（96 帧/画幅） | 45.3s | 外推 144 帧 ≈7 分钟（实测均值 ~4.6s/帧横 + ~1.6s/帧竖） |
-| 每帧成本 | ~0.47s | ~3.1s（均值） |
-| 编辑性 | 工作台可改参数、即时预览、配方入库 | 离线 CLI，改参数需重跑 Python |
-| 材质/光照 | 标准材质 + 双灯（演示级） | Cycles 全局光照 + 环境近似（写实级但非生产级） |
-| GPU 归因 | 纯 CPU（SwiftShader） | **未决**（OPTIX 已启用但利用率仅 12-24%，详见 `c4-report.json` deviceInvestigation） |
+| 对象 | orbit3d@1 box 2×2×2（@1 口径） | 同参数 Blender 移植 |
+| bbox IoU | — | 0.904（横竖，@1 基线） |
+| 竖版映射 | @1 拉伸 3.16× | 720×405→拉伸 720×1280（复刻 @1） |
+| 每帧成本 | ~0.47s（96 帧实测 45.3s） | ~3.1s 均值（外推，短段实测，非全长） |
+| 材质 | 标准材质+双灯（演示级） | Cycles GI（写实感优势可从 `compare-*.png` 目检确认） |
 
-## 适用范围结论
+**竖版口径修正**（复核 Important#2）：C4 的竖版对照是在 @1 拉伸语义下做的（两路线同为 3.16× 拉伸，IoU 0.904 有效）。**@2 方形像素取景（T1 修复）尚未与 Blender 做同机位对照**——若需 @2 口径的对照需单独执行，本轮不做。
 
-| 场景 | 推荐路线 | 理由 |
+**成本口径修正**（复核 #3）：Blender "约 7 分钟"为短段均值外推，非 144 帧实测；人工评分表空；结论限定为**单一程序化立方体的观察**，不能外推为 FORM 01 产品广告成本。
+
+## FORM 01 Blender 单侧记录（无 Three 对照）
+
+| 项 | 数据 | 来源 |
 |---|---|---|
-| 工作台内快速出片、参数可编辑、配方复用 | **Three** | 集成链路完整，出片 ~1 分钟内，零环境依赖 |
-| 写实光照/材质表现（如产品质感预览） | **Blender** | Cycles GI 有真实光感优势，但成本高 ~6×，且需离线 |
-| 竖版 3D | **Three（@2）** | 方形像素取景已修复；Blender 竖版需手动分辨率设置 |
-| 准确商品模型 | **Blender** | `.blend` 可载入真实模型；Three 封闭注册表仅支持程序化几何 |
-| 交互 3D 页 | **Three** | 自包含 HTML 导出链已有（T3/W4）；Blender 无交互输出 |
+| 横版渲染 | 381s 端到端（含场景搭建 + 72 帧渲染 + 端卡） | REVIEW.md |
+| 竖版 | 独立 .blend 重新取景，非裁切 | REMOTION_REVIEW.md |
+| GPU | RTX 4060 OptiX，95% 峰值利用率（整卡采样） | REVIEW.md |
+| 可编辑性 | .blend 可打开续改（模型/灯光/相机/材质） | .blend 在库 |
+| 产出 | 6s 横竖双版 H.264/AAC + 文字排版 + 合成音效 | final/ + portrait/ |
 
-**边界**：本轮结论基于单一非品牌程序化对象的对照；不含真实商品模型的准确性与成本差异。Blender GPU 加速可用性待环境复查，不宣称。
+## 适用范围结论（口径收窄）
 
-## 复跑
-
-```text
-node scripts/video/c4-blender-dual.mjs --smoke                     # 冒烟（~2s）
-node scripts/video/c4-blender-dual.mjs --phase keys                 # 关键帧（~5min）
-node scripts/video/c4-blender-dual.mjs --phase motion               # 运动段（~10min）
-node scripts/video/t1-portrait-3d-verify.mjs                         # Three 路线（含 @2 竖版）
-```
+| 场景 | 推荐 | 证据等级 |
+|---|---|---|
+| 工作台快速出片、参数可编辑 | Three | 立方体对照 + 集成链完整（已验证） |
+| 竖版 3D | Three @2 | T1 修复验证（无 Blender @2 对照） |
+| 写实产品（如香水瓶） | Blender | FORM 01 单侧完成；Three 无法表达（不可比） |
+| 交互 3D 页 | Three | 自包含 HTML 导出链已有 |
+| 成本量化对比 | — | 立方体对照有数据；FORM 01 无双侧对照，不做定量结论 |
 
 ## 四态
 
-1. **代码**：无新代码——C4 对照链已入 main（含轴修复），本报告为结果汇总与适用范围结论。
-2. **自动回归**：VID-055（C4 冒烟）、VID-056（Three 取景）在 QA 注册表覆盖。
-3. **真实出片**：Blender 双画幅 6 关键帧 + 48 运动帧 + 并排对照图（`compare-*-mid.png`）全部留存 `artifacts/video-studio-c4-2026-10-25/`。
-4. **视觉**：同机位几何一致（IoU 0.904）；Three 均匀光照 vs Cycles 渐变真实可见（`compare-landscape-mid.png`）；人工评分表**留空待人工**。
+1. **代码**：无新代码（FORM 01 .blend 与渲染在库；Three 侧不扩组件）。
+2. **自动回归**：VID-055（C4 冒烟）、VID-056（Three 取景）覆盖立方体链。
+3. **真实出片**：C4 立方体对照双画幅产物在库；FORM 01 Blender 双版在库（无 Three 对照）。
+4. **视觉**：C4 立方体几何一致（IoU 0.904）；FORM 01 写实质感仅 Blender 单侧；人工评分表**留空待人工**。
