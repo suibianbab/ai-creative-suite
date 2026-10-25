@@ -1109,6 +1109,44 @@ export function ShotEditorCard({
                           <option value="false">恶化（红）</option>
                         </select>
                       </label>
+                      <label className="shot-edit-field">
+                        入场时序
+                        <select
+                          className="compare-sequence-select"
+                          value={String(
+                            compareSplitDraft.sequence ?? "stagger",
+                          )}
+                          onChange={(e) =>
+                            setCompareSplitDraft({
+                              ...compareSplitDraft,
+                              sequence:
+                                e.target.value === "sync" ? "sync" : "stagger",
+                            })
+                          }
+                        >
+                          <option value="stagger">
+                            依次（标题→前→后→徽章）
+                          </option>
+                          <option value="sync">同步（全部一起）</option>
+                        </select>
+                      </label>
+                      <label className="shot-edit-field">
+                        入场时长（ms，200–5000）
+                        <input
+                          className="compare-enter-ms-input"
+                          type="number"
+                          min={200}
+                          max={5000}
+                          step={100}
+                          value={Number(compareSplitDraft.enterMs ?? 1200)}
+                          onChange={(e) =>
+                            setCompareSplitDraft({
+                              ...compareSplitDraft,
+                              enterMs: Number(e.target.value),
+                            })
+                          }
+                        />
+                      </label>
                     </>
                   ) : editSpec.componentId === "timeline-milestones" &&
                     timelineDraft ? (
@@ -1209,6 +1247,42 @@ export function ShotEditorCard({
                           </label>
                         </div>
                       ))}
+                      <label className="shot-edit-field">
+                        入场时序
+                        <select
+                          className="timeline-sequence-select"
+                          value={String(timelineDraft.sequence ?? "stagger")}
+                          onChange={(e) =>
+                            setTimelineDraft({
+                              ...timelineDraft,
+                              sequence:
+                                e.target.value === "sync" ? "sync" : "stagger",
+                            })
+                          }
+                        >
+                          <option value="stagger">
+                            依次（标题→轴线→逐节点）
+                          </option>
+                          <option value="sync">同步（全部一起）</option>
+                        </select>
+                      </label>
+                      <label className="shot-edit-field">
+                        入场时长（ms，200–5000）
+                        <input
+                          className="timeline-enter-ms-input"
+                          type="number"
+                          min={200}
+                          max={5000}
+                          step={100}
+                          value={Number(timelineDraft.enterMs ?? 1400)}
+                          onChange={(e) =>
+                            setTimelineDraft({
+                              ...timelineDraft,
+                              enterMs: Number(e.target.value),
+                            })
+                          }
+                        />
+                      </label>
                     </>
                   ) : templateLabels ? (
                     <span className="shot-edit-field">

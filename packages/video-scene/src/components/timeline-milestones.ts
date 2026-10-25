@@ -25,6 +25,8 @@ export type TimelineMilestonesParams = {
   activeColor: string;
   pendingColor: string;
   enterMs: number;
+  /** 入场时序预设：stagger=标题→轴线→逐节点（默认），sync=全部同时。 */
+  sequence?: "stagger" | "sync";
 };
 
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
@@ -83,6 +85,10 @@ export function validateParams(value: unknown): TimelineMilestonesParams {
       value.enterMs <= 5000
         ? value.enterMs
         : 1400,
+    sequence:
+      value.sequence === "sync" || value.sequence === "stagger"
+        ? value.sequence
+        : "stagger",
   };
 }
 
@@ -110,8 +116,13 @@ function render(spec: SceneSpecLike, ctx: FrameContext): SvgNode {
   const start = portrait ? ctx.height * 0.28 : ctx.width * 0.12;
   const end = portrait ? ctx.height * 0.82 : ctx.width * 0.9;
   const step = (end - start) / (n - 1);
+  // 时序预设（Task 2）：sync = 标题/轴线/全部节点同时入场；
+  // stagger（默认/旧口径）= 标题 0 → 轴线 300 → 节点 600+i×300。
+  const isSync = p.sequence === "sync";
   const titleAppear = easeOutCubic(clamp01(tMs / 600));
-  const axisAppear = easeOutCubic(clamp01((tMs - 300) / 800));
+  const axisAppear = isSync
+    ? titleAppear
+    : easeOutCubic(clamp01((tMs - 300) / 800));
 
   const position = (index: number) =>
     portrait
@@ -120,7 +131,9 @@ function render(spec: SceneSpecLike, ctx: FrameContext): SvgNode {
 
   const nodes: SvgNode[] = [];
   p.milestones.forEach((milestone, index) => {
-    const appear = easeOutCubic(clamp01((tMs - 600 - index * 300) / 500));
+    const appear = isSync
+      ? titleAppear
+      : easeOutCubic(clamp01((tMs - 600 - index * 300) / 500));
     const { x, y } = position(index);
     const color =
       milestone.status === "done"

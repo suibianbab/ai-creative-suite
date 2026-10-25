@@ -27,6 +27,8 @@ export type CompareSplitParams = {
   positiveColor: string;
   negativeColor: string;
   enterMs: number;
+  /** 入场时序预设：stagger=依次（默认，旧口径），sync=同步全部。 */
+  sequence?: "stagger" | "sync";
 };
 
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
@@ -82,6 +84,10 @@ export function validateParams(value: unknown): CompareSplitParams {
       value.enterMs <= 5000
         ? value.enterMs
         : 1200,
+    sequence:
+      value.sequence === "sync" || value.sequence === "stagger"
+        ? value.sequence
+        : "stagger",
   };
 }
 
@@ -121,9 +127,16 @@ function render(spec: SceneSpecLike, ctx: FrameContext): SvgNode {
   const rightY = portrait ? ctx.height * 0.58 : ctx.height * 0.32;
   const arrowX = portrait ? ctx.width * 0.5 : ctx.width * 0.5;
   const arrowY = portrait ? ctx.height * 0.55 : ctx.height * 0.53;
+  // 时序预设（Task 2）：sync = 标题/面板/箭头/徽章同时入场（统一 200ms 起）；
+  // stagger（默认/旧口径）= 标题 200 → 后卡/箭头 700 → 徽章 1400。
+  const isSync = p.sequence === "sync";
   const appear = easeOutCubic(clamp01((tMs - 200) / p.enterMs));
-  const afterAppear = easeOutCubic(clamp01((tMs - 700) / p.enterMs));
-  const deltaAppear = easeOutCubic(clamp01((tMs - 1400) / 600));
+  const afterAppear = isSync
+    ? appear
+    : easeOutCubic(clamp01((tMs - 700) / p.enterMs));
+  const deltaAppear = isSync
+    ? easeOutCubic(clamp01((tMs - 200 - p.enterMs * 0.5) / (p.enterMs * 0.5)))
+    : easeOutCubic(clamp01((tMs - 1400) / 600));
 
   const panel = (x: number, y: number, opacity: number): SvgNode => ({
     tag: "rect",
