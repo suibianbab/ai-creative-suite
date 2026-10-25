@@ -284,6 +284,106 @@ export default function VideoStudioPage() {
     }
   };
 
+  // P1-1：工作台交互页导出——取项目当前工作版本的第一个 three 镜头，
+  // 客户端组装自包含 HTML（静态预编译运行时 + spec 参数），SHA-256 入账
+  // 追加 DeliveryRecord 后保存项目。
+  const exportInteractivePage = async (state: EditorState) => {
+    const current = state.document;
+    const threeShot = current.shots.find((shot) => {
+      const working = shot.contentVersions.find(
+        (v) => v.versionId === shot.workingVersionId,
+      );
+      return working?.sceneSource.type === "three";
+    });
+    if (!threeShot) {
+      setEditor({ ...state, message: "项目中没有 3D 镜头可导出交互页" });
+      return;
+    }
+    const working = threeShot.contentVersions.find(
+      (v) => v.versionId === threeShot.workingVersionId,
+    );
+    if (working?.sceneSource.type !== "three") return;
+    const spec = working.sceneSource.spec;
+    setEditor({ ...state, busy: true, message: "正在生成交互页…" });
+    try {
+      const bundleResponse = await fetch(
+        "/samples/interactive-runtime.bundle.js",
+      );
+      if (!bundleResponse.ok)
+        throw new Error("交互运行时不可用（请联系管理员）");
+      const bundle = await bundleResponse.text();
+      const options = {
+        background: spec.background,
+        color: spec.params.color,
+        accent: spec.params.accent,
+        shape: spec.params.shape,
+        tilt: spec.params.tilt,
+        spinPerFrame: spec.params.spinPerFrame,
+        zoom: spec.params.zoom,
+      };
+      const escapeHtml = (text: unknown) =>
+        String(text)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;");
+      const safeTitle = escapeHtml(current.title);
+      const html = `<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>交互预览 · ${safeTitle}</title>
+<style>body{margin:0;background:${escapeHtml(spec.background)};color:#eef3f8;font-family:sans-serif}#stage{width:100vw;height:88vh;touch-action:none;cursor:grab}#hint{padding:12px 16px;font-size:14px;color:#9fb2c4}#state{color:${escapeHtml(spec.params.accent)};font-weight:700}.w4-status{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}</style>
+</head><body>
+<div id="stage" data-exploded="false" data-rotated="false" tabindex="0" role="group" aria-label="拖转 ${escapeHtml(spec.params.shape)} 主体，双击或回车拆解"></div>
+<p id="hint">拖拽转动；双击/回车切换 <span id="state">合拢</span>/拆解。源项目：${safeTitle}。衍生交互演示。</p>
+<script>${bundle}</script>
+<script>const app=W4App.createApp(document.getElementById("stage"),${JSON.stringify(options)});const sl=document.getElementById("state");document.getElementById("stage").addEventListener("w4:state",()=>{sl.textContent=app.state.exploded?"拆解":"合拢"});</script>
+</body></html>`;
+      const blob = new Blob([html], { type: "text/html" });
+      const digest = await crypto.subtle.digest(
+        "SHA-256",
+        await blob.arrayBuffer(),
+      );
+      const sha256 = Array.from(new Uint8Array(digest), (b) =>
+        b.toString(16).padStart(2, "0"),
+      ).join("");
+      const url = URL.createObjectURL(blob);
+      const anchor = window.document.createElement("a");
+      anchor.href = url;
+      anchor.download = `${current.id}-interactive.html`;
+      anchor.click();
+      URL.revokeObjectURL(url);
+      // DeliveryRecord 追加 + 保存（P1-1 核心）。
+      const deliveryRecord = {
+        deliveryId: crypto.randomUUID(),
+        at: new Date().toISOString(),
+        versionIds: [threeShot.workingVersionId],
+        renderIds: [],
+        frameMap: [],
+        kind: "interactive-html" as const,
+        outputRef: anchor.download,
+        digest: sha256,
+      };
+      const delivered = {
+        ...current,
+        deliveries: [...current.deliveries, deliveryRecord],
+      };
+      const saved = await saveVideoProject(delivered);
+      setEditor({
+        ...state,
+        document: saved,
+        busy: false,
+        message: `已导出交互页 ${anchor.download}（SHA-256 ${sha256.slice(0, 12)}…），交付记录已入账`,
+      });
+      void refreshProjects().catch(() => {});
+    } catch (error) {
+      setEditor({
+        ...state,
+        busy: false,
+        message: error instanceof Error ? error.message : "交互页导出失败",
+      });
+    }
+  };
+
   const exportPortableProject = async (state: EditorState) => {
     const current = state.document;
     setEditor({ ...state, busy: true, message: "正在校验并打包项目与素材…" });
@@ -1306,6 +1406,21 @@ export default function VideoStudioPage() {
           >
             导出可移植项目包（含素材）
           </button>
+          {document.shots.some((shot) => {
+            const working = shot.contentVersions.find(
+              (v) => v.versionId === shot.workingVersionId,
+            );
+            return working?.sceneSource.type === "three";
+          }) ? (
+            <button
+              type="button"
+              className="editor-export-interactive"
+              disabled={busy}
+              onClick={() => void exportInteractivePage(editor)}
+            >
+              导出交互页（3D 镜头）
+            </button>
+          ) : null}
           <p className="shot-template-note">
             浏览器单文件包上限 32 MiB；更大的媒体项目可用现有 CLI
             目录包。历史渲染记录可能包含原电脑路径，分享前请检查项目数据。

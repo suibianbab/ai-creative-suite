@@ -75,13 +75,17 @@ try {
   await page.waitForTimeout(500);
   await timelineCard.locator(".recipe-title-input").scrollIntoViewIfNeeded();
   await timelineCard.locator(".recipe-title-input").fill("上线里程碑");
-  await timelineCard.locator(".recipe-labels-input").fill("立项, 开发, 测试, 上线");
+  await timelineCard
+    .locator(".recipe-labels-input")
+    .fill("立项, 开发, 测试, 上线");
   await timelineCard.locator(".recipe-apply").click();
   await page.locator(".shot-card").nth(2).waitFor({ timeout: 20_000 });
   // 第四镜：文字配方，再转为 3D 模板镜头。
   await page.locator(".recipe-catalog").scrollIntoViewIfNeeded();
   await page.waitForTimeout(500);
-  const textCard2 = page.locator(".recipe-card").filter({ hasText: "开场提问" });
+  const textCard2 = page
+    .locator(".recipe-card")
+    .filter({ hasText: "开场提问" });
   await textCard2.scrollIntoViewIfNeeded();
   await textCard2.locator(".recipe-toggle").click();
   await page.waitForTimeout(500);
@@ -101,7 +105,9 @@ try {
   await fourthCard.locator(".shot-edit-toggle").click();
 
   // 3. 加转场：边界 1 加 fade。
-  await page.locator('.transition-row[data-boundary="1"] .transition-kind').selectOption("fade");
+  await page
+    .locator('.transition-row[data-boundary="1"] .transition-kind')
+    .selectOption("fade");
   await page
     .locator(".transition-borrow-summary")
     .first()
@@ -139,9 +145,26 @@ try {
     .first()
     .waitFor({ timeout: 300_000 });
   assert.equal(await page.locator(".editor-downloads a").count(), 2);
-  await page.screenshot({ path: path.join(out, "experience-mp4-exported.png") });
+  await page.screenshot({
+    path: path.join(out, "experience-mp4-exported.png"),
+  });
 
-  // 7. 导出项目 JSON（供 CLI 导出交互页）。
+  // 7. 导出交互页（工作台按钮，P1-1 修复——delivery record 入账）。
+  const [interactiveDownload] = await Promise.all([
+    page.waitForEvent("download"),
+    page.locator(".editor-export-interactive").click(),
+  ]);
+  const interactivePath = path.join(out, "workbench-interactive.html");
+  await interactiveDownload.saveAs(interactivePath);
+  await page
+    .getByText("交付记录已入账", { exact: false })
+    .first()
+    .waitFor({ timeout: 10_000 });
+  const interactiveHtml = readFileSync(interactivePath, "utf8");
+  assert.ok(interactiveHtml.startsWith("<!doctype html>"));
+  assert.ok(interactiveHtml.includes('id="stage"'), "交互页须含 stage 容器");
+
+  // 8. 导出项目 JSON（供 CLI 交互页导出 + 交付记录核对）。
   const [download] = await Promise.all([
     page.waitForEvent("download"),
     page.locator(".editor-export").click(),
@@ -152,8 +175,23 @@ try {
   assert.equal(exported.shots.length, 4);
   assert.equal(exported.transitions?.length, 1, "一条转场");
   assert.ok(exported.renderRecords.length >= 8, "双画幅渲染记录已回写");
+  assert.ok(
+    exported.deliveries.length >= 1,
+    "交互页导出后 deliveries 不为空（P1-1 交付入账断言）",
+  );
+  const delivery = exported.deliveries.at(-1);
+  assert.equal(delivery.kind, "interactive-html");
+  assert.equal(delivery.outputRef, `${exported.id}-interactive.html`);
+  assert.match(delivery.digest, /^[0-9a-f]{64}$/);
+  // 入账哈希与产物一致。
+  const { createHash } = await import("node:crypto");
+  assert.equal(
+    delivery.digest,
+    createHash("sha256").update(interactiveHtml).digest("hex"),
+    "delivery digest 须与下载文件 SHA-256 一致",
+  );
 
-  // 8. 导出交互页（CLI）。
+  // 9. CLI 交互页导出（与工作台版并存验证）。
   execFileSync(
     process.execPath,
     [

@@ -105,7 +105,10 @@ execFileSync(
   { cwd: root, stdio: "inherit" },
 );
 for (const aspect of ["landscape", "portrait"]) {
-  for (const [shot, at] of [[2, 2.5], [3, 6.5]]) {
+  for (const [shot, at] of [
+    [2, 2.5],
+    [3, 6.5],
+  ]) {
     execFileSync("ffmpeg", [
       "-y",
       "-loglevel",
