@@ -2764,6 +2764,25 @@ export function ShotEditorCard({
                     ? layoutDraftFromSpec(editSpec)
                     : null,
                 );
+                // Codex 复核 P2-3：取消须同步重置 compare-split /
+                // timeline-milestones 草稿到当前工作版本值，否则改后取消
+                // 再应用会写入本应放弃的编辑。
+                setCompareSplitDraft(
+                  editSpec?.componentId === "compare-split"
+                    ? structuredClone(
+                        editSpec.params as Record<string, unknown>,
+                      )
+                    : null,
+                );
+                setCompareSplitError(null);
+                setTimelineDraft(
+                  editSpec?.componentId === "timeline-milestones"
+                    ? structuredClone(
+                        editSpec.params as Record<string, unknown>,
+                      )
+                    : null,
+                );
+                setTimelineError(null);
               }}
             >
               取消

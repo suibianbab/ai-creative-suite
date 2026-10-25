@@ -42,11 +42,11 @@ execFileSync(
   ],
   { cwd: root, stdio: "inherit" },
 );
-// 逐镜关键帧（对比镜 2、时间轴镜 4）。
+// 逐镜关键帧（对比镜 2 中段、时间轴镜 4 全节点入场完成后 = 13.7s）。
 for (const aspect of ["landscape", "portrait"]) {
   for (const [shot, at] of [
     [2, 5.0],
-    [4, 11.0],
+    [4, 13.7],
   ]) {
     execFileSync("ffmpeg", [
       "-y",

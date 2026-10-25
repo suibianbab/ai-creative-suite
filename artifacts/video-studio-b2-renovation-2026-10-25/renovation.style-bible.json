@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
-  "id": "c719435a-06df-4f66-846d-1225d856e70e",
-  "currentVersionId": "a3d52c59-8477-48fd-90bb-39ebcc6df915",
+  "id": "c2760aed-58f3-44e5-97b6-f3d93b9dca3f",
+  "currentVersionId": "402fcfa0-31d8-4877-9e62-484773b166db",
   "versions": [
     {
-      "versionId": "a3d52c59-8477-48fd-90bb-39ebcc6df915",
-      "createdAt": "2026-10-25T10:26:39.737Z",
+      "versionId": "402fcfa0-31d8-4877-9e62-484773b166db",
+      "createdAt": "2026-10-25T10:54:12.801Z",
       "name": "暖木家装",
       "palette": {
         "background": "#241c14",

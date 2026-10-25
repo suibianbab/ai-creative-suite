@@ -115,9 +115,11 @@ function render(spec: SceneSpecLike, ctx: FrameContext): SvgNode {
   const leftX = portrait ? ctx.width * 0.08 : ctx.width * 0.08;
   const rightX = portrait ? ctx.width * 0.08 : ctx.width * 0.54;
   const leftY = portrait ? ctx.height * 0.28 : ctx.height * 0.32;
-  const rightY = portrait ? ctx.height * 0.62 : ctx.height * 0.32;
+  // Codex 复核 P1-2：竖版后卡上移（62%→56%），说明底约 84%，徽章从 88%
+  // 起——二者不再挤压/重叠。后卡从 56% 到 84%，面板底 84% 有余量。
+  const rightY = portrait ? ctx.height * 0.56 : ctx.height * 0.32;
   const arrowX = portrait ? ctx.width * 0.5 : ctx.width * 0.5;
-  const arrowY = portrait ? ctx.height * 0.585 : ctx.height * 0.53;
+  const arrowY = portrait ? ctx.height * 0.53 : ctx.height * 0.53;
   const appear = easeOutCubic(clamp01((tMs - 200) / p.enterMs));
   const afterAppear = easeOutCubic(clamp01((tMs - 700) / p.enterMs));
   const deltaAppear = easeOutCubic(clamp01((tMs - 1400) / 600));
@@ -218,7 +220,7 @@ function render(spec: SceneSpecLike, ctx: FrameContext): SvgNode {
   const deltaColor = p.deltaPositive ? p.positiveColor : p.negativeColor;
   const badgeW = deltaSize * (p.deltaText.length + 2);
   const badgeX = ctx.width / 2 - badgeW / 2;
-  const badgeY = portrait ? ctx.height * 0.86 : ctx.height * 0.86;
+  const badgeY = portrait ? ctx.height * 0.885 : ctx.height * 0.86;
 
   return {
     tag: "g",

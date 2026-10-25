@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "id": "e5907e32-1251-4ad6-9446-fb3478fe004b",
+  "id": "28a47277-de7e-4d14-afb4-91eb3b460082",
   "title": "两房变三房 · 家装方案",
   "brief": {
     "sentence": "样片库：两房变三房 · 家装方案。这是可编辑起点，请在发布前替换示例文案和素材。",
@@ -11,14 +11,14 @@
   },
   "shots": [
     {
-      "shotId": "1e383f15-4592-4425-9cfe-396365dfd499",
+      "shotId": "5892790a-67cf-4dd9-9d7b-985eccddf8bc",
       "order": 0,
       "locked": false,
-      "workingVersionId": "96aaaf12-8d75-445d-a814-6b7a05c6bfff",
+      "workingVersionId": "d4c7c54b-7454-49cf-a616-84ea1881d7d6",
       "contentVersions": [
         {
-          "versionId": "96aaaf12-8d75-445d-a814-6b7a05c6bfff",
-          "createdAt": "2026-10-25T10:26:39.737Z",
+          "versionId": "d4c7c54b-7454-49cf-a616-84ea1881d7d6",
+          "createdAt": "2026-10-25T10:54:12.801Z",
           "durationMs": 3000,
           "description": "开场：点出改造目标",
           "narrationText": "两房能变三房吗？",
@@ -50,24 +50,24 @@
       "events": [
         {
           "kind": "submitted",
-          "versionId": "96aaaf12-8d75-445d-a814-6b7a05c6bfff",
-          "at": "2026-10-25T10:26:39.737Z",
+          "versionId": "d4c7c54b-7454-49cf-a616-84ea1881d7d6",
+          "at": "2026-10-25T10:54:12.801Z",
           "actor": "human"
         }
       ]
     },
     {
-      "shotId": "c487abc8-54af-4af7-9dfe-2dbdd7bae0dd",
+      "shotId": "493b5bc1-7b0c-4d41-914e-5523a55073f2",
       "order": 1,
       "locked": false,
-      "workingVersionId": "e28edcb9-a0af-45e0-aa27-0f8b9b814e15",
+      "workingVersionId": "5d7da479-4af2-4484-9018-3ee48b18aec5",
       "contentVersions": [
         {
-          "versionId": "e28edcb9-a0af-45e0-aa27-0f8b9b814e15",
-          "createdAt": "2026-10-25T10:26:39.737Z",
+          "versionId": "5d7da479-4af2-4484-9018-3ee48b18aec5",
+          "createdAt": "2026-10-25T10:54:12.801Z",
           "durationMs": 4000,
-          "description": "对比：改造前后等单时长变化",
-          "narrationText": "等单时长从十二分钟降到三分钟。",
+          "description": "对比：改造前后空间感变化",
+          "narrationText": "改造前空间局促，改造后多出一间房。",
           "sceneSource": {
             "type": "spec",
             "spec": {
@@ -78,15 +78,15 @@
               "seed": 4410,
               "background": "#241c14",
               "params": {
-                "title": "等单时长对比",
-                "metricLabel": "顾客平均等单",
+                "title": "空间利用对比",
+                "metricLabel": "两房 vs 三房",
                 "beforeLabel": "改造前",
-                "beforeValue": "12 分钟",
-                "beforeNote": "旧吧台动线",
+                "beforeValue": "两房",
+                "beforeNote": "客厅局促采光差",
                 "afterLabel": "改造后",
-                "afterValue": "3 分钟",
-                "afterNote": "双窗口分流",
-                "deltaText": "12 → 3 分钟",
+                "afterValue": "三房",
+                "afterNote": "多一间多功能房",
+                "deltaText": "2 房 → 3 房",
                 "deltaPositive": true,
                 "textColor": "#f5efe6",
                 "panelColor": "#3a2c1e",
@@ -106,21 +106,21 @@
       "events": [
         {
           "kind": "submitted",
-          "versionId": "e28edcb9-a0af-45e0-aa27-0f8b9b814e15",
-          "at": "2026-10-25T10:26:39.737Z",
+          "versionId": "5d7da479-4af2-4484-9018-3ee48b18aec5",
+          "at": "2026-10-25T10:54:12.801Z",
           "actor": "human"
         }
       ]
     },
     {
-      "shotId": "0d02cc14-eae0-4ea3-bb8f-7ea9c1b93493",
+      "shotId": "8c9c5e3c-eda4-4819-9873-898c7eb89c2a",
       "order": 2,
       "locked": false,
-      "workingVersionId": "90d374b4-e50a-4c1e-9546-8ab69f84ec51",
+      "workingVersionId": "2d2e9f1a-d77f-4691-9eb5-de05f1ef32bc",
       "contentVersions": [
         {
-          "versionId": "90d374b4-e50a-4c1e-9546-8ab69f84ec51",
-          "createdAt": "2026-10-25T10:26:39.737Z",
+          "versionId": "2d2e9f1a-d77f-4691-9eb5-de05f1ef32bc",
+          "createdAt": "2026-10-25T10:54:12.801Z",
           "durationMs": 3500,
           "description": "总览：改造四步流程",
           "narrationText": "量房、设计、施工、验收，四步走完。",
@@ -183,24 +183,24 @@
       "events": [
         {
           "kind": "submitted",
-          "versionId": "90d374b4-e50a-4c1e-9546-8ab69f84ec51",
-          "at": "2026-10-25T10:26:39.737Z",
+          "versionId": "2d2e9f1a-d77f-4691-9eb5-de05f1ef32bc",
+          "at": "2026-10-25T10:54:12.801Z",
           "actor": "human"
         }
       ]
     },
     {
-      "shotId": "3e256733-83d1-437a-9a72-e5cb54340f91",
+      "shotId": "075e343a-64e2-4858-aa67-93b3a324ed26",
       "order": 3,
       "locked": false,
-      "workingVersionId": "851df40d-694b-4ed0-a16d-ee95bb5b727c",
+      "workingVersionId": "3dafc116-ea29-478a-983a-34c3baf77f16",
       "contentVersions": [
         {
-          "versionId": "851df40d-694b-4ed0-a16d-ee95bb5b727c",
-          "createdAt": "2026-10-25T10:26:39.737Z",
+          "versionId": "3dafc116-ea29-478a-983a-34c3baf77f16",
+          "createdAt": "2026-10-25T10:54:12.801Z",
           "durationMs": 4000,
-          "description": "里程碑：实施计划与完成状态",
-          "narrationText": "签约到开业，四个季度稳步推进。",
+          "description": "里程碑：施工阶段与完成状态",
+          "narrationText": "从签约设计到入住验收，四阶段推进。",
           "sceneSource": {
             "type": "spec",
             "spec": {
@@ -214,23 +214,23 @@
                 "title": "改造里程碑",
                 "milestones": [
                   {
-                    "date": "Q1",
+                    "date": "3 月",
                     "label": "签约",
                     "status": "done"
                   },
                   {
-                    "date": "Q2",
-                    "label": "拆除",
+                    "date": "4 月",
+                    "label": "拆改",
                     "status": "done"
                   },
                   {
-                    "date": "Q3",
-                    "label": "重装",
+                    "date": "6 月",
+                    "label": "硬装",
                     "status": "active"
                   },
                   {
-                    "date": "Q4",
-                    "label": "开业",
+                    "date": "8 月",
+                    "label": "入住",
                     "status": "pending"
                   }
                 ],
@@ -252,21 +252,21 @@
       "events": [
         {
           "kind": "submitted",
-          "versionId": "851df40d-694b-4ed0-a16d-ee95bb5b727c",
-          "at": "2026-10-25T10:26:39.737Z",
+          "versionId": "3dafc116-ea29-478a-983a-34c3baf77f16",
+          "at": "2026-10-25T10:54:12.801Z",
           "actor": "human"
         }
       ]
     },
     {
-      "shotId": "ba5edb3f-401a-4e17-8f62-cf195adef641",
+      "shotId": "81aa3c88-2b44-4e4e-a6d2-aafbf336379c",
       "order": 4,
       "locked": false,
-      "workingVersionId": "18710328-ee94-49ba-b4c3-715b5c0f7fef",
+      "workingVersionId": "16ccf863-829b-4049-b817-2732d68f45dd",
       "contentVersions": [
         {
-          "versionId": "18710328-ee94-49ba-b4c3-715b5c0f7fef",
-          "createdAt": "2026-10-25T10:26:39.737Z",
+          "versionId": "16ccf863-829b-4049-b817-2732d68f45dd",
+          "createdAt": "2026-10-25T10:54:12.801Z",
           "durationMs": 3500,
           "description": "户型：示意墙体调整",
           "narrationText": "非承重墙移除，空间重新划分。",
@@ -319,21 +319,21 @@
       "events": [
         {
           "kind": "submitted",
-          "versionId": "18710328-ee94-49ba-b4c3-715b5c0f7fef",
-          "at": "2026-10-25T10:26:39.737Z",
+          "versionId": "16ccf863-829b-4049-b817-2732d68f45dd",
+          "at": "2026-10-25T10:54:12.801Z",
           "actor": "human"
         }
       ]
     },
     {
-      "shotId": "6e347732-7cfb-41da-adf7-f77526cdf8c3",
+      "shotId": "90fea20a-cffc-4953-adff-ee326f694ba9",
       "order": 5,
       "locked": false,
-      "workingVersionId": "b8b701bd-e757-4863-b177-ae30377a6949",
+      "workingVersionId": "396facac-c9a5-47d1-b27a-39805013fddc",
       "contentVersions": [
         {
-          "versionId": "b8b701bd-e757-4863-b177-ae30377a6949",
-          "createdAt": "2026-10-25T10:26:39.737Z",
+          "versionId": "396facac-c9a5-47d1-b27a-39805013fddc",
+          "createdAt": "2026-10-25T10:54:12.801Z",
           "durationMs": 3000,
           "description": "提醒：两条关键原则",
           "narrationText": "承重墙不能动，水电走顶更好修。",
@@ -375,21 +375,21 @@
       "events": [
         {
           "kind": "submitted",
-          "versionId": "b8b701bd-e757-4863-b177-ae30377a6949",
-          "at": "2026-10-25T10:26:39.737Z",
+          "versionId": "396facac-c9a5-47d1-b27a-39805013fddc",
+          "at": "2026-10-25T10:54:12.801Z",
           "actor": "human"
         }
       ]
     },
     {
-      "shotId": "7f9a330e-6a9e-40c3-80b6-74d927fa3f8e",
+      "shotId": "f6ca24e7-3238-4892-8a05-de8cd074a1b7",
       "order": 6,
       "locked": false,
-      "workingVersionId": "60705a6d-c735-4f57-83b5-08010325d9dc",
+      "workingVersionId": "fb8ac7e8-5cdb-4e09-b40b-d4ce2b72f054",
       "contentVersions": [
         {
-          "versionId": "60705a6d-c735-4f57-83b5-08010325d9dc",
-          "createdAt": "2026-10-25T10:26:39.737Z",
+          "versionId": "fb8ac7e8-5cdb-4e09-b40b-d4ce2b72f054",
+          "createdAt": "2026-10-25T10:54:12.801Z",
           "durationMs": 3000,
           "description": "收尾：邀请下一步",
           "narrationText": "从方案到入住，从一次量房开始。",
@@ -421,8 +421,8 @@
       "events": [
         {
           "kind": "submitted",
-          "versionId": "60705a6d-c735-4f57-83b5-08010325d9dc",
-          "at": "2026-10-25T10:26:39.737Z",
+          "versionId": "fb8ac7e8-5cdb-4e09-b40b-d4ce2b72f054",
+          "at": "2026-10-25T10:54:12.801Z",
           "actor": "human"
         }
       ]
@@ -430,9 +430,9 @@
   ],
   "renderRecords": [
     {
-      "renderId": "e7b2e256-3440-4c6c-9e7f-fab5375f7951",
-      "versionId": "96aaaf12-8d75-445d-a814-6b7a05c6bfff",
-      "contentDigest": "2a094406031b231c5810544106f9e06ce4959faf3abc13ebaab68a62561a3bc6",
+      "renderId": "39576906-63d9-448c-b25c-1aee560653ff",
+      "versionId": "d4c7c54b-7454-49cf-a616-84ea1881d7d6",
+      "contentDigest": "2f53523eac7105a6daa002c303dae13fb57b7642660366e66e8531a7f4508bae",
       "engineId": "remotion",
       "engineVersion": "9",
       "rendererVersion": "4.0.534",
@@ -446,16 +446,16 @@
         "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
       },
       "styleBibleRef": {
-        "bibleId": "c719435a-06df-4f66-846d-1225d856e70e",
-        "versionId": "a3d52c59-8477-48fd-90bb-39ebcc6df915",
-        "digest": "9cfae4bffaffa89aeacb753c52226142caab1690b16b1c47430ef31bcad9dc64"
+        "bibleId": "c2760aed-58f3-44e5-97b6-f3d93b9dca3f",
+        "versionId": "402fcfa0-31d8-4877-9e62-484773b166db",
+        "digest": "9ea82ce254091bfb139f1cdf57175c9b2fa30248a75abb319431a5fc33121a56"
       },
       "outputAssetRef": "render/landscape.mp4"
     },
     {
-      "renderId": "039e7291-a6ab-41a6-a88e-9fff0549f637",
-      "versionId": "e28edcb9-a0af-45e0-aa27-0f8b9b814e15",
-      "contentDigest": "d62369193a16aff18e33524ba31d6a1d574c5cf6533504fa6c0770edf369a18f",
+      "renderId": "7d83cb38-e1b8-4c6b-acce-9fc938dead21",
+      "versionId": "5d7da479-4af2-4484-9018-3ee48b18aec5",
+      "contentDigest": "3c25a181ee32440b14b5923fd8a19a42edc94cf5efc3df86bd41da7df52b3752",
       "engineId": "remotion",
       "engineVersion": "9",
       "rendererVersion": "4.0.534",
@@ -469,16 +469,16 @@
         "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
       },
       "styleBibleRef": {
-        "bibleId": "c719435a-06df-4f66-846d-1225d856e70e",
-        "versionId": "a3d52c59-8477-48fd-90bb-39ebcc6df915",
-        "digest": "9cfae4bffaffa89aeacb753c52226142caab1690b16b1c47430ef31bcad9dc64"
+        "bibleId": "c2760aed-58f3-44e5-97b6-f3d93b9dca3f",
+        "versionId": "402fcfa0-31d8-4877-9e62-484773b166db",
+        "digest": "9ea82ce254091bfb139f1cdf57175c9b2fa30248a75abb319431a5fc33121a56"
       },
       "outputAssetRef": "render/landscape.mp4"
     },
     {
-      "renderId": "8789db49-0ba1-4916-b37b-86c8ebbcbf96",
-      "versionId": "90d374b4-e50a-4c1e-9546-8ab69f84ec51",
-      "contentDigest": "f68fe0877555a53dc3cd20df741aad5bdcdc2774f5d5e79d460712a0b808b90e",
+      "renderId": "1eb158d2-0460-449c-b13e-e12d197860e7",
+      "versionId": "2d2e9f1a-d77f-4691-9eb5-de05f1ef32bc",
+      "contentDigest": "bbd061dbb41e30477ef48017f046a076a464da2d624ee9834dc38d2917dcd4f5",
       "engineId": "remotion",
       "engineVersion": "9",
       "rendererVersion": "4.0.534",
@@ -492,16 +492,16 @@
         "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
       },
       "styleBibleRef": {
-        "bibleId": "c719435a-06df-4f66-846d-1225d856e70e",
-        "versionId": "a3d52c59-8477-48fd-90bb-39ebcc6df915",
-        "digest": "9cfae4bffaffa89aeacb753c52226142caab1690b16b1c47430ef31bcad9dc64"
+        "bibleId": "c2760aed-58f3-44e5-97b6-f3d93b9dca3f",
+        "versionId": "402fcfa0-31d8-4877-9e62-484773b166db",
+        "digest": "9ea82ce254091bfb139f1cdf57175c9b2fa30248a75abb319431a5fc33121a56"
       },
       "outputAssetRef": "render/landscape.mp4"
     },
     {
-      "renderId": "9407eb2a-61cd-4b55-9db8-b7949850e3d2",
-      "versionId": "851df40d-694b-4ed0-a16d-ee95bb5b727c",
-      "contentDigest": "0e619ead2d514d28c90a93271eb84f69b3adfaf8d0c45ab37f83fcf96456f678",
+      "renderId": "710a7a04-832e-49c0-a751-5dcf9d904c7d",
+      "versionId": "3dafc116-ea29-478a-983a-34c3baf77f16",
+      "contentDigest": "e4749cda3e4c2d3a558afa89a562c04bde31c740206491119376f1460bdaaca2",
       "engineId": "remotion",
       "engineVersion": "9",
       "rendererVersion": "4.0.534",
@@ -515,16 +515,16 @@
         "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
       },
       "styleBibleRef": {
-        "bibleId": "c719435a-06df-4f66-846d-1225d856e70e",
-        "versionId": "a3d52c59-8477-48fd-90bb-39ebcc6df915",
-        "digest": "9cfae4bffaffa89aeacb753c52226142caab1690b16b1c47430ef31bcad9dc64"
+        "bibleId": "c2760aed-58f3-44e5-97b6-f3d93b9dca3f",
+        "versionId": "402fcfa0-31d8-4877-9e62-484773b166db",
+        "digest": "9ea82ce254091bfb139f1cdf57175c9b2fa30248a75abb319431a5fc33121a56"
       },
       "outputAssetRef": "render/landscape.mp4"
     },
     {
-      "renderId": "3b0a382d-d26f-4fb6-908b-3e17e27ea877",
-      "versionId": "18710328-ee94-49ba-b4c3-715b5c0f7fef",
-      "contentDigest": "7463e636de13d6bf4af9ada25d64d67e9cb30c87f449b810afac0e98cf80e217",
+      "renderId": "79a9d9ae-a3f4-4e28-bbed-d04add415cf3",
+      "versionId": "16ccf863-829b-4049-b817-2732d68f45dd",
+      "contentDigest": "94a37374a058baed10083b423084c3d8a3536f13c38b07d315acd2c1e6f0f3f3",
       "engineId": "remotion",
       "engineVersion": "9",
       "rendererVersion": "4.0.534",
@@ -538,16 +538,16 @@
         "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
       },
       "styleBibleRef": {
-        "bibleId": "c719435a-06df-4f66-846d-1225d856e70e",
-        "versionId": "a3d52c59-8477-48fd-90bb-39ebcc6df915",
-        "digest": "9cfae4bffaffa89aeacb753c52226142caab1690b16b1c47430ef31bcad9dc64"
+        "bibleId": "c2760aed-58f3-44e5-97b6-f3d93b9dca3f",
+        "versionId": "402fcfa0-31d8-4877-9e62-484773b166db",
+        "digest": "9ea82ce254091bfb139f1cdf57175c9b2fa30248a75abb319431a5fc33121a56"
       },
       "outputAssetRef": "render/landscape.mp4"
     },
     {
-      "renderId": "b281ca07-6508-4a0c-9f2b-b70ce5d688c6",
-      "versionId": "b8b701bd-e757-4863-b177-ae30377a6949",
-      "contentDigest": "68d2a84f78ee652c38f0b495eba6ac203816b6270ec054fbf45cc72a3e98b4c4",
+      "renderId": "ca63c468-71fe-467b-9680-20df570e65df",
+      "versionId": "396facac-c9a5-47d1-b27a-39805013fddc",
+      "contentDigest": "f21405997e91d9a4bbcd8ba3be4297aaa57739c5646be026bf879284e84a98e3",
       "engineId": "remotion",
       "engineVersion": "9",
       "rendererVersion": "4.0.534",
@@ -561,16 +561,16 @@
         "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
       },
       "styleBibleRef": {
-        "bibleId": "c719435a-06df-4f66-846d-1225d856e70e",
-        "versionId": "a3d52c59-8477-48fd-90bb-39ebcc6df915",
-        "digest": "9cfae4bffaffa89aeacb753c52226142caab1690b16b1c47430ef31bcad9dc64"
+        "bibleId": "c2760aed-58f3-44e5-97b6-f3d93b9dca3f",
+        "versionId": "402fcfa0-31d8-4877-9e62-484773b166db",
+        "digest": "9ea82ce254091bfb139f1cdf57175c9b2fa30248a75abb319431a5fc33121a56"
       },
       "outputAssetRef": "render/landscape.mp4"
     },
     {
-      "renderId": "caa8f621-06d7-46f6-8d22-35fa42473b17",
-      "versionId": "60705a6d-c735-4f57-83b5-08010325d9dc",
-      "contentDigest": "7406e4fd3f5d8d79d86e738731cc10a56899c75dbffb5d5118f3340c002eefec",
+      "renderId": "cca85334-50e0-4ee6-8d3a-5671dabf6b56",
+      "versionId": "fb8ac7e8-5cdb-4e09-b40b-d4ce2b72f054",
+      "contentDigest": "d843a166cda3fcfd2af62947a56e28c58bad5c4c687e14a6863e21632c1ccae6",
       "engineId": "remotion",
       "engineVersion": "9",
       "rendererVersion": "4.0.534",
@@ -584,16 +584,16 @@
         "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
       },
       "styleBibleRef": {
-        "bibleId": "c719435a-06df-4f66-846d-1225d856e70e",
-        "versionId": "a3d52c59-8477-48fd-90bb-39ebcc6df915",
-        "digest": "9cfae4bffaffa89aeacb753c52226142caab1690b16b1c47430ef31bcad9dc64"
+        "bibleId": "c2760aed-58f3-44e5-97b6-f3d93b9dca3f",
+        "versionId": "402fcfa0-31d8-4877-9e62-484773b166db",
+        "digest": "9ea82ce254091bfb139f1cdf57175c9b2fa30248a75abb319431a5fc33121a56"
       },
       "outputAssetRef": "render/landscape.mp4"
     },
     {
-      "renderId": "1635791f-ef7a-4510-88bb-6d633866b22c",
-      "versionId": "96aaaf12-8d75-445d-a814-6b7a05c6bfff",
-      "contentDigest": "2a094406031b231c5810544106f9e06ce4959faf3abc13ebaab68a62561a3bc6",
+      "renderId": "53ba4cec-7a2c-4997-b470-377bed03646e",
+      "versionId": "d4c7c54b-7454-49cf-a616-84ea1881d7d6",
+      "contentDigest": "2f53523eac7105a6daa002c303dae13fb57b7642660366e66e8531a7f4508bae",
       "engineId": "remotion",
       "engineVersion": "9",
       "rendererVersion": "4.0.534",
@@ -607,16 +607,16 @@
         "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
       },
       "styleBibleRef": {
-        "bibleId": "c719435a-06df-4f66-846d-1225d856e70e",
-        "versionId": "a3d52c59-8477-48fd-90bb-39ebcc6df915",
-        "digest": "9cfae4bffaffa89aeacb753c52226142caab1690b16b1c47430ef31bcad9dc64"
+        "bibleId": "c2760aed-58f3-44e5-97b6-f3d93b9dca3f",
+        "versionId": "402fcfa0-31d8-4877-9e62-484773b166db",
+        "digest": "9ea82ce254091bfb139f1cdf57175c9b2fa30248a75abb319431a5fc33121a56"
       },
       "outputAssetRef": "render/portrait.mp4"
     },
     {
-      "renderId": "8146a0db-383e-41b5-863a-bdee53de7aca",
-      "versionId": "e28edcb9-a0af-45e0-aa27-0f8b9b814e15",
-      "contentDigest": "d62369193a16aff18e33524ba31d6a1d574c5cf6533504fa6c0770edf369a18f",
+      "renderId": "775b4914-75de-4fb3-b67d-98556a2b996e",
+      "versionId": "5d7da479-4af2-4484-9018-3ee48b18aec5",
+      "contentDigest": "3c25a181ee32440b14b5923fd8a19a42edc94cf5efc3df86bd41da7df52b3752",
       "engineId": "remotion",
       "engineVersion": "9",
       "rendererVersion": "4.0.534",
@@ -630,16 +630,16 @@
         "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
       },
       "styleBibleRef": {
-        "bibleId": "c719435a-06df-4f66-846d-1225d856e70e",
-        "versionId": "a3d52c59-8477-48fd-90bb-39ebcc6df915",
-        "digest": "9cfae4bffaffa89aeacb753c52226142caab1690b16b1c47430ef31bcad9dc64"
+        "bibleId": "c2760aed-58f3-44e5-97b6-f3d93b9dca3f",
+        "versionId": "402fcfa0-31d8-4877-9e62-484773b166db",
+        "digest": "9ea82ce254091bfb139f1cdf57175c9b2fa30248a75abb319431a5fc33121a56"
       },
       "outputAssetRef": "render/portrait.mp4"
     },
     {
-      "renderId": "608b697b-d4de-46f1-98f7-ad496ff79329",
-      "versionId": "90d374b4-e50a-4c1e-9546-8ab69f84ec51",
-      "contentDigest": "f68fe0877555a53dc3cd20df741aad5bdcdc2774f5d5e79d460712a0b808b90e",
+      "renderId": "c5e7da52-5326-487e-9e55-66b92f98151c",
+      "versionId": "2d2e9f1a-d77f-4691-9eb5-de05f1ef32bc",
+      "contentDigest": "bbd061dbb41e30477ef48017f046a076a464da2d624ee9834dc38d2917dcd4f5",
       "engineId": "remotion",
       "engineVersion": "9",
       "rendererVersion": "4.0.534",
@@ -653,16 +653,16 @@
         "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
       },
       "styleBibleRef": {
-        "bibleId": "c719435a-06df-4f66-846d-1225d856e70e",
-        "versionId": "a3d52c59-8477-48fd-90bb-39ebcc6df915",
-        "digest": "9cfae4bffaffa89aeacb753c52226142caab1690b16b1c47430ef31bcad9dc64"
+        "bibleId": "c2760aed-58f3-44e5-97b6-f3d93b9dca3f",
+        "versionId": "402fcfa0-31d8-4877-9e62-484773b166db",
+        "digest": "9ea82ce254091bfb139f1cdf57175c9b2fa30248a75abb319431a5fc33121a56"
       },
       "outputAssetRef": "render/portrait.mp4"
     },
     {
-      "renderId": "3d6cb203-fee3-421a-ac6e-8db5e76c813f",
-      "versionId": "851df40d-694b-4ed0-a16d-ee95bb5b727c",
-      "contentDigest": "0e619ead2d514d28c90a93271eb84f69b3adfaf8d0c45ab37f83fcf96456f678",
+      "renderId": "0adab99d-b62f-48bd-8cd3-ee6a6ad0afb9",
+      "versionId": "3dafc116-ea29-478a-983a-34c3baf77f16",
+      "contentDigest": "e4749cda3e4c2d3a558afa89a562c04bde31c740206491119376f1460bdaaca2",
       "engineId": "remotion",
       "engineVersion": "9",
       "rendererVersion": "4.0.534",
@@ -676,16 +676,16 @@
         "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
       },
       "styleBibleRef": {
-        "bibleId": "c719435a-06df-4f66-846d-1225d856e70e",
-        "versionId": "a3d52c59-8477-48fd-90bb-39ebcc6df915",
-        "digest": "9cfae4bffaffa89aeacb753c52226142caab1690b16b1c47430ef31bcad9dc64"
+        "bibleId": "c2760aed-58f3-44e5-97b6-f3d93b9dca3f",
+        "versionId": "402fcfa0-31d8-4877-9e62-484773b166db",
+        "digest": "9ea82ce254091bfb139f1cdf57175c9b2fa30248a75abb319431a5fc33121a56"
       },
       "outputAssetRef": "render/portrait.mp4"
     },
     {
-      "renderId": "9f9d6028-b62e-4ee4-b3a0-a18147dc9c6a",
-      "versionId": "18710328-ee94-49ba-b4c3-715b5c0f7fef",
-      "contentDigest": "7463e636de13d6bf4af9ada25d64d67e9cb30c87f449b810afac0e98cf80e217",
+      "renderId": "658208d7-996f-49ac-b837-0cb8c1bad750",
+      "versionId": "16ccf863-829b-4049-b817-2732d68f45dd",
+      "contentDigest": "94a37374a058baed10083b423084c3d8a3536f13c38b07d315acd2c1e6f0f3f3",
       "engineId": "remotion",
       "engineVersion": "9",
       "rendererVersion": "4.0.534",
@@ -699,16 +699,16 @@
         "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
       },
       "styleBibleRef": {
-        "bibleId": "c719435a-06df-4f66-846d-1225d856e70e",
-        "versionId": "a3d52c59-8477-48fd-90bb-39ebcc6df915",
-        "digest": "9cfae4bffaffa89aeacb753c52226142caab1690b16b1c47430ef31bcad9dc64"
+        "bibleId": "c2760aed-58f3-44e5-97b6-f3d93b9dca3f",
+        "versionId": "402fcfa0-31d8-4877-9e62-484773b166db",
+        "digest": "9ea82ce254091bfb139f1cdf57175c9b2fa30248a75abb319431a5fc33121a56"
       },
       "outputAssetRef": "render/portrait.mp4"
     },
     {
-      "renderId": "33ef2501-2b4f-429e-bc29-9342edf61f1f",
-      "versionId": "b8b701bd-e757-4863-b177-ae30377a6949",
-      "contentDigest": "68d2a84f78ee652c38f0b495eba6ac203816b6270ec054fbf45cc72a3e98b4c4",
+      "renderId": "be03f6ab-6473-41b3-a4b3-e98b07b68f76",
+      "versionId": "396facac-c9a5-47d1-b27a-39805013fddc",
+      "contentDigest": "f21405997e91d9a4bbcd8ba3be4297aaa57739c5646be026bf879284e84a98e3",
       "engineId": "remotion",
       "engineVersion": "9",
       "rendererVersion": "4.0.534",
@@ -722,16 +722,16 @@
         "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
       },
       "styleBibleRef": {
-        "bibleId": "c719435a-06df-4f66-846d-1225d856e70e",
-        "versionId": "a3d52c59-8477-48fd-90bb-39ebcc6df915",
-        "digest": "9cfae4bffaffa89aeacb753c52226142caab1690b16b1c47430ef31bcad9dc64"
+        "bibleId": "c2760aed-58f3-44e5-97b6-f3d93b9dca3f",
+        "versionId": "402fcfa0-31d8-4877-9e62-484773b166db",
+        "digest": "9ea82ce254091bfb139f1cdf57175c9b2fa30248a75abb319431a5fc33121a56"
       },
       "outputAssetRef": "render/portrait.mp4"
     },
     {
-      "renderId": "3632675d-5463-4de4-88f5-5435ec257055",
-      "versionId": "60705a6d-c735-4f57-83b5-08010325d9dc",
-      "contentDigest": "7406e4fd3f5d8d79d86e738731cc10a56899c75dbffb5d5118f3340c002eefec",
+      "renderId": "75970444-f086-46af-8386-c7614598a349",
+      "versionId": "fb8ac7e8-5cdb-4e09-b40b-d4ce2b72f054",
+      "contentDigest": "d843a166cda3fcfd2af62947a56e28c58bad5c4c687e14a6863e21632c1ccae6",
       "engineId": "remotion",
       "engineVersion": "9",
       "rendererVersion": "4.0.534",
@@ -745,9 +745,9 @@
         "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
       },
       "styleBibleRef": {
-        "bibleId": "c719435a-06df-4f66-846d-1225d856e70e",
-        "versionId": "a3d52c59-8477-48fd-90bb-39ebcc6df915",
-        "digest": "9cfae4bffaffa89aeacb753c52226142caab1690b16b1c47430ef31bcad9dc64"
+        "bibleId": "c2760aed-58f3-44e5-97b6-f3d93b9dca3f",
+        "versionId": "402fcfa0-31d8-4877-9e62-484773b166db",
+        "digest": "9ea82ce254091bfb139f1cdf57175c9b2fa30248a75abb319431a5fc33121a56"
       },
       "outputAssetRef": "render/portrait.mp4"
     }
@@ -755,8 +755,8 @@
   "deliveries": [],
   "savedVersion": 2,
   "styleBibleRef": {
-    "bibleId": "c719435a-06df-4f66-846d-1225d856e70e",
-    "versionId": "a3d52c59-8477-48fd-90bb-39ebcc6df915",
-    "digest": "9cfae4bffaffa89aeacb753c52226142caab1690b16b1c47430ef31bcad9dc64"
+    "bibleId": "c2760aed-58f3-44e5-97b6-f3d93b9dca3f",
+    "versionId": "402fcfa0-31d8-4877-9e62-484773b166db",
+    "digest": "9ea82ce254091bfb139f1cdf57175c9b2fa30248a75abb319431a5fc33121a56"
   }
 }
