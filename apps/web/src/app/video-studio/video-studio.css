@@ -1834,3 +1834,12 @@
   color: #587068;
   font-size: 11px;
 }
+
+/* Batch-2 Task 1：compare-split / timeline-milestones 编辑表单。 */
+.timeline-milestone-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid #e4ece6;
+}

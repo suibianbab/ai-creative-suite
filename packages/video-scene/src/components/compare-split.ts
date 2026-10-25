@@ -110,14 +110,17 @@ function render(spec: SceneSpecLike, ctx: FrameContext): SvgNode {
     ctx.width * 0.3,
   );
   const portrait = ctx.height > ctx.width;
+  // Codex 复核第二轮 P1：竖版缩短面板（28%→24%），上卡 28–52%、箭头 55%、
+  // 下卡 58–82%、徽章 88.5%——卡间留 6% 箭头独立间距，卡底说明/箭头/徽章
+  // 三者互不交叠（上说明中心 28+24×82% ≈ 47.7%，箭头上缘 53.6%＝安全间距）。
   const panelW = portrait ? ctx.width * 0.84 : ctx.width * 0.38;
-  const panelH = portrait ? ctx.height * 0.28 : ctx.height * 0.42;
+  const panelH = portrait ? ctx.height * 0.24 : ctx.height * 0.42;
   const leftX = portrait ? ctx.width * 0.08 : ctx.width * 0.08;
   const rightX = portrait ? ctx.width * 0.08 : ctx.width * 0.54;
   const leftY = portrait ? ctx.height * 0.28 : ctx.height * 0.32;
-  const rightY = portrait ? ctx.height * 0.62 : ctx.height * 0.32;
+  const rightY = portrait ? ctx.height * 0.58 : ctx.height * 0.32;
   const arrowX = portrait ? ctx.width * 0.5 : ctx.width * 0.5;
-  const arrowY = portrait ? ctx.height * 0.585 : ctx.height * 0.53;
+  const arrowY = portrait ? ctx.height * 0.55 : ctx.height * 0.53;
   const appear = easeOutCubic(clamp01((tMs - 200) / p.enterMs));
   const afterAppear = easeOutCubic(clamp01((tMs - 700) / p.enterMs));
   const deltaAppear = easeOutCubic(clamp01((tMs - 1400) / 600));
@@ -218,7 +221,7 @@ function render(spec: SceneSpecLike, ctx: FrameContext): SvgNode {
   const deltaColor = p.deltaPositive ? p.positiveColor : p.negativeColor;
   const badgeW = deltaSize * (p.deltaText.length + 2);
   const badgeX = ctx.width / 2 - badgeW / 2;
-  const badgeY = portrait ? ctx.height * 0.86 : ctx.height * 0.86;
+  const badgeY = portrait ? ctx.height * 0.885 : ctx.height * 0.86;
 
   return {
     tag: "g",

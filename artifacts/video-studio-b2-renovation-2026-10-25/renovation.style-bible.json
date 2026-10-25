@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "70419771-6eb8-4c9c-951d-70fe324805c5",
+  "currentVersionId": "d1a00f21-806c-4b1b-8015-7b580b4e095d",
+  "versions": [
+    {
+      "versionId": "d1a00f21-806c-4b1b-8015-7b580b4e095d",
+      "createdAt": "2026-10-25T11:41:19.020Z",
+      "name": "暖木家装",
+      "palette": {
+        "background": "#241c14",
+        "foreground": "#f5efe6",
+        "secondary": "#e3cfae",
+        "accent": "#d97a3d",
+        "object": "#7d8b5a"
+      },
+      "fontFamily": "NotoSansSC",
+      "lightingPreset": "orbit3d-fixed-soft-studio"
+    }
+  ]
+}

@@ -51,8 +51,9 @@ export const GALLERY_SAMPLES: ReadonlyArray<{
   {
     id: "renovation",
     title: "两房变三房 · 家装方案",
-    summary: "四步流程＋户型示意＋关键提醒的家装讲解",
-    detail: "5 镜头 · 约 16 秒 · 可改标题、流程、标注与户型线稿",
+    summary: "前后对比＋里程碑时间轴＋流程＋户型示意的完整家装讲解",
+    detail:
+      "7 镜头 · 约 24 秒 · 可改对比数值、时间轴节点、流程、标注与户型线稿",
     poster: "/samples/p4-renovation.svg",
   },
   {
@@ -436,6 +437,29 @@ function sampleShots(
         source: text("两房变三房", "一次讲清改造方案", 3000, 4401),
       },
       {
+        durationMs: 4000,
+        description: "对比：改造前后空间感变化",
+        narrationText: "改造前空间局促，改造后多出一间房。",
+        source: spec("compare-split", 4000, 4410, {
+          title: "空间利用对比",
+          metricLabel: "两房 vs 三房",
+          beforeLabel: "改造前",
+          beforeValue: "两房",
+          beforeNote: "客厅局促采光差",
+          afterLabel: "改造后",
+          afterValue: "三房",
+          afterNote: "多一间多功能房",
+          deltaText: "2 房 → 3 房",
+          deltaPositive: true,
+          textColor: "#f5efe6",
+          panelColor: "#3a2c1e",
+          accentColor: "#d97a3d",
+          positiveColor: "#8bc4a0",
+          negativeColor: "#e8837a",
+          enterMs: 1200,
+        }),
+      },
+      {
         durationMs: 3500,
         description: "总览：改造四步流程",
         narrationText: "量房、设计、施工、验收，四步走完。",
@@ -469,6 +493,26 @@ function sampleShots(
               enterMs: 2000,
             },
           ],
+        }),
+      },
+      {
+        durationMs: 4000,
+        description: "里程碑：施工阶段与完成状态",
+        narrationText: "从签约设计到入住验收，四阶段推进。",
+        source: spec("timeline-milestones", 4000, 4411, {
+          title: "改造里程碑",
+          milestones: [
+            { date: "3 月", label: "签约", status: "done" },
+            { date: "4 月", label: "拆改", status: "done" },
+            { date: "6 月", label: "硬装", status: "active" },
+            { date: "8 月", label: "入住", status: "pending" },
+          ],
+          textColor: "#f5efe6",
+          lineColor: "#5a4a3a",
+          doneColor: "#8bc4a0",
+          activeColor: "#d97a3d",
+          pendingColor: "#8a7a6a",
+          enterMs: 1400,
         }),
       },
       {
