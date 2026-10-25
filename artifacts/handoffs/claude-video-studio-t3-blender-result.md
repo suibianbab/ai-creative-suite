@@ -8,10 +8,9 @@
 
 - **资产位置**：`D:/codex/animate/artifacts/fictional-product-ad-2026-10-09/`——`render/form01_scene.blend`（可编辑主场景）、`portrait/draft/form01_scene.blend`（竖版独立取景）、72 帧横版 + 6s H.264/AAC、竖版独立导出、`REVIEW.md` 成本记录（Blender 5.2.2 Cycles OptiX，横版 381s 端到端）。
 - **不可比原因**：Three 封闭注册表 `orbit3d@1/@2` 的 `validateParams` 仅接受 `shape ∈ {box, sphere, torus, icosahedron}` + 标准材质（`MeshStandardMaterial`、uniform color、roughness/metalness 标量）。FORM 01 香水瓶需要：
-  1. **玻璃透明材质**（`Transmission`/`IOR`）——Three 路线不支持
-  2. **多部件装配**（瓶身 + 瓶盖 + 标签）——orbit3d 单 mesh，无装配
-  3. **曲线瓶身几何**——封闭 shape 集合无自由几何入口
-  4. **弧形影棚背景幕**——orbit3d 无背景几何
+  1. **倒角盒形瓶身**——`fictional_product_ad.py:129` 瓶身材质为 `opaque deep green enamel design study`（Base Color + Metallic 0.22 + Roughness 0.21，**无 Transmission/IOR**）；几何为 bevel 修正的盒体（`cube()` + `bevel()`），非透明玻璃。Three 封闭 shape 集合（box/sphere/torus/icosahedron）**无倒角/自定义几何入口**。
+  2. **多部件装配**（瓶身 + 瓶盖 + 标签）——orbit3d 单 mesh，无装配。
+  3. **展台 + 弧形背景幕**——orbit3d 无背景几何。
 
 按任务源约定"不为对照擅自扩充生产组件"，不做 Three 侧的 FORM 01 适配。
 
