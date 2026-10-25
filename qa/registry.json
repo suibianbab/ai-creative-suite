@@ -1813,6 +1813,19 @@
         "Rollback compare-split to recipe version restores original values",
         "Dual-aspect MP4 export succeeds with keyframes extracted for visual review"
       ]
+    },
+    {
+      "id": "VID-063",
+      "tier": "browser-video",
+      "title": "Renovation gallery sample full browser chain with editable layouts",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/e2e-b2-gallery-sample.mjs"],
+      "requiresPorts": [3210],
+      "checks": [
+        "Create renovation project from gallery card (7 shots), edit compare values and timeline milestone label/status, save and reload with data persisted",
+        "Real dual-aspect MP4 export from workbench (two download links)",
+        "Cancel button resets edited compare/timeline drafts to working version values"
+      ]
     }
   ],
   "manual": [

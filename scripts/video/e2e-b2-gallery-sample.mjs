@@ -37,17 +37,37 @@ try {
   await page.waitForSelector("html[data-studio-ready]", { timeout: 30_000 });
 
   // 从样片库一键创建家装项目。
-  const card = page
-    .locator(".sample-card")
-    .filter({ hasText: "家装方案" });
+  const card = page.locator(".sample-card").filter({ hasText: "家装方案" });
   await card.locator(".sample-use").click();
   await page.locator(".shot-card").first().waitFor({ timeout: 45_000 });
   assert.equal(await page.locator(".shot-card").count(), 7, "家装七镜");
 
+  // 取消回归（Codex P2-3）：改字段→取消→编辑仍开→值恢复原样。
+  const cancelShot = page.locator(".shot-card").nth(1);
+  await cancelShot.locator(".shot-edit-toggle").click();
+  await page
+    .locator(".compare-before-value-input")
+    .waitFor({ timeout: 10_000 });
+  const originalBefore = await page
+    .locator(".compare-before-value-input")
+    .inputValue();
+  await page.locator(".compare-before-value-input").fill("应被取消的值");
+  await cancelShot.locator(".shot-cancel").click();
+  // 取消后编辑面板仍开——直接检查值是否恢复（不重新 toggle）。
+  assert.equal(
+    await page.locator(".compare-before-value-input").inputValue(),
+    originalBefore,
+    "取消后字段须恢复工作版本原值",
+  );
+  // 关闭编辑面板，为后续正式编辑做清洁起点。
+  await cancelShot.locator(".shot-edit-toggle").click();
+
   // 修改对比镜（第 2 镜）的非标题字段。
   const compareShot = page.locator(".shot-card").nth(1);
   await compareShot.locator(".shot-edit-toggle").click();
-  await page.locator(".compare-before-value-input").waitFor({ timeout: 10_000 });
+  await page
+    .locator(".compare-before-value-input")
+    .waitFor({ timeout: 10_000 });
   await page.locator(".compare-before-value-input").fill("旧两房");
   await page.locator(".compare-after-value-input").fill("新三房");
   await compareShot.locator(".shot-apply").click();
