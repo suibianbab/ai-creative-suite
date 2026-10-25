@@ -1824,7 +1824,7 @@
       "checks": [
         "Create renovation project from gallery card (7 shots), edit compare values and timeline milestone label/status, save and reload with data persisted",
         "Real dual-aspect MP4 export from workbench (two download links)",
-        "Cancel button resets edited compare/timeline drafts to working version values"
+        "Cancel button resets edited compare-split draft to working version values (timeline draft reset shares the same code path)"
       ]
     }
   ],
