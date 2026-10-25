@@ -91,6 +91,19 @@
       ]
     },
     {
+      "id": "VID-058",
+      "tier": "integration",
+      "title": "Interactive 3D page exported from a real project three shot",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/e2e-t3-interactive-export.mjs"],
+      "requiresPorts": [],
+      "checks": [
+        "Export uses the project working version spec params (shape/color/accent/tilt/spinPerFrame) and a registered three component, producing a self-contained page under 8 MiB",
+        "Offline file:// open: explode/collapse by double-click and keyboard Enter, drag rotation, drag-then-click no-toggle, aria-live announcements, iframe embedding",
+        "Rebuild from the same project is byte-identical; the base W4 demo page and its touch/a11y e2e continue to pass"
+      ]
+    },
+    {
       "id": "VID-050",
       "tier": "browser-video",
       "title": "Shot recipe catalog apply-edit-save-reopen and dual-aspect render",

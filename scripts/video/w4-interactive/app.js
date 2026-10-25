@@ -38,8 +38,17 @@ export function createApp(container, options = {}) {
   camera.lookAt(0, 0, 0);
 
   const group = new THREE.Group();
+  // T3：主体几何跟随项目 spec 的 shape 参数（与 orbit3d createGeometry 同
+  // 形状集），而非写死演示立方体。尺寸缩放使各形状视觉权重接近 W4 基线。
+  const shapeGeometries = {
+    box: () => new THREE.BoxGeometry(1.4, 1.4, 1.4),
+    sphere: () => new THREE.SphereGeometry(0.95, 32, 16),
+    torus: () => new THREE.TorusGeometry(0.75, 0.3, 16, 64),
+    icosahedron: () => new THREE.IcosahedronGeometry(1.05, 0),
+  };
+  const shapeFactory = shapeGeometries[options.shape] ?? shapeGeometries.box;
   const main = new THREE.Mesh(
-    new THREE.BoxGeometry(1.4, 1.4, 1.4),
+    shapeFactory(),
     new THREE.MeshStandardMaterial({
       color: new THREE.Color(options.color ?? "#4f9dff"),
       roughness: 0.45,
@@ -60,6 +69,12 @@ export function createApp(container, options = {}) {
     }),
   );
   group.add(main, core, shellOut);
+  // T3：初始倾角与自转速率跟随 spec 参数（缺省沿用 W4 演示值）。
+  if (typeof options.tilt === "number") group.rotation.x = options.tilt;
+  const autoSpin =
+    typeof options.spinPerFrame === "number"
+      ? options.spinPerFrame / 60 // spec 每帧@24fps → 60fps 页面近似
+      : 0.004;
   scene.add(group);
   scene.add(new THREE.AmbientLight(0xffffff, 0.55));
   const key = new THREE.DirectionalLight(0xffffff, 1.6);
@@ -184,7 +199,7 @@ export function createApp(container, options = {}) {
   let raf = 0;
   let frames = 0;
   const loop = () => {
-    if (!dragging) group.rotation.y += 0.004;
+    if (!dragging) group.rotation.y += autoSpin;
     renderer.render(scene, camera);
     frames += 1;
     raf = requestAnimationFrame(loop);
