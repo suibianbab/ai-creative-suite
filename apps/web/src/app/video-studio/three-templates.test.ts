@@ -46,7 +46,7 @@ test("模板：默认参数为 orbit3d 且通过 validateParams 规范化", () =
   const source = buildThreeSceneVersion({ durationMs: 3000, seed: 7 });
   assert.equal(source.spec.specVersion, 1);
   assert.equal(source.spec.componentId, "orbit3d");
-  assert.equal(source.spec.componentVersion, 1);
+  assert.equal(source.spec.componentVersion, 2);
   assert.equal(source.spec.seed, 7);
   assert.equal(source.spec.background, "#101820");
   // 六个键齐全（validateParams 的规范化输出；无多余键）

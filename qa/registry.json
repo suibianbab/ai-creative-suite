@@ -66,6 +66,18 @@
       ]
     },
     {
+      "id": "VID-056",
+      "tier": "integration",
+      "title": "Portrait 3D square-pixel framing (orbit3d@2 vs @1 baseline)",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/t1-portrait-3d-verify.mjs"],
+      "requiresPorts": [],
+      "checks": [
+        "Same three spec rendered as orbit3d@2 and @1 in both aspects: content bbox aspect ratio matches across aspects within 10% for v2 (square pixels) while v1 portrait shows the ~3.16x vertical stretch",
+        "Landscape output of @2 is frame-identical to @1 (formula reproduces legacy frustum values); early/mid/late keyframes and old-vs-new side-by-side retained"
+      ]
+    },
+    {
       "id": "VID-050",
       "tier": "browser-video",
       "title": "Shot recipe catalog apply-edit-save-reopen and dual-aspect render",

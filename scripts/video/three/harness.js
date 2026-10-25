@@ -49,12 +49,23 @@ try {
 
   // 封闭注册表的组件文件（components/<componentId>.mjs）由静态服务只读提供；
   // 页面侧再做一次参数校验，防止绕过 Node 侧烘焙入口。
-  const component = await import(`/scene/${config.componentId}.mjs`);
+  const module = await import(`/scene/${config.componentId}.mjs`);
+  // 版本选择（T1）：模块导出 orbit3dV1/orbit3dV2 对象；无版本化的旧形状
+  // （顶层 validateParams/createRig）仍按原路径工作。
+  const component =
+    config.componentVersion === 2 && module.orbit3dV2
+      ? module.orbit3dV2
+      : config.componentVersion === 1 && module.orbit3dV1
+        ? module.orbit3dV1
+        : module;
   const params = component.validateParams(config.params ?? {});
+  // 画幅传入装配层（T1）：@2 按宽高算方形像素视锥；@1 忽略之（历史渲染不变）。
   const rig = component.createRig({
     THREE,
     params,
     background: config.background,
+    width: config.width,
+    height: config.height,
   });
 
   const gl = renderer.getContext();
@@ -73,7 +84,7 @@ try {
     if (!Number.isInteger(frameIndex) || frameIndex < 0) {
       throw new Error("帧号须为非负整数");
     }
-    component.pose(rig, frameIndex);
+    (module.pose ? module.pose : component.pose)(rig, frameIndex);
     renderer.render(rig.scene, rig.camera);
     return canvas.toDataURL("image/png");
   };

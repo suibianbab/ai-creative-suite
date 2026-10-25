@@ -1,7 +1,7 @@
 // 3D 组件封闭注册表：键为 `${componentId}@${version}`。
 // 唯一 import 是同目录的组件模块（相对路径，浏览器静态服务可直接解析）；
 // 本模块不 import three —— three 对象一律由 createRig 的调用方传入。
-import * as orbit3d from "./components/orbit3d.mjs";
+import { orbit3dV1, orbit3dV2 } from "./components/orbit3d.mjs";
 
 export class UnknownThreeComponentError extends Error {
   constructor(componentId, componentVersion) {
@@ -50,5 +50,5 @@ export function createThreeRegistry(initialComponents = []) {
   return registry;
 }
 
-// 单例：封闭注册表，只含 orbit3d@1。
-export const threeRegistry = createThreeRegistry([orbit3d]);
+// 单例：封闭注册表，orbit3d@1（历史视锥）+ orbit3d@2（T1 竖版方形像素取景）。
+export const threeRegistry = createThreeRegistry([orbit3dV1, orbit3dV2]);

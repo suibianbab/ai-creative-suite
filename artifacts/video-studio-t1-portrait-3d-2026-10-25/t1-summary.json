@@ -1,0 +1,29 @@
+{
+  "pass": true,
+  "bbox": {
+    "v2-landscape": {
+      "w": 648,
+      "h": 456
+    },
+    "v2-portrait": {
+      "w": 365,
+      "h": 256
+    },
+    "v1-landscape": {
+      "w": 648,
+      "h": 456
+    },
+    "v1-portrait": {
+      "w": 365,
+      "h": 809
+    }
+  },
+  "ratios": {
+    "v2Landscape": 1.4211,
+    "v2Portrait": 1.4258,
+    "v1Landscape": 1.4211,
+    "v1Portrait": 0.4512
+  },
+  "criteria": "v2 横竖内容宽高比差 <10%（实测 0.3%——方形像素→比例一致）；v1 竖版 0.451 ≈ 1.421/3.16（纵向拉伸证据）",
+  "basis": "原生像素中段帧（-ss 1.5）灰度 >40 判非背景 bbox；MP4 为 orbit3d@2/@1 同 spec 双画幅真实出片"
+}
