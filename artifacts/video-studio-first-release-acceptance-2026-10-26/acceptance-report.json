@@ -1,0 +1,45 @@
+{
+  "fps": 24,
+  "shots": [
+    {
+      "aspect": "landscape",
+      "shot": 3,
+      "componentId": "compare-split",
+      "midFrame": 216,
+      "lateFrame": 254,
+      "midSec": 9,
+      "lateSec": 10.583
+    },
+    {
+      "aspect": "landscape",
+      "shot": 4,
+      "componentId": "timeline-milestones",
+      "midFrame": 312,
+      "lateFrame": 350,
+      "midSec": 13,
+      "lateSec": 14.583
+    },
+    {
+      "aspect": "portrait",
+      "shot": 3,
+      "componentId": "compare-split",
+      "midFrame": 216,
+      "lateFrame": 254,
+      "midSec": 9,
+      "lateSec": 10.583
+    },
+    {
+      "aspect": "portrait",
+      "shot": 4,
+      "componentId": "timeline-milestones",
+      "midFrame": 312,
+      "lateFrame": 350,
+      "midSec": 13,
+      "lateSec": 14.583
+    }
+  ],
+  "hashes": {
+    "landscape": "60fe356087d9297c7321932180e0b40fd7f46155625a959cf73b2d3dc90d3c02",
+    "portrait": "2287c489dfbcf45fee22501d3a3c809fe4263bbdb2a1cd9e6ef3497f716943cb"
+  }
+}

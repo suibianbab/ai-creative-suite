@@ -42,7 +42,7 @@ pnpm --filter @acs/web exec next dev --hostname 0.0.0.0 --port 3000
 
 | 环境变量 | 用途 | 无此变量时 |
 |---|---|---|
-| `DASHSCOPE_API_KEY` | 生成有声版 MP4（TTS 旁白） | 有声按钮不可用，无声不受影响 |
+| `DASHSCOPE_API_KEY` | 生成有声版 MP4（TTS 旁白） | 有声按钮仍可点击，服务端返回"未配置 DASHSCOPE_API_KEY"错误（503）；无声版不受影响 |
 | `ACS_MEDIA_STORE` | 媒体素材仓路径 | 使用默认用户目录 |
 
 ## 操作手册
@@ -100,10 +100,11 @@ pnpm --filter @acs/web exec next dev --hostname 0.0.0.0 --port 3000
 
 | 步骤 | 结果 | 证据 |
 |---|---|---|
-| 样片创建（季度简报） | ✅ 6 镜/21.5s | `first-release-acceptance.mjs` 输出 |
-| 逐镜 SceneSpec 校验 | ✅ 全过 | 同上（6 镜组件+版本列表） |
-| 双画幅 H.264 MP4 | ✅ 516 帧/24fps | `render/*.mp4`，sha256 留存 |
-| 关键帧 | ✅ 对比/时间轴横竖各 1 帧 | `{aspect}-shot{3,4}.png` |
-| 样片库六卡全部可打开 | ✅ VID-064 通过 | QA 注册表 |
-
-人工审片：对比镜差值徽章清晰可读、时间轴四节点全可见、柱状图数值在终态可读——中段帧处于入场过渡属正常动画。
+| 季度样片创建（干净 context） | ✅ 6 镜/21.5s | `e2e-first-release-browser.mjs` 步骤 PASS |
+| 逐镜 SceneSpec 校验 | ✅ 全过 | `first-release-acceptance.mjs`（`cd apps/web && node --import tsx ../../scripts/video/first-release-acceptance.mjs`） |
+| 双画幅 H.264 MP4 | ✅ 516 帧/24fps | `render/*.mp4`，sha256 在 `acceptance-report.json` |
+| 对比镜关键帧 | ✅ frameMap 推导 mid@9s/late@10.58s | `{aspect}-shot3-{mid,late}.png` |
+| 时间轴关键帧 | ✅ frameMap 推导 mid@13s/late@14.58s | `{aspect}-shot4-{mid,late}.png` |
+| 文字/对比编辑→保存→重开→回滚 | ✅ 浏览器链逐步 PASS | `browser-acceptance.json` |
+| 横竖预览 + MP4 导出 | ✅ viewBox/下载链接断言 | 同上 + `browser-mp4-exported.png` |
+| 样片卡 | VID-064 覆盖季度+旧版图示编辑；其余四卡未逐卡浏览器验证 | 待补或删宣称 |
