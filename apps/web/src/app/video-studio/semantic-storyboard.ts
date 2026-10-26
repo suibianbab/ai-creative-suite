@@ -252,7 +252,9 @@ function compileCycleExplainer(shot: SemanticDraftShot, seed: number): SceneSpec
     titleY: 145,
     titleEnterMs: 0,
     diagramOffsetX: 0,
-    diagramOffsetY: -60,
+    // -30：横版底部阶段 caption 与旁白注解（y 780）留出净空；-60 实测
+    // 重叠约 11px（check-layout 几何校验，2026-10-26）。
+    diagramOffsetY: -30,
     diagramEnterMs: 450,
     diagram: {
       kind: "cycle",
@@ -277,7 +279,9 @@ function compileFlowExplainer(shot: SemanticDraftShot, seed: number): SceneSpec 
     titleY: 145,
     titleEnterMs: 0,
     diagramOffsetX: 0,
-    diagramOffsetY: -75,
+    // +20：竖版 flow 纵向堆叠起点与标题（titleY 145）留净空；-75 实测
+    // 竖版首步与标题完全叠位（check-layout 几何校验，2026-10-26）。
+    diagramOffsetY: 20,
     diagramEnterMs: 450,
     diagram: { kind: "flow", steps: (shot.flowSteps ?? []).map((s) => ({ label: s })) },
     annotations: [{
