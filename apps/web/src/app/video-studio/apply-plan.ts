@@ -151,6 +151,13 @@ export function applyStoryboard(
   document: VideoProject,
   storyboard: StoryboardResult & { ok: true },
   ids: { shot: () => string; version: () => string },
+  // 语义分镜（2026-10-26）：AI 路径传自己的引擎标识与版本串
+  // （如 "planner-semantic" / "qwen-plus/prompt1/compiler1"）；
+  // 不传保持 planner-rules/1，旧路径与旧测试行为不变。
+  provenance: { engineId: string; engineVersion: string } = {
+    engineId: "planner-rules",
+    engineVersion: "1",
+  },
 ): StoryboardApplyResult {
   const now = new Date().toISOString();
   const nextOrder =
@@ -171,7 +178,7 @@ export function applyStoryboard(
           description: shot.description,
           narrationText: shot.narrationText,
           sceneSource: { type: "spec" as const, spec: shot.plan.spec },
-          provenance: { engineId: "planner-rules", engineVersion: "1" },
+          provenance: { ...provenance },
         },
       ],
       events: [

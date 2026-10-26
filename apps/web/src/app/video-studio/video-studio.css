@@ -344,6 +344,12 @@
   cursor: not-allowed;
 }
 
+/* AI 分镜入口与固定句式规划并列但视觉区分：它走云端模型、有独立失败面。 */
+.planner-run.planner-ai {
+  border-color: #9db8d2;
+  background: #f2f7fc;
+}
+
 .planner-feedback {
   border: 1px solid #e4cfc7;
   border-radius: 10px;

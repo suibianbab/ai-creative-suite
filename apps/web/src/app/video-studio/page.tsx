@@ -98,6 +98,20 @@ type EditorState = {
   storyboard: StoryboardResult | null;
 };
 
+// 语义分镜（2026-10-26）：AI 生成入口的瞬态状态。独立于 EditorState——
+// 生成中/失败是请求生命周期，不属于文档编辑器；失败绝不静默回退旧占位分镜。
+type SemanticPlanState = {
+  busy: boolean;
+  error: string | null;
+  // 确认应用时落进 ContentVersion.provenance（模型/提示词/编译器版本）。
+  provenance: {
+    provider: string;
+    model: string;
+    promptVersion: string;
+    compilerVersion: string;
+  } | null;
+};
+
 export default function VideoStudioPage() {
   const [projects, setProjects] = useState<VideoProjectSummary[]>([]);
   const [editor, setEditor] = useState<EditorState | null>(null);
@@ -127,6 +141,11 @@ export default function VideoStudioPage() {
     [],
   );
   const [transitionError, setTransitionError] = useState<string | null>(null);
+  const [semanticPlan, setSemanticPlan] = useState<SemanticPlanState>({
+    busy: false,
+    error: null,
+    provenance: null,
+  });
   useEffect(() => {
     setTransitionRows(
       transitionsDraftFromProject(
@@ -881,7 +900,71 @@ export default function VideoStudioPage() {
               >
                 规划
               </button>
+              <button
+                type="button"
+                className="planner-run planner-ai"
+                // AI 分镜与固定句式规划是两条独立入口：AI 失败只报错，
+                // 不静默回退旧占位分镜（交接单 2026-10-26 明确纪律）。
+                disabled={
+                  semanticPlan.busy ||
+                  busy ||
+                  sentence.trim().length === 0
+                }
+                onClick={async () => {
+                  const trimmed = sentence.trim();
+                  setSemanticPlan({
+                    busy: true,
+                    error: null,
+                    provenance: null,
+                  });
+                  try {
+                    const response = await fetch("/api/video/semantic-plan", {
+                      method: "POST",
+                      headers: { "content-type": "application/json" },
+                      body: JSON.stringify({ sentence: trimmed }),
+                    });
+                    const data = (await response.json()) as {
+                      storyboard?: StoryboardResult;
+                      provenance?: SemanticPlanState["provenance"];
+                      error?: string;
+                    };
+                    if (!response.ok || !data.storyboard?.ok) {
+                      setSemanticPlan({
+                        busy: false,
+                        error:
+                          data.error ?? "AI 分镜生成失败，请稍后重试或改用固定句式",
+                        provenance: null,
+                      });
+                      return;
+                    }
+                    setSemanticPlan({
+                      busy: false,
+                      error: null,
+                      provenance: data.provenance ?? null,
+                    });
+                    setEditor({
+                      ...editor,
+                      storyboard: data.storyboard,
+                      plan: null,
+                      message: null,
+                    });
+                  } catch {
+                    setSemanticPlan({
+                      busy: false,
+                      error: "AI 分镜请求失败（网络错误），未修改项目",
+                      provenance: null,
+                    });
+                  }
+                }}
+              >
+                {semanticPlan.busy ? "正在生成分镜…" : "AI 生成分镜"}
+              </button>
             </div>
+            {semanticPlan.error ? (
+              <div className="planner-feedback">
+                <p className="planner-reason">{semanticPlan.error}</p>
+              </div>
+            ) : null}
           </div>
 
           {plan && !plan.ok ? (
@@ -904,6 +987,13 @@ export default function VideoStudioPage() {
                 分镜预告：{storyboard.title} · {storyboard.shots.length} 个镜头
                 · {storyboard.totalMs / 1000}s
               </p>
+              {semanticPlan.provenance ? (
+                <p className="plan-summary">
+                  AI 分镜：{semanticPlan.provenance.model} · 提示词 v
+                  {semanticPlan.provenance.promptVersion} · 编译器 v
+                  {semanticPlan.provenance.compilerVersion}
+                </p>
+              ) : null}
               <ol className="plan-shot-list">
                 {storyboardConfirmLines(storyboard).map((line) => (
                   <li key={line.index} className="plan-shot-item">
@@ -927,12 +1017,23 @@ export default function VideoStudioPage() {
                   type="button"
                   className="plan-apply"
                   onClick={async () => {
-                    // P1：分镜应用 = 在当前项目上只追加 N 个镜头
+                    // P1：分镜应用 = 在当前项目上只追加 N 个镜头；
+                    // 语义分镜把模型/提示词/编译器版本落进 provenance。
                     try {
-                      const applied = applyStoryboard(document, storyboard, {
-                        shot: () => crypto.randomUUID(),
-                        version: () => crypto.randomUUID(),
-                      });
+                      const applied = applyStoryboard(
+                        document,
+                        storyboard,
+                        {
+                          shot: () => crypto.randomUUID(),
+                          version: () => crypto.randomUUID(),
+                        },
+                        semanticPlan.provenance
+                          ? {
+                              engineId: "planner-semantic",
+                              engineVersion: `${semanticPlan.provenance.model}/prompt${semanticPlan.provenance.promptVersion}/compiler${semanticPlan.provenance.compilerVersion}`,
+                            }
+                          : undefined,
+                      );
                       const styled = await applyLinkedStyle(applied.document);
                       setEditor({
                         document: styled,
@@ -941,6 +1042,11 @@ export default function VideoStudioPage() {
                         sentence,
                         plan: null,
                         storyboard: null,
+                      });
+                      setSemanticPlan({
+                        busy: false,
+                        error: null,
+                        provenance: null,
                       });
                     } catch (error) {
                       setEditor({
@@ -958,9 +1064,14 @@ export default function VideoStudioPage() {
                 <button
                   type="button"
                   className="plan-discard"
-                  onClick={() =>
-                    setEditor({ ...editor, storyboard: null, message: null })
-                  }
+                  onClick={() => {
+                    setEditor({ ...editor, storyboard: null, message: null });
+                    setSemanticPlan({
+                      busy: false,
+                      error: null,
+                      provenance: null,
+                    });
+                  }}
                 >
                   放弃
                 </button>

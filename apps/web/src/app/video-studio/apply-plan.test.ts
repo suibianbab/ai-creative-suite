@@ -148,6 +148,42 @@ test("应用分镜：narrationText 逐镜头落入内容版本，与分镜结果
   );
 });
 
+// 语义分镜（2026-10-26）：AI 路径的 provenance 不得记成 planner-rules；
+// 默认（不传）仍为 planner-rules，旧路径与旧测试行为不变。
+test("应用分镜：默认 provenance=planner-rules；语义路径可传入 AI 引擎标识", () => {
+  const rules = applyStoryboard(emptyProject(), storyboard, {
+    shot: uuidFactory("cccccccc", 200),
+    version: uuidFactory("dddddddd", 200),
+  });
+  assert.equal(
+    rules.document.shots[0]!.contentVersions[0]!.provenance.engineId,
+    "planner-rules",
+  );
+  assert.equal(
+    rules.document.shots[0]!.contentVersions[0]!.provenance.engineVersion,
+    "1",
+  );
+
+  const semantic = applyStoryboard(
+    emptyProject(),
+    storyboard,
+    {
+      shot: uuidFactory("cccccccc", 300),
+      version: uuidFactory("dddddddd", 300),
+    },
+    { engineId: "planner-semantic", engineVersion: "qwen-plus/prompt1/compiler1" },
+  );
+  assert.equal(
+    semantic.document.shots[0]!.contentVersions[0]!.provenance.engineId,
+    "planner-semantic",
+  );
+  assert.equal(
+    semantic.document.shots[0]!.contentVersions[0]!.provenance.engineVersion,
+    "qwen-plus/prompt1/compiler1",
+  );
+  validateVideoProject(semantic.document);
+});
+
 // Task 2：镜头说明是规划产物，应用层原样落库（不再二次拼接文案）。
 test("应用分镜：镜头说明逐字落入工作版本，与分镜结果一致", () => {
   const result = applyStoryboard(emptyProject(), storyboard, {

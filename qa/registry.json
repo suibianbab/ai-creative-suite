@@ -1839,6 +1839,19 @@
         "Save and reopen preserves both @2 edits and original @1 content versions",
         "Rolling back compare-split restores its @1 spec; no browser console or page errors"
       ]
+    },
+    {
+      "id": "VID-065",
+      "tier": "browser-video",
+      "title": "Semantic storyboard AI entry: no-key failure surface without silent fallback",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/e2e-semantic-plan.mjs"],
+      "requiresPorts": [3210],
+      "checks": [
+        "Free-form Chinese request via the dedicated AI entry shows the missing-DASHSCOPE_API_KEY error and never renders a placeholder storyboard card",
+        "The legacy fixed-syntax storyboard planner still plans the same four-shot card (regression)",
+        "Discard clears the card; no browser console errors"
+      ]
     }
   ],
   "manual": [
