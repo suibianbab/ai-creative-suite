@@ -38,8 +38,8 @@ export type SemanticDraftShot = {
   durationMs: number;
   /** text-explainer 的 1-3 条要点 */
   bullets?: string[];
-  /** cycle-explainer 的 3-5 阶段 */
-  cycleSteps?: Array<{ label: string; caption?: string }>;
+  /** cycle-explainer 的 3-5 阶段（纯 label；caption 已从 IR 移除，P2-3） */
+  cycleSteps?: string[];
   /** flow-explainer 的 2-4 步骤 */
   flowSteps?: string[];
 };
@@ -49,6 +49,22 @@ export type SemanticStoryboardDraft = {
   title: string;
   shots: SemanticDraftShot[];
 };
+
+// 严格键集合（P1-2，Codex 复核 2026-10-26）：模型输出只许这些字段——
+// 未知字段（尤其资产引用/代码）一律拒绝；资产类键给素材边界指引，
+// 「要真实照片」的需求不得被无声转成通用图解。
+const ROOT_KEYS = new Set(["topic", "title", "shots"]);
+const SHOT_BASE_KEYS = new Set(["intent", "title", "narrationText", "durationMs"]);
+const SHOT_KEYS_BY_INTENT: Record<SemanticIntent, Set<string>> = {
+  title: new Set([]),
+  "text-explainer": new Set(["bullets"]),
+  "cycle-explainer": new Set(["cycleSteps"]),
+  "flow-explainer": new Set(["flowSteps"]),
+};
+// 常见资产/代码字段名 → 指引文案（模型请求画不出的东西时明说下一步）。
+const ASSET_KEYS = /asset|image|photo|pic|src|url|link|media|file|html|svg|css|js|code|script/i;
+const ASSET_GUIDANCE =
+  "本版本不能引用外部素材/照片/代码：请改用图解表述（title/text-explainer/cycle-explainer/flow-explainer），或由用户在素材面板人工导入";
 
 const INTENTS = new Set(["title", "text-explainer", "cycle-explainer", "flow-explainer"]);
 
@@ -86,6 +102,12 @@ export function validateSemanticDraft(raw: unknown): SemanticValidation {
   }
   const d = raw as Record<string, unknown>;
   const errors: string[] = [];
+  // 根级严格键集合（P1-2）。
+  for (const key of Object.keys(d))
+    if (!ROOT_KEYS.has(key))
+      errors.push(
+        `未知根字段「${key}」${ASSET_KEYS.test(key) ? `。${ASSET_GUIDANCE}` : "（只允许 topic/title/shots）"}`,
+      );
   if (typeof d.topic !== "string" || d.topic.length < 1 || d.topic.length > 40) {
     errors.push("topic 须为 1..40 字");
   }
@@ -112,6 +134,16 @@ export function validateSemanticDraft(raw: unknown): SemanticValidation {
       continue;
     }
     const intent = shot.intent as SemanticIntent;
+    // 镜头级严格键集合（P1-2）：基础四键 + 该 intent 专属一键，其余拒绝。
+    const allowedKeys = new Set([
+      ...SHOT_BASE_KEYS,
+      ...SHOT_KEYS_BY_INTENT[intent],
+    ]);
+    for (const key of Object.keys(shot))
+      if (!allowedKeys.has(key))
+        errors.push(
+          `未知字段 ${field}.${key}${ASSET_KEYS.test(key) ? `。${ASSET_GUIDANCE}` : "（不在该 intent 的契约内）"}`,
+        );
     // 标题上限取各目标组件契约的交集（explainer-composition ≤32）。
     if (typeof shot.title !== "string" || shot.title.length < 1 || shot.title.length > 32) {
       errors.push(`${field}.title 须为 1..32 字`);
@@ -149,18 +181,14 @@ export function validateSemanticDraft(raw: unknown): SemanticValidation {
       }
     }
     if (intent === "cycle-explainer") {
+      // 纯字符串 label 数组（P2-3：caption 已从 IR 移除——上屏 caption 与底部
+      // 旁白注解恒碰撞，关键信息必须写进 label 或旁白，不再静默丢弃）。
       if (!Array.isArray(shot.cycleSteps) || shot.cycleSteps.length < 3 || shot.cycleSteps.length > 5) {
-        errors.push(`${field}.cycleSteps 须为 3..5 阶段`);
+        errors.push(`${field}.cycleSteps 须为 3..5 个字符串阶段名`);
       } else {
-        for (const [j, step] of (shot.cycleSteps as Array<Record<string, unknown>>).entries()) {
-          if (typeof step?.label !== "string" || step.label.length < 1 || step.label.length > 6) {
-            errors.push(`${field}.cycleSteps[${j}].label 须为 1..6 字`);
-          }
-          if (
-            step?.caption !== undefined &&
-            (typeof step.caption !== "string" || step.caption.length < 1 || step.caption.length > 12)
-          ) {
-            errors.push(`${field}.cycleSteps[${j}].caption 须为 1..12 字`);
+        for (const [j, step] of (shot.cycleSteps as unknown[]).entries()) {
+          if (typeof step !== "string" || step.length < 1 || step.length > 6) {
+            errors.push(`${field}.cycleSteps[${j}] 须为 1..6 字的字符串`);
           }
         }
       }
@@ -257,10 +285,9 @@ function compileCycleExplainer(shot: SemanticDraftShot, seed: number): SceneSpec
     diagramEnterMs: 450,
     diagram: {
       kind: "cycle",
-      // caption 不上屏：阶段 caption 挂在节点下方，侵入注解带（y 650..800）
-      // 与底部旁白注解碰撞（check-layout 实测 4+ 阶段必撞）。阶段信息以
-      // label 上屏（交接单验收口径），caption 细节由旁白承载。
-      steps: (shot.cycleSteps ?? []).map((s) => ({ label: s.label })),
+      // 阶段只上屏 label（P2-3：IR 已无 caption——上屏 caption 与底部旁白
+      // 注解恒碰撞，细节信息必须写进 label 或旁白，编译不静默丢内容）。
+      steps: (shot.cycleSteps ?? []).map((label) => ({ label })),
     },
     // 旁白注解 enterMs=400：阅读窗 = durationMs-400 ≥ 300×旁白字数
     // （验证器已保证 durationMs ≥ 400+300×字数），屏幕文字读得完。
@@ -306,7 +333,7 @@ function renderHintFor(shot: SemanticDraftShot): string {
     case "text-explainer":
       return `${base}，要点：${(shot.bullets ?? []).join("、")}`;
     case "cycle-explainer":
-      return `${base}，循环阶段：${(shot.cycleSteps ?? []).map((s) => s.label).join(" → ")}`;
+      return `${base}，循环阶段：${(shot.cycleSteps ?? []).join(" → ")}`;
     case "flow-explainer":
       return `${base}，流程：${(shot.flowSteps ?? []).join(" → ")}`;
   }

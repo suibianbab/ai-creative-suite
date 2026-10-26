@@ -22,20 +22,18 @@ const VALID_IR = JSON.stringify({
       title: "水循环四阶段",
       narrationText: "水在四个阶段循环",
       durationMs: 5000,
-      cycleSteps: [
-        { label: "蒸发" },
-        { label: "凝结" },
-        { label: "降水" },
-        { label: "汇集" },
-      ],
+      cycleSteps: ["蒸发", "凝结", "降水", "汇集"],
     },
     { intent: "title", title: "谢谢观看", narrationText: "谢谢观看", durationMs: 2500 },
   ],
 });
 
-function chatResponse(content: string) {
+function chatResponse(content: string, usage?: object) {
   return new Response(
-    JSON.stringify({ choices: [{ message: { content } }] }),
+    JSON.stringify({
+      choices: [{ message: { content } }],
+      ...(usage ? { usage } : {}),
+    }),
     { status: 200, headers: { "content-type": "application/json" } },
   );
 }
@@ -94,7 +92,7 @@ test("semantic-plan：合法 IR → 200 返回 storyboard 与 provenance", async
       assert.equal(data.storyboard.totalMs, 10500);
       assert.equal(data.provenance.provider, "qwen-chat");
       assert.equal(data.provenance.model, "qwen-plus");
-      assert.equal(data.provenance.promptVersion, "3");
+      assert.equal(data.provenance.promptVersion, "4");
       assert.equal(data.provenance.compilerVersion, "1");
       assert.equal(
         data.provenance.sentence,
@@ -164,6 +162,47 @@ test("semantic-plan：两次 IR 都非法 → 422 且只调两次，无占位分
   }
 });
 
+// P1-2（Codex 复核 2026-10-26）：模型输出资产引用/未知字段 → 带因重试一次，
+// 仍非法则 422，错误信息含素材边界指引（不无声转成通用图解）。
+test("semantic-plan：资产引用字段 → 重试一次后仍 422 且含素材指引", async () => {
+  const originalFetch = globalThis.fetch;
+  const userMessages: string[] = [];
+  let calls = 0;
+  globalThis.fetch = async (_input, init) => {
+    calls += 1;
+    const body = JSON.parse(String(init?.body)) as {
+      messages: Array<{ role: string; content: string }>;
+    };
+    userMessages.push(body.messages[1]!.content);
+    const valid = JSON.parse(VALID_IR) as { shots: unknown[] };
+    return chatResponse(
+      JSON.stringify({
+        ...valid,
+        shots: [
+          { ...(valid.shots[0] as object), assetUrl: "https://e.com/a.png" },
+          ...valid.shots.slice(1),
+        ],
+      }),
+    );
+  };
+  try {
+    await withEnv(WITH_KEY, async () => {
+      const response = await POST(ask("做一条水循环短片，要真实照片"));
+      assert.equal(response.status, 422);
+      const data = await response.json();
+      assert.equal(calls, 2);
+      assert.match(userMessages[1]!, /assetUrl/);
+      assert.ok(
+        (data.errors as string[]).some((e) => /素材|照片|人工/.test(e)),
+        JSON.stringify(data.errors),
+      );
+      assert.equal(data.storyboard, undefined);
+    });
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test("semantic-plan：空句/超长句 → 400 不触网", async () => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async () => {
@@ -211,7 +250,7 @@ const SHORT_IR = JSON.stringify({
       title: "水循环四阶段",
       narrationText: "水在四个阶段循环",
       durationMs: 4500,
-      cycleSteps: [{ label: "蒸发" }, { label: "凝结" }, { label: "降水" }, { label: "汇集" }],
+      cycleSteps: ["蒸发", "凝结", "降水", "汇集"],
     },
     { intent: "title", title: "谢谢观看", narrationText: "谢谢观看", durationMs: 2300 },
     { intent: "title", title: "再看一遍", narrationText: "可以再看一遍", durationMs: 4000 },
@@ -228,7 +267,7 @@ const ON_TARGET_IR = JSON.stringify({
       title: "水循环四阶段",
       narrationText: "蒸发凝结降水汇集循环不息",
       durationMs: 5200,
-      cycleSteps: [{ label: "蒸发" }, { label: "凝结" }, { label: "降水" }, { label: "汇集" }],
+      cycleSteps: ["蒸发", "凝结", "降水", "汇集"],
     },
     {
       intent: "text-explainer",
@@ -293,6 +332,55 @@ test("semantic-plan：重试后仍偏短 → 200 但透明标注 durationDeviati
       assert.ok(data.durationDeviation);
       assert.equal(data.durationDeviation.targetMs, 25000);
       assert.equal(data.durationDeviation.actualMs, data.storyboard.totalMs);
+    });
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+// P2-4（Codex 复核 2026-10-26）：发生重试时 usage 必须合计并给分项，
+// 不能只报最后一调（计费台账低报）。
+test("semantic-plan：重试后 usage 合计两次调用并附分项", async () => {
+  const originalFetch = globalThis.fetch;
+  let calls = 0;
+  globalThis.fetch = async () => {
+    calls += 1;
+    // 第一次：旁白超绝对上限触发重试；第二次合法。两调 usage 不同。
+    return chatResponse(
+      calls === 1
+        ? JSON.stringify({
+            ...JSON.parse(VALID_IR),
+            shots: [
+              {
+                intent: "title",
+                title: "T",
+                narrationText: "这段旁白实在太长了肯定无论如何都装不下啊",
+                durationMs: 6000,
+              },
+              ...JSON.parse(VALID_IR).shots.slice(1),
+            ],
+          })
+        : VALID_IR,
+      calls === 1
+        ? { prompt_tokens: 100, completion_tokens: 50, total_tokens: 150 }
+        : { prompt_tokens: 40, completion_tokens: 20, total_tokens: 60 },
+    );
+  };
+  try {
+    await withEnv(WITH_KEY, async () => {
+      const response = await POST(ask("做一条约25秒的水循环科普短片"));
+      assert.equal(response.status, 200);
+      const data = await response.json();
+      assert.equal(calls, 2);
+      assert.deepEqual(data.usage, {
+        prompt_tokens: 140,
+        completion_tokens: 70,
+        total_tokens: 210,
+      });
+      assert.deepEqual(data.usageCalls, [
+        { prompt_tokens: 100, completion_tokens: 50, total_tokens: 150 },
+        { prompt_tokens: 40, completion_tokens: 20, total_tokens: 60 },
+      ]);
     });
   } finally {
     globalThis.fetch = originalFetch;

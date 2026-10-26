@@ -14,12 +14,7 @@ const VALID = {
       title: "水循环四阶段",
       narrationText: "循环讲解",
       durationMs: 5000,
-      cycleSteps: [
-        { label: "蒸发" },
-        { label: "凝结" },
-        { label: "降水" },
-        { label: "汇集" },
-      ],
+      cycleSteps: ["蒸发", "凝结", "降水", "汇集"],
     },
     { intent: "title", title: "结尾", narrationText: "谢谢", durationMs: 3000 },
   ],
@@ -126,7 +121,7 @@ test("semantic IR：bullets 超 12 字 → 拒绝（sketch-note 契约）", () =
   );
 });
 
-test("semantic IR：cycle caption 超 12 字 → 拒绝", () => {
+test("semantic IR：cycleSteps 含 caption 对象 → 拒绝（caption 已从 IR 移除，P2-3）", () => {
   const bad = {
     ...VALID,
     shots: [
@@ -137,7 +132,7 @@ test("semantic IR：cycle caption 超 12 字 → 拒绝", () => {
         narrationText: "循环讲解",
         durationMs: 5000,
         cycleSteps: [
-          { label: "蒸发", caption: "一二三四五六七八九十一二三四五" },
+          { label: "蒸发", caption: "水变水汽" },
           { label: "凝结" },
           { label: "降水" },
           { label: "汇集" },
@@ -149,8 +144,62 @@ test("semantic IR：cycle caption 超 12 字 → 拒绝", () => {
   const v = validateSemanticDraft(bad);
   assert.ok(!v.ok);
   assert.ok(
-    v.errors.some((e) => e.includes("caption") && e.includes("12")),
+    v.errors.some((e) => e.includes("cycleSteps")),
     v.errors.join("; "),
+  );
+});
+
+test("semantic IR：未知根字段 → 拒绝（P1-2 严格键集合）", () => {
+  const bad = { ...VALID, note: "模型自作主张的额外说明" };
+  const v = validateSemanticDraft(bad);
+  assert.ok(!v.ok);
+  assert.ok(
+    v.errors.some((e) => e.includes("note") && e.includes("未知")),
+    v.errors.join("; "),
+  );
+});
+
+test("semantic IR：未知镜头字段 → 拒绝（P1-2 严格键集合）", () => {
+  const bad = {
+    ...VALID,
+    shots: [
+      { ...VALID.shots[0], params: { x: 1 } },
+      ...VALID.shots.slice(1),
+    ],
+  };
+  const v = validateSemanticDraft(bad);
+  assert.ok(!v.ok);
+  assert.ok(
+    v.errors.some((e) => e.includes("shots[0].params")),
+    v.errors.join("; "),
+  );
+});
+
+test("semantic IR：资产引用字段 → 拒绝并给出素材边界指引（P1-2）", () => {
+  for (const key of ["assetUrl", "imageUrl", "src", "html", "svg", "url"]) {
+    const bad = {
+      ...VALID,
+      shots: [
+        { ...VALID.shots[0], [key]: "https://example.com/x.png" },
+        ...VALID.shots.slice(1),
+      ],
+    };
+    const v = validateSemanticDraft(bad);
+    assert.ok(!v.ok, `字段 ${key} 应被拒绝`);
+    assert.ok(
+      v.errors.some((e) => e.includes(key)),
+      `${key}: ${v.errors.join("; ")}`,
+    );
+  }
+  // 指引：无法表达的资产要求要给出明确下一步，不是干巴巴的 schema 错。
+  const v2 = validateSemanticDraft({
+    ...VALID,
+    shots: [{ ...VALID.shots[0], assetUrl: "https://e.com/a.png" }, ...VALID.shots.slice(1)],
+  });
+  assert.ok(!v2.ok);
+  assert.ok(
+    v2.errors.some((e) => /素材|照片|人工/.test(e)),
+    v2.errors.join("; "),
   );
 });
 
@@ -211,7 +260,7 @@ test("semantic 编译：renderHint 列出该镜屏幕文字（I-5，交接单 §
         title: "水循环三阶段",
         narrationText: "水在三个阶段循环",
         durationMs: 5000,
-        cycleSteps: [{ label: "蒸发" }, { label: "凝结" }, { label: "降水" }],
+        cycleSteps: ["蒸发", "凝结", "降水"],
       },
       {
         intent: "text-explainer",

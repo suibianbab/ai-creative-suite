@@ -6,8 +6,10 @@
 // json_object 而非 json_schema：与 plan-provider 实测结论一致（大 schema
 // 强约束让输出劣化），结构完备性交给 validateSemanticDraft 硬校验。
 
-// v3：flow 步骤字数上限 6→10（对齐 flow-steps 契约，3eef0c0 补记）。
-export const SEMANTIC_PROMPT_VERSION = "3";
+// v4：cycleSteps 改纯字符串数组（caption 从 IR 移除，P2-3）；严格字段
+// 纪律与素材边界指引（P1-2）；内容准确性——只有真正首尾相接的循环过程
+// 才用 cycle（光合作用这类单向过程用 flow，防止「四步循环」式误导）。
+export const SEMANTIC_PROMPT_VERSION = "4";
 export const SEMANTIC_COMPILER_VERSION = "1";
 
 // 提示词 = 能力目录 + IR 契约 + 预算公式。模型只能在这个范围内表达；
@@ -20,16 +22,17 @@ IR 顶层：{"topic":"主题（1..40 字）","title":"片名（1..30 字）","sh
 四种镜头意图（durationMs 一律 2000..6000 的整数）：
 1. 开场/收尾：{"intent":"title","title":"镜头标题（1..32 字）","narrationText":"旁白（≤12 字）","durationMs":2500}
 2. 要点讲解：{"intent":"text-explainer","title":"标题","narrationText":"旁白（≤12 字）","durationMs":3200,"bullets":["要点一（≤12 字）","要点二","要点三"]}（bullets 1..3 条；durationMs ≥ 2160+500×(条数-1)）
-3. 循环图解：{"intent":"cycle-explainer","title":"标题","narrationText":"旁白（≤14 字）","durationMs":5000,"cycleSteps":[{"label":"蒸发","caption":"可选短注≤12字"},{"label":"凝结"},{"label":"降水"},{"label":"汇集"}]}（cycleSteps 3..5 阶段，label 1..6 字；durationMs ≥ 3000+480×(阶段数-1)）
+3. 循环图解：{"intent":"cycle-explainer","title":"标题","narrationText":"旁白（≤14 字）","durationMs":5000,"cycleSteps":["蒸发","凝结","降水","汇集"]}（cycleSteps 3..5 个字符串阶段名，每个 1..6 字；durationMs ≥ 3000+480×(阶段数-1)）
 4. 流程图解：{"intent":"flow-explainer","title":"标题","narrationText":"旁白（≤16 字）","durationMs":3000,"flowSteps":["步骤一","步骤二","步骤三"]}（flowSteps 2..4 步，每步 1..10 字；durationMs ≥ 2500+120×(步数-1)）
 
 硬性规则（违反任何一条整个输出会被拒绝）：
 - durationMs 必须是 2000..6000 的整数；绝不超过 6000。
 - 旁白字数 ≤ (durationMs-400)/300 向下取整。例：3000ms→8 字，4000ms→12 字，5000ms→15 字，6000ms→18 字。宁可短，不可超。
-- 每个镜头的 title ≤32 字；bullets 每条 ≤12 字；cycle label ≤6 字、caption ≤12 字；flow 每步 ≤10 字。
-- 不输出上述字段以外的任何字段（无坐标、无颜色、无 URL、无代码）。
+- 每个镜头的 title ≤32 字；bullets 每条 ≤12 字；cycle 每阶段 1..6 字；flow 每步 ≤10 字。
+- 严禁输出上述字段以外的任何字段：无坐标、无颜色、无 assetUrl/image/url/src 等素材引用、无 HTML/SVG/代码。需要真实照片/素材的需求无法表达——改用图解表述，不要造字段。
 
-内容纪律：旁白只陈述画面实际展示的内容；循环/流程的每个阶段都要在 label/caption 或旁白中如实出现；不要虚构当前画不出来的东西（真实照片、复杂机械结构）。
+内容纪律：旁白只陈述画面实际展示的内容；循环/流程的每个阶段都要在阶段名或旁白中如实出现。
+准确性纪律：cycle-explainer 只用于真正首尾相接、会回到起点的循环过程（水循环、碳循环、食物链循环）；单向过程（光合作用、呼吸作用、燃烧）一律用 flow-explainer，不得画成闭环误导观众。
 时长纪律：用户要求约 N 秒时，Σ durationMs 必须落在 0.8N..1.2N。先按 N 估镜头数（25 秒 ≈ 6..8 镜 × 2500..5000ms），逐镜定 durationMs，输出前自己求和核对；不足就加镜头，不要把单镜拉到 6000 之上。
 典型编排：开场 title → 循环/流程/要点讲解（2..6 镜）→ 收尾 title。`;
 

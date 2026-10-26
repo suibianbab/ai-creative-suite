@@ -950,6 +950,14 @@ export default function VideoStudioPage() {
                     provenance: null,
                     durationDeviation: null,
                   });
+                  // P1-1（Codex 复核 2026-10-26）：新请求开始即撤销旧候选——
+                  // 请求期间/失败后旧确认卡不可再应用，杜绝「旧 AI 结果按
+                  // planner-rules 记账」的错标路径（provenance 已随下方重置）。
+                  setEditor((current) =>
+                    !current || current.document.id !== documentId
+                      ? current
+                      : { ...current, storyboard: null, plan: null, message: null },
+                  );
                   // 响应归属守卫：项目已切换或已有更新请求 → 整体丢弃。
                   const stale = () =>
                     semanticRequestRef.current !== requestId ||

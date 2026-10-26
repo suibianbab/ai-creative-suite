@@ -10,7 +10,7 @@
 //   - <slug>.project.json      应用+保存后导出的项目 JSON
 //   - generation-log.json      每主题时延/usage/镜头数/总时长
 // exit 0 = 两个主题都拿到有效分镜与项目；否则 exit 1。
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright-core";
@@ -166,6 +166,19 @@ for (const topic of TOPICS) {
   ]);
   const projectPath = path.join(OUT_DIR, `${topic.slug}.project.json`);
   await download.saveAs(projectPath);
+  // Codex 复核场景 3：应用写档的是规划期句子快照（生成后改输入不影响落库句）。
+  const exported = JSON.parse(readFileSync(projectPath, "utf8"));
+  if (exported.brief.sentence !== topic.sentence)
+    fail(
+      `句子快照(${topic.slug})`,
+      `brief.sentence=${exported.brief.sentence} ≠ 规划句 ${topic.sentence}`,
+    );
+  // provenance 必须是语义引擎（防错标 planner-rules，P1-1 相关口径）。
+  for (const shot of exported.shots) {
+    const v = shot.contentVersions.find((x) => x.versionId === shot.workingVersionId);
+    if (!v.provenance.engineId.startsWith("planner-semantic"))
+      fail(`provenance(${topic.slug})`, `镜 ${shot.order + 1} 落档 ${v.provenance.engineId}`);
+  }
   await page.click(".project-action");
 
   // 台账记录交付轮（浏览器轮）：probe 轮的时延/usage 一并留档对比。

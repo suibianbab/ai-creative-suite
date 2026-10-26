@@ -3,31 +3,28 @@
     "slug": "water-cycle",
     "sentence": "做一条约25秒的水循环科普短片，讲清蒸发、凝结和降水",
     "browser": {
-      "shots": 5,
-      "totalMs": 16600,
+      "shots": 6,
+      "totalMs": 21100,
       "usage": {
-        "prompt_tokens": 898,
-        "completion_tokens": 406,
-        "total_tokens": 1304
+        "prompt_tokens": 886,
+        "completion_tokens": 447,
+        "total_tokens": 1333
       },
-      "durationDeviation": {
-        "targetMs": 25000,
-        "actualMs": 16600
-      },
+      "durationDeviation": null,
       "provenance": {
         "model": "qwen-plus",
-        "promptVersion": "3",
+        "promptVersion": "4",
         "compilerVersion": "1"
       }
     },
     "probe": {
-      "routeElapsedMs": 17492,
-      "shots": 5,
-      "totalMs": 19000,
+      "routeElapsedMs": 10748,
+      "shots": 6,
+      "totalMs": 22600,
       "usage": {
-        "prompt_tokens": 898,
-        "completion_tokens": 424,
-        "total_tokens": 1322
+        "prompt_tokens": 886,
+        "completion_tokens": 442,
+        "total_tokens": 1328
       }
     }
   },
@@ -36,27 +33,27 @@
     "sentence": "做一条约25秒的光合作用科普短片，讲清阳光、二氧化碳和水如何变成养分",
     "browser": {
       "shots": 6,
-      "totalMs": 21300,
+      "totalMs": 22800,
       "usage": {
-        "prompt_tokens": 902,
-        "completion_tokens": 481,
-        "total_tokens": 1383
+        "prompt_tokens": 1849,
+        "completion_tokens": 792,
+        "total_tokens": 2641
       },
       "durationDeviation": null,
       "provenance": {
         "model": "qwen-plus",
-        "promptVersion": "3",
+        "promptVersion": "4",
         "compilerVersion": "1"
       }
     },
     "probe": {
-      "routeElapsedMs": 21363,
-      "shots": 6,
-      "totalMs": 22300,
+      "routeElapsedMs": 16228,
+      "shots": 5,
+      "totalMs": 17800,
       "usage": {
-        "prompt_tokens": 902,
-        "completion_tokens": 498,
-        "total_tokens": 1400
+        "prompt_tokens": 1849,
+        "completion_tokens": 694,
+        "total_tokens": 2543
       }
     }
   }

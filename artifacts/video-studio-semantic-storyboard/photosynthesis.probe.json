@@ -2,13 +2,13 @@
   "storyboard": {
     "ok": true,
     "sentence": "做一条约25秒的光合作用科普短片，讲清阳光、二氧化碳和水如何变成养分",
-    "title": "阳光·水·气→生命养分",
-    "totalMs": 22300,
+    "title": "阳光·水·CO₂→养分",
+    "totalMs": 17800,
     "shots": [
       {
         "label": "标题",
-        "description": "光合作用：生命的能量工厂（标题）",
-        "narrationText": "植物如何造养分？",
+        "description": "光合作用：植物的厨房（标题）",
+        "narrationText": "植物如何造食物？",
         "plan": {
           "ok": true,
           "spec": {
@@ -19,85 +19,42 @@
             "seed": 5000,
             "background": "#101f34",
             "params": {
-              "title": "光合作用：生命的能量工厂",
-              "subtitle": "植物如何造养分？",
+              "title": "光合作用：植物的厨房",
+              "subtitle": "植物如何造食物？",
               "titleColor": "#f3f5f7",
               "subtitleColor": "#b4d8e4",
               "entrance": "fade-up",
               "enterMs": 450
             }
           },
-          "title": "光合作用：生命的能量工厂",
-          "renderHint": "标题「光合作用：生命的能量工厂」，副标题「植物如何造养分？」"
-        }
-      },
-      {
-        "label": "要点解说",
-        "description": "三大原料缺一不可（要点解说）",
-        "narrationText": "阳光、水、二氧化碳",
-        "plan": {
-          "ok": true,
-          "spec": {
-            "specVersion": 1,
-            "componentId": "sketch-note",
-            "componentVersion": 1,
-            "durationMs": 3200,
-            "seed": 5007,
-            "background": "#101f34",
-            "params": {
-              "title": "三大原料缺一不可",
-              "items": [
-                {
-                  "text": "阳光提供能量",
-                  "emphasis": "下划线"
-                },
-                {
-                  "text": "水来自根部",
-                  "emphasis": "圈"
-                },
-                {
-                  "text": "二氧化碳来自空气",
-                  "emphasis": "圈"
-                }
-              ],
-              "inkColor": "#f3f5f7",
-              "accentColor": "#f5b652",
-              "writeMs": 900,
-              "drawMs": 700,
-              "staggerMs": 500
-            }
-          },
-          "title": "三大原料缺一不可",
-          "renderHint": "要点解说「三大原料缺一不可」，要点：阳光提供能量、水来自根部、二氧化碳来自空气"
+          "title": "光合作用：植物的厨房",
+          "renderHint": "标题「光合作用：植物的厨房」，副标题「植物如何造食物？」"
         }
       },
       {
         "label": "流程图解",
-        "description": "光合作用四步转化（流程图解）",
-        "narrationText": "光能驱动化学反应",
+        "description": "光合作用原料输入（流程图解）",
+        "narrationText": "阳光照叶，吸收CO₂和水",
         "plan": {
           "ok": true,
           "spec": {
             "specVersion": 1,
             "componentId": "flow-steps",
             "componentVersion": 1,
-            "durationMs": 4800,
-            "seed": 5014,
+            "durationMs": 4200,
+            "seed": 5007,
             "background": "#101f34",
             "params": {
-              "title": "光合作用四步转化",
+              "title": "光合作用原料输入",
               "steps": [
                 {
-                  "label": "吸光：叶绿素捕获阳光"
+                  "label": "阳光提供能量"
                 },
                 {
-                  "label": "裂水：水分解出氧气"
+                  "label": "气孔吸入CO₂"
                 },
                 {
-                  "label": "固碳：CO₂变有机物"
-                },
-                {
-                  "label": "合成：生成葡萄糖"
+                  "label": "根部吸收水分"
                 }
               ],
               "direction": "vertical",
@@ -107,131 +64,108 @@
               "enterMs": 700
             }
           },
-          "title": "光合作用四步转化",
-          "renderHint": "流程图解「光合作用四步转化」，流程：吸光：叶绿素捕获阳光 → 裂水：水分解出氧气 → 固碳：CO₂变有机物 → 合成：生成葡萄糖"
+          "title": "光合作用原料输入",
+          "renderHint": "流程图解「光合作用原料输入」，流程：阳光提供能量 → 气孔吸入CO₂ → 根部吸收水分"
         }
       },
       {
-        "label": "循环图解",
-        "description": "能量与物质循环（循环图解）",
-        "narrationText": "原料进，养分和氧出",
+        "label": "流程图解",
+        "description": "叶绿体中发生反应（流程图解）",
+        "narrationText": "在叶绿体里转化",
         "plan": {
           "ok": true,
           "spec": {
             "specVersion": 1,
-            "componentId": "explainer-composition",
+            "componentId": "flow-steps",
             "componentVersion": 1,
-            "durationMs": 5000,
+            "durationMs": 4000,
+            "seed": 5014,
+            "background": "#101f34",
+            "params": {
+              "title": "叶绿体中发生反应",
+              "steps": [
+                {
+                  "label": "光能激活叶绿素"
+                },
+                {
+                  "label": "分解水分子"
+                },
+                {
+                  "label": "固定CO₂成糖"
+                }
+              ],
+              "direction": "vertical",
+              "boxColor": "#dcebe1",
+              "arrowColor": "#f5b652",
+              "textColor": "#f3f5f7",
+              "enterMs": 700
+            }
+          },
+          "title": "叶绿体中发生反应",
+          "renderHint": "流程图解「叶绿体中发生反应」，流程：光能激活叶绿素 → 分解水分子 → 固定CO₂成糖"
+        }
+      },
+      {
+        "label": "流程图解",
+        "description": "产出与释放（流程图解）",
+        "narrationText": "产出葡萄糖，释放氧气",
+        "plan": {
+          "ok": true,
+          "spec": {
+            "specVersion": 1,
+            "componentId": "flow-steps",
+            "componentVersion": 1,
+            "durationMs": 4300,
             "seed": 5021,
             "background": "#101f34",
             "params": {
-              "titleColor": "#f3f5f7",
-              "textColor": "#f3f5f7",
-              "boxColor": "#dcebe1",
-              "arrowColor": "#f5b652",
-              "strokeColor": "#42a5a0",
-              "title": "能量与物质循环",
-              "titleY": 145,
-              "titleEnterMs": 0,
-              "diagramOffsetX": 0,
-              "diagramOffsetY": -60,
-              "diagramEnterMs": 450,
-              "diagram": {
-                "kind": "cycle",
-                "steps": [
-                  {
-                    "label": "阳光"
-                  },
-                  {
-                    "label": "水"
-                  },
-                  {
-                    "label": "CO₂"
-                  },
-                  {
-                    "label": "葡萄糖"
-                  }
-                ]
-              },
-              "annotations": [
+              "title": "产出与释放",
+              "steps": [
                 {
-                  "text": "原料进，养分和氧出",
-                  "x": 500,
-                  "y": 780,
-                  "portraitY": 1340,
-                  "enterMs": 400
-                }
-              ]
-            }
-          },
-          "title": "能量与物质循环",
-          "renderHint": "循环图解「能量与物质循环」，循环阶段：阳光 → 水 → CO₂ → 葡萄糖"
-        }
-      },
-      {
-        "label": "要点解说",
-        "description": "关键产物与意义（要点解说）",
-        "narrationText": "养分供生长，氧供呼吸",
-        "plan": {
-          "ok": true,
-          "spec": {
-            "specVersion": 1,
-            "componentId": "sketch-note",
-            "componentVersion": 1,
-            "durationMs": 3600,
-            "seed": 5028,
-            "background": "#101f34",
-            "params": {
-              "title": "关键产物与意义",
-              "items": [
-                {
-                  "text": "葡萄糖是主要养分",
-                  "emphasis": "下划线"
+                  "label": "合成葡萄糖"
                 },
                 {
-                  "text": "氧气释放到大气",
-                  "emphasis": "圈"
+                  "label": "储存化学能"
                 },
                 {
-                  "text": "支撑整个食物链",
-                  "emphasis": "圈"
+                  "label": "释放氧气"
                 }
               ],
-              "inkColor": "#f3f5f7",
-              "accentColor": "#f5b652",
-              "writeMs": 900,
-              "drawMs": 700,
-              "staggerMs": 500
+              "direction": "vertical",
+              "boxColor": "#dcebe1",
+              "arrowColor": "#f5b652",
+              "textColor": "#f3f5f7",
+              "enterMs": 700
             }
           },
-          "title": "关键产物与意义",
-          "renderHint": "要点解说「关键产物与意义」，要点：葡萄糖是主要养分、氧气释放到大气、支撑整个食物链"
+          "title": "产出与释放",
+          "renderHint": "流程图解「产出与释放」，流程：合成葡萄糖 → 储存化学能 → 释放氧气"
         }
       },
       {
         "label": "标题",
-        "description": "光合作用——地球的生命引擎（标题）",
-        "narrationText": "万物生长靠太阳",
+        "description": "光合作用：生命之源（标题）",
+        "narrationText": "养分从这里开始",
         "plan": {
           "ok": true,
           "spec": {
             "specVersion": 1,
             "componentId": "text-animation",
             "componentVersion": 1,
-            "durationMs": 2900,
-            "seed": 5035,
+            "durationMs": 2500,
+            "seed": 5028,
             "background": "#101f34",
             "params": {
-              "title": "光合作用——地球的生命引擎",
-              "subtitle": "万物生长靠太阳",
+              "title": "光合作用：生命之源",
+              "subtitle": "养分从这里开始",
               "titleColor": "#f3f5f7",
               "subtitleColor": "#b4d8e4",
               "entrance": "fade-up",
               "enterMs": 450
             }
           },
-          "title": "光合作用——地球的生命引擎",
-          "renderHint": "标题「光合作用——地球的生命引擎」，副标题「万物生长靠太阳」"
+          "title": "光合作用：生命之源",
+          "renderHint": "标题「光合作用：生命之源」，副标题「养分从这里开始」"
         }
       }
     ]
@@ -239,14 +173,30 @@
   "provenance": {
     "provider": "qwen-chat",
     "model": "qwen-plus",
-    "promptVersion": "3",
+    "promptVersion": "4",
     "compilerVersion": "1",
     "sentence": "做一条约25秒的光合作用科普短片，讲清阳光、二氧化碳和水如何变成养分",
     "topic": "光合作用三要素转化过程"
   },
   "usage": {
-    "prompt_tokens": 902,
-    "completion_tokens": 498,
-    "total_tokens": 1400
+    "prompt_tokens": 1849,
+    "completion_tokens": 694,
+    "total_tokens": 2543
+  },
+  "usageCalls": [
+    {
+      "prompt_tokens": 890,
+      "completion_tokens": 337,
+      "total_tokens": 1227
+    },
+    {
+      "prompt_tokens": 959,
+      "completion_tokens": 357,
+      "total_tokens": 1316
+    }
+  ],
+  "durationDeviation": {
+    "targetMs": 25000,
+    "actualMs": 17800
   }
 }

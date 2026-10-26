@@ -59,6 +59,9 @@ export async function POST(request: Request) {
     return Response.json({ error: first.message, kind: first.kind }, { status: 422 });
   let validation = validateSemanticDraft(first.draft);
   let draftSource = first;
+  // P2-4（Codex 复核）：重试的 token 用量必须合计——只报最后一调会低报成本。
+  const usageCalls: Array<NonNullable<typeof first.usage>> = [];
+  if (first.usage) usageCalls.push(first.usage);
 
   // 时长目标（交接单验收：20-30s 或显式记录偏离）：Σ 偏离 0.8N..1.2N 与
   // IR 非法同等对待，并入同一次带因修正重试。
@@ -81,6 +84,7 @@ export async function POST(request: Request) {
       return Response.json({ error: retry.message, kind: retry.kind }, { status: 422 });
     validation = validateSemanticDraft(retry.draft);
     draftSource = retry;
+    if (retry.usage) usageCalls.push(retry.usage);
   }
   if (!validation.ok)
     return Response.json(
@@ -103,6 +107,15 @@ export async function POST(request: Request) {
   const stillOff =
     targetMs !== null && !withinRange(finalTotal, lo, hi);
 
+  // usage = 逐调合计（分项在 usageCalls）；上游未给任何 usage 时为 null。
+  const usage = usageCalls.length
+    ? {
+        prompt_tokens: usageCalls.reduce((n, u) => n + u.prompt_tokens, 0),
+        completion_tokens: usageCalls.reduce((n, u) => n + u.completion_tokens, 0),
+        total_tokens: usageCalls.reduce((n, u) => n + u.total_tokens, 0),
+      }
+    : null;
+
   return Response.json({
     storyboard: compiled,
     provenance: {
@@ -113,8 +126,9 @@ export async function POST(request: Request) {
       sentence: text,
       topic: validation.draft.topic,
     },
-    // token usage 透传给调用方做计费台账（缺省 null：上游未提供）。
-    usage: draftSource.usage,
+    // token usage 合计 + 分项，供计费台账（P2-4）。
+    usage,
+    ...(usage ? { usageCalls } : {}),
     ...(stillOff
       ? { durationDeviation: { targetMs, actualMs: finalTotal } }
       : {}),

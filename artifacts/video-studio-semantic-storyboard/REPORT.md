@@ -19,7 +19,7 @@
 | 链路接入 | applyStoryboard 可选 provenance 参数（语义路径落 `planner-semantic/<model>/prompt<v>/compiler<v>`，默认 planner-rules/1 不变）；确认卡/追加/保存/导出/出片全走现有代码 | apply-plan.test.ts 14 用例 |
 | QA registry | VID-065（browser-video 档） | `pnpm qa:validate` 117 自动用例通过 |
 
-提示词版本 v3（含 6→10 字上限补记 bump）；编译器 v1。token usage 经 provider→route 原样透传（计费台账取证）。token usage 经 provider→route 原样透传（计费台账取证）。
+提示词版本 v4（cycleSteps 纯字符串、严格字段纪律、素材边界指引、cycle 仅限真循环）；编译器 v1。token usage 经 provider→route 原样透传（计费台账取证）。token usage 经 provider→route 原样透传（计费台账取证）。
 
 ## 二、四态
 
@@ -27,16 +27,24 @@
 2. **自动回归**：`pnpm test` 340/340 通过；`pnpm typecheck` 通过；`pnpm qa:validate` 通过。
 3. **浏览器链路**：VID-065 无密钥失败面 E2E 通过（AI 入口 503 明示、不回退；旧句式规划回归正常；放弃无残留；控制台干净——503 资源日志按 response 事件对账放行）。真实千问浏览器全链（生成→确认卡截图→追加→保存→导出）双主题通过（audit-semantic-storyboard-live.mjs）。
 
+### Codex 复核修复轮（2026-10-26，CODEX_REVIEW.md 四项必修全闭合）
+
+- P1-1 新 AI 请求开始即撤销旧候选（page.tsx setEditor 守卫清除 storyboard），失败后无旧卡可错标；e2e-semantic-plan 加「规则卡→点 AI→卡消失」回归。
+- P1-2 IR 严格键集合校验（根/镜头两级），资产/代码类字段拒绝并给素材边界指引（「改用图解或人工导入」），不再无声转通用图解；单测+API 假响应测试覆盖。
+- P2-3 caption 从 IR 移除（cycleSteps 纯字符串），关键信息必须写进 label/旁白，编译不再静默丢内容。
+- P2-4 重试 usage 合计+分项（usage 汇总、usageCalls 明细），双调用测试锁定；实测光合作用轮 2641 tokens=两调合计。
+- 提示词 v4 增加「cycle 仅限真正首尾相接的循环，单向过程用 flow」准确性纪律：本轮光合作用样片全部 flow-steps（无「四步循环」误导），水循环 cycle+三镜分阶段详解（汽化吸热/凝结核/重力下落）。
+
 ### 独立全分支评审（2026-10-26，修复后数字）
 
 无 Critical。5 项 Important 已全部修复：I-1 AI 回调过期闭包（函数式 setEditor + 文档 id/请求序号守卫）；I-2 semanticPlan 生命周期（旧规划点击即重置、三处项目切换重置、AI 期间互斥禁用——规则产物不再可能错标 AI provenance）；I-3 证据三件套同轮落盘（*.response.json=浏览器轮，*.probe.json=直连取样轮，脚本内断言三件一致）；I-4 UI 失败面拼接逐镜 errors[]；I-5 确认卡 renderHint 列出每镜屏幕文字（标题/要点/循环阶段/流程步骤）。M-1 提示词版本补 bump 至 v3。M-2..M-7 记账缓办（见分支 ledger）。
-4. **视觉质量**：确定性几何校验 LAYOUT OK——两片×双画幅×每镜入场帧+稳定帧共 150 个文本包围盒零出界零重叠（check-layout.mjs，思路移植 stem-visual）；末帧 YAVG 44-46（无黑屏结尾）；蒸发→凝结→降水屏幕顺序与旁白一致（位置 [433,450,467]）。
+4. **视觉质量**：确定性几何校验 LAYOUT OK——两片×双画幅×每镜入场帧+稳定帧共 168 个文本包围盒零出界零重叠（check-layout.mjs，思路移植 stem-visual）；末帧 YAVG 44-46（无黑屏结尾）；蒸发→凝结→降水屏幕顺序与旁白一致（位置 [433,450,467]）。
 
 ## 三、真实样片证据（本目录）
 
-- `water-cycle.project.json` + `water-cycle-render/{landscape,portrait}.mp4`：横 1280×720/竖 720×1280、24fps、398 帧、16.58s（ffprobe；偏离标注在 response.json 与确认卡，重试后仍未对齐）。
-- `photosynthesis.project.json` + `photosynthesis-render/{landscape,portrait}.mp4`：511 帧、21.29s（20-30s 目标内）。
-- `frames/`：44 张逐镜抽帧（每镜入场中段+稳定段，双画幅）。
+- `water-cycle.project.json` + `water-cycle-render/{landscape,portrait}.mp4`：横 1280×720/竖 720×1280、24fps、506 帧、21.08s（20-30s 目标内，无偏离）。
+- `photosynthesis.project.json` + `photosynthesis-render/{landscape,portrait}.mp4`：547 帧、22.79s（20-30s 目标内；重试轮 usage 合计 2641）。
+- `frames/`：48 张逐镜抽帧（每镜入场中段+稳定段，双画幅）。
 - `*.confirm-card.png`：浏览器确认卡截图（无「要点 1/示意 1」占位文案，assert 在 audit 脚本）。
 - `*.response.json`：**浏览器轮**路由完整响应（与确认卡截图、project.json 同轮生成，脚本断言三件一致）；`*.probe.json`：直连取样轮（时延/usage 对比）。
 - `generation-log.json`：每主题路由时延与 token usage。
@@ -44,7 +52,7 @@
 
 ## 四、偏离与已知限制（如实记录）
 
-1. **时长对齐是概率性的**：句中目标 25s 时，多轮生成落在 17.4s..25.3s；带因重试后仍可能偏短。机制上以 durationDeviation 透明标注（路由响应+确认卡提示行），不硬失败。样片记录：水循环浏览器轮 16.58s（偏离标注在案）；光合作用 21.29s（达标）。
+1. **时长对齐是概率性的**：多轮生成落在 13.2s..25.3s；带因重试后仍可能偏短，机制上以 durationDeviation 透明标注（路由响应+确认卡提示行），不硬失败。本轮修复轮双主题均达标（21.08s / 22.79s）。
 2. **cycle 阶段短注（caption）不上屏**：caption 挂在阶段节点下方，横版侵入注解带（y 650..800）与旁白注解必撞（几何实测 4+ 阶段）。阶段信息以 label 上屏（交接单验收口径），caption 细节由旁白承载；IR 仍接受 caption（校验 ≤12 字）。
 3. **flow 走独立 flow-steps@1**：explainer-composition 的 flow 竖版布局组件内重排（diagramOffsetY/titleY 均不生效），标题×首步全参数空间恒叠位（offset-sweep 实测）；flow-steps 横/纵×2..4 步×双画幅最坏内容零碰撞。代价：flow 镜头旁白不上屏（无注解位），走 TTS/确认卡。
 4. **音频链未验证**：本轮未跑 TTS 合成，有声成片链标为「未验证」（旁白文本/时长预算已按 TTS 口径约束：400+300×字数 ≤ durationMs）。

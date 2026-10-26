@@ -105,10 +105,22 @@ if (shotLabels.length !== 4)
 if (!/开场/.test(shotLabels[0] ?? "") || !/结语/.test(shotLabels.at(-1) ?? ""))
   fail("旧句式分镜确认卡", `开场/结语缺失: ${shotLabels.join(" / ")}`);
 
-// —— 放弃：状态清理，无残留 ——
-await page.click(".plan-discard");
+// —— P1-1 回归（Codex 复核）：新 AI 请求开始即撤销旧候选 ——
+// 存量确认卡（无论规则或 AI 产物）在点击 AI 生成的瞬间必须消失：
+// 请求期间/失败后旧卡不可再应用，杜绝错标 provenance 的记账路径。
+await page.click(".planner-ai");
+await page
+  .locator(".planner-feedback", { hasText: "DASHSCOPE_API_KEY" })
+  .first()
+  .waitFor({ timeout: 20_000 })
+  .catch(() => fail("P1-1 撤销旧卡", "第二次 AI 失败提示未出现"));
+const cardsAfterSecondAi = await page.locator(".storyboard-card").count();
+if (cardsAfterSecondAi !== 0)
+  fail("P1-1 撤销旧卡", "AI 请求后旧确认卡仍在（可被错误应用）");
+
+// —— 状态面干净：撤销后页面无残留确认卡 ——
 const cardsAfterDiscard = await page.locator(".storyboard-card").count();
-if (cardsAfterDiscard !== 0) fail("放弃", "分镜卡未清理");
+if (cardsAfterDiscard !== 0) fail("状态面", "撤销后仍有分镜卡残留");
 
 await page.screenshot({
   path: path.join(OUT_DIR, "semantic-entry.png"),
@@ -126,5 +138,5 @@ if (expectedSemanticFailures === 0)
 
 await browser.close();
 console.log(
-  "[e2e-semantic-plan] OK: AI 入口无密钥时明示失败不回退；旧句式规划回归正常；放弃后无残留",
+  "[e2e-semantic-plan] OK: AI 入口无密钥时明示失败不回退；旧句式规划回归正常；新 AI 请求撤销旧候选（P1-1）；状态面无残留",
 );
