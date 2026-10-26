@@ -116,13 +116,13 @@ test("semantic-plan：首次 IR 非法 → 带原因重试一次后成功", asyn
       messages: Array<{ role: string; content: string }>;
     };
     userMessages.push(body.messages[1]!.content);
-    // 第一次：旁白超预算；第二次：合法。
+    // 第一次：旁白超绝对上限（>18 字无论如何延长都读不完）；第二次：合法。
     return chatResponse(
       calls === 1
         ? JSON.stringify({
             ...JSON.parse(VALID_IR),
             shots: [
-              { intent: "title", title: "T", narrationText: "这段旁白实在太长了肯定装不下", durationMs: 2000 },
+              { intent: "title", title: "T", narrationText: "这段旁白实在太长了肯定无论如何都装不下啊", durationMs: 2000 },
               ...JSON.parse(VALID_IR).shots.slice(1),
             ],
           })

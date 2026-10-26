@@ -6,6 +6,7 @@ import {
 } from "../../../video-studio/semantic-provider";
 import {
   compileSemanticDraft,
+  projectedTotalMs,
   validateSemanticDraft,
 } from "../../../video-studio/semantic-storyboard";
 
@@ -21,10 +22,6 @@ function durationTargetMs(text: string): number | null {
   const seconds = Number(match[1]);
   if (seconds < 5 || seconds > 120) return null;
   return seconds * 1000;
-}
-
-function totalMsOf(draft: { shots: Array<{ durationMs: number }> }): number {
-  return draft.shots.reduce((ms, shot) => ms + shot.durationMs, 0);
 }
 
 export async function POST(request: Request) {
@@ -69,14 +66,15 @@ export async function POST(request: Request) {
   const lo = targetMs === null ? 0 : Math.floor(targetMs * 0.8);
   const hi = targetMs === null ? Number.POSITIVE_INFINITY : Math.ceil(targetMs * 1.2);
   const offTarget =
-    targetMs !== null && validation.ok && !withinRange(totalMsOf(validation.draft), lo, hi);
+    targetMs !== null && validation.ok &&
+    !withinRange(projectedTotalMs(validation.draft), lo, hi);
 
   // 第二轮：IR 非法或时长偏离时带原因修正重试，恰好一次。
   if (!validation.ok || offTarget) {
     const reasons = validation.ok ? [] : validation.errors.slice();
     if (offTarget && validation.ok)
       reasons.push(
-        `总时长 ${totalMsOf(validation.draft)}ms 偏离要求：句子目标 ${targetMs}ms，Σ durationMs 须落在 ${lo}..${hi}ms`,
+        `总时长（延长后）${projectedTotalMs(validation.draft)}ms 偏离要求：句子目标 ${targetMs}ms，Σ durationMs 须落在 ${lo}..${hi}ms`,
       );
     const retry = await provider.plan(text, reasons.join("；"));
     if (!retry.ok)
@@ -101,7 +99,7 @@ export async function POST(request: Request) {
     );
 
   // 重试后仍偏离：透明标注（不硬失败——确认卡如实显示总时长，用户决定）。
-  const finalTotal = totalMsOf(validation.draft);
+  const finalTotal = projectedTotalMs(validation.draft);
   const stillOff =
     targetMs !== null && !withinRange(finalTotal, lo, hi);
 

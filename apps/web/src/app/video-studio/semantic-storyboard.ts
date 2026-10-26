@@ -70,6 +70,12 @@ export function narrationCharBudget(durationMs: number): number {
   return Math.floor((durationMs - SPEECH_LEAD_IN_MS) / SPEECH_MS_PER_CHAR);
 }
 
+// 投影总时长：逐镜延长（演完下限+旁白预算）后的 Σ——路由的时长目标检查
+// 与偏离标注用这个值（用户拿到的就是它），不用 IR 原始 Σ。
+export function projectedTotalMs(draft: SemanticStoryboardDraft): number {
+  return draft.shots.reduce((ms, shot) => ms + effectiveDurationMs(shot), 0);
+}
+
 export type SemanticValidation =
   | { ok: true; draft: SemanticStoryboardDraft }
   | { ok: false; errors: string[] };
@@ -117,18 +123,18 @@ export function validateSemanticDraft(raw: unknown): SemanticValidation {
       errors.push(`${field}.durationMs 须为 2000..6000 的整数`);
     }
     const shaped = shot as unknown as SemanticDraftShot;
-    if (typeof shot.narrationText === "string" && typeof shot.durationMs === "number") {
-      const budget = narrationCharBudget(shot.durationMs);
+    if (typeof shot.narrationText === "string") {
+      // 旁白硬上限 = 6000ms（IR 时长上限）的预算 floor((6000-400)/300)=18 字：
+      // 低于它的超额由编译器确定性延长吸收（durationMs 是模型的下限意图，
+      // 同旧规划器 speechAwareDurationMs 的下限语义）；超过它无论如何延长
+      // 都读不完，才是校验错误。
       const chars = [...shot.narrationText.trim()].length;
-      if (chars > budget) {
+      const absoluteBudget = narrationCharBudget(6000);
+      if (chars > absoluteBudget) {
         errors.push(
-          `${field} 旁白 ${chars} 字超出时长预算：${shot.durationMs}ms 最多 ${budget} 字（须满足 400+300×字数 ≤ durationMs）`,
+          `${field} 旁白 ${chars} 字超出可读上限：单镜最长 6000ms 最多 ${absoluteBudget} 字，请精简或拆镜`,
         );
       }
-    }
-    const minMs = minDurationMs(intent, shaped);
-    if (typeof shot.durationMs === "number" && shot.durationMs >= 2000 && shot.durationMs < minMs) {
-      errors.push(`${field}.durationMs=${shot.durationMs} 不足以演完该画面，须 ≥${minMs}`);
     }
     if (intent === "text-explainer") {
       if (!Array.isArray(shot.bullets) || shot.bullets.length < 1 || shot.bullets.length > 3) {
@@ -177,6 +183,15 @@ export function validateSemanticDraft(raw: unknown): SemanticValidation {
 }
 
 // —— 确定性编译器：IR → SceneSpec（只选已注册组件）——
+// durationMs 是模型的「下限意图」：编译器确定性延长到 max(IR 时长, 演完
+// 下限, 旁白预算)，同旧规划器 speechAwareDurationMs 的下限语义——旁白
+// 读不完/画面演不完的镜头不许出厂，但不把矛盾推回给模型重试。
+function effectiveDurationMs(shot: SemanticDraftShot): number {
+  const chars = [...shot.narrationText.trim()].length;
+  const speechMs = SPEECH_LEAD_IN_MS + chars * SPEECH_MS_PER_CHAR;
+  return Math.max(shot.durationMs, minDurationMs(shot.intent, shot), speechMs);
+}
+
 function baseSpec(
   componentId: string,
   durationMs: number,
@@ -204,7 +219,7 @@ const CYCLE_COLORS = {
 };
 
 function compileTitle(shot: SemanticDraftShot, seed: number): SceneSpec {
-  return baseSpec("text-animation", shot.durationMs, {
+  return baseSpec("text-animation", effectiveDurationMs(shot), {
     title: shot.title,
     subtitle: shot.narrationText,
     titleColor: "#f3f5f7",
@@ -215,7 +230,7 @@ function compileTitle(shot: SemanticDraftShot, seed: number): SceneSpec {
 }
 
 function compileTextExplainer(shot: SemanticDraftShot, seed: number): SceneSpec {
-  return baseSpec("sketch-note", shot.durationMs, {
+  return baseSpec("sketch-note", effectiveDurationMs(shot), {
     title: shot.title,
     items: (shot.bullets ?? []).map((b, i) => ({
       text: b,
@@ -230,7 +245,7 @@ function compileTextExplainer(shot: SemanticDraftShot, seed: number): SceneSpec 
 }
 
 function compileCycleExplainer(shot: SemanticDraftShot, seed: number): SceneSpec {
-  return baseSpec("explainer-composition", shot.durationMs, {
+  return baseSpec("explainer-composition", effectiveDurationMs(shot), {
     ...CYCLE_COLORS,
     title: shot.title,
     titleY: 145,
@@ -255,7 +270,7 @@ function compileCycleExplainer(shot: SemanticDraftShot, seed: number): SceneSpec
 }
 
 function compileFlowExplainer(shot: SemanticDraftShot, seed: number): SceneSpec {
-  return baseSpec("explainer-composition", shot.durationMs, {
+  return baseSpec("explainer-composition", effectiveDurationMs(shot), {
     ...CYCLE_COLORS,
     title: shot.title,
     titleY: 145,

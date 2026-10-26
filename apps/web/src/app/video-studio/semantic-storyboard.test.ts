@@ -71,12 +71,12 @@ test("semantic IR：缺失 cycleSteps 拒绝", () => {
   );
 });
 
-test("semantic IR：旁白超出镜头时长预算 → 拒绝并给出预算", () => {
-  // 2000ms 只装得下 floor((2000-400)/300)=5 字；10 字必须被拒。
+test("semantic IR：旁白连 6000ms 都装不下 → 拒绝（预算不可延长）", () => {
+  // 6000ms 最多 floor((6000-400)/300)=18 字；19 字无论怎么延长都读不完。
   const bad = {
     ...VALID,
     shots: [
-      { intent: "title", title: "T", narrationText: "一二三四五六七八九十", durationMs: 2000 },
+      { intent: "title", title: "T", narrationText: "一二三四五六七八九十一二三四五六七八九", durationMs: 6000 },
       ...VALID.shots.slice(1),
     ],
   };
@@ -86,6 +86,22 @@ test("semantic IR：旁白超出镜头时长预算 → 拒绝并给出预算", (
     v.errors.some((e) => e.includes("shots[0]") && e.includes("旁白")),
     v.errors.join("; "),
   );
+});
+
+test("semantic 编译：旁白超出模型时长但延长可救 → 确定性延长（旧规划器下限语义）", () => {
+  // 10 字旁白预算 3400ms；模型给 2000ms 不是错误，编译器延长到 3400。
+  const draft = {
+    ...VALID,
+    shots: [
+      { intent: "title", title: "T", narrationText: "一二三四五六七八九十", durationMs: 2000 },
+      ...VALID.shots.slice(1),
+    ],
+  };
+  const v = validateSemanticDraft(draft);
+  assert.ok(v.ok, v.ok ? "" : v.errors.join("; "));
+  const c = compileSemanticDraft(v.draft, "句子");
+  assert.ok(c.ok, c.ok ? "" : c.errors.join("; "));
+  assert.equal(c.shots[0]!.plan.spec.durationMs, 3400);
 });
 
 test("semantic IR：bullets 超 12 字 → 拒绝（sketch-note 契约）", () => {
@@ -138,8 +154,9 @@ test("semantic IR：cycle caption 超 12 字 → 拒绝", () => {
   );
 });
 
-test("semantic IR：cycle 镜头时长不足以演完 → 拒绝并点名下限", () => {
-  // 4 阶段 cycle 需要 ≥ (4-1)×480+3000 = 4440ms；3000ms 必须被拒。
+test("semantic 编译：cycle 时长不足以演完 → 确定性延长到演完下限", () => {
+  // 4 阶段 cycle 演完需 (4-1)×480+3000 = 4440ms；模型给 3000ms 不是错误，
+  // 编译器延长到 4440（durationMs 是模型的下限意图，同旧规划器下限语义）。
   const bad = {
     ...VALID,
     shots: [
@@ -149,11 +166,10 @@ test("semantic IR：cycle 镜头时长不足以演完 → 拒绝并点名下限"
     ],
   };
   const v = validateSemanticDraft(bad);
-  assert.ok(!v.ok);
-  assert.ok(
-    v.errors.some((e) => e.includes("shots[1]") && e.includes("4440")),
-    v.errors.join("; "),
-  );
+  assert.ok(v.ok, v.ok ? "" : v.errors.join("; "));
+  const c = compileSemanticDraft(v.draft, "句子");
+  assert.ok(c.ok, c.ok ? "" : c.errors.join("; "));
+  assert.equal(c.shots[1]!.plan.spec.durationMs, 4440);
 });
 
 test("semantic 编译：输出即 StoryboardResult(ok:true)，24fps 无零帧", () => {
