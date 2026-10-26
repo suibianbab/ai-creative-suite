@@ -200,6 +200,53 @@ test("semantic 编译：flow-explainer 用 flow-steps@1 纵向布局（独立组
   );
 });
 
+test("semantic 编译：renderHint 列出该镜屏幕文字（I-5，交接单 §3.3）", () => {
+  const draft = {
+    topic: "水循环",
+    title: "水的旅程",
+    shots: [
+      { intent: "title", title: "水的旅程", narrationText: "一滴水的旅程", durationMs: 2500 },
+      {
+        intent: "cycle-explainer",
+        title: "水循环三阶段",
+        narrationText: "水在三个阶段循环",
+        durationMs: 5000,
+        cycleSteps: [{ label: "蒸发" }, { label: "凝结" }, { label: "降水" }],
+      },
+      {
+        intent: "text-explainer",
+        title: "为什么重要",
+        narrationText: "淡水全靠它补给",
+        durationMs: 4000,
+        bullets: ["淡水之源", "气候推手"],
+      },
+      {
+        intent: "flow-explainer",
+        title: "路径",
+        narrationText: "从海到云再到地",
+        durationMs: 3000,
+        flowSteps: ["海洋", "云朵", "河流"],
+      },
+      { intent: "title", title: "谢谢观看", narrationText: "谢谢观看", durationMs: 2500 },
+    ],
+  };
+  const v = validateSemanticDraft(draft);
+  assert.ok(v.ok, v.ok ? "" : v.errors.join("; "));
+  const c = compileSemanticDraft(v.draft, "句子");
+  assert.ok(c.ok, c.ok ? "" : c.errors.join("; "));
+  const hints = c.shots.map((s) => s.plan.renderHint);
+  // 确认卡预告的是观众将看到的文字：标题/副标题、循环阶段、要点、流程步骤。
+  assert.match(hints[0]!, /水的旅程/);
+  assert.match(hints[0]!, /一滴水的旅程/);
+  assert.match(hints[1]!, /蒸发/);
+  assert.match(hints[1]!, /凝结/);
+  assert.match(hints[1]!, /降水/);
+  assert.match(hints[2]!, /淡水之源/);
+  assert.match(hints[2]!, /气候推手/);
+  assert.match(hints[3]!, /海洋/);
+  assert.match(hints[3]!, /河流/);
+});
+
 test("semantic 编译：输出即 StoryboardResult(ok:true)，24fps 无零帧", () => {
   const v = validateSemanticDraft(VALID);
   assert.ok(v.ok, v.ok ? "" : v.errors.join("; "));

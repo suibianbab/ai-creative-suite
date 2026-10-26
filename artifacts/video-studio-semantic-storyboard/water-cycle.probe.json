@@ -1,0 +1,213 @@
+{
+  "storyboard": {
+    "ok": true,
+    "sentence": "做一条约25秒的水循环科普短片，讲清蒸发、凝结和降水",
+    "title": "水的旅行：蒸发·凝结·降水",
+    "totalMs": 19000,
+    "shots": [
+      {
+        "label": "标题",
+        "description": "水的旅行：蒸发·凝结·降水（标题）",
+        "narrationText": "水在地球上不停旅行",
+        "plan": {
+          "ok": true,
+          "spec": {
+            "specVersion": 1,
+            "componentId": "text-animation",
+            "componentVersion": 1,
+            "durationMs": 3100,
+            "seed": 5000,
+            "background": "#101f34",
+            "params": {
+              "title": "水的旅行：蒸发·凝结·降水",
+              "subtitle": "水在地球上不停旅行",
+              "titleColor": "#f3f5f7",
+              "subtitleColor": "#b4d8e4",
+              "entrance": "fade-up",
+              "enterMs": 450
+            }
+          },
+          "title": "水的旅行：蒸发·凝结·降水",
+          "renderHint": "标题「水的旅行：蒸发·凝结·降水」，副标题「水在地球上不停旅行」"
+        }
+      },
+      {
+        "label": "循环图解",
+        "description": "水循环三阶段（循环图解）",
+        "narrationText": "太阳加热，水蒸发升空",
+        "plan": {
+          "ok": true,
+          "spec": {
+            "specVersion": 1,
+            "componentId": "explainer-composition",
+            "componentVersion": 1,
+            "durationMs": 5000,
+            "seed": 5007,
+            "background": "#101f34",
+            "params": {
+              "titleColor": "#f3f5f7",
+              "textColor": "#f3f5f7",
+              "boxColor": "#dcebe1",
+              "arrowColor": "#f5b652",
+              "strokeColor": "#42a5a0",
+              "title": "水循环三阶段",
+              "titleY": 145,
+              "titleEnterMs": 0,
+              "diagramOffsetX": 0,
+              "diagramOffsetY": -60,
+              "diagramEnterMs": 450,
+              "diagram": {
+                "kind": "cycle",
+                "steps": [
+                  {
+                    "label": "蒸发"
+                  },
+                  {
+                    "label": "凝结"
+                  },
+                  {
+                    "label": "降水"
+                  }
+                ]
+              },
+              "annotations": [
+                {
+                  "text": "太阳加热，水蒸发升空",
+                  "x": 500,
+                  "y": 780,
+                  "portraitY": 1340,
+                  "enterMs": 400
+                }
+              ]
+            }
+          },
+          "title": "水循环三阶段",
+          "renderHint": "循环图解「水循环三阶段」，循环阶段：蒸发 → 凝结 → 降水"
+        }
+      },
+      {
+        "label": "要点解说",
+        "description": "三阶段关键点（要点解说）",
+        "narrationText": "能量驱动，循环不息",
+        "plan": {
+          "ok": true,
+          "spec": {
+            "specVersion": 1,
+            "componentId": "sketch-note",
+            "componentVersion": 1,
+            "durationMs": 3600,
+            "seed": 5014,
+            "background": "#101f34",
+            "params": {
+              "title": "三阶段关键点",
+              "items": [
+                {
+                  "text": "蒸发靠太阳能",
+                  "emphasis": "下划线"
+                },
+                {
+                  "text": "凝结需冷却",
+                  "emphasis": "圈"
+                },
+                {
+                  "text": "降水靠重力",
+                  "emphasis": "圈"
+                }
+              ],
+              "inkColor": "#f3f5f7",
+              "accentColor": "#f5b652",
+              "writeMs": 900,
+              "drawMs": 700,
+              "staggerMs": 500
+            }
+          },
+          "title": "三阶段关键点",
+          "renderHint": "要点解说「三阶段关键点」，要点：蒸发靠太阳能、凝结需冷却、降水靠重力"
+        }
+      },
+      {
+        "label": "流程图解",
+        "description": "水循环路径（流程图解）",
+        "narrationText": "从海到云，再落回大地",
+        "plan": {
+          "ok": true,
+          "spec": {
+            "specVersion": 1,
+            "componentId": "flow-steps",
+            "componentVersion": 1,
+            "durationMs": 4800,
+            "seed": 5021,
+            "background": "#101f34",
+            "params": {
+              "title": "水循环路径",
+              "steps": [
+                {
+                  "label": "海水蒸发"
+                },
+                {
+                  "label": "水汽凝结成云"
+                },
+                {
+                  "label": "云中降水落地"
+                },
+                {
+                  "label": "汇入河流海洋"
+                }
+              ],
+              "direction": "vertical",
+              "boxColor": "#dcebe1",
+              "arrowColor": "#f5b652",
+              "textColor": "#f3f5f7",
+              "enterMs": 700
+            }
+          },
+          "title": "水循环路径",
+          "renderHint": "流程图解「水循环路径」，流程：海水蒸发 → 水汽凝结成云 → 云中降水落地 → 汇入河流海洋"
+        }
+      },
+      {
+        "label": "标题",
+        "description": "水循环永不停歇（标题）",
+        "narrationText": "守护地球生命",
+        "plan": {
+          "ok": true,
+          "spec": {
+            "specVersion": 1,
+            "componentId": "text-animation",
+            "componentVersion": 1,
+            "durationMs": 2500,
+            "seed": 5028,
+            "background": "#101f34",
+            "params": {
+              "title": "水循环永不停歇",
+              "subtitle": "守护地球生命",
+              "titleColor": "#f3f5f7",
+              "subtitleColor": "#b4d8e4",
+              "entrance": "fade-up",
+              "enterMs": 450
+            }
+          },
+          "title": "水循环永不停歇",
+          "renderHint": "标题「水循环永不停歇」，副标题「守护地球生命」"
+        }
+      }
+    ]
+  },
+  "provenance": {
+    "provider": "qwen-chat",
+    "model": "qwen-plus",
+    "promptVersion": "3",
+    "compilerVersion": "1",
+    "sentence": "做一条约25秒的水循环科普短片，讲清蒸发、凝结和降水",
+    "topic": "水循环三阶段"
+  },
+  "usage": {
+    "prompt_tokens": 898,
+    "completion_tokens": 424,
+    "total_tokens": 1322
+  },
+  "durationDeviation": {
+    "targetMs": 25000,
+    "actualMs": 19000
+  }
+}

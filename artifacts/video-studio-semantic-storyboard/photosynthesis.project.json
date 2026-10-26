@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "id": "69bcddae-529c-4413-bedb-141a6d48ffbb",
-  "title": "阳光·水·气→养分",
+  "id": "1fe508d3-2625-4005-9cb3-8cc818ad81d1",
+  "title": "阳光·水·CO₂→养分",
   "brief": {
     "sentence": "做一条约25秒的光合作用科普短片，讲清阳光、二氧化碳和水如何变成养分",
     "aspectTargets": [
@@ -12,26 +12,26 @@
       {
         "sentence": "做一条约25秒的光合作用科普短片，讲清阳光、二氧化碳和水如何变成养分",
         "appendedShotCount": 6,
-        "appendedDurationMs": 25300,
+        "appendedDurationMs": 21300,
         "filmShotCountAfter": 6,
-        "filmTotalMsAfter": 25300,
-        "appliedAt": "2026-10-26T13:41:14.477Z"
+        "filmTotalMsAfter": 21300,
+        "appliedAt": "2026-10-26T14:16:23.892Z"
       }
     ]
   },
   "shots": [
     {
-      "shotId": "6fc90f0c-4253-4731-b0b3-0f48a086bc3b",
+      "shotId": "1851f7c2-b727-40d4-87fd-c6956edac700",
       "order": 0,
       "locked": false,
-      "workingVersionId": "bea22325-feda-45e6-a83e-09940ef1c981",
+      "workingVersionId": "a9115495-95b5-48c6-ab4e-7bb1f20a913c",
       "contentVersions": [
         {
-          "versionId": "bea22325-feda-45e6-a83e-09940ef1c981",
-          "createdAt": "2026-10-26T13:41:14.477Z",
+          "versionId": "a9115495-95b5-48c6-ab4e-7bb1f20a913c",
+          "createdAt": "2026-10-26T14:16:23.892Z",
           "durationMs": 2800,
-          "description": "光合作用：植物的厨房（标题）",
-          "narrationText": "植物如何造养分？",
+          "description": "光合作用：生命的能量工厂（标题）",
+          "narrationText": "植物如何造食物？",
           "sceneSource": {
             "type": "spec",
             "spec": {
@@ -42,8 +42,8 @@
               "seed": 5000,
               "background": "#101f34",
               "params": {
-                "title": "光合作用：植物的厨房",
-                "subtitle": "植物如何造养分？",
+                "title": "光合作用：生命的能量工厂",
+                "subtitle": "植物如何造食物？",
                 "titleColor": "#f3f5f7",
                 "subtitleColor": "#b4d8e4",
                 "entrance": "fade-up",
@@ -53,28 +53,28 @@
           },
           "provenance": {
             "engineId": "planner-semantic",
-            "engineVersion": "qwen-plus/prompt2/compiler1"
+            "engineVersion": "qwen-plus/prompt3/compiler1"
           }
         }
       ],
       "events": [
         {
           "kind": "submitted",
-          "versionId": "bea22325-feda-45e6-a83e-09940ef1c981",
-          "at": "2026-10-26T13:41:14.477Z",
+          "versionId": "a9115495-95b5-48c6-ab4e-7bb1f20a913c",
+          "at": "2026-10-26T14:16:23.892Z",
           "actor": "human"
         }
       ]
     },
     {
-      "shotId": "23fda55c-c00e-4e04-9954-a477911080c4",
+      "shotId": "ec85914f-e29d-4617-bcd3-e6487c076af2",
       "order": 1,
       "locked": false,
-      "workingVersionId": "ca73da52-5595-460e-a96d-f5969299a538",
+      "workingVersionId": "a9688f31-886d-4e40-b9d2-d636ab4de022",
       "contentVersions": [
         {
-          "versionId": "ca73da52-5595-460e-a96d-f5969299a538",
-          "createdAt": "2026-10-26T13:41:14.477Z",
+          "versionId": "a9688f31-886d-4e40-b9d2-d636ab4de022",
+          "createdAt": "2026-10-26T14:16:23.892Z",
           "durationMs": 3200,
           "description": "三大原料缺一不可（要点解说）",
           "narrationText": "阳光、水、二氧化碳",
@@ -99,7 +99,7 @@
                     "emphasis": "圈"
                   },
                   {
-                    "text": "二氧化碳来自空气",
+                    "text": "CO₂来自空气",
                     "emphasis": "圈"
                   }
                 ],
@@ -113,54 +113,128 @@
           },
           "provenance": {
             "engineId": "planner-semantic",
-            "engineVersion": "qwen-plus/prompt2/compiler1"
+            "engineVersion": "qwen-plus/prompt3/compiler1"
           }
         }
       ],
       "events": [
         {
           "kind": "submitted",
-          "versionId": "ca73da52-5595-460e-a96d-f5969299a538",
-          "at": "2026-10-26T13:41:14.477Z",
+          "versionId": "a9688f31-886d-4e40-b9d2-d636ab4de022",
+          "at": "2026-10-26T14:16:23.892Z",
           "actor": "human"
         }
       ]
     },
     {
-      "shotId": "10d8bdf1-6e56-46ae-b75c-53e7d0cc6c42",
+      "shotId": "ce57c693-8f91-4b60-83d3-c222498aca41",
       "order": 2,
       "locked": false,
-      "workingVersionId": "fffaeca0-3c72-47d8-99cd-cf1bc50bc025",
+      "workingVersionId": "a8224490-6535-4c25-881f-0b36d61c24d8",
       "contentVersions": [
         {
-          "versionId": "fffaeca0-3c72-47d8-99cd-cf1bc50bc025",
-          "createdAt": "2026-10-26T13:41:14.477Z",
-          "durationMs": 4800,
-          "description": "光合作用四步转化（流程图解）",
-          "narrationText": "光能驱动化学反应",
+          "versionId": "a8224490-6535-4c25-881f-0b36d61c24d8",
+          "createdAt": "2026-10-26T14:16:23.892Z",
+          "durationMs": 5000,
+          "description": "光合作用四步循环（循环图解）",
+          "narrationText": "光能驱动化学转化",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "explainer-composition",
+              "componentVersion": 1,
+              "durationMs": 5000,
+              "seed": 5014,
+              "background": "#101f34",
+              "params": {
+                "titleColor": "#f3f5f7",
+                "textColor": "#f3f5f7",
+                "boxColor": "#dcebe1",
+                "arrowColor": "#f5b652",
+                "strokeColor": "#42a5a0",
+                "title": "光合作用四步循环",
+                "titleY": 145,
+                "titleEnterMs": 0,
+                "diagramOffsetX": 0,
+                "diagramOffsetY": -60,
+                "diagramEnterMs": 450,
+                "diagram": {
+                  "kind": "cycle",
+                  "steps": [
+                    {
+                      "label": "吸光"
+                    },
+                    {
+                      "label": "裂解水"
+                    },
+                    {
+                      "label": "固碳"
+                    },
+                    {
+                      "label": "合成"
+                    }
+                  ]
+                },
+                "annotations": [
+                  {
+                    "text": "光能驱动化学转化",
+                    "x": 500,
+                    "y": 780,
+                    "portraitY": 1340,
+                    "enterMs": 400
+                  }
+                ]
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-semantic",
+            "engineVersion": "qwen-plus/prompt3/compiler1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "a8224490-6535-4c25-881f-0b36d61c24d8",
+          "at": "2026-10-26T14:16:23.892Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "bca0520b-74f3-48c6-a7d5-d66fad28f76b",
+      "order": 3,
+      "locked": false,
+      "workingVersionId": "1a9df044-dba5-472b-8a26-41026b728479",
+      "contentVersions": [
+        {
+          "versionId": "1a9df044-dba5-472b-8a26-41026b728479",
+          "createdAt": "2026-10-26T14:16:23.892Z",
+          "durationMs": 4200,
+          "description": "能量与物质流向（流程图解）",
+          "narrationText": "输入→转化→输出",
           "sceneSource": {
             "type": "spec",
             "spec": {
               "specVersion": 1,
               "componentId": "flow-steps",
               "componentVersion": 1,
-              "durationMs": 4800,
-              "seed": 5014,
+              "durationMs": 4200,
+              "seed": 5021,
               "background": "#101f34",
               "params": {
-                "title": "光合作用四步转化",
+                "title": "能量与物质流向",
                 "steps": [
                   {
-                    "label": "吸光捕能"
+                    "label": "阳光+H₂O+CO₂"
                   },
                   {
-                    "label": "水分解"
+                    "label": "叶绿体反应"
                   },
                   {
-                    "label": "固碳合成"
-                  },
-                  {
-                    "label": "产出葡萄糖"
+                    "label": "葡萄糖+O₂"
                   }
                 ],
                 "direction": "vertical",
@@ -173,126 +247,53 @@
           },
           "provenance": {
             "engineId": "planner-semantic",
-            "engineVersion": "qwen-plus/prompt2/compiler1"
+            "engineVersion": "qwen-plus/prompt3/compiler1"
           }
         }
       ],
       "events": [
         {
           "kind": "submitted",
-          "versionId": "fffaeca0-3c72-47d8-99cd-cf1bc50bc025",
-          "at": "2026-10-26T13:41:14.477Z",
+          "versionId": "1a9df044-dba5-472b-8a26-41026b728479",
+          "at": "2026-10-26T14:16:23.892Z",
           "actor": "human"
         }
       ]
     },
     {
-      "shotId": "23356b83-a03b-410c-a845-e1fdd4fa2855",
-      "order": 3,
-      "locked": false,
-      "workingVersionId": "94140e2c-af8c-43a1-94df-ee39096ea6f0",
-      "contentVersions": [
-        {
-          "versionId": "94140e2c-af8c-43a1-94df-ee39096ea6f0",
-          "createdAt": "2026-10-26T13:41:14.477Z",
-          "durationMs": 5000,
-          "description": "能量与物质循环（循环图解）",
-          "narrationText": "光能变化学能",
-          "sceneSource": {
-            "type": "spec",
-            "spec": {
-              "specVersion": 1,
-              "componentId": "explainer-composition",
-              "componentVersion": 1,
-              "durationMs": 5000,
-              "seed": 5021,
-              "background": "#101f34",
-              "params": {
-                "titleColor": "#f3f5f7",
-                "textColor": "#f3f5f7",
-                "boxColor": "#dcebe1",
-                "arrowColor": "#f5b652",
-                "strokeColor": "#42a5a0",
-                "title": "能量与物质循环",
-                "titleY": 145,
-                "titleEnterMs": 0,
-                "diagramOffsetX": 0,
-                "diagramOffsetY": -60,
-                "diagramEnterMs": 450,
-                "diagram": {
-                  "kind": "cycle",
-                  "steps": [
-                    {
-                      "label": "阳光"
-                    },
-                    {
-                      "label": "水"
-                    },
-                    {
-                      "label": "CO₂"
-                    },
-                    {
-                      "label": "葡萄糖"
-                    }
-                  ]
-                },
-                "annotations": [
-                  {
-                    "text": "光能变化学能",
-                    "x": 500,
-                    "y": 780,
-                    "portraitY": 1340,
-                    "enterMs": 400
-                  }
-                ]
-              }
-            }
-          },
-          "provenance": {
-            "engineId": "planner-semantic",
-            "engineVersion": "qwen-plus/prompt2/compiler1"
-          }
-        }
-      ],
-      "events": [
-        {
-          "kind": "submitted",
-          "versionId": "94140e2c-af8c-43a1-94df-ee39096ea6f0",
-          "at": "2026-10-26T13:41:14.477Z",
-          "actor": "human"
-        }
-      ]
-    },
-    {
-      "shotId": "5bc56bad-82ea-4592-bc84-473d16c43e79",
+      "shotId": "50a2d028-bfd8-4f24-a72c-1b2cf5fd77a1",
       "order": 4,
       "locked": false,
-      "workingVersionId": "bdfa73e2-f1a5-4841-b8f6-8e7fe7cc4adf",
+      "workingVersionId": "17e770a2-4e85-4f65-aee4-8066f82c0af6",
       "contentVersions": [
         {
-          "versionId": "bdfa73e2-f1a5-4841-b8f6-8e7fe7cc4adf",
-          "createdAt": "2026-10-26T13:41:14.477Z",
-          "durationMs": 3500,
-          "description": "产物与意义（要点解说）",
-          "narrationText": "养分+氧气",
+          "versionId": "17e770a2-4e85-4f65-aee4-8066f82c0af6",
+          "createdAt": "2026-10-26T14:16:23.892Z",
+          "durationMs": 3600,
+          "description": "关键产物与意义（要点解说）",
+          "narrationText": "养分支撑生命",
           "sceneSource": {
             "type": "spec",
             "spec": {
               "specVersion": 1,
               "componentId": "sketch-note",
               "componentVersion": 1,
-              "durationMs": 3500,
+              "durationMs": 3600,
               "seed": 5028,
               "background": "#101f34",
               "params": {
-                "title": "产物与意义",
+                "title": "关键产物与意义",
                 "items": [
                   {
-                    "text": "葡萄糖供生长",
+                    "text": "葡萄糖供能",
                     "emphasis": "下划线"
                   },
                   {
-                    "text": "氧气释放大气",
+                    "text": "氧气释放",
+                    "emphasis": "圈"
+                  },
+                  {
+                    "text": "生态基石",
                     "emphasis": "圈"
                   }
                 ],
@@ -306,43 +307,43 @@
           },
           "provenance": {
             "engineId": "planner-semantic",
-            "engineVersion": "qwen-plus/prompt2/compiler1"
+            "engineVersion": "qwen-plus/prompt3/compiler1"
           }
         }
       ],
       "events": [
         {
           "kind": "submitted",
-          "versionId": "bdfa73e2-f1a5-4841-b8f6-8e7fe7cc4adf",
-          "at": "2026-10-26T13:41:14.477Z",
+          "versionId": "17e770a2-4e85-4f65-aee4-8066f82c0af6",
+          "at": "2026-10-26T14:16:23.892Z",
           "actor": "human"
         }
       ]
     },
     {
-      "shotId": "b62ca24e-5fba-46a3-94cb-f737eb4fa18a",
+      "shotId": "2abde890-27e2-412e-864d-7b94cbf76834",
       "order": 5,
       "locked": false,
-      "workingVersionId": "a78848cd-a96b-4c7e-83a9-c250766cb6b9",
+      "workingVersionId": "cc1163c7-e014-4b62-a6ab-1807eb40978c",
       "contentVersions": [
         {
-          "versionId": "a78848cd-a96b-4c7e-83a9-c250766cb6b9",
-          "createdAt": "2026-10-26T13:41:14.477Z",
-          "durationMs": 6000,
-          "description": "光合作用：地球生命引擎（标题）",
-          "narrationText": "万物能量之源",
+          "versionId": "cc1163c7-e014-4b62-a6ab-1807eb40978c",
+          "createdAt": "2026-10-26T14:16:23.892Z",
+          "durationMs": 2500,
+          "description": "光合作用：地球的生命引擎（标题）",
+          "narrationText": "万物生长靠太阳",
           "sceneSource": {
             "type": "spec",
             "spec": {
               "specVersion": 1,
               "componentId": "text-animation",
               "componentVersion": 1,
-              "durationMs": 6000,
+              "durationMs": 2500,
               "seed": 5035,
               "background": "#101f34",
               "params": {
-                "title": "光合作用：地球生命引擎",
-                "subtitle": "万物能量之源",
+                "title": "光合作用：地球的生命引擎",
+                "subtitle": "万物生长靠太阳",
                 "titleColor": "#f3f5f7",
                 "subtitleColor": "#b4d8e4",
                 "entrance": "fade-up",
@@ -352,15 +353,15 @@
           },
           "provenance": {
             "engineId": "planner-semantic",
-            "engineVersion": "qwen-plus/prompt2/compiler1"
+            "engineVersion": "qwen-plus/prompt3/compiler1"
           }
         }
       ],
       "events": [
         {
           "kind": "submitted",
-          "versionId": "a78848cd-a96b-4c7e-83a9-c250766cb6b9",
-          "at": "2026-10-26T13:41:14.477Z",
+          "versionId": "cc1163c7-e014-4b62-a6ab-1807eb40978c",
+          "at": "2026-10-26T14:16:23.892Z",
           "actor": "human"
         }
       ]
@@ -368,9 +369,9 @@
   ],
   "renderRecords": [
     {
-      "renderId": "0fa1e5be-3f65-406d-8bc7-18f31b97e2c3",
-      "versionId": "bea22325-feda-45e6-a83e-09940ef1c981",
-      "contentDigest": "5b0a75f39de1da342c9d69007cbb4c76b4f874cf162bf8b087806c1c5d8182af",
+      "renderId": "5435f374-8a9d-4a78-bc97-2914ca4a8778",
+      "versionId": "a9115495-95b5-48c6-ab4e-7bb1f20a913c",
+      "contentDigest": "808eaa55cbf42959f69ab392de42db7c7277a94cc5223e1a1efc6ea611e397d4",
       "engineId": "remotion",
       "engineVersion": "10",
       "rendererVersion": "4.0.534",
@@ -386,9 +387,9 @@
       "outputAssetRef": "photosynthesis-render/landscape.mp4"
     },
     {
-      "renderId": "2939bdb4-9b29-447e-aa6e-f66f3a9eb704",
-      "versionId": "ca73da52-5595-460e-a96d-f5969299a538",
-      "contentDigest": "847bcdbff5eb857a016afb4488bc3fb35627fc48a00dd25908f9de4c39b0e507",
+      "renderId": "734c7078-21ec-48f6-870f-89d3b05cc8a5",
+      "versionId": "a9688f31-886d-4e40-b9d2-d636ab4de022",
+      "contentDigest": "8099a1edc7b2dfc659fc02b16a5ee950433e662a90d81d40fdf238e04314caa0",
       "engineId": "remotion",
       "engineVersion": "10",
       "rendererVersion": "4.0.534",
@@ -404,27 +405,9 @@
       "outputAssetRef": "photosynthesis-render/landscape.mp4"
     },
     {
-      "renderId": "8ce26ed2-9de1-4d28-8ac1-9736981fdabe",
-      "versionId": "fffaeca0-3c72-47d8-99cd-cf1bc50bc025",
-      "contentDigest": "ab180c174b3517ce788c0ea1507353ab6e20a36f94eeecb47623c6265b7c0944",
-      "engineId": "remotion",
-      "engineVersion": "10",
-      "rendererVersion": "4.0.534",
-      "browser": "Google Chrome 155.0.8059.41",
-      "fps": 24,
-      "width": 1280,
-      "height": 720,
-      "codec": "h264",
-      "frames": 115,
-      "fontDigests": {
-        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
-      },
-      "outputAssetRef": "photosynthesis-render/landscape.mp4"
-    },
-    {
-      "renderId": "7d95667e-bcec-4c7c-9e90-007e9662d6e3",
-      "versionId": "94140e2c-af8c-43a1-94df-ee39096ea6f0",
-      "contentDigest": "96ccad4fb5984776f0536c30bfb887af45444d58ed170f382c46ce7b67233e5c",
+      "renderId": "139f994e-4574-4070-b220-ec06082301f0",
+      "versionId": "a8224490-6535-4c25-881f-0b36d61c24d8",
+      "contentDigest": "8db87b63532c8c0faf4bb102de725d5efa7e6e7a05660e8c87d20185cd7987e1",
       "engineId": "remotion",
       "engineVersion": "10",
       "rendererVersion": "4.0.534",
@@ -440,9 +423,9 @@
       "outputAssetRef": "photosynthesis-render/landscape.mp4"
     },
     {
-      "renderId": "f21a4244-ea14-4209-a6fb-90a856e65829",
-      "versionId": "bdfa73e2-f1a5-4841-b8f6-8e7fe7cc4adf",
-      "contentDigest": "de56c001c9b90620c8e4a50f17a7b57e59baa05ee05c60f40c4f9a8b636d7d14",
+      "renderId": "f336a509-b617-498b-ad72-2122cc700141",
+      "versionId": "1a9df044-dba5-472b-8a26-41026b728479",
+      "contentDigest": "26fe308f4da2e618c0d6c8a3d7de68b292812871b1734949cc0520a5fb0d4a55",
       "engineId": "remotion",
       "engineVersion": "10",
       "rendererVersion": "4.0.534",
@@ -451,16 +434,16 @@
       "width": 1280,
       "height": 720,
       "codec": "h264",
-      "frames": 84,
+      "frames": 101,
       "fontDigests": {
         "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
       },
       "outputAssetRef": "photosynthesis-render/landscape.mp4"
     },
     {
-      "renderId": "864826c3-f7f0-414e-8d26-5a26fbdc3de3",
-      "versionId": "a78848cd-a96b-4c7e-83a9-c250766cb6b9",
-      "contentDigest": "7ba76e14dbaaecc4022669d9a15e6885ff712ada672538319c34868eaaabc3c9",
+      "renderId": "6076a410-abd7-4850-a4d2-ce1f11989115",
+      "versionId": "17e770a2-4e85-4f65-aee4-8066f82c0af6",
+      "contentDigest": "771bf0d85cb18c2416ffad1606dfb617b2e3c7459e35f88cc6af80267e7cf721",
       "engineId": "remotion",
       "engineVersion": "10",
       "rendererVersion": "4.0.534",
@@ -469,16 +452,34 @@
       "width": 1280,
       "height": 720,
       "codec": "h264",
-      "frames": 144,
+      "frames": 86,
       "fontDigests": {
         "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
       },
       "outputAssetRef": "photosynthesis-render/landscape.mp4"
     },
     {
-      "renderId": "b9261cbb-aa4e-493e-8988-35436c21d10a",
-      "versionId": "bea22325-feda-45e6-a83e-09940ef1c981",
-      "contentDigest": "5b0a75f39de1da342c9d69007cbb4c76b4f874cf162bf8b087806c1c5d8182af",
+      "renderId": "695d4c1e-0b2c-4fbf-aafb-e3c3723e14e2",
+      "versionId": "cc1163c7-e014-4b62-a6ab-1807eb40978c",
+      "contentDigest": "12c32d8b5d0f206d32af48cb25a87e00e1410fade405df24250d85ea0d0c07cc",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 60,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "photosynthesis-render/landscape.mp4"
+    },
+    {
+      "renderId": "42e9d54b-b6b2-425f-b66a-d5577bba7649",
+      "versionId": "a9115495-95b5-48c6-ab4e-7bb1f20a913c",
+      "contentDigest": "808eaa55cbf42959f69ab392de42db7c7277a94cc5223e1a1efc6ea611e397d4",
       "engineId": "remotion",
       "engineVersion": "10",
       "rendererVersion": "4.0.534",
@@ -494,9 +495,9 @@
       "outputAssetRef": "photosynthesis-render/portrait.mp4"
     },
     {
-      "renderId": "38c2c6ff-f782-49f9-a5ca-e865d5651ec1",
-      "versionId": "ca73da52-5595-460e-a96d-f5969299a538",
-      "contentDigest": "847bcdbff5eb857a016afb4488bc3fb35627fc48a00dd25908f9de4c39b0e507",
+      "renderId": "472a90a9-f664-4f0d-9e58-b1c954272f54",
+      "versionId": "a9688f31-886d-4e40-b9d2-d636ab4de022",
+      "contentDigest": "8099a1edc7b2dfc659fc02b16a5ee950433e662a90d81d40fdf238e04314caa0",
       "engineId": "remotion",
       "engineVersion": "10",
       "rendererVersion": "4.0.534",
@@ -512,27 +513,9 @@
       "outputAssetRef": "photosynthesis-render/portrait.mp4"
     },
     {
-      "renderId": "25f17207-ff18-451b-ab08-e3854293f009",
-      "versionId": "fffaeca0-3c72-47d8-99cd-cf1bc50bc025",
-      "contentDigest": "ab180c174b3517ce788c0ea1507353ab6e20a36f94eeecb47623c6265b7c0944",
-      "engineId": "remotion",
-      "engineVersion": "10",
-      "rendererVersion": "4.0.534",
-      "browser": "Google Chrome 155.0.8059.41",
-      "fps": 24,
-      "width": 720,
-      "height": 1280,
-      "codec": "h264",
-      "frames": 115,
-      "fontDigests": {
-        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
-      },
-      "outputAssetRef": "photosynthesis-render/portrait.mp4"
-    },
-    {
-      "renderId": "6e9e4524-a4ec-4ba8-b9f0-95cef642871e",
-      "versionId": "94140e2c-af8c-43a1-94df-ee39096ea6f0",
-      "contentDigest": "96ccad4fb5984776f0536c30bfb887af45444d58ed170f382c46ce7b67233e5c",
+      "renderId": "19aeb8c3-d987-4a98-95b9-5bbf5f054c3f",
+      "versionId": "a8224490-6535-4c25-881f-0b36d61c24d8",
+      "contentDigest": "8db87b63532c8c0faf4bb102de725d5efa7e6e7a05660e8c87d20185cd7987e1",
       "engineId": "remotion",
       "engineVersion": "10",
       "rendererVersion": "4.0.534",
@@ -548,9 +531,9 @@
       "outputAssetRef": "photosynthesis-render/portrait.mp4"
     },
     {
-      "renderId": "a1f9e800-5567-4092-bd24-c8e2804aad72",
-      "versionId": "bdfa73e2-f1a5-4841-b8f6-8e7fe7cc4adf",
-      "contentDigest": "de56c001c9b90620c8e4a50f17a7b57e59baa05ee05c60f40c4f9a8b636d7d14",
+      "renderId": "267286cb-7bc4-4c2d-9482-0e400f6338b9",
+      "versionId": "1a9df044-dba5-472b-8a26-41026b728479",
+      "contentDigest": "26fe308f4da2e618c0d6c8a3d7de68b292812871b1734949cc0520a5fb0d4a55",
       "engineId": "remotion",
       "engineVersion": "10",
       "rendererVersion": "4.0.534",
@@ -559,16 +542,16 @@
       "width": 720,
       "height": 1280,
       "codec": "h264",
-      "frames": 84,
+      "frames": 101,
       "fontDigests": {
         "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
       },
       "outputAssetRef": "photosynthesis-render/portrait.mp4"
     },
     {
-      "renderId": "5ccad72a-e0be-46d4-924d-94d60fa6006c",
-      "versionId": "a78848cd-a96b-4c7e-83a9-c250766cb6b9",
-      "contentDigest": "7ba76e14dbaaecc4022669d9a15e6885ff712ada672538319c34868eaaabc3c9",
+      "renderId": "8847de30-beca-4814-ba9c-196d5c9ad1bb",
+      "versionId": "17e770a2-4e85-4f65-aee4-8066f82c0af6",
+      "contentDigest": "771bf0d85cb18c2416ffad1606dfb617b2e3c7459e35f88cc6af80267e7cf721",
       "engineId": "remotion",
       "engineVersion": "10",
       "rendererVersion": "4.0.534",
@@ -577,7 +560,25 @@
       "width": 720,
       "height": 1280,
       "codec": "h264",
-      "frames": 144,
+      "frames": 86,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "photosynthesis-render/portrait.mp4"
+    },
+    {
+      "renderId": "248c915d-99d5-4b53-a4e8-11baeaf39014",
+      "versionId": "cc1163c7-e014-4b62-a6ab-1807eb40978c",
+      "contentDigest": "12c32d8b5d0f206d32af48cb25a87e00e1410fade405df24250d85ea0d0c07cc",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 60,
       "fontDigests": {
         "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
       },

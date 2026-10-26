@@ -6,7 +6,8 @@
 // json_object 而非 json_schema：与 plan-provider 实测结论一致（大 schema
 // 强约束让输出劣化），结构完备性交给 validateSemanticDraft 硬校验。
 
-export const SEMANTIC_PROMPT_VERSION = "2";
+// v3：flow 步骤字数上限 6→10（对齐 flow-steps 契约，3eef0c0 补记）。
+export const SEMANTIC_PROMPT_VERSION = "3";
 export const SEMANTIC_COMPILER_VERSION = "1";
 
 // 提示词 = 能力目录 + IR 契约 + 预算公式。模型只能在这个范围内表达；

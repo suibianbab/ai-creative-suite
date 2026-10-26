@@ -149,6 +149,13 @@ export default function VideoStudioPage() {
     provenance: null,
     durationDeviation: null,
   });
+  // AI 请求归属守卫（I-1/I-2，2026-10-26 评审）：请求发起时的文档 id +
+  // 单调序号。响应返回时若用户已切换项目（返回列表/打开/新建）或已发起
+  // 更新的 AI 请求，整个响应连同 semanticPlan 状态一并丢弃——过期闭包
+  // 不得覆写当前编辑器（可丢未保存编辑），飞行中状态不得泄漏到无关项目。
+  const semanticRequestRef = useRef(0);
+  const editorDocumentIdRef = useRef<string | null>(null);
+  editorDocumentIdRef.current = editor?.document.id ?? null;
   useEffect(() => {
     setTransitionRows(
       transitionsDraftFromProject(
@@ -737,6 +744,15 @@ export default function VideoStudioPage() {
             disabled={busy}
             onClick={() => {
               setEditor(null);
+              // AI 状态随编辑器生命周期清理（I-2）：错误/provenance/飞行中
+              // busy 不得带到列表或其他项目。
+              semanticRequestRef.current += 1;
+              setSemanticPlan({
+                busy: false,
+                error: null,
+                provenance: null,
+                durationDeviation: null,
+              });
               refreshProjects().catch(() => {});
             }}
           >
@@ -880,9 +896,20 @@ export default function VideoStudioPage() {
               <button
                 type="button"
                 className="planner-run"
-                disabled={busy || sentence.trim().length === 0}
+                // AI 生成期间禁用旧规划（两条路径并发会互相覆盖），同时旧规划
+                // 点击即重置 semanticPlan——规则产物不得残留 AI 徽章/provenance
+                // （I-2，2026-10-26 评审：错标会永久写进内容版本账本）。
+                disabled={
+                  semanticPlan.busy || busy || sentence.trim().length === 0
+                }
                 onClick={() => {
                   const trimmed = sentence.trim();
+                  setSemanticPlan({
+                    busy: false,
+                    error: null,
+                    provenance: null,
+                    durationDeviation: null,
+                  });
                   // 分镜句式 → 多镜头规划器；其余 → P0 单镜头规划器
                   if (isStoryboardSentence(trimmed)) {
                     setEditor({
@@ -915,12 +942,22 @@ export default function VideoStudioPage() {
                 }
                 onClick={async () => {
                   const trimmed = sentence.trim();
+                  const requestId = ++semanticRequestRef.current;
+                  const documentId = document.id;
                   setSemanticPlan({
                     busy: true,
                     error: null,
                     provenance: null,
                     durationDeviation: null,
                   });
+                  // 响应归属守卫：项目已切换或已有更新请求 → 整体丢弃。
+                  const stale = () =>
+                    semanticRequestRef.current !== requestId ||
+                    editorDocumentIdRef.current !== documentId;
+                  const finish = (state: SemanticPlanState) => {
+                    if (stale()) return;
+                    setSemanticPlan(state);
+                  };
                   try {
                     const response = await fetch("/api/video/semantic-plan", {
                       method: "POST",
@@ -931,34 +968,46 @@ export default function VideoStudioPage() {
                       storyboard?: StoryboardResult;
                       provenance?: SemanticPlanState["provenance"];
                       error?: string;
+                      errors?: string[];
                       durationDeviation?: { targetMs: number; actualMs: number };
                     };
-                    if (!response.ok || !data.storyboard?.ok) {
-                      setSemanticPlan({
+                    const storyboard = data.storyboard;
+                    if (!response.ok || !storyboard?.ok) {
+                      finish({
                         busy: false,
-                        error:
-                          data.error ?? "AI 分镜生成失败，请稍后重试或改用固定句式",
+                        // 逐镜校验/编译失败带明细（I-4）：只给一句汇总用户
+                        // 无法定位该改哪个字。
+                        error: [
+                          data.error ??
+                            "AI 分镜生成失败，请稍后重试或改用固定句式",
+                          ...(data.errors ?? []),
+                        ].join("；"),
                         provenance: null,
                         durationDeviation: null,
                       });
                       return;
                     }
+                    if (stale()) return;
                     setSemanticPlan({
                       busy: false,
                       error: null,
                       provenance: data.provenance ?? null,
                       durationDeviation: data.durationDeviation ?? null,
                     });
-                    setEditor({
-                      ...editor,
-                      storyboard: data.storyboard,
-                      plan: null,
-                      message: null,
-                    });
+                    setEditor((current) =>
+                      !current || current.document.id !== documentId
+                        ? current
+                        : {
+                            ...current,
+                            storyboard,
+                            plan: null,
+                            message: null,
+                          },
+                    );
                   } catch {
-                    setSemanticPlan({
+                    finish({
                       busy: false,
-                      error: "AI 分镜请求失败（网络错误），未修改项目",
+                      error: "AI 分镜请求失败（网络或服务错误），未修改项目",
                       provenance: null,
                       durationDeviation: null,
                     });
@@ -1637,7 +1686,7 @@ export default function VideoStudioPage() {
           <button
             type="button"
             className="project-create"
-            onClick={() =>
+            onClick={() => {
               setEditor({
                 document: createEmptyVideoProject(),
                 message: null,
@@ -1645,8 +1694,15 @@ export default function VideoStudioPage() {
                 sentence: "",
                 plan: null,
                 storyboard: null,
-              })
-            }
+              });
+              semanticRequestRef.current += 1;
+              setSemanticPlan({
+                busy: false,
+                error: null,
+                provenance: null,
+                durationDeviation: null,
+              });
+            }}
           >
             新建项目
           </button>
@@ -1816,6 +1872,13 @@ export default function VideoStudioPage() {
                           sentence: document.brief.sentence,
                           plan: null,
                           storyboard: null,
+                        });
+                        semanticRequestRef.current += 1;
+                        setSemanticPlan({
+                          busy: false,
+                          error: null,
+                          provenance: null,
+                          durationDeviation: null,
                         });
                       }}
                     >

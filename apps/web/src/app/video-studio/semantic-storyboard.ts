@@ -296,6 +296,22 @@ const INTENT_LABEL: Record<SemanticIntent, string> = {
   "flow-explainer": "流程图解",
 };
 
+// 确认卡预告观众将看到的屏幕文字（交接单 §3.3：目的、画面内容、屏幕文字、
+// 旁白、时长及模板边界）——不只报组件名/意图词。
+function renderHintFor(shot: SemanticDraftShot): string {
+  const base = `${INTENT_LABEL[shot.intent]}「${shot.title}」`;
+  switch (shot.intent) {
+    case "title":
+      return `${base}，副标题「${shot.narrationText}」`;
+    case "text-explainer":
+      return `${base}，要点：${(shot.bullets ?? []).join("、")}`;
+    case "cycle-explainer":
+      return `${base}，循环阶段：${(shot.cycleSteps ?? []).map((s) => s.label).join(" → ")}`;
+    case "flow-explainer":
+      return `${base}，流程：${(shot.flowSteps ?? []).join(" → ")}`;
+  }
+}
+
 export type CompiledStoryboard = {
   ok: true;
   sentence: string;
@@ -335,7 +351,7 @@ export function compileSemanticDraft(
         label: INTENT_LABEL[shot.intent],
         description: `${shot.title}（${INTENT_LABEL[shot.intent]}）`,
         narrationText: shot.narrationText,
-        plan: { ok: true, spec, title: shot.title, renderHint: INTENT_LABEL[shot.intent] },
+        plan: { ok: true, spec, title: shot.title, renderHint: renderHintFor(shot) },
       });
     } catch (err) {
       errors.push(`镜 ${i + 1} 编译失败：${err instanceof Error ? err.message : String(err)}`);

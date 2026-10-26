@@ -57,7 +57,8 @@ page.on("pageerror", (e) => consoleErrors.push(String(e).slice(0, 200)));
 
 const log = [];
 for (const topic of TOPICS) {
-  // —— 路由直调：时延与 usage 取证 ——
+  // —— 路由直调 probe 轮：时延与 usage 取证（独立生成，与浏览器轮分开存档，
+  //    证据三件套以浏览器轮为准——I-3，2026-10-26 评审） ——
   const started = performance.now();
   const response = await fetch(`${BASE_URL}/api/video/semantic-plan`, {
     method: "POST",
@@ -67,7 +68,7 @@ for (const topic of TOPICS) {
   const elapsedMs = Math.round(performance.now() - started);
   const data = await response.json();
   writeFileSync(
-    path.join(OUT_DIR, `${topic.slug}.response.json`),
+    path.join(OUT_DIR, `${topic.slug}.probe.json`),
     JSON.stringify(data, null, 2),
   );
   if (!response.ok || !data.storyboard?.ok)
@@ -94,12 +95,53 @@ for (const topic of TOPICS) {
     .catch(() => fail("打开工作台", "客户端未就绪"));
   await page.click(".project-create");
   await page.fill("#planner-sentence", topic.sentence);
+  // 浏览器轮的路由响应与确认卡/项目同轮落盘（I-3）：截图、response、
+  // project 三件套必须来自同一次生成，交接单验收「输入句、确认卡、
+  // 实际版本内容一致」按此核对。
+  const browserResponsePromise = page.waitForResponse(
+    (r) => r.url().includes("/api/video/semantic-plan"),
+    { timeout: 90_000 },
+  );
   await page.click(".planner-ai");
+  const browserResponse = await browserResponsePromise;
+  const browserData = await browserResponse.json();
   await page
     .locator(".storyboard-card")
     .first()
     .waitFor({ timeout: 90_000 })
     .catch(() => fail(`浏览器生成(${topic.slug})`, "确认卡未出现"));
+  // 浏览器轮完整响应就是交付样片的规划来源：存为 *.response.json。
+  writeFileSync(
+    path.join(OUT_DIR, `${topic.slug}.response.json`),
+    JSON.stringify(browserData, null, 2),
+  );
+  if (!browserData.storyboard?.ok)
+    fail(`浏览器生成(${topic.slug})`, "路由响应无 storyboard");
+  // 主题覆盖以交付轮为准（probe 轮仅作生成面取样）。
+  const browserAllText = browserData.storyboard.shots
+    .map(
+      (s) =>
+        `${s.description}|${s.narrationText}|${s.plan.title}|${s.plan.renderHint}`,
+    )
+    .join("\n");
+  for (const synonyms of topic.mustMention)
+    if (!synonyms.some((word) => browserAllText.includes(word)))
+      fail(`交付轮主题覆盖(${topic.slug})`, `分镜未提及「${synonyms.join("/")}」`);
+  // M-7：偏离标注与总时长/目标的逻辑一致性（不只落盘）。
+  const dev = browserData.durationDeviation;
+  if (dev) {
+    if (dev.actualMs !== browserData.storyboard.totalMs)
+      fail(
+        `偏离一致性(${topic.slug})`,
+        `durationDeviation.actualMs=${dev.actualMs} ≠ totalMs=${browserData.storyboard.totalMs}`,
+      );
+    const inBand = dev.actualMs >= dev.targetMs * 0.8 && dev.actualMs <= dev.targetMs * 1.2;
+    if (inBand)
+      fail(
+        `偏离一致性(${topic.slug})`,
+        `actualMs=${dev.actualMs} 在目标带内却标了偏离`,
+      );
+  }
   await page.screenshot({
     path: path.join(OUT_DIR, `${topic.slug}.confirm-card.png`),
     fullPage: true,
@@ -126,21 +168,30 @@ for (const topic of TOPICS) {
   await download.saveAs(projectPath);
   await page.click(".project-action");
 
+  // 台账记录交付轮（浏览器轮）：probe 轮的时延/usage 一并留档对比。
   log.push({
     slug: topic.slug,
     sentence: topic.sentence,
-    routeElapsedMs: elapsedMs,
-    usage: data.usage ?? null,
-    provenance: {
-      model: data.provenance?.model,
-      promptVersion: data.provenance?.promptVersion,
-      compilerVersion: data.provenance?.compilerVersion,
+    browser: {
+      shots: browserData.storyboard.shots.length,
+      totalMs: browserData.storyboard.totalMs,
+      usage: browserData.usage ?? null,
+      durationDeviation: browserData.durationDeviation ?? null,
+      provenance: {
+        model: browserData.provenance?.model,
+        promptVersion: browserData.provenance?.promptVersion,
+        compilerVersion: browserData.provenance?.compilerVersion,
+      },
     },
-    shots: data.storyboard.shots.length,
-    totalMs: data.storyboard.totalMs,
+    probe: {
+      routeElapsedMs: elapsedMs,
+      shots: data.storyboard.shots.length,
+      totalMs: data.storyboard.totalMs,
+      usage: data.usage ?? null,
+    },
   });
   console.log(
-    `[audit-semantic-live] ${topic.slug}: ${data.storyboard.shots.length} 镜 / ${data.storyboard.totalMs / 1000}s / 路由 ${elapsedMs}ms / tokens ${data.usage?.total_tokens ?? "?"}`,
+    `[audit-semantic-live] ${topic.slug}: 浏览器轮 ${browserData.storyboard.shots.length} 镜 / ${browserData.storyboard.totalMs / 1000}s${browserData.durationDeviation ? "（偏离标注）" : ""} / probe 路由 ${elapsedMs}ms / tokens 浏览器 ${browserData.usage?.total_tokens ?? "?"} · probe ${data.usage?.total_tokens ?? "?"}`,
   );
 }
 

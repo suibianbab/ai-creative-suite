@@ -2,35 +2,62 @@
   {
     "slug": "water-cycle",
     "sentence": "做一条约25秒的水循环科普短片，讲清蒸发、凝结和降水",
-    "routeElapsedMs": 13870,
-    "usage": {
-      "prompt_tokens": 829,
-      "completion_tokens": 486,
-      "total_tokens": 1315
+    "browser": {
+      "shots": 5,
+      "totalMs": 16600,
+      "usage": {
+        "prompt_tokens": 898,
+        "completion_tokens": 406,
+        "total_tokens": 1304
+      },
+      "durationDeviation": {
+        "targetMs": 25000,
+        "actualMs": 16600
+      },
+      "provenance": {
+        "model": "qwen-plus",
+        "promptVersion": "3",
+        "compilerVersion": "1"
+      }
     },
-    "provenance": {
-      "model": "qwen-plus",
-      "promptVersion": "2",
-      "compilerVersion": "1"
-    },
-    "shots": 6,
-    "totalMs": 20500
+    "probe": {
+      "routeElapsedMs": 17492,
+      "shots": 5,
+      "totalMs": 19000,
+      "usage": {
+        "prompt_tokens": 898,
+        "completion_tokens": 424,
+        "total_tokens": 1322
+      }
+    }
   },
   {
     "slug": "photosynthesis",
     "sentence": "做一条约25秒的光合作用科普短片，讲清阳光、二氧化碳和水如何变成养分",
-    "routeElapsedMs": 20786,
-    "usage": {
-      "prompt_tokens": 902,
-      "completion_tokens": 475,
-      "total_tokens": 1377
+    "browser": {
+      "shots": 6,
+      "totalMs": 21300,
+      "usage": {
+        "prompt_tokens": 902,
+        "completion_tokens": 481,
+        "total_tokens": 1383
+      },
+      "durationDeviation": null,
+      "provenance": {
+        "model": "qwen-plus",
+        "promptVersion": "3",
+        "compilerVersion": "1"
+      }
     },
-    "provenance": {
-      "model": "qwen-plus",
-      "promptVersion": "2",
-      "compilerVersion": "1"
-    },
-    "shots": 6,
-    "totalMs": 21800
+    "probe": {
+      "routeElapsedMs": 21363,
+      "shots": 6,
+      "totalMs": 22300,
+      "usage": {
+        "prompt_tokens": 902,
+        "completion_tokens": 498,
+        "total_tokens": 1400
+      }
+    }
   }
 ]

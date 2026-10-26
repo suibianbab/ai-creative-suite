@@ -94,7 +94,7 @@ test("semantic-plan：合法 IR → 200 返回 storyboard 与 provenance", async
       assert.equal(data.storyboard.totalMs, 10500);
       assert.equal(data.provenance.provider, "qwen-chat");
       assert.equal(data.provenance.model, "qwen-plus");
-      assert.equal(data.provenance.promptVersion, "2");
+      assert.equal(data.provenance.promptVersion, "3");
       assert.equal(data.provenance.compilerVersion, "1");
       assert.equal(
         data.provenance.sentence,
