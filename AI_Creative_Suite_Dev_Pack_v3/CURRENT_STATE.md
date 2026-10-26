@@ -1,5 +1,11 @@
 # Current State v2
 
+## 2026-10-26 Video Studio 首版集成与时序回归
+
+`claude/video-overnight` 已快进合并到 `main`（`1e2de02`）：包含六镜头季度数据样片入口、compare-split 与 timeline-milestones 入场时序预设及 `@1`/`@2` 组件版本边界。新增浏览器回归 `VID-064`，实测当前样片生成项目→模拟旧 `@1` 图示导入→编辑升级到 `@2`→保存重开→回滚旧版本，结果通过；入口默认自动化仍关闭、数据为演示用途。此项只证明上述链路可用，未宣称首版用户验收或商业视觉质量达标。
+
+**留存证据限制：** `artifacts/video-studio-overnight-quarterly-2026-10-26/project.json` 是组件版本升级前的历史快照；当前 `validateVideoProject` 可读取，但其中 compare-split/timeline-milestones 的 `@1` spec 带 `sequence`，用当前 `validateSceneSpec` 重校验会拒绝。该目录既有渲染证据只能按当时版本阅读，不可当作当前代码可复渲的交付样片。首版干净环境验收须由当前样片入口重新创建项目并生成新的双画幅证据，旧目录保留溯源。
+
 ## 2026-10-24 Video Studio STEM 视觉模板与浏览器有声出片集成
 
 在 `codex/video-stem-integration` 集成 Claude 的循环图、线描部件标注和七镜 STEM 样片，与 Codex 的浏览器有声双画幅出片。循环阶段、中心字和线描标注可在镜头卡修改，保存重开及回滚通过 `VID-048` 浏览器脚本；新增通用四阶段循环模板。浏览器实际导出横竖两版 H.264/AAC，7 镜产生 14 条渲染记录，字幕/旁白清单各 7 条，控制台零错误；本轮 7 段旁白复用已计费缓存，共享台账保持 28 条、¥0.0656。竖版镜头 2 晚帧已重看，句号没有单独字幕块。Claude 对有声线 N1–N7 增量复核确认修复、无阻断；强杀遗留锁、旧版工作树误用、配音自然度人耳评价仍需后续处理/审听。具体报告见 `artifacts/handoffs/video-stem-integration-2026-10-24.md`。

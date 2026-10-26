@@ -1826,6 +1826,19 @@
         "Real dual-aspect MP4 export from workbench (two download links)",
         "Cancel button resets edited compare-split draft to working version values (timeline draft reset shares the same code path)"
       ]
+    },
+    {
+      "id": "VID-064",
+      "tier": "browser-video",
+      "title": "Legacy diagram timing upgrade, save/reopen and rollback in browser",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/e2e-timing-version.mjs"],
+      "requiresPorts": [3210],
+      "checks": [
+        "Import a current six-shot sample converted to legacy compare-split@1 and timeline-milestones@1; browser editing upgrades both working versions to @2 with enterMs=5000",
+        "Save and reopen preserves both @2 edits and original @1 content versions",
+        "Rolling back compare-split restores its @1 spec; no browser console or page errors"
+      ]
     }
   ],
   "manual": [
