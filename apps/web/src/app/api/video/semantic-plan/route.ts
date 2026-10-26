@@ -84,5 +84,7 @@ export async function POST(request: Request) {
       sentence: text,
       topic: validation.draft.topic,
     },
+    // token usage 透传给调用方做计费台账（缺省 null：上游未提供）。
+    usage: draftSource.usage,
   });
 }

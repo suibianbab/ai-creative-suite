@@ -38,8 +38,21 @@ export type SemanticPlanFailureKind =
   | "invalid-json"
   | "too-large";
 
+export type SemanticTokenUsage = {
+  prompt_tokens: number;
+  completion_tokens: number;
+  total_tokens: number;
+};
+
 export type SemanticPlanResult =
-  | { ok: true; draft: unknown; provider: string; model: string }
+  | {
+      ok: true;
+      draft: unknown;
+      provider: string;
+      model: string;
+      /** 上游 usage 原样透传（计费台账证据）；上游未给则为 null。 */
+      usage: SemanticTokenUsage | null;
+    }
   | {
       ok: false;
       kind: SemanticPlanFailureKind;
@@ -83,7 +96,7 @@ class QwenSemanticProvider implements SemanticPlanProvider {
 
   // 传输层一次调用；失败分类由 plan() 汇总（含一次重试）。
   private async chatOnce(retryNote: string): Promise<
-    | { ok: true; content: string }
+    | { ok: true; content: string; usage: SemanticTokenUsage | null }
     | {
         ok: false;
         kind: SemanticPlanFailureKind;
@@ -136,6 +149,11 @@ class QwenSemanticProvider implements SemanticPlanProvider {
     }
     const data = (await upstream.json().catch(() => null)) as {
       choices?: Array<{ message?: { content?: unknown } }>;
+      usage?: {
+        prompt_tokens?: unknown;
+        completion_tokens?: unknown;
+        total_tokens?: unknown;
+      };
     } | null;
     const content = data?.choices?.[0]?.message?.content;
     if (typeof content !== "string" || !content.trim())
@@ -145,7 +163,18 @@ class QwenSemanticProvider implements SemanticPlanProvider {
         message: "分镜模型未返回内容",
         retryable: false,
       };
-    return { ok: true, content };
+    const u = data?.usage;
+    const usage =
+      typeof u?.prompt_tokens === "number" &&
+      typeof u?.completion_tokens === "number" &&
+      typeof u?.total_tokens === "number"
+        ? {
+            prompt_tokens: u.prompt_tokens,
+            completion_tokens: u.completion_tokens,
+            total_tokens: u.total_tokens,
+          }
+        : null;
+    return { ok: true, content, usage };
   }
 
   async plan(
@@ -174,6 +203,7 @@ class QwenSemanticProvider implements SemanticPlanProvider {
             draft: JSON.parse(result.content),
             provider: this.name,
             model: this.model,
+            usage: result.usage,
           };
         } catch {
           return {

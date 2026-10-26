@@ -5,9 +5,12 @@ import { semanticProviderFromEnv } from "./semantic-provider";
 // 语义分镜 Provider（交接单第 3 步）：测试注入假 fetch，不触网、不依赖真密钥。
 // 纪律与 photocraft plan-provider 一致：端点白名单、密钥脱敏、超时、输出限长。
 
-function chatResponse(content: string) {
+function chatResponse(content: string, usage?: object) {
   return new Response(
-    JSON.stringify({ choices: [{ message: { content } }] }),
+    JSON.stringify({
+      choices: [{ message: { content } }],
+      ...(usage ? { usage } : {}),
+    }),
     { status: 200, headers: { "content-type": "application/json" } },
   );
 }
@@ -28,7 +31,11 @@ test("semantic provider：合法调用返回 IR 原文解析结果与元信息",
       url: String(input),
       body: String(init?.body ?? ""),
     });
-    return chatResponse('{"topic":"水循环","title":"水的旅程","shots":[]}');
+    return chatResponse('{"topic":"水循环","title":"水的旅程","shots":[]}', {
+      prompt_tokens: 100,
+      completion_tokens: 50,
+      total_tokens: 150,
+    });
   };
   try {
     const result = await provider.plan("做一条水循环科普短片");
@@ -40,6 +47,12 @@ test("semantic provider：合法调用返回 IR 原文解析结果与元信息",
     });
     assert.equal(result.provider, "qwen-chat");
     assert.equal(result.model, "qwen-plus");
+    // token usage 透传（计费台账证据，交接单第 4 节）。
+    assert.deepEqual(result.usage, {
+      prompt_tokens: 100,
+      completion_tokens: 50,
+      total_tokens: 150,
+    });
     assert.equal(calls.length, 1);
     assert.match(calls[0]!.url, /dashscope\.aliyuncs\.com/);
     const body = JSON.parse(calls[0]!.body) as { response_format?: { type: string } };
