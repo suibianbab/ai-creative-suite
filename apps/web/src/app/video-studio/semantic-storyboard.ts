@@ -170,8 +170,9 @@ export function validateSemanticDraft(raw: unknown): SemanticValidation {
         errors.push(`${field}.flowSteps 须为 2..4 步`);
       } else {
         for (const [j, s] of (shot.flowSteps as unknown[]).entries()) {
-          if (typeof s !== "string" || s.length < 1 || s.length > 6) {
-            errors.push(`${field}.flowSteps[${j}] 须为 1..6 字`);
+          // flow-steps 契约 label ≤10（真实上限，不过度收紧）。
+          if (typeof s !== "string" || s.length < 1 || s.length > 10) {
+            errors.push(`${field}.flowSteps[${j}] 须为 1..10 字`);
           }
         }
       }
