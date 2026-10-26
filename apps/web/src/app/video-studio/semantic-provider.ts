@@ -6,7 +6,7 @@
 // json_object 而非 json_schema：与 plan-provider 实测结论一致（大 schema
 // 强约束让输出劣化），结构完备性交给 validateSemanticDraft 硬校验。
 
-export const SEMANTIC_PROMPT_VERSION = "1";
+export const SEMANTIC_PROMPT_VERSION = "2";
 export const SEMANTIC_COMPILER_VERSION = "1";
 
 // 提示词 = 能力目录 + IR 契约 + 预算公式。模型只能在这个范围内表达；
@@ -29,7 +29,8 @@ IR 顶层：{"topic":"主题（1..40 字）","title":"片名（1..30 字）","sh
 - 不输出上述字段以外的任何字段（无坐标、无颜色、无 URL、无代码）。
 
 内容纪律：旁白只陈述画面实际展示的内容；循环/流程的每个阶段都要在 label/caption 或旁白中如实出现；不要虚构当前画不出来的东西（真实照片、复杂机械结构）。
-典型编排：开场 title → 循环/流程/要点讲解（1..4 镜）→ 收尾 title；总时长尽量落在用户要求的范围（每镜 ≤6s，多拆镜头而不是加长单镜）。`;
+时长纪律：用户要求约 N 秒时，Σ durationMs 必须落在 0.8N..1.2N。先按 N 估镜头数（25 秒 ≈ 6..8 镜 × 2500..5000ms），逐镜定 durationMs，输出前自己求和核对；不足就加镜头，不要把单镜拉到 6000 之上。
+典型编排：开场 title → 循环/流程/要点讲解（2..6 镜）→ 收尾 title。`;
 
 export type SemanticPlanFailureKind =
   | "timeout"

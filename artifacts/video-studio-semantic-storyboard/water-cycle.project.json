@@ -1,0 +1,330 @@
+{
+  "schemaVersion": 1,
+  "id": "09194269-5bc3-4164-87ea-acb468f50180",
+  "title": "水的奇妙旅行",
+  "brief": {
+    "sentence": "做一条约25秒的水循环科普短片，讲清蒸发、凝结和降水",
+    "aspectTargets": [
+      "landscape",
+      "portrait"
+    ],
+    "applications": [
+      {
+        "sentence": "做一条约25秒的水循环科普短片，讲清蒸发、凝结和降水",
+        "appendedShotCount": 5,
+        "appendedDurationMs": 16200,
+        "filmShotCountAfter": 5,
+        "filmTotalMsAfter": 16200,
+        "appliedAt": "2026-10-26T12:46:57.576Z"
+      }
+    ]
+  },
+  "shots": [
+    {
+      "shotId": "fe1f16a0-2a1c-48ce-9063-3a6ce95c17a7",
+      "order": 0,
+      "locked": false,
+      "workingVersionId": "b723fccf-b7c0-40f9-85f4-07c2103df28f",
+      "contentVersions": [
+        {
+          "versionId": "b723fccf-b7c0-40f9-85f4-07c2103df28f",
+          "createdAt": "2026-10-26T12:46:57.576Z",
+          "durationMs": 2500,
+          "description": "水的奇妙旅行（标题）",
+          "narrationText": "水在循环",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 2500,
+              "seed": 5000,
+              "background": "#101f34",
+              "params": {
+                "title": "水的奇妙旅行",
+                "subtitle": "水在循环",
+                "titleColor": "#f3f5f7",
+                "subtitleColor": "#b4d8e4",
+                "entrance": "fade-up",
+                "enterMs": 450
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-semantic",
+            "engineVersion": "qwen-plus/prompt2/compiler1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "b723fccf-b7c0-40f9-85f4-07c2103df28f",
+          "at": "2026-10-26T12:46:57.576Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "5bb61554-b49b-4c68-afa2-21db26f75c9f",
+      "order": 1,
+      "locked": false,
+      "workingVersionId": "6b7c896e-b54e-404f-9093-28972d55907c",
+      "contentVersions": [
+        {
+          "versionId": "6b7c896e-b54e-404f-9093-28972d55907c",
+          "createdAt": "2026-10-26T12:46:57.576Z",
+          "durationMs": 5000,
+          "description": "水循环三步曲（循环图解）",
+          "narrationText": "蒸发→凝结→降水",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "explainer-composition",
+              "componentVersion": 1,
+              "durationMs": 5000,
+              "seed": 5007,
+              "background": "#101f34",
+              "params": {
+                "titleColor": "#f3f5f7",
+                "textColor": "#f3f5f7",
+                "boxColor": "#dcebe1",
+                "arrowColor": "#f5b652",
+                "strokeColor": "#42a5a0",
+                "title": "水循环三步曲",
+                "titleY": 145,
+                "titleEnterMs": 0,
+                "diagramOffsetX": 0,
+                "diagramOffsetY": -60,
+                "diagramEnterMs": 450,
+                "diagram": {
+                  "kind": "cycle",
+                  "steps": [
+                    {
+                      "label": "蒸发",
+                      "caption": "水变水汽"
+                    },
+                    {
+                      "label": "凝结",
+                      "caption": "汽变云滴"
+                    },
+                    {
+                      "label": "降水",
+                      "caption": "云落成雨"
+                    }
+                  ]
+                },
+                "annotations": [
+                  {
+                    "text": "蒸发→凝结→降水",
+                    "x": 500,
+                    "y": 780,
+                    "portraitY": 1340,
+                    "enterMs": 400
+                  }
+                ]
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-semantic",
+            "engineVersion": "qwen-plus/prompt2/compiler1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "6b7c896e-b54e-404f-9093-28972d55907c",
+          "at": "2026-10-26T12:46:57.576Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "bfd0e84b-01c1-4502-8a0a-12caa398fcfe",
+      "order": 2,
+      "locked": false,
+      "workingVersionId": "81c0ddcb-0a86-41cf-b6fa-cea8f1e1bbe4",
+      "contentVersions": [
+        {
+          "versionId": "81c0ddcb-0a86-41cf-b6fa-cea8f1e1bbe4",
+          "createdAt": "2026-10-26T12:46:57.576Z",
+          "durationMs": 3200,
+          "description": "关键条件（要点解说）",
+          "narrationText": "需要能量与冷却",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "sketch-note",
+              "componentVersion": 1,
+              "durationMs": 3200,
+              "seed": 5014,
+              "background": "#101f34",
+              "params": {
+                "title": "关键条件",
+                "items": [
+                  {
+                    "text": "太阳加热蒸发",
+                    "emphasis": "下划线"
+                  },
+                  {
+                    "text": "高空冷却凝结",
+                    "emphasis": "圈"
+                  },
+                  {
+                    "text": "云滴变重降水",
+                    "emphasis": "圈"
+                  }
+                ],
+                "inkColor": "#f3f5f7",
+                "accentColor": "#f5b652",
+                "writeMs": 900,
+                "drawMs": 700,
+                "staggerMs": 500
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-semantic",
+            "engineVersion": "qwen-plus/prompt2/compiler1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "81c0ddcb-0a86-41cf-b6fa-cea8f1e1bbe4",
+          "at": "2026-10-26T12:46:57.576Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "88a0b349-c725-4bc1-914d-a5694820d93e",
+      "order": 3,
+      "locked": false,
+      "workingVersionId": "74cf4337-0d77-436c-9920-faf53a7c9544",
+      "contentVersions": [
+        {
+          "versionId": "74cf4337-0d77-436c-9920-faf53a7c9544",
+          "createdAt": "2026-10-26T12:46:57.576Z",
+          "durationMs": 3000,
+          "description": "水去哪儿了（流程图解）",
+          "narrationText": "地表→大气→地面",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "explainer-composition",
+              "componentVersion": 1,
+              "durationMs": 3000,
+              "seed": 5021,
+              "background": "#101f34",
+              "params": {
+                "titleColor": "#f3f5f7",
+                "textColor": "#f3f5f7",
+                "boxColor": "#dcebe1",
+                "arrowColor": "#f5b652",
+                "strokeColor": "#42a5a0",
+                "title": "水去哪儿了",
+                "titleY": 145,
+                "titleEnterMs": 0,
+                "diagramOffsetX": 0,
+                "diagramOffsetY": -75,
+                "diagramEnterMs": 450,
+                "diagram": {
+                  "kind": "flow",
+                  "steps": [
+                    {
+                      "label": "地表蒸发"
+                    },
+                    {
+                      "label": "空中凝结"
+                    },
+                    {
+                      "label": "降落回地"
+                    }
+                  ]
+                },
+                "annotations": [
+                  {
+                    "text": "地表→大气→地面",
+                    "x": 500,
+                    "y": 730,
+                    "portraitY": 1260,
+                    "enterMs": 400
+                  }
+                ]
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-semantic",
+            "engineVersion": "qwen-plus/prompt2/compiler1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "74cf4337-0d77-436c-9920-faf53a7c9544",
+          "at": "2026-10-26T12:46:57.576Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "b1e37f51-f213-4a3b-ae67-f14abc819b46",
+      "order": 4,
+      "locked": false,
+      "workingVersionId": "41008c5a-5a92-4029-ba43-9d042bdf55e5",
+      "contentVersions": [
+        {
+          "versionId": "41008c5a-5a92-4029-ba43-9d042bdf55e5",
+          "createdAt": "2026-10-26T12:46:57.576Z",
+          "durationMs": 2500,
+          "description": "水循环永不停歇（标题）",
+          "narrationText": "生生不息",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 2500,
+              "seed": 5028,
+              "background": "#101f34",
+              "params": {
+                "title": "水循环永不停歇",
+                "subtitle": "生生不息",
+                "titleColor": "#f3f5f7",
+                "subtitleColor": "#b4d8e4",
+                "entrance": "fade-up",
+                "enterMs": 450
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-semantic",
+            "engineVersion": "qwen-plus/prompt2/compiler1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "41008c5a-5a92-4029-ba43-9d042bdf55e5",
+          "at": "2026-10-26T12:46:57.576Z",
+          "actor": "human"
+        }
+      ]
+    }
+  ],
+  "renderRecords": [],
+  "deliveries": [],
+  "savedVersion": 2
+}

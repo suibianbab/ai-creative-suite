@@ -14,6 +14,19 @@ import {
 // 返回分类错误，绝不回退旧占位分镜、绝不产出「文件成功生成」的假成功。
 // IR 校验失败给模型一次带原因的修正重试（交接单：一次可解释的重试）。
 
+// 句中「N秒」目标解析（「约25秒」「25 秒」都认；无目标/超出 5..120s 返回 null）。
+function durationTargetMs(text: string): number | null {
+  const match = /(\d{1,3})\s*秒/.exec(text);
+  if (!match) return null;
+  const seconds = Number(match[1]);
+  if (seconds < 5 || seconds > 120) return null;
+  return seconds * 1000;
+}
+
+function totalMsOf(draft: { shots: Array<{ durationMs: number }> }): number {
+  return draft.shots.reduce((ms, shot) => ms + shot.durationMs, 0);
+}
+
 export async function POST(request: Request) {
   if (!isSameOriginRequest(request))
     return Response.json({ error: "跨站请求已拒绝" }, { status: 403 });
@@ -50,9 +63,22 @@ export async function POST(request: Request) {
   let validation = validateSemanticDraft(first.draft);
   let draftSource = first;
 
-  // 第二轮：IR 非法时带原因修正重试，恰好一次。
-  if (!validation.ok) {
-    const retry = await provider.plan(text, validation.errors.join("；"));
+  // 时长目标（交接单验收：20-30s 或显式记录偏离）：Σ 偏离 0.8N..1.2N 与
+  // IR 非法同等对待，并入同一次带因修正重试。
+  const targetMs = durationTargetMs(text);
+  const lo = targetMs === null ? 0 : Math.floor(targetMs * 0.8);
+  const hi = targetMs === null ? Number.POSITIVE_INFINITY : Math.ceil(targetMs * 1.2);
+  const offTarget =
+    targetMs !== null && validation.ok && !withinRange(totalMsOf(validation.draft), lo, hi);
+
+  // 第二轮：IR 非法或时长偏离时带原因修正重试，恰好一次。
+  if (!validation.ok || offTarget) {
+    const reasons = validation.ok ? [] : validation.errors.slice();
+    if (offTarget && validation.ok)
+      reasons.push(
+        `总时长 ${totalMsOf(validation.draft)}ms 偏离要求：句子目标 ${targetMs}ms，Σ durationMs 须落在 ${lo}..${hi}ms`,
+      );
+    const retry = await provider.plan(text, reasons.join("；"));
     if (!retry.ok)
       return Response.json({ error: retry.message, kind: retry.kind }, { status: 422 });
     validation = validateSemanticDraft(retry.draft);
@@ -74,6 +100,11 @@ export async function POST(request: Request) {
       { status: 422 },
     );
 
+  // 重试后仍偏离：透明标注（不硬失败——确认卡如实显示总时长，用户决定）。
+  const finalTotal = totalMsOf(validation.draft);
+  const stillOff =
+    targetMs !== null && !withinRange(finalTotal, lo, hi);
+
   return Response.json({
     storyboard: compiled,
     provenance: {
@@ -86,5 +117,12 @@ export async function POST(request: Request) {
     },
     // token usage 透传给调用方做计费台账（缺省 null：上游未提供）。
     usage: draftSource.usage,
+    ...(stillOff
+      ? { durationDeviation: { targetMs, actualMs: finalTotal } }
+      : {}),
   });
+}
+
+function withinRange(value: number, lo: number, hi: number): boolean {
+  return value >= lo && value <= hi;
 }

@@ -1,0 +1,337 @@
+{
+  "schemaVersion": 1,
+  "id": "78d5a0fa-eb3f-4772-bf47-f261584af009",
+  "title": "阳光·水·气→养分",
+  "brief": {
+    "sentence": "做一条约25秒的光合作用科普短片，讲清阳光、二氧化碳和水如何变成养分",
+    "aspectTargets": [
+      "landscape",
+      "portrait"
+    ],
+    "applications": [
+      {
+        "sentence": "做一条约25秒的光合作用科普短片，讲清阳光、二氧化碳和水如何变成养分",
+        "appendedShotCount": 5,
+        "appendedDurationMs": 17000,
+        "filmShotCountAfter": 5,
+        "filmTotalMsAfter": 17000,
+        "appliedAt": "2026-10-26T12:47:36.571Z"
+      }
+    ]
+  },
+  "shots": [
+    {
+      "shotId": "afab0bd8-150d-46dc-b2e4-e6ac6735c8b0",
+      "order": 0,
+      "locked": false,
+      "workingVersionId": "6945ed24-61f3-49bf-926c-9fe6a2839b05",
+      "contentVersions": [
+        {
+          "versionId": "6945ed24-61f3-49bf-926c-9fe6a2839b05",
+          "createdAt": "2026-10-26T12:47:36.571Z",
+          "durationMs": 2500,
+          "description": "光合作用：生命的能量工厂（标题）",
+          "narrationText": "植物造养分",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 2500,
+              "seed": 5000,
+              "background": "#101f34",
+              "params": {
+                "title": "光合作用：生命的能量工厂",
+                "subtitle": "植物造养分",
+                "titleColor": "#f3f5f7",
+                "subtitleColor": "#b4d8e4",
+                "entrance": "fade-up",
+                "enterMs": 450
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-semantic",
+            "engineVersion": "qwen-plus/prompt2/compiler1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "6945ed24-61f3-49bf-926c-9fe6a2839b05",
+          "at": "2026-10-26T12:47:36.571Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "547b0b66-b572-44a3-a254-d18cf72aac9a",
+      "order": 1,
+      "locked": false,
+      "workingVersionId": "bd007b8e-8c76-4a2a-89e6-35c2b07a3849",
+      "contentVersions": [
+        {
+          "versionId": "bd007b8e-8c76-4a2a-89e6-35c2b07a3849",
+          "createdAt": "2026-10-26T12:47:36.571Z",
+          "durationMs": 3200,
+          "description": "三大原料缺一不可（要点解说）",
+          "narrationText": "阳光、水、二氧化碳",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "sketch-note",
+              "componentVersion": 1,
+              "durationMs": 3200,
+              "seed": 5007,
+              "background": "#101f34",
+              "params": {
+                "title": "三大原料缺一不可",
+                "items": [
+                  {
+                    "text": "阳光提供能量",
+                    "emphasis": "下划线"
+                  },
+                  {
+                    "text": "水来自根部",
+                    "emphasis": "圈"
+                  },
+                  {
+                    "text": "二氧化碳来自空气",
+                    "emphasis": "圈"
+                  }
+                ],
+                "inkColor": "#f3f5f7",
+                "accentColor": "#f5b652",
+                "writeMs": 900,
+                "drawMs": 700,
+                "staggerMs": 500
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-semantic",
+            "engineVersion": "qwen-plus/prompt2/compiler1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "bd007b8e-8c76-4a2a-89e6-35c2b07a3849",
+          "at": "2026-10-26T12:47:36.571Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "e2e097ef-06cf-4c88-b754-9d28876fbd43",
+      "order": 2,
+      "locked": false,
+      "workingVersionId": "0ada8a96-60f2-483e-9334-5a9f7baa90ce",
+      "contentVersions": [
+        {
+          "versionId": "0ada8a96-60f2-483e-9334-5a9f7baa90ce",
+          "createdAt": "2026-10-26T12:47:36.571Z",
+          "durationMs": 3800,
+          "description": "光合作用四步转化（流程图解）",
+          "narrationText": "光能驱动化学反应",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "explainer-composition",
+              "componentVersion": 1,
+              "durationMs": 3800,
+              "seed": 5014,
+              "background": "#101f34",
+              "params": {
+                "titleColor": "#f3f5f7",
+                "textColor": "#f3f5f7",
+                "boxColor": "#dcebe1",
+                "arrowColor": "#f5b652",
+                "strokeColor": "#42a5a0",
+                "title": "光合作用四步转化",
+                "titleY": 145,
+                "titleEnterMs": 0,
+                "diagramOffsetX": 0,
+                "diagramOffsetY": -75,
+                "diagramEnterMs": 450,
+                "diagram": {
+                  "kind": "flow",
+                  "steps": [
+                    {
+                      "label": "吸收光能"
+                    },
+                    {
+                      "label": "分解水"
+                    },
+                    {
+                      "label": "固定碳"
+                    },
+                    {
+                      "label": "合成葡萄糖"
+                    }
+                  ]
+                },
+                "annotations": [
+                  {
+                    "text": "光能驱动化学反应",
+                    "x": 500,
+                    "y": 730,
+                    "portraitY": 1260,
+                    "enterMs": 400
+                  }
+                ]
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-semantic",
+            "engineVersion": "qwen-plus/prompt2/compiler1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "0ada8a96-60f2-483e-9334-5a9f7baa90ce",
+          "at": "2026-10-26T12:47:36.571Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "191ff3e5-42c4-4ee9-aff0-4d6434070c1b",
+      "order": 3,
+      "locked": false,
+      "workingVersionId": "71617af6-54b6-4e67-acc3-1b5c8d1cd35b",
+      "contentVersions": [
+        {
+          "versionId": "71617af6-54b6-4e67-acc3-1b5c8d1cd35b",
+          "createdAt": "2026-10-26T12:47:36.571Z",
+          "durationMs": 5000,
+          "description": "原料→产物循环（循环图解）",
+          "narrationText": "输入变输出，生生不息",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "explainer-composition",
+              "componentVersion": 1,
+              "durationMs": 5000,
+              "seed": 5021,
+              "background": "#101f34",
+              "params": {
+                "titleColor": "#f3f5f7",
+                "textColor": "#f3f5f7",
+                "boxColor": "#dcebe1",
+                "arrowColor": "#f5b652",
+                "strokeColor": "#42a5a0",
+                "title": "原料→产物循环",
+                "titleY": 145,
+                "titleEnterMs": 0,
+                "diagramOffsetX": 0,
+                "diagramOffsetY": -60,
+                "diagramEnterMs": 450,
+                "diagram": {
+                  "kind": "cycle",
+                  "steps": [
+                    {
+                      "label": "阳光",
+                      "caption": "能量来源"
+                    },
+                    {
+                      "label": "水",
+                      "caption": "氢与氧来源"
+                    },
+                    {
+                      "label": "CO₂",
+                      "caption": "碳来源"
+                    },
+                    {
+                      "label": "葡萄糖",
+                      "caption": "储存能量"
+                    }
+                  ]
+                },
+                "annotations": [
+                  {
+                    "text": "输入变输出，生生不息",
+                    "x": 500,
+                    "y": 780,
+                    "portraitY": 1340,
+                    "enterMs": 400
+                  }
+                ]
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-semantic",
+            "engineVersion": "qwen-plus/prompt2/compiler1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "71617af6-54b6-4e67-acc3-1b5c8d1cd35b",
+          "at": "2026-10-26T12:47:36.571Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "51076dc1-1bb2-439b-b130-046586eda887",
+      "order": 4,
+      "locked": false,
+      "workingVersionId": "9ad2002b-5977-43d5-ad5b-bf590f5da114",
+      "contentVersions": [
+        {
+          "versionId": "9ad2002b-5977-43d5-ad5b-bf590f5da114",
+          "createdAt": "2026-10-26T12:47:36.571Z",
+          "durationMs": 2500,
+          "description": "光合作用：地球生命基石（标题）",
+          "narrationText": "养分由此来",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 2500,
+              "seed": 5028,
+              "background": "#101f34",
+              "params": {
+                "title": "光合作用：地球生命基石",
+                "subtitle": "养分由此来",
+                "titleColor": "#f3f5f7",
+                "subtitleColor": "#b4d8e4",
+                "entrance": "fade-up",
+                "enterMs": 450
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-semantic",
+            "engineVersion": "qwen-plus/prompt2/compiler1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "9ad2002b-5977-43d5-ad5b-bf590f5da114",
+          "at": "2026-10-26T12:47:36.571Z",
+          "actor": "human"
+        }
+      ]
+    }
+  ],
+  "renderRecords": [],
+  "deliveries": [],
+  "savedVersion": 2
+}

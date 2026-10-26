@@ -1,0 +1,237 @@
+{
+  "storyboard": {
+    "ok": true,
+    "sentence": "做一条约25秒的光合作用科普短片，讲清阳光、二氧化碳和水如何变成养分",
+    "title": "阳光·水·气→养分",
+    "totalMs": 17400,
+    "shots": [
+      {
+        "label": "标题",
+        "description": "光合作用：生命的能量工厂（标题）",
+        "narrationText": "植物造养分",
+        "plan": {
+          "ok": true,
+          "spec": {
+            "specVersion": 1,
+            "componentId": "text-animation",
+            "componentVersion": 1,
+            "durationMs": 2500,
+            "seed": 5000,
+            "background": "#101f34",
+            "params": {
+              "title": "光合作用：生命的能量工厂",
+              "subtitle": "植物造养分",
+              "titleColor": "#f3f5f7",
+              "subtitleColor": "#b4d8e4",
+              "entrance": "fade-up",
+              "enterMs": 450
+            }
+          },
+          "title": "光合作用：生命的能量工厂",
+          "renderHint": "标题"
+        }
+      },
+      {
+        "label": "要点解说",
+        "description": "三大原料缺一不可（要点解说）",
+        "narrationText": "阳光、水、二氧化碳",
+        "plan": {
+          "ok": true,
+          "spec": {
+            "specVersion": 1,
+            "componentId": "sketch-note",
+            "componentVersion": 1,
+            "durationMs": 3200,
+            "seed": 5007,
+            "background": "#101f34",
+            "params": {
+              "title": "三大原料缺一不可",
+              "items": [
+                {
+                  "text": "阳光提供能量",
+                  "emphasis": "下划线"
+                },
+                {
+                  "text": "水来自根部",
+                  "emphasis": "圈"
+                },
+                {
+                  "text": "二氧化碳来自空气",
+                  "emphasis": "圈"
+                }
+              ],
+              "inkColor": "#f3f5f7",
+              "accentColor": "#f5b652",
+              "writeMs": 900,
+              "drawMs": 700,
+              "staggerMs": 500
+            }
+          },
+          "title": "三大原料缺一不可",
+          "renderHint": "要点解说"
+        }
+      },
+      {
+        "label": "流程图解",
+        "description": "光合作用四步转化（流程图解）",
+        "narrationText": "光能驱动化学反应",
+        "plan": {
+          "ok": true,
+          "spec": {
+            "specVersion": 1,
+            "componentId": "explainer-composition",
+            "componentVersion": 1,
+            "durationMs": 4200,
+            "seed": 5014,
+            "background": "#101f34",
+            "params": {
+              "titleColor": "#f3f5f7",
+              "textColor": "#f3f5f7",
+              "boxColor": "#dcebe1",
+              "arrowColor": "#f5b652",
+              "strokeColor": "#42a5a0",
+              "title": "光合作用四步转化",
+              "titleY": 145,
+              "titleEnterMs": 0,
+              "diagramOffsetX": 0,
+              "diagramOffsetY": -75,
+              "diagramEnterMs": 450,
+              "diagram": {
+                "kind": "flow",
+                "steps": [
+                  {
+                    "label": "吸收光能"
+                  },
+                  {
+                    "label": "分解水"
+                  },
+                  {
+                    "label": "固定碳"
+                  },
+                  {
+                    "label": "合成葡萄糖"
+                  }
+                ]
+              },
+              "annotations": [
+                {
+                  "text": "光能驱动化学反应",
+                  "x": 500,
+                  "y": 730,
+                  "portraitY": 1260,
+                  "enterMs": 400
+                }
+              ]
+            }
+          },
+          "title": "光合作用四步转化",
+          "renderHint": "流程图解"
+        }
+      },
+      {
+        "label": "循环图解",
+        "description": "自然能量循环（循环图解）",
+        "narrationText": "氧气同步释放",
+        "plan": {
+          "ok": true,
+          "spec": {
+            "specVersion": 1,
+            "componentId": "explainer-composition",
+            "componentVersion": 1,
+            "durationMs": 5000,
+            "seed": 5021,
+            "background": "#101f34",
+            "params": {
+              "titleColor": "#f3f5f7",
+              "textColor": "#f3f5f7",
+              "boxColor": "#dcebe1",
+              "arrowColor": "#f5b652",
+              "strokeColor": "#42a5a0",
+              "title": "自然能量循环",
+              "titleY": 145,
+              "titleEnterMs": 0,
+              "diagramOffsetX": 0,
+              "diagramOffsetY": -60,
+              "diagramEnterMs": 450,
+              "diagram": {
+                "kind": "cycle",
+                "steps": [
+                  {
+                    "label": "光照",
+                    "caption": "叶绿体激活"
+                  },
+                  {
+                    "label": "吸水",
+                    "caption": "根系输送"
+                  },
+                  {
+                    "label": "吸碳",
+                    "caption": "气孔进入"
+                  },
+                  {
+                    "label": "产糖",
+                    "caption": "养分储存"
+                  },
+                  {
+                    "label": "释氧",
+                    "caption": "副产品释放"
+                  }
+                ]
+              },
+              "annotations": [
+                {
+                  "text": "氧气同步释放",
+                  "x": 500,
+                  "y": 780,
+                  "portraitY": 1340,
+                  "enterMs": 400
+                }
+              ]
+            }
+          },
+          "title": "自然能量循环",
+          "renderHint": "循环图解"
+        }
+      },
+      {
+        "label": "标题",
+        "description": "光合作用：地球的生命引擎（标题）",
+        "narrationText": "养分与氧气之源",
+        "plan": {
+          "ok": true,
+          "spec": {
+            "specVersion": 1,
+            "componentId": "text-animation",
+            "componentVersion": 1,
+            "durationMs": 2500,
+            "seed": 5028,
+            "background": "#101f34",
+            "params": {
+              "title": "光合作用：地球的生命引擎",
+              "subtitle": "养分与氧气之源",
+              "titleColor": "#f3f5f7",
+              "subtitleColor": "#b4d8e4",
+              "entrance": "fade-up",
+              "enterMs": 450
+            }
+          },
+          "title": "光合作用：地球的生命引擎",
+          "renderHint": "标题"
+        }
+      }
+    ]
+  },
+  "provenance": {
+    "provider": "qwen-chat",
+    "model": "qwen-plus",
+    "promptVersion": "2",
+    "compilerVersion": "1",
+    "sentence": "做一条约25秒的光合作用科普短片，讲清阳光、二氧化碳和水如何变成养分",
+    "topic": "光合作用三要素转化过程"
+  },
+  "usage": {
+    "prompt_tokens": 913,
+    "completion_tokens": 413,
+    "total_tokens": 1326
+  }
+}

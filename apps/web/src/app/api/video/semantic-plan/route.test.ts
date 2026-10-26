@@ -94,7 +94,7 @@ test("semantic-plan：合法 IR → 200 返回 storyboard 与 provenance", async
       assert.equal(data.storyboard.totalMs, 10500);
       assert.equal(data.provenance.provider, "qwen-chat");
       assert.equal(data.provenance.model, "qwen-plus");
-      assert.equal(data.provenance.promptVersion, "1");
+      assert.equal(data.provenance.promptVersion, "2");
       assert.equal(data.provenance.compilerVersion, "1");
       assert.equal(
         data.provenance.sentence,
@@ -191,6 +191,108 @@ test("semantic-plan：模型坏 JSON → 422 分类错误", async () => {
       const data = await response.json();
       assert.match(String(data.error), /JSON/);
       assert.equal(data.storyboard, undefined);
+    });
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+// 时长目标（交接单验收：20-30s 或显式记录偏离）：句子里的「N秒」解析为
+// 目标，Σ durationMs 偏离 0.8N..1.2N 先走带因重试；重试后仍偏则透明标注
+// durationDeviation（不硬失败——确认卡如实显示总时长，用户自行决定）。
+// 手工构造合法 IR（等比缩放会撞每镜上限/旁白预算）：
+const SHORT_IR = JSON.stringify({
+  topic: "水循环",
+  title: "水的旅程",
+  shots: [
+    { intent: "title", title: "水的旅程", narrationText: "一滴水的旅程", durationMs: 2300 },
+    {
+      intent: "cycle-explainer",
+      title: "水循环四阶段",
+      narrationText: "水在四个阶段循环",
+      durationMs: 4500,
+      cycleSteps: [{ label: "蒸发" }, { label: "凝结" }, { label: "降水" }, { label: "汇集" }],
+    },
+    { intent: "title", title: "谢谢观看", narrationText: "谢谢观看", durationMs: 2300 },
+    { intent: "title", title: "再看一遍", narrationText: "可以再看一遍", durationMs: 4000 },
+  ],
+}); // Σ=13100ms < 20000ms（25s×0.8）
+
+const ON_TARGET_IR = JSON.stringify({
+  topic: "水循环",
+  title: "水的旅程",
+  shots: [
+    { intent: "title", title: "水的旅程", narrationText: "一滴水的旅程", durationMs: 3000 },
+    {
+      intent: "cycle-explainer",
+      title: "水循环四阶段",
+      narrationText: "蒸发凝结降水汇集循环不息",
+      durationMs: 5200,
+      cycleSteps: [{ label: "蒸发" }, { label: "凝结" }, { label: "降水" }, { label: "汇集" }],
+    },
+    {
+      intent: "text-explainer",
+      title: "为什么重要",
+      narrationText: "淡水全靠它补给",
+      durationMs: 3700,
+      bullets: ["淡水之源", "气候推手", "生生不息"],
+    },
+    {
+      intent: "flow-explainer",
+      title: "一杯水的路径",
+      narrationText: "从海到云再到海",
+      durationMs: 3500,
+      flowSteps: ["海洋", "云朵", "河流"],
+    },
+    { intent: "title", title: "水的旅程", narrationText: "循环永不停", durationMs: 3000 },
+    { intent: "title", title: "谢谢观看", narrationText: "谢谢观看", durationMs: 3000 },
+    { intent: "title", title: "下集再见", narrationText: "下集再见", durationMs: 3000 },
+  ],
+}); // Σ=24400ms ∈ [20000, 30000]
+
+test("semantic-plan：Σ时长低于句中目标 → 带因重试；修正后通过且无偏离标注", async () => {
+  const originalFetch = globalThis.fetch;
+  const userMessages: string[] = [];
+  let calls = 0;
+  globalThis.fetch = async (_input, init) => {
+    calls += 1;
+    const body = JSON.parse(String(init?.body)) as {
+      messages: Array<{ role: string; content: string }>;
+    };
+    userMessages.push(body.messages[1]!.content);
+    // 第一次 Σ13.1s（远低于 25s×0.8）；第二次 Σ24.4s（达标）。
+    return chatResponse(calls === 1 ? SHORT_IR : ON_TARGET_IR);
+  };
+  try {
+    await withEnv(WITH_KEY, async () => {
+      const response = await POST(ask("做一条约25秒的水循环科普短片"));
+      assert.equal(response.status, 200);
+      const data = await response.json();
+      assert.equal(calls, 2);
+      assert.match(userMessages[1]!, /总时长/);
+      assert.equal(data.durationDeviation, undefined);
+    });
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("semantic-plan：重试后仍偏短 → 200 但透明标注 durationDeviation", async () => {
+  const originalFetch = globalThis.fetch;
+  let calls = 0;
+  globalThis.fetch = async () => {
+    calls += 1;
+    return chatResponse(SHORT_IR);
+  };
+  try {
+    await withEnv(WITH_KEY, async () => {
+      const response = await POST(ask("做一条约25秒的水循环科普短片"));
+      assert.equal(response.status, 200);
+      const data = await response.json();
+      assert.equal(calls, 2);
+      assert.ok(data.durationDeviation);
+      assert.equal(data.durationDeviation.targetMs, 25000);
+      assert.equal(data.durationDeviation.actualMs, data.storyboard.totalMs);
     });
   } finally {
     globalThis.fetch = originalFetch;

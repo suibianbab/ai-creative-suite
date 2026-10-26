@@ -110,6 +110,8 @@ type SemanticPlanState = {
     promptVersion: string;
     compilerVersion: string;
   } | null;
+  // 路由透明标注：重试后 Σ时长仍偏离句中目标（确认卡如实告知，用户决定）。
+  durationDeviation: { targetMs: number; actualMs: number } | null;
 };
 
 export default function VideoStudioPage() {
@@ -145,6 +147,7 @@ export default function VideoStudioPage() {
     busy: false,
     error: null,
     provenance: null,
+    durationDeviation: null,
   });
   useEffect(() => {
     setTransitionRows(
@@ -916,6 +919,7 @@ export default function VideoStudioPage() {
                     busy: true,
                     error: null,
                     provenance: null,
+                    durationDeviation: null,
                   });
                   try {
                     const response = await fetch("/api/video/semantic-plan", {
@@ -927,6 +931,7 @@ export default function VideoStudioPage() {
                       storyboard?: StoryboardResult;
                       provenance?: SemanticPlanState["provenance"];
                       error?: string;
+                      durationDeviation?: { targetMs: number; actualMs: number };
                     };
                     if (!response.ok || !data.storyboard?.ok) {
                       setSemanticPlan({
@@ -934,6 +939,7 @@ export default function VideoStudioPage() {
                         error:
                           data.error ?? "AI 分镜生成失败，请稍后重试或改用固定句式",
                         provenance: null,
+                        durationDeviation: null,
                       });
                       return;
                     }
@@ -941,6 +947,7 @@ export default function VideoStudioPage() {
                       busy: false,
                       error: null,
                       provenance: data.provenance ?? null,
+                      durationDeviation: data.durationDeviation ?? null,
                     });
                     setEditor({
                       ...editor,
@@ -953,6 +960,7 @@ export default function VideoStudioPage() {
                       busy: false,
                       error: "AI 分镜请求失败（网络错误），未修改项目",
                       provenance: null,
+                      durationDeviation: null,
                     });
                   }
                 }}
@@ -992,6 +1000,13 @@ export default function VideoStudioPage() {
                   AI 分镜：{semanticPlan.provenance.model} · 提示词 v
                   {semanticPlan.provenance.promptVersion} · 编译器 v
                   {semanticPlan.provenance.compilerVersion}
+                </p>
+              ) : null}
+              {semanticPlan.durationDeviation ? (
+                <p className="planner-reason">
+                  注意：总时长 {semanticPlan.durationDeviation.actualMs / 1000}s
+                  偏离了要求的约 {semanticPlan.durationDeviation.targetMs / 1000}s
+                  （重试后仍未对齐）。可放弃后换个说法重新生成。
                 </p>
               ) : null}
               <ol className="plan-shot-list">
@@ -1047,6 +1062,7 @@ export default function VideoStudioPage() {
                         busy: false,
                         error: null,
                         provenance: null,
+                        durationDeviation: null,
                       });
                     } catch (error) {
                       setEditor({
@@ -1070,6 +1086,7 @@ export default function VideoStudioPage() {
                       busy: false,
                       error: null,
                       provenance: null,
+                      durationDeviation: null,
                     });
                   }}
                 >
