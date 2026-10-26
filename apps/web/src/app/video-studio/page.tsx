@@ -109,6 +109,7 @@ type SemanticPlanState = {
     model: string;
     promptVersion: string;
     compilerVersion: string;
+    substitutedForAssets?: boolean;
   } | null;
   // 路由透明标注：重试后 Σ时长仍偏离句中目标（确认卡如实告知，用户决定）。
   durationDeviation: { targetMs: number; actualMs: number } | null;
@@ -591,9 +592,7 @@ export default function VideoStudioPage() {
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
             sentence: trimmed,
-            ...(allowSubstitute
-              ? { allowDiagramSubstitute: true }
-              : {}),
+            ...(allowSubstitute ? { allowDiagramSubstitute: true } : {}),
           }),
         });
         const data = (await response.json()) as {
@@ -610,8 +609,7 @@ export default function VideoStudioPage() {
             busy: false,
             // 逐镜校验/编译失败带明细（I-4）；needs-assets 提供授权入口。
             error: [
-              data.error ??
-                "AI 分镜生成失败，请稍后重试或改用固定句式",
+              data.error ?? "AI 分镜生成失败，请稍后重试或改用固定句式",
               ...(data.errors ?? []),
             ].join("；"),
             provenance: null,
@@ -848,7 +846,7 @@ export default function VideoStudioPage() {
                 error: null,
                 provenance: null,
                 durationDeviation: null,
-                    needsAssetsChoice: false,
+                needsAssetsChoice: false,
               });
               refreshProjects().catch(() => {});
             }}
@@ -1034,9 +1032,7 @@ export default function VideoStudioPage() {
                 // AI 分镜与固定句式规划是两条独立入口：AI 失败只报错，
                 // 不静默回退旧占位分镜（交接单 2026-10-26 明确纪律）。
                 disabled={
-                  semanticPlan.busy ||
-                  busy ||
-                  sentence.trim().length === 0
+                  semanticPlan.busy || busy || sentence.trim().length === 0
                 }
                 onClick={() => runSemanticPlan(false)}
               >
@@ -1089,10 +1085,16 @@ export default function VideoStudioPage() {
                   {semanticPlan.provenance.compilerVersion}
                 </p>
               ) : null}
+              {semanticPlan.provenance?.substitutedForAssets ? (
+                <p className="planner-reason">
+                  已按你的选择改用图解生成；本分镜不包含原要求的真实照片或素材。
+                </p>
+              ) : null}
               {semanticPlan.durationDeviation ? (
                 <p className="planner-reason">
                   注意：总时长 {semanticPlan.durationDeviation.actualMs / 1000}s
-                  偏离了要求的约 {semanticPlan.durationDeviation.targetMs / 1000}s
+                  偏离了要求的约{" "}
+                  {semanticPlan.durationDeviation.targetMs / 1000}s
                   （重试后仍未对齐）。可放弃后换个说法重新生成。
                 </p>
               ) : null}
@@ -1132,7 +1134,7 @@ export default function VideoStudioPage() {
                         semanticPlan.provenance
                           ? {
                               engineId: "planner-semantic",
-                              engineVersion: `${semanticPlan.provenance.model}/prompt${semanticPlan.provenance.promptVersion}/compiler${semanticPlan.provenance.compilerVersion}`,
+                              engineVersion: `${semanticPlan.provenance.model}/prompt${semanticPlan.provenance.promptVersion}/compiler${semanticPlan.provenance.compilerVersion}${semanticPlan.provenance.substitutedForAssets ? "/diagram-substitute" : ""}`,
                             }
                           : undefined,
                       );
@@ -1150,7 +1152,7 @@ export default function VideoStudioPage() {
                         error: null,
                         provenance: null,
                         durationDeviation: null,
-                    needsAssetsChoice: false,
+                        needsAssetsChoice: false,
                       });
                     } catch (error) {
                       setEditor({
@@ -1175,7 +1177,7 @@ export default function VideoStudioPage() {
                       error: null,
                       provenance: null,
                       durationDeviation: null,
-                    needsAssetsChoice: false,
+                      needsAssetsChoice: false,
                     });
                   }}
                 >
@@ -1741,7 +1743,7 @@ export default function VideoStudioPage() {
                 error: null,
                 provenance: null,
                 durationDeviation: null,
-                    needsAssetsChoice: false,
+                needsAssetsChoice: false,
               });
             }}
           >
@@ -1920,7 +1922,7 @@ export default function VideoStudioPage() {
                           error: null,
                           provenance: null,
                           durationDeviation: null,
-                    needsAssetsChoice: false,
+                          needsAssetsChoice: false,
                         });
                       }}
                     >

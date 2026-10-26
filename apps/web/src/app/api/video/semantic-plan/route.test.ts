@@ -16,7 +16,12 @@ const VALID_IR = JSON.stringify({
   topic: "水循环",
   title: "水的旅程",
   shots: [
-    { intent: "title", title: "水的旅程", narrationText: "一滴水的旅程", durationMs: 3000 },
+    {
+      intent: "title",
+      title: "水的旅程",
+      narrationText: "一滴水的旅程",
+      durationMs: 3000,
+    },
     {
       intent: "cycle-explainer",
       title: "水循环四阶段",
@@ -24,7 +29,12 @@ const VALID_IR = JSON.stringify({
       durationMs: 5000,
       cycleSteps: ["蒸发", "凝结", "降水", "汇集"],
     },
-    { intent: "title", title: "谢谢观看", narrationText: "谢谢观看", durationMs: 2500 },
+    {
+      intent: "title",
+      title: "谢谢观看",
+      narrationText: "谢谢观看",
+      durationMs: 2500,
+    },
   ],
 });
 
@@ -94,10 +104,7 @@ test("semantic-plan：合法 IR → 200 返回 storyboard 与 provenance", async
       assert.equal(data.provenance.model, "qwen-plus");
       assert.equal(data.provenance.promptVersion, "4");
       assert.equal(data.provenance.compilerVersion, "1");
-      assert.equal(
-        data.provenance.sentence,
-        "做一条约25秒的水循环科普短片",
-      );
+      assert.equal(data.provenance.sentence, "做一条约25秒的水循环科普短片");
     });
   } finally {
     globalThis.fetch = originalFetch;
@@ -120,7 +127,12 @@ test("semantic-plan：首次 IR 非法 → 带原因重试一次后成功", asyn
         ? JSON.stringify({
             ...JSON.parse(VALID_IR),
             shots: [
-              { intent: "title", title: "T", narrationText: "这段旁白实在太长了肯定无论如何都装不下啊", durationMs: 2000 },
+              {
+                intent: "title",
+                title: "T",
+                narrationText: "这段旁白实在太长了肯定无论如何都装不下啊",
+                durationMs: 2000,
+              },
               ...JSON.parse(VALID_IR).shots.slice(1),
             ],
           })
@@ -246,7 +258,12 @@ const SHORT_IR = JSON.stringify({
   topic: "水循环",
   title: "水的旅程",
   shots: [
-    { intent: "title", title: "水的旅程", narrationText: "一滴水的旅程", durationMs: 2300 },
+    {
+      intent: "title",
+      title: "水的旅程",
+      narrationText: "一滴水的旅程",
+      durationMs: 2300,
+    },
     {
       intent: "cycle-explainer",
       title: "水循环四阶段",
@@ -254,8 +271,18 @@ const SHORT_IR = JSON.stringify({
       durationMs: 4500,
       cycleSteps: ["蒸发", "凝结", "降水", "汇集"],
     },
-    { intent: "title", title: "谢谢观看", narrationText: "谢谢观看", durationMs: 2300 },
-    { intent: "title", title: "再看一遍", narrationText: "可以再看一遍", durationMs: 4000 },
+    {
+      intent: "title",
+      title: "谢谢观看",
+      narrationText: "谢谢观看",
+      durationMs: 2300,
+    },
+    {
+      intent: "title",
+      title: "再看一遍",
+      narrationText: "可以再看一遍",
+      durationMs: 4000,
+    },
   ],
 }); // Σ=13100ms < 20000ms（25s×0.8）
 
@@ -263,7 +290,12 @@ const ON_TARGET_IR = JSON.stringify({
   topic: "水循环",
   title: "水的旅程",
   shots: [
-    { intent: "title", title: "水的旅程", narrationText: "一滴水的旅程", durationMs: 3000 },
+    {
+      intent: "title",
+      title: "水的旅程",
+      narrationText: "一滴水的旅程",
+      durationMs: 3000,
+    },
     {
       intent: "cycle-explainer",
       title: "水循环四阶段",
@@ -285,9 +317,24 @@ const ON_TARGET_IR = JSON.stringify({
       durationMs: 3500,
       flowSteps: ["海洋", "云朵", "河流"],
     },
-    { intent: "title", title: "水的旅程", narrationText: "循环永不停", durationMs: 3000 },
-    { intent: "title", title: "谢谢观看", narrationText: "谢谢观看", durationMs: 3000 },
-    { intent: "title", title: "下集再见", narrationText: "下集再见", durationMs: 3000 },
+    {
+      intent: "title",
+      title: "水的旅程",
+      narrationText: "循环永不停",
+      durationMs: 3000,
+    },
+    {
+      intent: "title",
+      title: "谢谢观看",
+      narrationText: "谢谢观看",
+      durationMs: 3000,
+    },
+    {
+      intent: "title",
+      title: "下集再见",
+      narrationText: "下集再见",
+      durationMs: 3000,
+    },
   ],
 }); // Σ=24400ms ∈ [20000, 30000]
 
@@ -442,9 +489,22 @@ test("semantic-plan：allowDiagramSubstitute=true（用户明示改用图解）�
       assert.equal(data.storyboard.ok, true);
       // 回应里带 substituted 标记：确认卡如实告知这是图解替代方案。
       assert.equal(data.substitutedForAssets, true);
+      assert.equal(data.provenance.substitutedForAssets, true);
       assert.equal(calls, 1);
     });
   } finally {
     globalThis.fetch = originalFetch;
   }
+});
+
+test("semantic-plan：合法 JSON null → 400，不抛未处理异常", async () => {
+  const response = await POST(
+    new Request("http://localhost:3000/api/video/semantic-plan", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: "null",
+    }),
+  );
+  assert.equal(response.status, 400);
+  assert.match(String((await response.json()).error), /格式/);
 });

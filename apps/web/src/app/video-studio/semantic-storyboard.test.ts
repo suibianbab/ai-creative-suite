@@ -3,16 +3,21 @@ import test from "node:test";
 import { quantizeTimeline } from "@acs/video-document";
 import type { StoryboardResult } from "./planner";
 import {
+  compileSemanticDraft,
   requiresRealAssets,
   validateSemanticDraft,
-  compileSemanticDraft,
 } from "./semantic-storyboard";
 
 const VALID = {
   topic: "水循环",
   title: "水的旅程",
   shots: [
-    { intent: "title", title: "水的旅程", narrationText: "一滴水的故事", durationMs: 3000 },
+    {
+      intent: "title",
+      title: "水的旅程",
+      narrationText: "一滴水的故事",
+      durationMs: 3000,
+    },
     {
       intent: "cycle-explainer",
       title: "水循环四阶段",
@@ -34,7 +39,8 @@ test("semantic IR：合法草稿通过校验并编译出有效 SceneSpec", () =>
   assert.equal(c.shots[0]!.plan.spec.componentId, "text-animation");
   assert.equal(c.shots[1]!.plan.spec.componentId, "explainer-composition");
   assert.equal(
-    (c.shots[1]!.plan.spec.params as { diagram: { kind: string } }).diagram.kind,
+    (c.shots[1]!.plan.spec.params as { diagram: { kind: string } }).diagram
+      .kind,
     "cycle",
   );
 });
@@ -59,7 +65,12 @@ test("semantic IR：缺失 cycleSteps 拒绝", () => {
   const bad2 = {
     ...VALID,
     shots: [
-      { intent: "cycle-explainer", title: "T", narrationText: "N", durationMs: 3000 },
+      {
+        intent: "cycle-explainer",
+        title: "T",
+        narrationText: "N",
+        durationMs: 3000,
+      },
     ],
   };
   const v2 = validateSemanticDraft(bad2);
@@ -75,7 +86,12 @@ test("semantic IR：旁白连 6000ms 都装不下 → 拒绝（预算不可延�
   const bad = {
     ...VALID,
     shots: [
-      { intent: "title", title: "T", narrationText: "一二三四五六七八九十一二三四五六七八九", durationMs: 6000 },
+      {
+        intent: "title",
+        title: "T",
+        narrationText: "一二三四五六七八九十一二三四五六七八九",
+        durationMs: 6000,
+      },
       ...VALID.shots.slice(1),
     ],
   };
@@ -92,7 +108,12 @@ test("semantic 编译：旁白超出模型时长但延长可救 → 确定性延
   const draft = {
     ...VALID,
     shots: [
-      { intent: "title", title: "T", narrationText: "一二三四五六七八九十", durationMs: 2000 },
+      {
+        intent: "title",
+        title: "T",
+        narrationText: "一二三四五六七八九十",
+        durationMs: 2000,
+      },
       ...VALID.shots.slice(1),
     ],
   };
@@ -166,10 +187,7 @@ test("semantic IR：未知根字段 → 拒绝（P1-2 严格键集合）", () =>
 test("semantic IR：未知镜头字段 → 拒绝（P1-2 严格键集合）", () => {
   const bad = {
     ...VALID,
-    shots: [
-      { ...VALID.shots[0], params: { x: 1 } },
-      ...VALID.shots.slice(1),
-    ],
+    shots: [{ ...VALID.shots[0], params: { x: 1 } }, ...VALID.shots.slice(1)],
   };
   const v = validateSemanticDraft(bad);
   assert.ok(!v.ok);
@@ -198,7 +216,10 @@ test("semantic IR：资产引用字段 → 拒绝并给出素材边界指引（P
   // 指引：无法表达的资产要求要给出明确下一步，不是干巴巴的 schema 错。
   const v2 = validateSemanticDraft({
     ...VALID,
-    shots: [{ ...VALID.shots[0], assetUrl: "https://e.com/a.png" }, ...VALID.shots.slice(1)],
+    shots: [
+      { ...VALID.shots[0], assetUrl: "https://e.com/a.png" },
+      ...VALID.shots.slice(1),
+    ],
   });
   assert.ok(!v2.ok);
   assert.ok(
@@ -230,7 +251,12 @@ test("semantic 编译：flow-explainer 用 flow-steps@1 纵向布局（独立组
     topic: "水循环",
     title: "水的旅程",
     shots: [
-      { intent: "title", title: "水的旅程", narrationText: "一滴水的旅程", durationMs: 2500 },
+      {
+        intent: "title",
+        title: "水的旅程",
+        narrationText: "一滴水的旅程",
+        durationMs: 2500,
+      },
       {
         intent: "flow-explainer",
         title: "三步走",
@@ -238,7 +264,12 @@ test("semantic 编译：flow-explainer 用 flow-steps@1 纵向布局（独立组
         durationMs: 3000,
         flowSteps: ["海洋", "云朵", "河流"],
       },
-      { intent: "title", title: "谢谢观看", narrationText: "谢谢观看", durationMs: 2500 },
+      {
+        intent: "title",
+        title: "谢谢观看",
+        narrationText: "谢谢观看",
+        durationMs: 2500,
+      },
     ],
   };
   const v = validateSemanticDraft(draft);
@@ -247,10 +278,7 @@ test("semantic 编译：flow-explainer 用 flow-steps@1 纵向布局（独立组
   assert.ok(c.ok, c.ok ? "" : c.errors.join("; "));
   const spec = c.shots[1]!.plan.spec;
   assert.equal(spec.componentId, "flow-steps");
-  assert.equal(
-    (spec.params as { direction: string }).direction,
-    "vertical",
-  );
+  assert.equal((spec.params as { direction: string }).direction, "vertical");
 });
 
 test("semantic 编译：renderHint 列出该镜屏幕文字（I-5，交接单 §3.3）", () => {
@@ -258,7 +286,12 @@ test("semantic 编译：renderHint 列出该镜屏幕文字（I-5，交接单 §
     topic: "水循环",
     title: "水的旅程",
     shots: [
-      { intent: "title", title: "水的旅程", narrationText: "一滴水的旅程", durationMs: 2500 },
+      {
+        intent: "title",
+        title: "水的旅程",
+        narrationText: "一滴水的旅程",
+        durationMs: 2500,
+      },
       {
         intent: "cycle-explainer",
         title: "水循环三阶段",
@@ -280,7 +313,12 @@ test("semantic 编译：renderHint 列出该镜屏幕文字（I-5，交接单 §
         durationMs: 3000,
         flowSteps: ["海洋", "云朵", "河流"],
       },
-      { intent: "title", title: "谢谢观看", narrationText: "谢谢观看", durationMs: 2500 },
+      {
+        intent: "title",
+        title: "谢谢观看",
+        narrationText: "谢谢观看",
+        durationMs: 2500,
+      },
     ],
   };
   const v = validateSemanticDraft(draft);
@@ -310,7 +348,10 @@ test("semantic 编译：输出即 StoryboardResult(ok:true)，24fps 无零帧", 
   assert.equal(asResult.ok, true);
   if (!asResult.ok) return;
   assert.equal(asResult.shots.length, 3);
-  assert.equal(asResult.totalMs, asResult.shots.reduce((ms, s) => ms + s.plan.spec.durationMs, 0));
+  assert.equal(
+    asResult.totalMs,
+    asResult.shots.reduce((ms, s) => ms + s.plan.spec.durationMs, 0),
+  );
   // 每镜时长为正整数且 24fps 量化无零帧镜头。
   const durations = asResult.shots.map((s) => s.plan.spec.durationMs);
   for (const d of durations) {
@@ -331,9 +372,16 @@ test("requiresRealAssets：显式素材需求识别与题材词不误伤", () =>
   assert.ok(requiresRealAssets("做一条用实拍画面的食品安全短片"));
   assert.ok(requiresRealAssets("需要插入真实图片讲细胞结构"));
   assert.ok(requiresRealAssets("用真实素材展示服装细节"));
+  assert.ok(requiresRealAssets("使用真实的产品照片介绍这款商品"));
+  assert.ok(requiresRealAssets("用我上传的图片做一条科普短片"));
+  assert.ok(requiresRealAssets("导入客户提供的商品原图制作短片"));
+  assert.ok(requiresRealAssets("不要用真实照片，改用我上传的商品图"));
   // 不误伤：题材/概念提及，非素材诉求
-  assert.ok(!requiresRealAssets("做一条约25秒的水循环科普短片，讲清蒸发、凝结和降水"));
+  assert.ok(
+    !requiresRealAssets("做一条约25秒的水循环科普短片，讲清蒸发、凝结和降水"),
+  );
   assert.ok(!requiresRealAssets("做一条摄影构图原理的科普短片"));
   assert.ok(!requiresRealAssets("讲解照相机的成像原理"));
   assert.ok(!requiresRealAssets("做一条光影艺术的美术短片"));
+  assert.ok(!requiresRealAssets("不要用真实照片，只做图解"));
 });

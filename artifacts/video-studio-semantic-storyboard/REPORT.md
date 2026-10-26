@@ -24,7 +24,7 @@
 ## 二、四态
 
 1. **代码实现**：完成（上表全部）。
-2. **自动回归**：`pnpm test` 349/349 通过；`pnpm typecheck` 通过；`pnpm qa:validate` 通过。
+2. **自动回归**：`pnpm --filter @acs/web test` 350/350 通过；Web typecheck 通过；QA registry 校验通过。
 3. **浏览器链路**：VID-065 无密钥失败面 E2E 通过（AI 入口 503 明示、不回退；旧句式规划回归正常；放弃无残留；控制台干净——503 资源日志按 response 事件对账放行）。真实千问浏览器全链（生成→确认卡截图→追加→保存→导出）双主题通过（audit-semantic-storyboard-live.mjs）。
 
 ### Codex 二轮修复（2026-10-27，CODEX_REVIEW_ROUND2.md）
@@ -32,6 +32,14 @@
 - P1 资产需求边界：`requiresRealAssets` 在规划前确定性判定用户句（高精度模式，题材词不误伤）；未授权 → 422 `kind=needs-assets`（一次模型调用都不发生），UI 提供「改用图解生成」明示授权入口，授权轮响应带 `substitutedForAssets` 标记。锁定测试：用户句要真实照片+假模型返回合法图解 IR → 仍 422 且 0 次调用；授权 → 200。
 - P2 E2E：e2e-semantic-plan 加路由拦截轮——第一次 AI 调用伪造合法分镜（确认卡出现）→ 第二次延迟 500 → 等待期间旧卡即消失、失败明示（覆盖「成功候选→二次请求失败/等待中」路径）。
 - P2 报告同步：本节及全文数字统一为 a31111a 后事实（v4/349 用例/route 12 用例/usage 合计/新样片时长）。
+
+### Codex 三轮复核与修复（2026-10-27）
+
+- 请求体即使是合法 JSON `null` 也返回 400，不再触发未处理异常；新增回归测试。
+- 「用真实的产品照片」「我上传的图片」「客户提供的商品原图」纳入素材边界识别；否定句如「不要用真实照片，只做图解」不误拦。这是常见说法的确定性规则，不声称覆盖任意自然语言。
+- 用户明示选择图解替代后，确认卡显示「不包含原要求的真实照片或素材」；来源记录的 `engineVersion` 附带 `diagram-substitute`，保留这一选择的可追溯标记。
+- 无密钥浏览器 E2E 已实跑：真实素材请求→能力边界提示→用户点击图解替代→进入模型配置检查；拦截成功响应时确认卡显示替代提示，旧候选撤销链仍通过。
+- 本轮复跑 Web 350/350、Web typecheck、QA registry 117 自动/56 手工、目标文件 Biome。先前四段双画幅样片为规划器变更前的真实输出；本轮只修改素材边界与 UI 提示，未重新调用付费模型或重渲样片。音频仍未验证。
 
 ### Codex 复核修复轮（2026-10-26，CODEX_REVIEW.md 四项必修全闭合）
 
@@ -77,7 +85,7 @@
 ## 六、复跑命令
 
 ```bash
-pnpm --filter @acs/web test                          # 349/349
+pnpm --filter @acs/web test                          # 350/350
 node scripts/video/e2e-semantic-plan.mjs             # VID-065（需无密钥 dev server，BASE_URL 可覆写）
 node scripts/video/audit-semantic-storyboard-live.mjs # 真实千问（需 DASHSCOPE_API_KEY dev server）
 node scripts/video/render-scene.mjs --project artifacts/video-studio-semantic-storyboard/water-cycle.project.json --out /tmp/out

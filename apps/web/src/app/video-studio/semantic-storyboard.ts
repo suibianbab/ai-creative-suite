@@ -54,7 +54,12 @@ export type SemanticStoryboardDraft = {
 // 未知字段（尤其资产引用/代码）一律拒绝；资产类键给素材边界指引，
 // 「要真实照片」的需求不得被无声转成通用图解。
 const ROOT_KEYS = new Set(["topic", "title", "shots"]);
-const SHOT_BASE_KEYS = new Set(["intent", "title", "narrationText", "durationMs"]);
+const SHOT_BASE_KEYS = new Set([
+  "intent",
+  "title",
+  "narrationText",
+  "durationMs",
+]);
 const SHOT_KEYS_BY_INTENT: Record<SemanticIntent, Set<string>> = {
   title: new Set([]),
   "text-explainer": new Set(["bullets"]),
@@ -62,14 +67,23 @@ const SHOT_KEYS_BY_INTENT: Record<SemanticIntent, Set<string>> = {
   "flow-explainer": new Set(["flowSteps"]),
 };
 // 常见资产/代码字段名 → 指引文案（模型请求画不出的东西时明说下一步）。
-const ASSET_KEYS = /asset|image|photo|pic|src|url|link|media|file|html|svg|css|js|code|script/i;
+const ASSET_KEYS =
+  /asset|image|photo|pic|src|url|link|media|file|html|svg|css|js|code|script/i;
 const ASSET_GUIDANCE =
   "本版本不能引用外部素材/照片/代码：请改用图解表述（title/text-explainer/cycle-explainer/flow-explainer），或由用户在素材面板人工导入";
 
-const INTENTS = new Set(["title", "text-explainer", "cycle-explainer", "flow-explainer"]);
+const INTENTS = new Set([
+  "title",
+  "text-explainer",
+  "cycle-explainer",
+  "flow-explainer",
+]);
 
 // 各 intent 的「演完 + 停留」时长下限（ms），由上方能力目录推出。
-function minDurationMs(intent: SemanticIntent, shot: SemanticDraftShot): number {
+function minDurationMs(
+  intent: SemanticIntent,
+  shot: SemanticDraftShot,
+): number {
   switch (intent) {
     case "title":
       return 2000;
@@ -95,14 +109,15 @@ export function projectedTotalMs(draft: SemanticStoryboardDraft): number {
 // 用户句的「真实素材」需求识别（P1，Codex 二轮复核 2026-10-27）：能力边界
 // 必须在规划前确定性判定，不能依赖模型自觉——模型可能顺从提示词把「要
 // 真实照片」静默改成合法图解 IR，字段校验照样通过。高精度口径：
-// 「真实/实拍/产品 × 照片/图片/素材/画面」或紧邻插入动词的裸资产名词；
-// 刻意不匹配「摄影构图」「照相机原理」这类题材词（漏判比误拦安全——
-// 漏判仍生成图解，误拦会挡掉合法请求）。
+// 「真实/实拍/产品 × 照片/图片/素材/画面」或在使用、导入等动词后提及
+// 素材；题材词（如摄影构图）不匹配。未知说法仍需在确认卡核对能力边界。
 const ASSET_DEMAND =
-  /(真实|实拍)(?:产品|的|高清)?(?:照片|图片|图像|素材|画面)|产品(?:照片|实拍图)|照片素材|(?:插入|配上?|加上?|放入|使用|换上?)(?:真实)?(?:照片|图片|实拍图)/;
+  /(?:真实|实拍|原始|客户提供|我上传|已有|现有|产品|商品).{0,10}?(?:照片|图片|图像|素材|画面|原图|产品图|商品图|实拍视频)|(?:用|使用|插入|导入|引用|上传|配上?|加上?|放入|换上?|基于|根据|拿).{0,12}?(?:照片|图片|图像|素材|画面|原图|产品图|商品图|实拍视频)/;
+const NEGATED_ASSET_DEMAND =
+  /(?:不要|不需要|无需|不用|别用|不必)(?:.{0,12}?)(?:照片|图片|图像|素材|画面|原图|产品图|商品图|实拍视频)/g;
 
 export function requiresRealAssets(sentence: string): boolean {
-  return ASSET_DEMAND.test(sentence);
+  return ASSET_DEMAND.test(sentence.replace(NEGATED_ASSET_DEMAND, ""));
 }
 
 export type SemanticValidation =
@@ -121,10 +136,18 @@ export function validateSemanticDraft(raw: unknown): SemanticValidation {
       errors.push(
         `未知根字段「${key}」${ASSET_KEYS.test(key) ? `。${ASSET_GUIDANCE}` : "（只允许 topic/title/shots）"}`,
       );
-  if (typeof d.topic !== "string" || d.topic.length < 1 || d.topic.length > 40) {
+  if (
+    typeof d.topic !== "string" ||
+    d.topic.length < 1 ||
+    d.topic.length > 40
+  ) {
     errors.push("topic 须为 1..40 字");
   }
-  if (typeof d.title !== "string" || d.title.length < 1 || d.title.length > 30) {
+  if (
+    typeof d.title !== "string" ||
+    d.title.length < 1 ||
+    d.title.length > 30
+  ) {
     errors.push("title 须为 1..30 字");
   }
   if (!Array.isArray(d.shots)) {
@@ -136,7 +159,9 @@ export function validateSemanticDraft(raw: unknown): SemanticValidation {
     errors.push("shots 须为 3..8 镜");
   }
   const shots: SemanticDraftShot[] = [];
-  for (const [i, shot] of (d.shots as Array<Record<string, unknown>>).entries()) {
+  for (const [i, shot] of (
+    d.shots as Array<Record<string, unknown>>
+  ).entries()) {
     const field = `shots[${i}]`;
     if (typeof shot !== "object" || shot === null || Array.isArray(shot)) {
       errors.push(`${field} 须为对象`);
@@ -158,13 +183,25 @@ export function validateSemanticDraft(raw: unknown): SemanticValidation {
           `未知字段 ${field}.${key}${ASSET_KEYS.test(key) ? `。${ASSET_GUIDANCE}` : "（不在该 intent 的契约内）"}`,
         );
     // 标题上限取各目标组件契约的交集（explainer-composition ≤32）。
-    if (typeof shot.title !== "string" || shot.title.length < 1 || shot.title.length > 32) {
+    if (
+      typeof shot.title !== "string" ||
+      shot.title.length < 1 ||
+      shot.title.length > 32
+    ) {
       errors.push(`${field}.title 须为 1..32 字`);
     }
-    if (typeof shot.narrationText !== "string" || shot.narrationText.length < 1) {
+    if (
+      typeof shot.narrationText !== "string" ||
+      shot.narrationText.length < 1
+    ) {
       errors.push(`${field}.narrationText 须为非空字符串`);
     }
-    if (typeof shot.durationMs !== "number" || !Number.isInteger(shot.durationMs) || shot.durationMs < 2000 || shot.durationMs > 6000) {
+    if (
+      typeof shot.durationMs !== "number" ||
+      !Number.isInteger(shot.durationMs) ||
+      shot.durationMs < 2000 ||
+      shot.durationMs > 6000
+    ) {
       errors.push(`${field}.durationMs 须为 2000..6000 的整数`);
     }
     const shaped = shot as unknown as SemanticDraftShot;
@@ -182,12 +219,20 @@ export function validateSemanticDraft(raw: unknown): SemanticValidation {
       }
     }
     if (intent === "text-explainer") {
-      if (!Array.isArray(shot.bullets) || shot.bullets.length < 1 || shot.bullets.length > 3) {
+      if (
+        !Array.isArray(shot.bullets) ||
+        shot.bullets.length < 1 ||
+        shot.bullets.length > 3
+      ) {
         errors.push(`${field}.bullets 须为 1..3 条`);
       } else {
         for (const [j, b] of (shot.bullets as unknown[]).entries()) {
           // sketch-note item.text ≤12（按码点计数，同组件口径）。
-          if (typeof b !== "string" || [...b].length < 1 || [...b].length > 12) {
+          if (
+            typeof b !== "string" ||
+            [...b].length < 1 ||
+            [...b].length > 12
+          ) {
             errors.push(`${field}.bullets[${j}] 须为 1..12 字`);
           }
         }
@@ -196,7 +241,11 @@ export function validateSemanticDraft(raw: unknown): SemanticValidation {
     if (intent === "cycle-explainer") {
       // 纯字符串 label 数组（P2-3：caption 已从 IR 移除——上屏 caption 与底部
       // 旁白注解恒碰撞，关键信息必须写进 label 或旁白，不再静默丢弃）。
-      if (!Array.isArray(shot.cycleSteps) || shot.cycleSteps.length < 3 || shot.cycleSteps.length > 5) {
+      if (
+        !Array.isArray(shot.cycleSteps) ||
+        shot.cycleSteps.length < 3 ||
+        shot.cycleSteps.length > 5
+      ) {
         errors.push(`${field}.cycleSteps 须为 3..5 个字符串阶段名`);
       } else {
         for (const [j, step] of (shot.cycleSteps as unknown[]).entries()) {
@@ -207,7 +256,11 @@ export function validateSemanticDraft(raw: unknown): SemanticValidation {
       }
     }
     if (intent === "flow-explainer") {
-      if (!Array.isArray(shot.flowSteps) || shot.flowSteps.length < 2 || shot.flowSteps.length > 4) {
+      if (
+        !Array.isArray(shot.flowSteps) ||
+        shot.flowSteps.length < 2 ||
+        shot.flowSteps.length > 4
+      ) {
         errors.push(`${field}.flowSteps 须为 2..4 步`);
       } else {
         for (const [j, s] of (shot.flowSteps as unknown[]).entries()) {
@@ -221,7 +274,10 @@ export function validateSemanticDraft(raw: unknown): SemanticValidation {
     shots.push(shot as unknown as SemanticDraftShot);
   }
   if (errors.length > 0) return { ok: false, errors };
-  return { ok: true, draft: { topic: d.topic as string, title: d.title as string, shots } };
+  return {
+    ok: true,
+    draft: { topic: d.topic as string, title: d.title as string, shots },
+  };
 }
 
 // —— 确定性编译器：IR → SceneSpec（只选已注册组件）——
@@ -261,76 +317,110 @@ const CYCLE_COLORS = {
 };
 
 function compileTitle(shot: SemanticDraftShot, seed: number): SceneSpec {
-  return baseSpec("text-animation", effectiveDurationMs(shot), {
-    title: shot.title,
-    subtitle: shot.narrationText,
-    titleColor: "#f3f5f7",
-    subtitleColor: "#b4d8e4",
-    entrance: "fade-up",
-    enterMs: 450,
-  }, seed);
-}
-
-function compileTextExplainer(shot: SemanticDraftShot, seed: number): SceneSpec {
-  return baseSpec("sketch-note", effectiveDurationMs(shot), {
-    title: shot.title,
-    items: (shot.bullets ?? []).map((b, i) => ({
-      text: b,
-      emphasis: i === 0 ? "下划线" : "圈",
-    })),
-    inkColor: "#f3f5f7",
-    accentColor: "#f5b652",
-    writeMs: 900,
-    drawMs: 700,
-    staggerMs: 500,
-  }, seed);
-}
-
-function compileCycleExplainer(shot: SemanticDraftShot, seed: number): SceneSpec {
-  return baseSpec("explainer-composition", effectiveDurationMs(shot), {
-    ...CYCLE_COLORS,
-    title: shot.title,
-    titleY: 145,
-    titleEnterMs: 0,
-    diagramOffsetX: 0,
-    // -60：竖版顶部净空（-30 实测首阶段 caption 撞标题，2026-10-26）。
-    diagramOffsetY: -60,
-    diagramEnterMs: 450,
-    diagram: {
-      kind: "cycle",
-      // 阶段只上屏 label（P2-3：IR 已无 caption——上屏 caption 与底部旁白
-      // 注解恒碰撞，细节信息必须写进 label 或旁白，编译不静默丢内容）。
-      steps: (shot.cycleSteps ?? []).map((label) => ({ label })),
+  return baseSpec(
+    "text-animation",
+    effectiveDurationMs(shot),
+    {
+      title: shot.title,
+      subtitle: shot.narrationText,
+      titleColor: "#f3f5f7",
+      subtitleColor: "#b4d8e4",
+      entrance: "fade-up",
+      enterMs: 450,
     },
-    // 旁白注解 enterMs=400：阅读窗 = durationMs-400 ≥ 300×旁白字数
-    // （验证器已保证 durationMs ≥ 400+300×字数），屏幕文字读得完。
-    // 居中 x=500 与底部阶段 label（design y≈715..746）净空 17 单位。
-    annotations: [{
-      text: shot.narrationText,
-      x: 500, y: 780, portraitY: 1340, enterMs: 400,
-    }],
-  }, seed);
+    seed,
+  );
 }
 
-function compileFlowExplainer(shot: SemanticDraftShot, seed: number): SceneSpec {
+function compileTextExplainer(
+  shot: SemanticDraftShot,
+  seed: number,
+): SceneSpec {
+  return baseSpec(
+    "sketch-note",
+    effectiveDurationMs(shot),
+    {
+      title: shot.title,
+      items: (shot.bullets ?? []).map((b, i) => ({
+        text: b,
+        emphasis: i === 0 ? "下划线" : "圈",
+      })),
+      inkColor: "#f3f5f7",
+      accentColor: "#f5b652",
+      writeMs: 900,
+      drawMs: 700,
+      staggerMs: 500,
+    },
+    seed,
+  );
+}
+
+function compileCycleExplainer(
+  shot: SemanticDraftShot,
+  seed: number,
+): SceneSpec {
+  return baseSpec(
+    "explainer-composition",
+    effectiveDurationMs(shot),
+    {
+      ...CYCLE_COLORS,
+      title: shot.title,
+      titleY: 145,
+      titleEnterMs: 0,
+      diagramOffsetX: 0,
+      // -60：竖版顶部净空（-30 实测首阶段 caption 撞标题，2026-10-26）。
+      diagramOffsetY: -60,
+      diagramEnterMs: 450,
+      diagram: {
+        kind: "cycle",
+        // 阶段只上屏 label（P2-3：IR 已无 caption——上屏 caption 与底部旁白
+        // 注解恒碰撞，细节信息必须写进 label 或旁白，编译不静默丢内容）。
+        steps: (shot.cycleSteps ?? []).map((label) => ({ label })),
+      },
+      // 旁白注解 enterMs=400：阅读窗 = durationMs-400 ≥ 300×旁白字数
+      // （验证器已保证 durationMs ≥ 400+300×字数），屏幕文字读得完。
+      // 居中 x=500 与底部阶段 label（design y≈715..746）净空 17 单位。
+      annotations: [
+        {
+          text: shot.narrationText,
+          x: 500,
+          y: 780,
+          portraitY: 1340,
+          enterMs: 400,
+        },
+      ],
+    },
+    seed,
+  );
+}
+
+function compileFlowExplainer(
+  shot: SemanticDraftShot,
+  seed: number,
+): SceneSpec {
   // flow 用独立 flow-steps@1（交接单预留路线）：explainer-composition 的
   // flow 竖版布局由组件内部重排（diagramOffsetY/titleY 均不生效），首步
   // 与标题恒叠位（offset-sweep 实测全参数空间无净窗）；flow-steps 自带
   // 标题布局，横/纵×2..4 步×双画幅最坏内容零碰撞（flow-steps-sweep 实测）。
   // 纵向列在横竖两版都居中可读；旁白走 TTS/确认卡，不上屏（无注解位）。
-  return baseSpec("flow-steps", effectiveDurationMs(shot), {
-    title: shot.title,
-    steps: (shot.flowSteps ?? []).map((s) => ({ label: s })),
-    direction: "vertical",
-    boxColor: "#dcebe1",
-    arrowColor: "#f5b652",
-    textColor: "#f3f5f7",
-    enterMs: 700,
-  }, seed);
+  return baseSpec(
+    "flow-steps",
+    effectiveDurationMs(shot),
+    {
+      title: shot.title,
+      steps: (shot.flowSteps ?? []).map((s) => ({ label: s })),
+      direction: "vertical",
+      boxColor: "#dcebe1",
+      arrowColor: "#f5b652",
+      textColor: "#f3f5f7",
+      enterMs: 700,
+    },
+    seed,
+  );
 }
 
 const INTENT_LABEL: Record<SemanticIntent, string> = {
-  "title": "标题",
+  title: "标题",
   "text-explainer": "要点解说",
   "cycle-explainer": "循环图解",
   "flow-explainer": "流程图解",
@@ -391,10 +481,17 @@ export function compileSemanticDraft(
         label: INTENT_LABEL[shot.intent],
         description: `${shot.title}（${INTENT_LABEL[shot.intent]}）`,
         narrationText: shot.narrationText,
-        plan: { ok: true, spec, title: shot.title, renderHint: renderHintFor(shot) },
+        plan: {
+          ok: true,
+          spec,
+          title: shot.title,
+          renderHint: renderHintFor(shot),
+        },
       });
     } catch (err) {
-      errors.push(`镜 ${i + 1} 编译失败：${err instanceof Error ? err.message : String(err)}`);
+      errors.push(
+        `镜 ${i + 1} 编译失败：${err instanceof Error ? err.message : String(err)}`,
+      );
     }
   }
   if (errors.length > 0) return { ok: false, errors };

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { mkdirSync } from "node:fs";
 // 语义分镜 AI 入口端到端验收（2026-10-26，确定性无密钥路径）：
 //   浏览器新建 → 输入自然语言创意 → 点「AI 生成分镜」→ 未配置
 //   DASHSCOPE_API_KEY 的 dev server 返回 503 → 界面明示失败原因，
@@ -10,7 +11,6 @@
 //   且该 server 进程未配置 DASHSCOPE_API_KEY。
 // exit 0 = 验收成立；任何一步失败 exit 1 并打印步骤名。
 import path from "node:path";
-import { mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright-core";
 
@@ -63,14 +63,16 @@ page.on("console", (msg) => {
   const text = msg.text();
   if (
     expectedSemanticFailures > 0 &&
-    /Failed to load resource.*5\d\d/.test(text)
+    /Failed to load resource.*[45]\d\d/.test(text)
   ) {
     seenResourceErrors += 1;
     return;
   }
   consoleErrors.push(text.slice(0, 200));
 });
-page.on("pageerror", (error) => consoleErrors.push(String(error).slice(0, 200)));
+page.on("pageerror", (error) =>
+  consoleErrors.push(String(error).slice(0, 200)),
+);
 
 await page.goto(`${BASE_URL}/video-studio`, {
   waitUntil: "domcontentloaded",
@@ -94,6 +96,23 @@ await page
 const cardsAfterAiFailure = await page.locator(".storyboard-card").count();
 if (cardsAfterAiFailure !== 0)
   fail("AI 入口失败面", "失败后出现了分镜卡（疑似静默回退占位分镜）");
+
+// 明确要求真实照片时先提示能力边界；用户选择图解后才继续请求模型。
+await page.fill("#planner-sentence", "用真实产品照片制作一条产品介绍短片");
+await page.click(".planner-ai");
+await expectVisible(page, ".planner-feedback .planner-ai", "真实素材边界选择");
+const needsAssetsText = await page
+  .locator(".planner-feedback")
+  .first()
+  .textContent();
+if (!needsAssetsText?.includes("需要真实照片/素材"))
+  fail("真实素材边界选择", `缺少明确提示: ${needsAssetsText}`);
+await page.locator(".planner-feedback .planner-ai").click();
+await page
+  .locator(".planner-feedback", { hasText: "DASHSCOPE_API_KEY" })
+  .first()
+  .waitFor({ timeout: 20_000 })
+  .catch(() => fail("图解授权入口", "授权后未进入模型配置检查"));
 
 // —— 旧固定句式规划回归：照常出确认卡 ——
 await page.fill("#planner-sentence", OLD_SENTENCE);
@@ -162,7 +181,9 @@ const FAKE_OK = {
     model: "intercepted",
     promptVersion: "4",
     compilerVersion: "1",
+    substitutedForAssets: true,
   },
+  substitutedForAssets: true,
 };
 let interceptCalls = 0;
 await page.route("**/api/video/semantic-plan", async (route) => {
@@ -184,6 +205,11 @@ await page.route("**/api/video/semantic-plan", async (route) => {
 });
 await page.click(".planner-ai");
 await expectVisible(page, ".storyboard-card", "拦截轮确认卡");
+await page
+  .locator(".storyboard-card", { hasText: "不包含原要求的真实照片或素材" })
+  .first()
+  .waitFor({ timeout: 20_000 })
+  .catch(() => fail("图解替代确认卡", "缺少替代素材的明确提示"));
 // 第二次请求：等待窗口内旧卡必须已消失（不可应用），随后失败明示。
 await page.click(".planner-ai");
 await page.waitForTimeout(400);
@@ -213,5 +239,5 @@ if (expectedSemanticFailures === 0)
 
 await browser.close();
 console.log(
-  "[e2e-semantic-plan] OK: 无密钥失败面不回退；旧句式回归；AI 请求撤销旧候选（P1-1）；拦截轮覆盖「成功候选→二次请求等待中撤销+失败明示」（Codex 二轮 P2）",
+  "[e2e-semantic-plan] OK: 无密钥失败面、真实素材授权入口、图解替代确认提示、旧句式回归、旧候选撤销与二次请求失败均通过",
 );

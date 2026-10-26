@@ -1,4 +1,3 @@
-import { isSameOriginRequest } from "../../same-origin";
 import {
   SEMANTIC_COMPILER_VERSION,
   SEMANTIC_PROMPT_VERSION,
@@ -10,6 +9,7 @@ import {
   requiresRealAssets,
   validateSemanticDraft,
 } from "../../../video-studio/semantic-storyboard";
+import { isSameOriginRequest } from "../../same-origin";
 
 // 语义分镜路由（交接单第 3 步，2026-10-26）：用户自然语言 → 千问受限 IR →
 // 确定性校验/编译 → StoryboardResult(ok:true)。失败纪律：任何一步失败都
@@ -32,20 +32,19 @@ export async function POST(request: Request) {
     return Response.json({ error: "请求过长" }, { status: 413 });
   let body: { sentence?: unknown; allowDiagramSubstitute?: unknown };
   try {
-    body = JSON.parse(await request.text());
+    const parsed: unknown = JSON.parse(await request.text());
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed))
+      return Response.json({ error: "请求格式无效" }, { status: 400 });
+    body = parsed as typeof body;
   } catch {
     return Response.json({ error: "请求格式无效" }, { status: 400 });
   }
   const sentence = body.sentence;
-  if (
-    typeof sentence !== "string" ||
-    !sentence.trim() ||
-    sentence.length > 240
-  )
+  if (typeof sentence !== "string" || !sentence.trim() || sentence.length > 240)
     return Response.json(
       { error: "请输入不超过 240 字的创意要求" },
       { status: 400 },
-  );
+    );
   const text = sentence.trim();
 
   // P1（Codex 二轮复核 2026-10-27）：真实素材需求的能力边界在规划前判定。
@@ -67,14 +66,19 @@ export async function POST(request: Request) {
   const provider = semanticProviderFromEnv(process.env);
   if (!provider)
     return Response.json(
-      { error: "未配置 DASHSCOPE_API_KEY，AI 分镜不可用（旧句式规划不受影响）" },
+      {
+        error: "未配置 DASHSCOPE_API_KEY，AI 分镜不可用（旧句式规划不受影响）",
+      },
       { status: 503 },
     );
 
   // 第一轮：模型直出 IR。
   const first = await provider.plan(text);
   if (!first.ok)
-    return Response.json({ error: first.message, kind: first.kind }, { status: 422 });
+    return Response.json(
+      { error: first.message, kind: first.kind },
+      { status: 422 },
+    );
   let validation = validateSemanticDraft(first.draft);
   let draftSource = first;
   // P2-4（Codex 复核）：重试的 token 用量必须合计——只报最后一调会低报成本。
@@ -85,9 +89,11 @@ export async function POST(request: Request) {
   // IR 非法同等对待，并入同一次带因修正重试。
   const targetMs = durationTargetMs(text);
   const lo = targetMs === null ? 0 : Math.floor(targetMs * 0.8);
-  const hi = targetMs === null ? Number.POSITIVE_INFINITY : Math.ceil(targetMs * 1.2);
+  const hi =
+    targetMs === null ? Number.POSITIVE_INFINITY : Math.ceil(targetMs * 1.2);
   const offTarget =
-    targetMs !== null && validation.ok &&
+    targetMs !== null &&
+    validation.ok &&
     !withinRange(projectedTotalMs(validation.draft), lo, hi);
 
   // 第二轮：IR 非法或时长偏离时带原因修正重试，恰好一次。
@@ -99,7 +105,10 @@ export async function POST(request: Request) {
       );
     const retry = await provider.plan(text, reasons.join("；"));
     if (!retry.ok)
-      return Response.json({ error: retry.message, kind: retry.kind }, { status: 422 });
+      return Response.json(
+        { error: retry.message, kind: retry.kind },
+        { status: 422 },
+      );
     validation = validateSemanticDraft(retry.draft);
     draftSource = retry;
     if (retry.usage) usageCalls.push(retry.usage);
@@ -122,14 +131,16 @@ export async function POST(request: Request) {
 
   // 重试后仍偏离：透明标注（不硬失败——确认卡如实显示总时长，用户决定）。
   const finalTotal = projectedTotalMs(validation.draft);
-  const stillOff =
-    targetMs !== null && !withinRange(finalTotal, lo, hi);
+  const stillOff = targetMs !== null && !withinRange(finalTotal, lo, hi);
 
   // usage = 逐调合计（分项在 usageCalls）；上游未给任何 usage 时为 null。
   const usage = usageCalls.length
     ? {
         prompt_tokens: usageCalls.reduce((n, u) => n + u.prompt_tokens, 0),
-        completion_tokens: usageCalls.reduce((n, u) => n + u.completion_tokens, 0),
+        completion_tokens: usageCalls.reduce(
+          (n, u) => n + u.completion_tokens,
+          0,
+        ),
         total_tokens: usageCalls.reduce((n, u) => n + u.total_tokens, 0),
       }
     : null;
@@ -143,6 +154,7 @@ export async function POST(request: Request) {
       compilerVersion: SEMANTIC_COMPILER_VERSION,
       sentence: text,
       topic: validation.draft.topic,
+      ...(substitutedForAssets ? { substitutedForAssets: true } : {}),
     },
     // token usage 合计 + 分项，供计费台账（P2-4）。
     usage,
