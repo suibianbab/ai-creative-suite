@@ -130,24 +130,27 @@ function render(spec: SceneSpecLike, ctx: FrameContext): SvgNode {
   const start = portrait ? ctx.height * 0.28 : ctx.width * 0.12;
   const end = portrait ? ctx.height * 0.82 : ctx.width * 0.9;
   const step = (end - start) / (n - 1);
-  // 时序预设（Task 2）：sync = 标题/轴线/全部节点同时入场；
-  // stagger（默认/旧口径）= 标题 0 → 轴线 300 → 节点 600+i×300。
-  // 入场时长（Codex P1-1/P1-2 修复）：
-  // 1. NaN 防御——旧 spec 无 enterMs 时用缺省 1400（validateSceneSpec 不
-  //    替换原 spec，render 读到 undefined）。
-  // 2. 入场预算——stagger 模式下最后节点完成时间 = (600+(n-1)·300+500)·k
-  //    ≤ durationMs；超出则按比例收缩 k，保证全部内容在镜头内出现。
-  const isSync = p.sequence === "sync";
-  const rawEnterMs = p.enterMs ?? 1400;
-  const lastNodeEnd =
-    (600 + (p.milestones.length - 1) * 300 + 500) * (rawEnterMs / 1400);
-  const maxK =
-    (spec.durationMs * 0.95) / (600 + (p.milestones.length - 1) * 300 + 500);
-  const k = Math.min(rawEnterMs / 1400, isSync ? rawEnterMs / 1400 : maxK);
-  const titleAppear = easeOutCubic(clamp01(tMs / (600 * k)));
-  const axisAppear = isSync
-    ? titleAppear
-    : easeOutCubic(clamp01((tMs - 300 * k) / (800 * k)));
+  // Codex P1-B/P2-C：@1 固定 600/300/800/500 时序（main@7996a 原始口径，
+  // enterMs 不影响、无预算封顶、无 sequence）；@2 按 enterMs/1400 缩放 +
+  // 入场预算（所有元素在镜头内完成）。
+  const version = spec.componentVersion ?? 1;
+  let titleAppear: number, axisAppear: number, isSync: boolean, k: number;
+  if (version === 1) {
+    isSync = false;
+    k = 1;
+    titleAppear = easeOutCubic(clamp01(tMs / 600));
+    axisAppear = easeOutCubic(clamp01((tMs - 300) / 800));
+  } else {
+    isSync = p.sequence === "sync";
+    const rawEnterMs = p.enterMs ?? 1400;
+    const span = 600 + (p.milestones.length - 1) * 300 + 500;
+    const maxK = (spec.durationMs * 0.95) / span;
+    k = Math.min(rawEnterMs / 1400, maxK);
+    titleAppear = easeOutCubic(clamp01(tMs / (600 * k)));
+    axisAppear = isSync
+      ? titleAppear
+      : easeOutCubic(clamp01((tMs - 300 * k) / (800 * k)));
+  }
 
   const position = (index: number) =>
     portrait
@@ -275,14 +278,11 @@ function render(spec: SceneSpecLike, ctx: FrameContext): SvgNode {
 }
 
 // Codex P2-4 版本边界：@1 不认 enterMs/sequence；@2 接受。
+// Codex P1-A/P2-4：@1 接受历史上合法的 enterMs（旧校验允许它，旧渲染忽略
+// 它——main@7996a 里 enterMs 不影响时序）；仅拒绝新增的 sequence。
 function validateParamsV1(value: unknown): TimelineMilestonesParams {
-  if (
-    isRecord(value) &&
-    (value.enterMs !== undefined || value.sequence !== undefined)
-  ) {
-    throw new Error(
-      "timeline-milestones@1 不支持 enterMs/sequence（请升级到 @2）",
-    );
+  if (isRecord(value) && value.sequence !== undefined) {
+    throw new Error("timeline-milestones@1 不支持 sequence（请升级到 @2）");
   }
   return validateParams(value);
 }

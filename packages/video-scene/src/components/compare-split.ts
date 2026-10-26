@@ -142,26 +142,38 @@ function render(spec: SceneSpecLike, ctx: FrameContext): SvgNode {
   const rightY = portrait ? ctx.height * 0.58 : ctx.height * 0.32;
   const arrowX = portrait ? ctx.width * 0.5 : ctx.width * 0.5;
   const arrowY = portrait ? ctx.height * 0.55 : ctx.height * 0.53;
-  // 时序预设（Task 2）：sync = 标题/面板/箭头/徽章同时入场（统一 200ms 起）；
-  // stagger（默认/旧口径）= 标题 200 → 后卡/箭头 700 → 徽章 1400。
-  // Codex P1-1/P1-2：NaN 防御 + 入场预算（stagger 最后元素完成 ≤ durationMs×0.95）。
-  const isSync = p.sequence === "sync";
+  // Codex P1-B/P2-C：按版本分离时序。
+  // @1（v1 渲染）：main@7996a 原始口径——enterMs 控制面板入场速度，徽章固定
+  // 1400ms/600ms，无预算封顶、无 sequence 支持（始终 stagger）。
+  // @2（v2 渲染）：sequence + 入场预算（所有元素在镜头内完成）。
+  const version = spec.componentVersion ?? 1;
   const rawEnterMs = p.enterMs ?? 1200;
-  const enterMs = isSync
-    ? rawEnterMs
-    : Math.min(
-        rawEnterMs,
-        (spec.durationMs * 0.95 - 1400 + 600) * (1200 / 600),
-      );
-  const appear = easeOutCubic(clamp01((tMs - 200) / enterMs));
-  const afterAppear = isSync
-    ? appear
-    : easeOutCubic(clamp01((tMs - 700) / enterMs));
-  // Codex P2-3 修复：sync 模式下徽章与所有元素统一从 200ms 起（不再延后
-  // enterMs/2）；stagger 保持旧口径（1400ms 起、600ms 入场）。
-  const deltaAppear = isSync
-    ? appear
-    : easeOutCubic(clamp01((tMs - 1400) / 600));
+  let appear: number, afterAppear: number, deltaAppear: number;
+
+  if (version === 1) {
+    // @1 原始口径（main@7996a）——不做任何预算封顶。
+    appear = easeOutCubic(clamp01((tMs - 200) / rawEnterMs));
+    afterAppear = easeOutCubic(clamp01((tMs - 700) / rawEnterMs));
+    deltaAppear = easeOutCubic(clamp01((tMs - 1400) / 600));
+  } else {
+    // @2：sequence 支持 + 入场预算。
+    const isSync = p.sequence === "sync";
+    // sync/stagger 均封顶：最晚完成元素（徽章或面板）须在镜头内完成。
+    const syncBudget =
+      Math.max(rawEnterMs, 1) > spec.durationMs - 200
+        ? Math.max(spec.durationMs - 200, 200)
+        : rawEnterMs;
+    const staggerBudget =
+      1400 + 600 > spec.durationMs * 0.95
+        ? Math.max((spec.durationMs * 0.95 - 200) * (1200 / (700 + 1200)), 200)
+        : rawEnterMs;
+    const enterMs = isSync ? syncBudget : Math.min(rawEnterMs, staggerBudget);
+    appear = easeOutCubic(clamp01((tMs - 200) / enterMs));
+    afterAppear = isSync
+      ? appear
+      : easeOutCubic(clamp01((tMs - 700) / enterMs));
+    deltaAppear = isSync ? appear : easeOutCubic(clamp01((tMs - 1400) / 600));
+  }
 
   const panel = (x: number, y: number, opacity: number): SvgNode => ({
     tag: "rect",
@@ -334,14 +346,11 @@ function render(spec: SceneSpecLike, ctx: FrameContext): SvgNode {
   };
 }
 
-// Codex P2-4 版本边界：@1 不认 enterMs/sequence（显式传入则拒绝，旧口径
-// 固定 stagger+1200ms）；@2 接受并使用这两个参数。同一版本号只代表一种行为。
+// Codex P1-A/P2-4：@1 接受其历史上已合法的 enterMs（main@7996a 口径），
+// 仅拒绝新增的 sequence。@2 接受两者。
 function validateParamsV1(value: unknown): CompareSplitParams {
-  if (
-    isRecord(value) &&
-    (value.enterMs !== undefined || value.sequence !== undefined)
-  ) {
-    throw new Error("compare-split@1 不支持 enterMs/sequence（请升级到 @2）");
+  if (isRecord(value) && value.sequence !== undefined) {
+    throw new Error("compare-split@1 不支持 sequence（请升级到 @2）");
   }
   return validateParams(value);
 }

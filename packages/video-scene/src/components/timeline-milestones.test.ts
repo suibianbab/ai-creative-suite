@@ -27,11 +27,11 @@ test("Codex P2-5：sequence 缺省 stagger、合法 sync", () => {
   assert.equal(validate({ ...base, sequence: "sync" }).sequence, "sync");
 });
 
-test("Codex P1-1：不同 enterMs 产生不同渲染输出", () => {
+test("Codex P1-1：不同 enterMs 产生不同渲染输出（@2）", () => {
   const spec = (enterMs: number) => ({
     specVersion: 1 as const,
     componentId: "timeline-milestones",
-    componentVersion: 1,
+    componentVersion: 2,
     durationMs: 4000,
     seed: 1,
     background: "#ffffff",
