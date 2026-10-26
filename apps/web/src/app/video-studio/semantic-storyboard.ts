@@ -273,21 +273,19 @@ function compileCycleExplainer(shot: SemanticDraftShot, seed: number): SceneSpec
 }
 
 function compileFlowExplainer(shot: SemanticDraftShot, seed: number): SceneSpec {
-  return baseSpec("explainer-composition", effectiveDurationMs(shot), {
-    ...CYCLE_COLORS,
+  // flow 用独立 flow-steps@1（交接单预留路线）：explainer-composition 的
+  // flow 竖版布局由组件内部重排（diagramOffsetY/titleY 均不生效），首步
+  // 与标题恒叠位（offset-sweep 实测全参数空间无净窗）；flow-steps 自带
+  // 标题布局，横/纵×2..4 步×双画幅最坏内容零碰撞（flow-steps-sweep 实测）。
+  // 纵向列在横竖两版都居中可读；旁白走 TTS/确认卡，不上屏（无注解位）。
+  return baseSpec("flow-steps", effectiveDurationMs(shot), {
     title: shot.title,
-    titleY: 145,
-    titleEnterMs: 0,
-    diagramOffsetX: 0,
-    // +20：竖版 flow 纵向堆叠起点与标题（titleY 145）留净空；-75 实测
-    // 竖版首步与标题完全叠位（check-layout 几何校验，2026-10-26）。
-    diagramOffsetY: 20,
-    diagramEnterMs: 450,
-    diagram: { kind: "flow", steps: (shot.flowSteps ?? []).map((s) => ({ label: s })) },
-    annotations: [{
-      text: shot.narrationText,
-      x: 500, y: 730, portraitY: 1260, enterMs: 400,
-    }],
+    steps: (shot.flowSteps ?? []).map((s) => ({ label: s })),
+    direction: "vertical",
+    boxColor: "#dcebe1",
+    arrowColor: "#f5b652",
+    textColor: "#f3f5f7",
+    enterMs: 700,
   }, seed);
 }
 

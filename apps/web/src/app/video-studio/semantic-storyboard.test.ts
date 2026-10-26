@@ -172,6 +172,34 @@ test("semantic 编译：cycle 时长不足以演完 → 确定性延长到演完
   assert.equal(c.shots[1]!.plan.spec.durationMs, 4440);
 });
 
+test("semantic 编译：flow-explainer 用 flow-steps@1 纵向布局（独立组件无碰撞）", () => {
+  const draft = {
+    topic: "水循环",
+    title: "水的旅程",
+    shots: [
+      { intent: "title", title: "水的旅程", narrationText: "一滴水的旅程", durationMs: 2500 },
+      {
+        intent: "flow-explainer",
+        title: "三步走",
+        narrationText: "从海到云再到地",
+        durationMs: 3000,
+        flowSteps: ["海洋", "云朵", "河流"],
+      },
+      { intent: "title", title: "谢谢观看", narrationText: "谢谢观看", durationMs: 2500 },
+    ],
+  };
+  const v = validateSemanticDraft(draft);
+  assert.ok(v.ok, v.ok ? "" : v.errors.join("; "));
+  const c = compileSemanticDraft(v.draft, "句子");
+  assert.ok(c.ok, c.ok ? "" : c.errors.join("; "));
+  const spec = c.shots[1]!.plan.spec;
+  assert.equal(spec.componentId, "flow-steps");
+  assert.equal(
+    (spec.params as { direction: string }).direction,
+    "vertical",
+  );
+});
+
 test("semantic 编译：输出即 StoryboardResult(ok:true)，24fps 无零帧", () => {
   const v = validateSemanticDraft(VALID);
   assert.ok(v.ok, v.ok ? "" : v.errors.join("; "));
