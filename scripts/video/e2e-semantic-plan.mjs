@@ -63,7 +63,7 @@ page.on("console", (msg) => {
   const text = msg.text();
   if (
     expectedSemanticFailures > 0 &&
-    /Failed to load resource.*503/.test(text)
+    /Failed to load resource.*5\d\d/.test(text)
   ) {
     seenResourceErrors += 1;
     return;
@@ -122,6 +122,81 @@ if (cardsAfterSecondAi !== 0)
 const cardsAfterDiscard = await page.locator(".storyboard-card").count();
 if (cardsAfterDiscard !== 0) fail("状态面", "撤销后仍有分镜卡残留");
 
+// —— P2（Codex 二轮复核）：已成功生成 AI 候选 → 第二次请求失败/等待中 ——
+// 无密钥 server 上用路由拦截伪造完整生命周期：第一次 AI 调用回合法分镜
+// （确认卡出现）→ 第二次调用延迟 1.5s 后 500 → 点击瞬间旧卡即被撤销
+// （等待期间不可应用），失败提示出现。
+const FAKE_SHOT = (i, label, hint) => ({
+  label,
+  description: `${label}（拦截样例）`,
+  narrationText: `拦截样例旁白${i}`,
+  plan: {
+    ok: true,
+    spec: {
+      specVersion: 1,
+      componentId: "text-animation",
+      componentVersion: 1,
+      durationMs: 3000,
+      seed: 5000 + i * 7,
+      background: "#101f34",
+      params: {},
+    },
+    title: label,
+    renderHint: hint,
+  },
+});
+const FAKE_OK = {
+  storyboard: {
+    ok: true,
+    sentence: AI_SENTENCE,
+    title: "拦截样例",
+    totalMs: 9000,
+    shots: [
+      FAKE_SHOT(0, "标题", "标题「拦截样例」"),
+      FAKE_SHOT(1, "要点解说", "要点解说「三个词」"),
+      FAKE_SHOT(2, "标题", "标题「谢谢观看」"),
+    ],
+  },
+  provenance: {
+    provider: "qwen-chat",
+    model: "intercepted",
+    promptVersion: "4",
+    compilerVersion: "1",
+  },
+};
+let interceptCalls = 0;
+await page.route("**/api/video/semantic-plan", async (route) => {
+  interceptCalls += 1;
+  if (interceptCalls === 1) {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(FAKE_OK),
+    });
+    return;
+  }
+  await new Promise((resolve) => setTimeout(resolve, 1500));
+  await route.fulfill({
+    status: 500,
+    contentType: "application/json",
+    body: JSON.stringify({ error: "拦截轮模拟服务错误" }),
+  });
+});
+await page.click(".planner-ai");
+await expectVisible(page, ".storyboard-card", "拦截轮确认卡");
+// 第二次请求：等待窗口内旧卡必须已消失（不可应用），随后失败明示。
+await page.click(".planner-ai");
+await page.waitForTimeout(400);
+const cardsInFlight = await page.locator(".storyboard-card").count();
+if (cardsInFlight !== 0)
+  fail("P2 等待中撤销", "第二次请求等待期间旧确认卡仍在（可被应用）");
+await page
+  .locator(".planner-feedback", { hasText: "拦截轮模拟服务错误" })
+  .first()
+  .waitFor({ timeout: 20_000 })
+  .catch(() => fail("P2 失败面", "拦截轮失败提示未出现"));
+await page.unroute("**/api/video/semantic-plan");
+
 await page.screenshot({
   path: path.join(OUT_DIR, "semantic-entry.png"),
   fullPage: true,
@@ -138,5 +213,5 @@ if (expectedSemanticFailures === 0)
 
 await browser.close();
 console.log(
-  "[e2e-semantic-plan] OK: AI 入口无密钥时明示失败不回退；旧句式规划回归正常；新 AI 请求撤销旧候选（P1-1）；状态面无残留",
+  "[e2e-semantic-plan] OK: 无密钥失败面不回退；旧句式回归；AI 请求撤销旧候选（P1-1）；拦截轮覆盖「成功候选→二次请求等待中撤销+失败明示」（Codex 二轮 P2）",
 );

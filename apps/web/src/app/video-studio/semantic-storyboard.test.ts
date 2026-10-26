@@ -2,7 +2,11 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { quantizeTimeline } from "@acs/video-document";
 import type { StoryboardResult } from "./planner";
-import { validateSemanticDraft, compileSemanticDraft } from "./semantic-storyboard";
+import {
+  requiresRealAssets,
+  validateSemanticDraft,
+  compileSemanticDraft,
+} from "./semantic-storyboard";
 
 const VALID = {
   topic: "水循环",
@@ -314,4 +318,22 @@ test("semantic 编译：输出即 StoryboardResult(ok:true)，24fps 无零帧", 
   }
   const timeline = quantizeTimeline(durations, 24);
   assert.ok(timeline.totalFrames > 0);
+});
+
+// P1（Codex 二轮复核 2026-10-27）：用户明确要求真实照片/素材时，能力边界
+// 必须在规划前确定性识别——不得依赖模型自觉（模型可能顺从提示词静默改成
+// 图解 IR，字段校验照样通过）。高精度模式：需求动词×资产名词，避免把
+// 「摄影史科普片」这类题材词误伤。
+test("requiresRealAssets：显式素材需求识别与题材词不误伤", () => {
+  // 命中：动词/要求 × 真实资产
+  assert.ok(requiresRealAssets("用真实产品照片制作一条产品介绍短片"));
+  assert.ok(requiresRealAssets("做一条要真实照片的科普片"));
+  assert.ok(requiresRealAssets("做一条用实拍画面的食品安全短片"));
+  assert.ok(requiresRealAssets("需要插入真实图片讲细胞结构"));
+  assert.ok(requiresRealAssets("用真实素材展示服装细节"));
+  // 不误伤：题材/概念提及，非素材诉求
+  assert.ok(!requiresRealAssets("做一条约25秒的水循环科普短片，讲清蒸发、凝结和降水"));
+  assert.ok(!requiresRealAssets("做一条摄影构图原理的科普短片"));
+  assert.ok(!requiresRealAssets("讲解照相机的成像原理"));
+  assert.ok(!requiresRealAssets("做一条光影艺术的美术短片"));
 });

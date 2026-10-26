@@ -7,6 +7,7 @@ import {
 import {
   compileSemanticDraft,
   projectedTotalMs,
+  requiresRealAssets,
   validateSemanticDraft,
 } from "../../../video-studio/semantic-storyboard";
 
@@ -29,12 +30,13 @@ export async function POST(request: Request) {
     return Response.json({ error: "跨站请求已拒绝" }, { status: 403 });
   if (Number(request.headers.get("content-length") ?? 0) > 2048)
     return Response.json({ error: "请求过长" }, { status: 413 });
-  let sentence: unknown;
+  let body: { sentence?: unknown; allowDiagramSubstitute?: unknown };
   try {
-    sentence = JSON.parse(await request.text()).sentence;
+    body = JSON.parse(await request.text());
   } catch {
     return Response.json({ error: "请求格式无效" }, { status: 400 });
   }
+  const sentence = body.sentence;
   if (
     typeof sentence !== "string" ||
     !sentence.trim() ||
@@ -45,6 +47,22 @@ export async function POST(request: Request) {
       { status: 400 },
   );
   const text = sentence.trim();
+
+  // P1（Codex 二轮复核 2026-10-27）：真实素材需求的能力边界在规划前判定。
+  // 用户句明确要真实照片/素材时，即使模型会顺从提示词改成合法图解 IR，
+  // 未经用户明示授权（allowDiagramSubstitute）也不得静默替换——返回
+  // needs-assets 与具体下一步；一次模型调用都不发生（零成本边界）。
+  const substitutedForAssets =
+    body.allowDiagramSubstitute === true && requiresRealAssets(text);
+  if (requiresRealAssets(text) && !substitutedForAssets)
+    return Response.json(
+      {
+        kind: "needs-assets",
+        error:
+          "这条要求需要真实照片/素材，当前 AI 分镜只能画图解（标题/要点/循环/流程）。请在素材面板人工导入素材后从素材链出片，或点「改用图解生成」明示接受图解替代",
+      },
+      { status: 422 },
+    );
 
   const provider = semanticProviderFromEnv(process.env);
   if (!provider)
@@ -129,6 +147,8 @@ export async function POST(request: Request) {
     // token usage 合计 + 分项，供计费台账（P2-4）。
     usage,
     ...(usage ? { usageCalls } : {}),
+    // 图解替代轮如实标记：确认卡/调用方知道这是用户授权的降级方案。
+    ...(substitutedForAssets ? { substitutedForAssets: true } : {}),
     ...(stillOff
       ? { durationDeviation: { targetMs, actualMs: finalTotal } }
       : {}),

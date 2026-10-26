@@ -112,6 +112,9 @@ type SemanticPlanState = {
   } | null;
   // 路由透明标注：重试后 Σ时长仍偏离句中目标（确认卡如实告知，用户决定）。
   durationDeviation: { targetMs: number; actualMs: number } | null;
+  // P1（Codex 二轮复核）：句要求真实素材被 needs-assets 拦下时，界面提供
+  // 「改用图解生成」明示授权入口——静默替换不被允许，降级必须用户点头。
+  needsAssetsChoice: boolean;
 };
 
 export default function VideoStudioPage() {
@@ -148,6 +151,7 @@ export default function VideoStudioPage() {
     error: null,
     provenance: null,
     durationDeviation: null,
+    needsAssetsChoice: false,
   });
   // AI 请求归属守卫（I-1/I-2，2026-10-26 评审）：请求发起时的文档 id +
   // 单调序号。响应返回时若用户已切换项目（返回列表/打开/新建）或已发起
@@ -552,6 +556,98 @@ export default function VideoStudioPage() {
 
   if (editor) {
     const { document, message, busy, sentence, plan, storyboard } = editor;
+
+    // 语义分镜请求（AI 按钮 / needs-assets 授权按钮共用）。allowSubstitute：
+    // 用户明示接受「图解替代真实素材」后才为 true（P1，Codex 二轮复核）。
+    // 守卫口径见 semanticRequestRef/editorDocumentIdRef 声明处注释。
+    const runSemanticPlan = async (allowSubstitute: boolean) => {
+      const trimmed = sentence.trim();
+      const requestId = ++semanticRequestRef.current;
+      const documentId = document.id;
+      setSemanticPlan({
+        busy: true,
+        error: null,
+        provenance: null,
+        durationDeviation: null,
+        needsAssetsChoice: false,
+      });
+      // P1-1（Codex 复核 2026-10-26）：新请求开始即撤销旧候选——请求期间/
+      // 失败后旧确认卡不可再应用，杜绝「旧 AI 结果按 planner-rules 记账」。
+      setEditor((current) =>
+        !current || current.document.id !== documentId
+          ? current
+          : { ...current, storyboard: null, plan: null, message: null },
+      );
+      const stale = () =>
+        semanticRequestRef.current !== requestId ||
+        editorDocumentIdRef.current !== documentId;
+      const finish = (state: SemanticPlanState) => {
+        if (stale()) return;
+        setSemanticPlan(state);
+      };
+      try {
+        const response = await fetch("/api/video/semantic-plan", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            sentence: trimmed,
+            ...(allowSubstitute
+              ? { allowDiagramSubstitute: true }
+              : {}),
+          }),
+        });
+        const data = (await response.json()) as {
+          storyboard?: StoryboardResult;
+          provenance?: SemanticPlanState["provenance"];
+          error?: string;
+          errors?: string[];
+          kind?: string;
+          durationDeviation?: { targetMs: number; actualMs: number };
+        };
+        const storyboardResult = data.storyboard;
+        if (!response.ok || !storyboardResult?.ok) {
+          finish({
+            busy: false,
+            // 逐镜校验/编译失败带明细（I-4）；needs-assets 提供授权入口。
+            error: [
+              data.error ??
+                "AI 分镜生成失败，请稍后重试或改用固定句式",
+              ...(data.errors ?? []),
+            ].join("；"),
+            provenance: null,
+            durationDeviation: null,
+            needsAssetsChoice: data.kind === "needs-assets",
+          });
+          return;
+        }
+        if (stale()) return;
+        setSemanticPlan({
+          busy: false,
+          error: null,
+          provenance: data.provenance ?? null,
+          durationDeviation: data.durationDeviation ?? null,
+          needsAssetsChoice: false,
+        });
+        setEditor((current) =>
+          !current || current.document.id !== documentId
+            ? current
+            : {
+                ...current,
+                storyboard: storyboardResult,
+                plan: null,
+                message: null,
+              },
+        );
+      } catch {
+        finish({
+          busy: false,
+          error: "AI 分镜请求失败（网络或服务错误），未修改项目",
+          provenance: null,
+          durationDeviation: null,
+          needsAssetsChoice: false,
+        });
+      }
+    };
     const interactiveShotChoices = document.shots.flatMap((shot, index) => {
       const working = shot.contentVersions.find(
         (version) => version.versionId === shot.workingVersionId,
@@ -752,6 +848,7 @@ export default function VideoStudioPage() {
                 error: null,
                 provenance: null,
                 durationDeviation: null,
+                    needsAssetsChoice: false,
               });
               refreshProjects().catch(() => {});
             }}
@@ -909,6 +1006,7 @@ export default function VideoStudioPage() {
                     error: null,
                     provenance: null,
                     durationDeviation: null,
+                    needsAssetsChoice: false,
                   });
                   // 分镜句式 → 多镜头规划器；其余 → P0 单镜头规划器
                   if (isStoryboardSentence(trimmed)) {
@@ -940,87 +1038,7 @@ export default function VideoStudioPage() {
                   busy ||
                   sentence.trim().length === 0
                 }
-                onClick={async () => {
-                  const trimmed = sentence.trim();
-                  const requestId = ++semanticRequestRef.current;
-                  const documentId = document.id;
-                  setSemanticPlan({
-                    busy: true,
-                    error: null,
-                    provenance: null,
-                    durationDeviation: null,
-                  });
-                  // P1-1（Codex 复核 2026-10-26）：新请求开始即撤销旧候选——
-                  // 请求期间/失败后旧确认卡不可再应用，杜绝「旧 AI 结果按
-                  // planner-rules 记账」的错标路径（provenance 已随下方重置）。
-                  setEditor((current) =>
-                    !current || current.document.id !== documentId
-                      ? current
-                      : { ...current, storyboard: null, plan: null, message: null },
-                  );
-                  // 响应归属守卫：项目已切换或已有更新请求 → 整体丢弃。
-                  const stale = () =>
-                    semanticRequestRef.current !== requestId ||
-                    editorDocumentIdRef.current !== documentId;
-                  const finish = (state: SemanticPlanState) => {
-                    if (stale()) return;
-                    setSemanticPlan(state);
-                  };
-                  try {
-                    const response = await fetch("/api/video/semantic-plan", {
-                      method: "POST",
-                      headers: { "content-type": "application/json" },
-                      body: JSON.stringify({ sentence: trimmed }),
-                    });
-                    const data = (await response.json()) as {
-                      storyboard?: StoryboardResult;
-                      provenance?: SemanticPlanState["provenance"];
-                      error?: string;
-                      errors?: string[];
-                      durationDeviation?: { targetMs: number; actualMs: number };
-                    };
-                    const storyboard = data.storyboard;
-                    if (!response.ok || !storyboard?.ok) {
-                      finish({
-                        busy: false,
-                        // 逐镜校验/编译失败带明细（I-4）：只给一句汇总用户
-                        // 无法定位该改哪个字。
-                        error: [
-                          data.error ??
-                            "AI 分镜生成失败，请稍后重试或改用固定句式",
-                          ...(data.errors ?? []),
-                        ].join("；"),
-                        provenance: null,
-                        durationDeviation: null,
-                      });
-                      return;
-                    }
-                    if (stale()) return;
-                    setSemanticPlan({
-                      busy: false,
-                      error: null,
-                      provenance: data.provenance ?? null,
-                      durationDeviation: data.durationDeviation ?? null,
-                    });
-                    setEditor((current) =>
-                      !current || current.document.id !== documentId
-                        ? current
-                        : {
-                            ...current,
-                            storyboard,
-                            plan: null,
-                            message: null,
-                          },
-                    );
-                  } catch {
-                    finish({
-                      busy: false,
-                      error: "AI 分镜请求失败（网络或服务错误），未修改项目",
-                      provenance: null,
-                      durationDeviation: null,
-                    });
-                  }
-                }}
+                onClick={() => runSemanticPlan(false)}
               >
                 {semanticPlan.busy ? "正在生成分镜…" : "AI 生成分镜"}
               </button>
@@ -1028,6 +1046,18 @@ export default function VideoStudioPage() {
             {semanticPlan.error ? (
               <div className="planner-feedback">
                 <p className="planner-reason">{semanticPlan.error}</p>
+                {semanticPlan.needsAssetsChoice ? (
+                  <button
+                    type="button"
+                    className="planner-run planner-ai"
+                    // needs-assets 的明示授权入口：用户点头后才以图解替代
+                    // 真实素材需求（P1，Codex 二轮复核——静默替换不被允许）。
+                    disabled={semanticPlan.busy}
+                    onClick={() => runSemanticPlan(true)}
+                  >
+                    改用图解生成
+                  </button>
+                ) : null}
               </div>
             ) : null}
           </div>
@@ -1120,6 +1150,7 @@ export default function VideoStudioPage() {
                         error: null,
                         provenance: null,
                         durationDeviation: null,
+                    needsAssetsChoice: false,
                       });
                     } catch (error) {
                       setEditor({
@@ -1144,6 +1175,7 @@ export default function VideoStudioPage() {
                       error: null,
                       provenance: null,
                       durationDeviation: null,
+                    needsAssetsChoice: false,
                     });
                   }}
                 >
@@ -1709,6 +1741,7 @@ export default function VideoStudioPage() {
                 error: null,
                 provenance: null,
                 durationDeviation: null,
+                    needsAssetsChoice: false,
               });
             }}
           >
@@ -1887,6 +1920,7 @@ export default function VideoStudioPage() {
                           error: null,
                           provenance: null,
                           durationDeviation: null,
+                    needsAssetsChoice: false,
                         });
                       }}
                     >

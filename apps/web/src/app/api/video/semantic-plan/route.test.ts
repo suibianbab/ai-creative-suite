@@ -187,7 +187,9 @@ test("semantic-plan：资产引用字段 → 重试一次后仍 422 且含素材
   };
   try {
     await withEnv(WITH_KEY, async () => {
-      const response = await POST(ask("做一条水循环短片，要真实照片"));
+      // 普通句（不触发规划前的 needs-assets 闸）：模型自己幻觉出 assetUrl
+      // 字段 → 严格键集合拒绝 → 带因重试 → 仍非法 422。
+      const response = await POST(ask("做一条水循环科普短片"));
       assert.equal(response.status, 422);
       const data = await response.json();
       assert.equal(calls, 2);
@@ -381,6 +383,66 @@ test("semantic-plan：重试后 usage 合计两次调用并附分项", async () 
         { prompt_tokens: 100, completion_tokens: 50, total_tokens: 150 },
         { prompt_tokens: 40, completion_tokens: 20, total_tokens: 60 },
       ]);
+    });
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+// P1（Codex 二轮复核 2026-10-27）：用户句明确要求真实照片时，即使模型
+// 顺从提示词返回合法图解 IR（无资产字段），未经用户授权也不得静默替换。
+const ask2 = (sentence: string, allowDiagramSubstitute?: boolean) =>
+  new Request("http://localhost:3000/api/video/semantic-plan", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(
+      allowDiagramSubstitute === undefined
+        ? { sentence }
+        : { sentence, allowDiagramSubstitute },
+    ),
+  });
+
+test("semantic-plan：要求真实照片+模型给合法图解 IR → 未授权 422 needs-assets 且不调模型", async () => {
+  const originalFetch = globalThis.fetch;
+  let calls = 0;
+  globalThis.fetch = async () => {
+    calls += 1;
+    return chatResponse(VALID_IR);
+  };
+  try {
+    await withEnv(WITH_KEY, async () => {
+      const response = await POST(ask2("用真实产品照片制作一条产品介绍短片"));
+      assert.equal(response.status, 422);
+      const data = await response.json();
+      assert.equal(data.kind, "needs-assets");
+      assert.match(String(data.error), /素材/);
+      assert.equal(data.storyboard, undefined);
+      // 边界在规划前判定：一次模型调用都不该发生。
+      assert.equal(calls, 0);
+    });
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("semantic-plan：allowDiagramSubstitute=true（用户明示改用图解）→ 放行 200", async () => {
+  const originalFetch = globalThis.fetch;
+  let calls = 0;
+  globalThis.fetch = async () => {
+    calls += 1;
+    return chatResponse(VALID_IR);
+  };
+  try {
+    await withEnv(WITH_KEY, async () => {
+      const response = await POST(
+        ask2("用真实产品照片制作一条产品介绍短片", true),
+      );
+      assert.equal(response.status, 200);
+      const data = await response.json();
+      assert.equal(data.storyboard.ok, true);
+      // 回应里带 substituted 标记：确认卡如实告知这是图解替代方案。
+      assert.equal(data.substitutedForAssets, true);
+      assert.equal(calls, 1);
     });
   } finally {
     globalThis.fetch = originalFetch;

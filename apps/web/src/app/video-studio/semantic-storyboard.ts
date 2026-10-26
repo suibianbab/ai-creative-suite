@@ -92,6 +92,19 @@ export function projectedTotalMs(draft: SemanticStoryboardDraft): number {
   return draft.shots.reduce((ms, shot) => ms + effectiveDurationMs(shot), 0);
 }
 
+// 用户句的「真实素材」需求识别（P1，Codex 二轮复核 2026-10-27）：能力边界
+// 必须在规划前确定性判定，不能依赖模型自觉——模型可能顺从提示词把「要
+// 真实照片」静默改成合法图解 IR，字段校验照样通过。高精度口径：
+// 「真实/实拍/产品 × 照片/图片/素材/画面」或紧邻插入动词的裸资产名词；
+// 刻意不匹配「摄影构图」「照相机原理」这类题材词（漏判比误拦安全——
+// 漏判仍生成图解，误拦会挡掉合法请求）。
+const ASSET_DEMAND =
+  /(真实|实拍)(?:产品|的|高清)?(?:照片|图片|图像|素材|画面)|产品(?:照片|实拍图)|照片素材|(?:插入|配上?|加上?|放入|使用|换上?)(?:真实)?(?:照片|图片|实拍图)/;
+
+export function requiresRealAssets(sentence: string): boolean {
+  return ASSET_DEMAND.test(sentence);
+}
+
 export type SemanticValidation =
   | { ok: true; draft: SemanticStoryboardDraft }
   | { ok: false; errors: string[] };
