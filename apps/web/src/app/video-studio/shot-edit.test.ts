@@ -1,8 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { defaultRegistry, validateSceneSpec } from "@acs/video-scene";
+import {
+  defaultRegistry,
+  type SceneSpec,
+  validateSceneSpec,
+} from "@acs/video-scene";
 import { planFromSentence, reseedSpecParams } from "./planner.js";
 import {
+  applyDiagramTimingDraft,
   attachDescription,
   buildRevisePatch,
   draftDurationMs,
@@ -10,6 +15,43 @@ import {
   type ShotEditDraft,
   speechOverflowMs,
 } from "./shot-edit.js";
+
+test("旧图示镜头普通编辑保留 @1，启用新时序或时间轴时长则升级 @2", () => {
+  const spec = (componentId: string, enterMs: number): SceneSpec => ({
+    specVersion: 1,
+    componentId,
+    componentVersion: 1,
+    durationMs: 4000,
+    seed: 1,
+    background: "#ffffff",
+    params: { title: "原标题", enterMs },
+  });
+  const compare = spec("compare-split", 1200);
+  const timeline = spec("timeline-milestones", 1400);
+  assert.equal(
+    applyDiagramTimingDraft(compare, { title: "新标题", enterMs: 1200 })
+      .componentVersion,
+    1,
+  );
+  assert.equal(
+    applyDiagramTimingDraft(compare, {
+      title: "原标题",
+      enterMs: 1200,
+      sequence: "sync",
+    }).componentVersion,
+    2,
+  );
+  assert.equal(
+    applyDiagramTimingDraft(timeline, { title: "新标题", enterMs: 1400 })
+      .componentVersion,
+    1,
+  );
+  assert.equal(
+    applyDiagramTimingDraft(timeline, { title: "原标题", enterMs: 2000 })
+      .componentVersion,
+    2,
+  );
+});
 
 // —— 分镜编辑器纯逻辑：草稿构造 / 校验 / 语速溢出 ——
 

@@ -30,6 +30,34 @@ type WorkingLike = {
 
 type TextParams = { title?: string; subtitle?: string };
 
+// 旧镜头只在用户启用新版时序时升级组件版本；普通文案编辑保持 @1
+// 的原始渲染。timeline @1 虽存有 enterMs，但历史渲染并不使用它。
+export function applyDiagramTimingDraft(
+  spec: SceneSpec,
+  draft: Record<string, unknown>,
+): SceneSpec {
+  if (spec.componentId === "compare-split") {
+    return {
+      ...spec,
+      componentVersion:
+        draft.sequence !== undefined ? 2 : spec.componentVersion,
+      params: draft,
+    };
+  }
+  if (spec.componentId === "timeline-milestones") {
+    return {
+      ...spec,
+      componentVersion:
+        draft.sequence !== undefined ||
+        draft.enterMs !== (spec.params as Record<string, unknown>).enterMs
+          ? 2
+          : spec.componentVersion,
+      params: draft,
+    };
+  }
+  return spec;
+}
+
 // 草稿初值：旁白/时长来自 working 版本，画面字段来自 spec。
 export function draftFromWorking(
   working: WorkingLike,

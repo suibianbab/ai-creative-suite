@@ -156,23 +156,21 @@ function render(spec: SceneSpecLike, ctx: FrameContext): SvgNode {
     afterAppear = easeOutCubic(clamp01((tMs - 700) / rawEnterMs));
     deltaAppear = easeOutCubic(clamp01((tMs - 1400) / 600));
   } else {
-    // @2：sequence 支持 + 入场预算。
+    // @2：按完整时序（包括徽章）等比压缩到最后一个实际输出帧之前。
+    // 只缩短 enterMs 无法救回短镜头里从 1400ms 才开始的徽章。
     const isSync = p.sequence === "sync";
-    // sync/stagger 均封顶：最晚完成元素（徽章或面板）须在镜头内完成。
-    const syncBudget =
-      Math.max(rawEnterMs, 1) > spec.durationMs - 200
-        ? Math.max(spec.durationMs - 200, 200)
-        : rawEnterMs;
-    const staggerBudget =
-      1400 + 600 > spec.durationMs * 0.95
-        ? Math.max((spec.durationMs * 0.95 - 200) * (1200 / (700 + 1200)), 200)
-        : rawEnterMs;
-    const enterMs = isSync ? syncBudget : Math.min(rawEnterMs, staggerBudget);
-    appear = easeOutCubic(clamp01((tMs - 200) / enterMs));
-    afterAppear = isSync
-      ? appear
-      : easeOutCubic(clamp01((tMs - 700) / enterMs));
-    deltaAppear = isSync ? appear : easeOutCubic(clamp01((tMs - 1400) / 600));
+    const sequenceEnd = isSync
+      ? 200 + rawEnterMs
+      : Math.max(700 + rawEnterMs, 1400 + 600);
+    const lastFrameMs = ((ctx.durationFrames - 1) / ctx.fps) * 1000;
+    const scale = Math.min(1, (lastFrameMs * 0.95) / sequenceEnd);
+    const fade = (startMs: number, durationMs: number) =>
+      scale <= 0
+        ? 1 // 单帧镜头没有入场过程，直接显示完整内容。
+        : easeOutCubic(clamp01((tMs - startMs * scale) / (durationMs * scale)));
+    appear = fade(200, rawEnterMs);
+    afterAppear = isSync ? appear : fade(700, rawEnterMs);
+    deltaAppear = isSync ? appear : fade(1400, 600);
   }
 
   const panel = (x: number, y: number, opacity: number): SvgNode => ({

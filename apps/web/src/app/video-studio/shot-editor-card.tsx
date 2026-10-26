@@ -78,6 +78,7 @@ import {
 } from "./media-clip-templates";
 import { LINE_TEMPLATE_LABELS, SHAPE_TEMPLATE_LABELS } from "./planner";
 import {
+  applyDiagramTimingDraft,
   attachDescription,
   buildRevisePatch,
   draftDurationMs,
@@ -1146,6 +1147,9 @@ export function ShotEditorCard({
                             })
                           }
                         />
+                        <span className="shot-template-note">
+                          新版时序遇到短镜头时会等比压缩全部入场阶段，实际时长可能短于输入值。
+                        </span>
                       </label>
                     </>
                   ) : editSpec.componentId === "timeline-milestones" &&
@@ -1282,6 +1286,9 @@ export function ShotEditorCard({
                             })
                           }
                         />
+                        <span className="shot-template-note">
+                          新版时序遇到短镜头时会等比压缩入场阶段，实际时长可能短于输入值。
+                        </span>
                       </label>
                     </>
                   ) : templateLabels ? (
@@ -2723,12 +2730,18 @@ export function ShotEditorCard({
                   composedSpec.componentId === "compare-split" &&
                   compareSplitDraft
                 ) {
-                  composedSpec = { ...composedSpec, params: compareSplitDraft };
+                  composedSpec = applyDiagramTimingDraft(
+                    composedSpec,
+                    compareSplitDraft,
+                  );
                 } else if (
                   composedSpec.componentId === "timeline-milestones" &&
                   timelineDraft
                 ) {
-                  composedSpec = { ...composedSpec, params: timelineDraft };
+                  composedSpec = applyDiagramTimingDraft(
+                    composedSpec,
+                    timelineDraft,
+                  );
                 }
                 // Browsing a template leaves the shared background draft alone.
                 // On actual composition Apply, take the template's default only
