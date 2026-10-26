@@ -1,8 +1,249 @@
 {
-  "error": "模型输出未通过校验，请换个说法或改用固定句式规划",
-  "errors": [
-    "shots[2].durationMs=2600 不足以演完该画面，须 ≥3160",
-    "shots[3].durationMs=2800 不足以演完该画面，须 ≥3160",
-    "shots[4].durationMs=2700 不足以演完该画面，须 ≥3160"
-  ]
+  "storyboard": {
+    "ok": true,
+    "sentence": "做一条约25秒的水循环科普短片，讲清蒸发、凝结和降水",
+    "title": "水的旅行：蒸发·凝结·降水",
+    "totalMs": 20500,
+    "shots": [
+      {
+        "label": "标题",
+        "description": "水的旅行：蒸发·凝结·降水（标题）",
+        "narrationText": "水在地球上不停旅行",
+        "plan": {
+          "ok": true,
+          "spec": {
+            "specVersion": 1,
+            "componentId": "text-animation",
+            "componentVersion": 1,
+            "durationMs": 3100,
+            "seed": 5000,
+            "background": "#101f34",
+            "params": {
+              "title": "水的旅行：蒸发·凝结·降水",
+              "subtitle": "水在地球上不停旅行",
+              "titleColor": "#f3f5f7",
+              "subtitleColor": "#b4d8e4",
+              "entrance": "fade-up",
+              "enterMs": 450
+            }
+          },
+          "title": "水的旅行：蒸发·凝结·降水",
+          "renderHint": "标题"
+        }
+      },
+      {
+        "label": "循环图解",
+        "description": "水循环三阶段（循环图解）",
+        "narrationText": "蒸发→凝结→降水→回归",
+        "plan": {
+          "ok": true,
+          "spec": {
+            "specVersion": 1,
+            "componentId": "explainer-composition",
+            "componentVersion": 1,
+            "durationMs": 5000,
+            "seed": 5007,
+            "background": "#101f34",
+            "params": {
+              "titleColor": "#f3f5f7",
+              "textColor": "#f3f5f7",
+              "boxColor": "#dcebe1",
+              "arrowColor": "#f5b652",
+              "strokeColor": "#42a5a0",
+              "title": "水循环三阶段",
+              "titleY": 145,
+              "titleEnterMs": 0,
+              "diagramOffsetX": 0,
+              "diagramOffsetY": -60,
+              "diagramEnterMs": 450,
+              "diagram": {
+                "kind": "cycle",
+                "steps": [
+                  {
+                    "label": "蒸发"
+                  },
+                  {
+                    "label": "凝结"
+                  },
+                  {
+                    "label": "降水"
+                  }
+                ]
+              },
+              "annotations": [
+                {
+                  "text": "蒸发→凝结→降水→回归",
+                  "x": 500,
+                  "y": 780,
+                  "portraitY": 1340,
+                  "enterMs": 400
+                }
+              ]
+            }
+          },
+          "title": "水循环三阶段",
+          "renderHint": "循环图解"
+        }
+      },
+      {
+        "label": "要点解说",
+        "description": "蒸发：太阳驱动（要点解说）",
+        "narrationText": "太阳加热地表水",
+        "plan": {
+          "ok": true,
+          "spec": {
+            "specVersion": 1,
+            "componentId": "sketch-note",
+            "componentVersion": 1,
+            "durationMs": 3200,
+            "seed": 5014,
+            "background": "#101f34",
+            "params": {
+              "title": "蒸发：太阳驱动",
+              "items": [
+                {
+                  "text": "发生在海洋湖泊",
+                  "emphasis": "下划线"
+                },
+                {
+                  "text": "水分子挣脱液态",
+                  "emphasis": "圈"
+                },
+                {
+                  "text": "变成看不见水汽",
+                  "emphasis": "圈"
+                }
+              ],
+              "inkColor": "#f3f5f7",
+              "accentColor": "#f5b652",
+              "writeMs": 900,
+              "drawMs": 700,
+              "staggerMs": 500
+            }
+          },
+          "title": "蒸发：太阳驱动",
+          "renderHint": "要点解说"
+        }
+      },
+      {
+        "label": "要点解说",
+        "description": "凝结：遇冷成云（要点解说）",
+        "narrationText": "水汽上升遇冷",
+        "plan": {
+          "ok": true,
+          "spec": {
+            "specVersion": 1,
+            "componentId": "sketch-note",
+            "componentVersion": 1,
+            "durationMs": 3200,
+            "seed": 5021,
+            "background": "#101f34",
+            "params": {
+              "title": "凝结：遇冷成云",
+              "items": [
+                {
+                  "text": "高空温度降低",
+                  "emphasis": "下划线"
+                },
+                {
+                  "text": "水汽聚成小水滴",
+                  "emphasis": "圈"
+                },
+                {
+                  "text": "形成可见云朵",
+                  "emphasis": "圈"
+                }
+              ],
+              "inkColor": "#f3f5f7",
+              "accentColor": "#f5b652",
+              "writeMs": 900,
+              "drawMs": 700,
+              "staggerMs": 500
+            }
+          },
+          "title": "凝结：遇冷成云",
+          "renderHint": "要点解说"
+        }
+      },
+      {
+        "label": "要点解说",
+        "description": "降水：重力回归（要点解说）",
+        "narrationText": "云滴变大落下",
+        "plan": {
+          "ok": true,
+          "spec": {
+            "specVersion": 1,
+            "componentId": "sketch-note",
+            "componentVersion": 1,
+            "durationMs": 3200,
+            "seed": 5028,
+            "background": "#101f34",
+            "params": {
+              "title": "降水：重力回归",
+              "items": [
+                {
+                  "text": "水滴合并变重",
+                  "emphasis": "下划线"
+                },
+                {
+                  "text": "克服空气阻力",
+                  "emphasis": "圈"
+                },
+                {
+                  "text": "以雨雪形式返回",
+                  "emphasis": "圈"
+                }
+              ],
+              "inkColor": "#f3f5f7",
+              "accentColor": "#f5b652",
+              "writeMs": 900,
+              "drawMs": 700,
+              "staggerMs": 500
+            }
+          },
+          "title": "降水：重力回归",
+          "renderHint": "要点解说"
+        }
+      },
+      {
+        "label": "标题",
+        "description": "水循环永不停歇（标题）",
+        "narrationText": "一滴水可循环千年",
+        "plan": {
+          "ok": true,
+          "spec": {
+            "specVersion": 1,
+            "componentId": "text-animation",
+            "componentVersion": 1,
+            "durationMs": 2800,
+            "seed": 5035,
+            "background": "#101f34",
+            "params": {
+              "title": "水循环永不停歇",
+              "subtitle": "一滴水可循环千年",
+              "titleColor": "#f3f5f7",
+              "subtitleColor": "#b4d8e4",
+              "entrance": "fade-up",
+              "enterMs": 450
+            }
+          },
+          "title": "水循环永不停歇",
+          "renderHint": "标题"
+        }
+      }
+    ]
+  },
+  "provenance": {
+    "provider": "qwen-chat",
+    "model": "qwen-plus",
+    "promptVersion": "2",
+    "compilerVersion": "1",
+    "sentence": "做一条约25秒的水循环科普短片，讲清蒸发、凝结和降水",
+    "topic": "水循环三阶段"
+  },
+  "usage": {
+    "prompt_tokens": 829,
+    "completion_tokens": 486,
+    "total_tokens": 1315
+  }
 }
