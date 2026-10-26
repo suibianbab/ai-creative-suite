@@ -252,19 +252,19 @@ function compileCycleExplainer(shot: SemanticDraftShot, seed: number): SceneSpec
     titleY: 145,
     titleEnterMs: 0,
     diagramOffsetX: 0,
-    // -30：横版底部阶段 caption 与旁白注解（y 780）留出净空；-60 实测
-    // 重叠约 11px（check-layout 几何校验，2026-10-26）。
-    diagramOffsetY: -30,
+    // -60：竖版顶部净空（-30 实测首阶段 caption 撞标题，2026-10-26）。
+    diagramOffsetY: -60,
     diagramEnterMs: 450,
     diagram: {
       kind: "cycle",
-      steps: (shot.cycleSteps ?? []).map((s) => ({
-        label: s.label,
-        caption: s.caption ?? s.label,
-      })),
+      // caption 不上屏：阶段 caption 挂在节点下方，侵入注解带（y 650..800）
+      // 与底部旁白注解碰撞（check-layout 实测 4+ 阶段必撞）。阶段信息以
+      // label 上屏（交接单验收口径），caption 细节由旁白承载。
+      steps: (shot.cycleSteps ?? []).map((s) => ({ label: s.label })),
     },
     // 旁白注解 enterMs=400：阅读窗 = durationMs-400 ≥ 300×旁白字数
     // （验证器已保证 durationMs ≥ 400+300×字数），屏幕文字读得完。
+    // 居中 x=500 与底部阶段 label（design y≈715..746）净空 17 单位。
     annotations: [{
       text: shot.narrationText,
       x: 500, y: 780, portraitY: 1340, enterMs: 400,
