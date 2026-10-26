@@ -132,10 +132,18 @@ function render(spec: SceneSpecLike, ctx: FrameContext): SvgNode {
   const step = (end - start) / (n - 1);
   // 时序预设（Task 2）：sync = 标题/轴线/全部节点同时入场；
   // stagger（默认/旧口径）= 标题 0 → 轴线 300 → 节点 600+i×300。
-  // 入场时长（Codex P1-1 修复）：固定延迟/时长按 enterMs/1400 比例缩放——
-  // enterMs=1400（缺省）精确还原旧时序，其它值按比例加速/减速。
+  // 入场时长（Codex P1-1/P1-2 修复）：
+  // 1. NaN 防御——旧 spec 无 enterMs 时用缺省 1400（validateSceneSpec 不
+  //    替换原 spec，render 读到 undefined）。
+  // 2. 入场预算——stagger 模式下最后节点完成时间 = (600+(n-1)·300+500)·k
+  //    ≤ durationMs；超出则按比例收缩 k，保证全部内容在镜头内出现。
   const isSync = p.sequence === "sync";
-  const k = p.enterMs / 1400;
+  const rawEnterMs = p.enterMs ?? 1400;
+  const lastNodeEnd =
+    (600 + (p.milestones.length - 1) * 300 + 500) * (rawEnterMs / 1400);
+  const maxK =
+    (spec.durationMs * 0.95) / (600 + (p.milestones.length - 1) * 300 + 500);
+  const k = Math.min(rawEnterMs / 1400, isSync ? rawEnterMs / 1400 : maxK);
   const titleAppear = easeOutCubic(clamp01(tMs / (600 * k)));
   const axisAppear = isSync
     ? titleAppear
@@ -266,9 +274,29 @@ function render(spec: SceneSpecLike, ctx: FrameContext): SvgNode {
   };
 }
 
-export const timelineMilestones: SceneComponent = {
+// Codex P2-4 版本边界：@1 不认 enterMs/sequence；@2 接受。
+function validateParamsV1(value: unknown): TimelineMilestonesParams {
+  if (
+    isRecord(value) &&
+    (value.enterMs !== undefined || value.sequence !== undefined)
+  ) {
+    throw new Error(
+      "timeline-milestones@1 不支持 enterMs/sequence（请升级到 @2）",
+    );
+  }
+  return validateParams(value);
+}
+
+export const timelineMilestonesV1: SceneComponent = {
   componentId: "timeline-milestones",
   version: 1,
+  validateParams: validateParamsV1,
+  render,
+};
+
+export const timelineMilestonesV2: SceneComponent = {
+  componentId: "timeline-milestones",
+  version: 2,
   validateParams,
   render,
 };

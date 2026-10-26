@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { timelineMilestones, validateParams } from "./timeline-milestones.js";
+import { timelineMilestonesV2, validateParams } from "./timeline-milestones.js";
 
 const validate = validateParams as (v: unknown) => {
   enterMs: number;
@@ -46,8 +46,8 @@ test("Codex P1-1：不同 enterMs 产生不同渲染输出", () => {
     random: () => 0.5,
   };
   // tMs = 12/24*1000 = 500ms：enterMs=1400 时标题仅部分入场；enterMs=300 时应已完全入场。
-  const slow = timelineMilestones.render(spec(1400), ctx);
-  const fast = timelineMilestones.render(spec(300), ctx);
+  const slow = timelineMilestonesV2.render(spec(1400), ctx);
+  const fast = timelineMilestonesV2.render(spec(300), ctx);
   const slowOpacity = JSON.stringify(slow).match(/"opacity":([\d.]+)/)?.[1];
   const fastOpacity = JSON.stringify(fast).match(/"opacity":([\d.]+)/)?.[1];
   assert.ok(

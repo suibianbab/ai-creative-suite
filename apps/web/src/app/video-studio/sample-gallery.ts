@@ -125,7 +125,11 @@ function spec(
   const scene: SceneSpec = {
     specVersion: 1,
     componentId,
-    componentVersion: 1,
+    // Codex P2-4：enterMs/sequence 感知组件用 @2。
+    componentVersion:
+      componentId === "compare-split" || componentId === "timeline-milestones"
+        ? 2
+        : 1,
     durationMs,
     seed,
     background: "#ffffff",

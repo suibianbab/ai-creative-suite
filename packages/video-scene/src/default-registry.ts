@@ -1,6 +1,6 @@
 import { barChart } from "./components/bar-chart.js";
 import { basicShapes } from "./components/basic-shapes.js";
-import { compareSplit } from "./components/compare-split.js";
+import { compareSplitV1, compareSplitV2 } from "./components/compare-split.js";
 import { explainerComposition } from "./components/explainer-composition.js";
 import { flowDiagram } from "./components/flow-diagram.js";
 import { flowSteps } from "./components/flow-steps.js";
@@ -14,7 +14,10 @@ import { numberCounter } from "./components/number-counter.js";
 import { sketchNote } from "./components/sketch-note.js";
 import { stickFigure } from "./components/stick-figure.js";
 import { textAnimation } from "./components/text-animation.js";
-import { timelineMilestones } from "./components/timeline-milestones.js";
+import {
+  timelineMilestonesV1,
+  timelineMilestonesV2,
+} from "./components/timeline-milestones.js";
 import { createRegistry, type SceneRegistry } from "./registry.js";
 
 // 平台默认注册表：文字动画 / 线描 / 基础图形，全部 version 1。
@@ -45,8 +48,10 @@ export const defaultRegistry: SceneRegistry = createRegistry(
     loadingDots,
     loadingProgress,
     explainerComposition,
-    compareSplit,
-    timelineMilestones,
+    compareSplitV1,
+    compareSplitV2,
+    timelineMilestonesV1,
+    timelineMilestonesV2,
   ],
-  9,
+  10,
 );

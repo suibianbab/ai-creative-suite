@@ -144,11 +144,19 @@ function render(spec: SceneSpecLike, ctx: FrameContext): SvgNode {
   const arrowY = portrait ? ctx.height * 0.55 : ctx.height * 0.53;
   // 时序预设（Task 2）：sync = 标题/面板/箭头/徽章同时入场（统一 200ms 起）；
   // stagger（默认/旧口径）= 标题 200 → 后卡/箭头 700 → 徽章 1400。
+  // Codex P1-1/P1-2：NaN 防御 + 入场预算（stagger 最后元素完成 ≤ durationMs×0.95）。
   const isSync = p.sequence === "sync";
-  const appear = easeOutCubic(clamp01((tMs - 200) / p.enterMs));
+  const rawEnterMs = p.enterMs ?? 1200;
+  const enterMs = isSync
+    ? rawEnterMs
+    : Math.min(
+        rawEnterMs,
+        (spec.durationMs * 0.95 - 1400 + 600) * (1200 / 600),
+      );
+  const appear = easeOutCubic(clamp01((tMs - 200) / enterMs));
   const afterAppear = isSync
     ? appear
-    : easeOutCubic(clamp01((tMs - 700) / p.enterMs));
+    : easeOutCubic(clamp01((tMs - 700) / enterMs));
   // Codex P2-3 修复：sync 模式下徽章与所有元素统一从 200ms 起（不再延后
   // enterMs/2）；stagger 保持旧口径（1400ms 起、600ms 入场）。
   const deltaAppear = isSync
@@ -326,9 +334,28 @@ function render(spec: SceneSpecLike, ctx: FrameContext): SvgNode {
   };
 }
 
-export const compareSplit: SceneComponent = {
+// Codex P2-4 版本边界：@1 不认 enterMs/sequence（显式传入则拒绝，旧口径
+// 固定 stagger+1200ms）；@2 接受并使用这两个参数。同一版本号只代表一种行为。
+function validateParamsV1(value: unknown): CompareSplitParams {
+  if (
+    isRecord(value) &&
+    (value.enterMs !== undefined || value.sequence !== undefined)
+  ) {
+    throw new Error("compare-split@1 不支持 enterMs/sequence（请升级到 @2）");
+  }
+  return validateParams(value);
+}
+
+export const compareSplitV1: SceneComponent = {
   componentId: "compare-split",
   version: 1,
+  validateParams: validateParamsV1,
+  render,
+};
+
+export const compareSplitV2: SceneComponent = {
+  componentId: "compare-split",
+  version: 2,
   validateParams,
   render,
 };

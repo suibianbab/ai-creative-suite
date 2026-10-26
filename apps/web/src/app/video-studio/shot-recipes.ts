@@ -57,7 +57,11 @@ const baseSpec = (
 ): SceneSpec => ({
   specVersion: 1,
   componentId,
-  componentVersion: 1,
+  // Codex P2-4：enterMs/sequence 感知组件用 @2（@1 拒绝这两个字段）。
+  componentVersion:
+    componentId === "compare-split" || componentId === "timeline-milestones"
+      ? 2
+      : 1,
   durationMs,
   // 预览/出片同源：配方用固定 seed，同一输入永远同一画面。
   seed,
