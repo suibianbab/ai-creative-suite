@@ -48,21 +48,11 @@ export async function POST(request: Request) {
     );
   const text = sentence.trim();
 
-  // P1（Codex 二轮复核 2026-10-27）：真实素材需求的能力边界在规划前判定。
-  // 用户句明确要真实照片/素材时，即使模型会顺从提示词改成合法图解 IR，
-  // 未经用户明示授权（allowDiagramSubstitute）也不得静默替换——返回
-  // needs-assets 与具体下一步；一次模型调用都不发生（零成本边界）。
+  // N5（2026-10-27）：素材诉求句放行——模型以 media-slot 素材位承接
+  // （先规划位、再由用户绑定入库素材）；明示授权图解替代时记录标记。
+  const assetDemand = requiresRealAssets(text);
   const substitutedForAssets =
-    body.allowDiagramSubstitute === true && requiresRealAssets(text);
-  if (requiresRealAssets(text) && !substitutedForAssets)
-    return Response.json(
-      {
-        kind: "needs-assets",
-        error:
-          "这条要求需要真实照片/素材，当前 AI 分镜只能画图解（标题/要点/循环/流程）。请在素材面板人工导入素材后从素材链出片，或点「改用图解生成」明示接受图解替代",
-      },
-      { status: 422 },
-    );
+    body.allowDiagramSubstitute === true && assetDemand;
 
   const provider = semanticProviderFromEnv(process.env);
   if (!provider)
@@ -101,12 +91,25 @@ export async function POST(request: Request) {
     ? validation.draft.shots.flatMap((shot) => verifySourcedNumbers(shot, text))
     : [];
 
-  // 第二轮：IR 非法、时长偏离或编造数值时带原因修正重试，恰好一次。
-  if (!validation.ok || offTarget || sourcingErrors.length > 0) {
+  // N5：素材诉求但首轮无素材位 → 并入带因重试（要求产 media-slot）。
+  const missingSlots =
+    assetDemand &&
+    !substitutedForAssets &&
+    validation.ok &&
+    !validation.draft.shots.some(
+      (shot) => shot.intent === "media-slot-explainer",
+    );
+
+  // 第二轮：IR 非法、时长偏离、编造数值或缺素材位时带原因修正重试，恰好一次。
+  if (!validation.ok || offTarget || sourcingErrors.length > 0 || missingSlots) {
     const reasons = validation.ok ? [] : validation.errors.slice();
     if (offTarget && validation.ok)
       reasons.push(
         `总时长（延长后）${projectedTotalMs(validation.draft)}ms 偏离要求：句子目标 ${targetMs}ms，Σ durationMs 须落在 ${lo}..${hi}ms`,
+      );
+    if (missingSlots)
+      reasons.push(
+        "这句明确需要真实照片/素材：请为素材需求输出 media-slot-explainer 素材位镜头（slotKind=素材种类、purpose=叙事用途），不要用图解冒充",
       );
     reasons.push(...(validation.ok ? sourcingErrors : []));
     const retry = await provider.plan(text, reasons.join("；"));
@@ -124,6 +127,22 @@ export async function POST(request: Request) {
       {
         error: "模型输出未通过校验，请换个说法或改用固定句式规划",
         errors: validation.errors,
+      },
+      { status: 422 },
+    );
+  // N5 终检：素材诉求两轮都没有素材位 → 拒绝（不给图解冒充真实素材出片）。
+  if (
+    assetDemand &&
+    !substitutedForAssets &&
+    !validation.draft.shots.some(
+      (shot) => shot.intent === "media-slot-explainer",
+    )
+  )
+    return Response.json(
+      {
+        kind: "needs-assets",
+        error:
+          "这条要求需要真实照片/素材，但模型未给出素材位。请重试生成（要求素材位），或明示改用图解（生成后在镜头上仍可绑定素材替换）",
       },
       { status: 422 },
     );

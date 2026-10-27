@@ -102,7 +102,7 @@ test("semantic-plan：合法 IR → 200 返回 storyboard 与 provenance", async
       assert.equal(data.storyboard.totalMs, 10500);
       assert.equal(data.provenance.provider, "qwen-chat");
       assert.equal(data.provenance.model, "qwen-plus");
-      assert.equal(data.provenance.promptVersion, "7");
+      assert.equal(data.provenance.promptVersion, "8");
       assert.equal(data.provenance.compilerVersion, "1");
       assert.equal(data.provenance.sentence, "做一条约25秒的水循环科普短片");
     });
@@ -449,11 +449,56 @@ const ask2 = (sentence: string, allowDiagramSubstitute?: boolean) =>
     ),
   });
 
-test("semantic-plan：要求真实照片+模型给合法图解 IR → 未授权 422 needs-assets 且不调模型", async () => {
+// N5 契约（2026-10-27）：素材诉求句放行规划，模型应产出 media-slot 素材位；
+// 两轮都没有素材位 → 422 needs-assets（带素材指引），不冒充图解完成。
+const SLOT_IR = JSON.stringify({
+  topic: "产品介绍",
+  title: "产品速览",
+  shots: [
+    { intent: "title", title: "产品速览", narrationText: "看产品", durationMs: 2500 },
+    {
+      intent: "media-slot-explainer",
+      title: "产品整体展示",
+      narrationText: "先看产品全貌",
+      durationMs: 3000,
+      slotKind: "产品整体照片",
+      purpose: "开场建立第一印象",
+    },
+    { intent: "title", title: "谢谢观看", narrationText: "谢谢", durationMs: 2500 },
+  ],
+});
+
+test("semantic-plan N5：素材句+模型给素材位 → 200（占位镜头诚实待绑定）", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => chatResponse(SLOT_IR);
+  try {
+    await withEnv(WITH_KEY, async () => {
+      const response = await POST(ask2("用真实产品照片制作一条产品介绍短片"));
+      assert.equal(response.status, 200);
+      const data = await response.json();
+      assert.equal(data.storyboard.ok, true);
+      const slotShot = (
+        data.storyboard.shots as Array<{ label: string; plan: { renderHint: string }; description: string }>
+      ).find((s) => s.label === "素材位");
+      assert.ok(slotShot, "缺素材位镜头");
+      assert.match(slotShot.plan.renderHint, /待绑定/);
+      assert.match(slotShot.description, /【素材位】/);
+    });
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("semantic-plan N5：素材句两轮无素材位 → 422 needs-assets（重试带因）", async () => {
   const originalFetch = globalThis.fetch;
   let calls = 0;
-  globalThis.fetch = async () => {
+  const messages: string[] = [];
+  globalThis.fetch = async (_input, init) => {
     calls += 1;
+    const body = JSON.parse(String(init?.body)) as {
+      messages: Array<{ role: string; content: string }>;
+    };
+    messages.push(body.messages[1]!.content);
     return chatResponse(VALID_IR);
   };
   try {
@@ -462,10 +507,9 @@ test("semantic-plan：要求真实照片+模型给合法图解 IR → 未授权 
       assert.equal(response.status, 422);
       const data = await response.json();
       assert.equal(data.kind, "needs-assets");
-      assert.match(String(data.error), /素材/);
+      assert.equal(calls, 2);
+      assert.match(messages[1]!, /素材位/);
       assert.equal(data.storyboard, undefined);
-      // 边界在规划前判定：一次模型调用都不该发生。
-      assert.equal(calls, 0);
     });
   } finally {
     globalThis.fetch = originalFetch;

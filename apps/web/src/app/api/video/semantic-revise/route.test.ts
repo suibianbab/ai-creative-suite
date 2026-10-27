@@ -123,7 +123,7 @@ test("semantic-revise：合法指令+合法单镜 IR → 200 候选（含屏幕�
       assert.match(userMessages[0]!, /水循环/);
       assert.match(userMessages[0]!, /把这一镜改成凝结/);
       // provenance：修改链自己的提示词版本 + 指令快照。
-      assert.equal(data.provenance.promptVersion, "r4");
+      assert.equal(data.provenance.promptVersion, "r5");
       assert.equal(data.provenance.instruction, CONTEXT.instruction);
       assert.deepEqual(data.usage, {
         prompt_tokens: 80,
@@ -163,11 +163,45 @@ test("semantic-revise：IR 非法 → 带因重试一次；仍非法 422 无候�
   }
 });
 
-test("semantic-revise：指令要求真实照片 → needs-assets 422 不调模型", async () => {
+// N5 契约：素材诉求指令 → 模型应产素材位镜头；两轮都无素材位才 422。
+const SLOT_SHOT_IR = JSON.stringify({
+  intent: "media-slot-explainer",
+  title: "云的形成",
+  narrationText: "看真实云照片",
+  durationMs: 3000,
+  slotKind: "云的真实照片",
+  purpose: "展示积云形成过程",
+});
+
+test("semantic-revise N5：素材指令+素材位候选 → 200（待绑定占位）", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => chatResponse(SLOT_SHOT_IR);
+  try {
+    await withEnv(WITH_KEY, async () => {
+      const response = await POST(
+        ask({ ...CONTEXT, instruction: "这一镜换成真实照片展示云的形成" }),
+      );
+      assert.equal(response.status, 200);
+      const data = await response.json();
+      assert.equal(data.shot.label, "素材位");
+      assert.match(data.shot.plan.renderHint, /待绑定/);
+      assert.match(data.shot.description, /【素材位】/);
+    });
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("semantic-revise N5：素材指令两轮无素材位 → 422 needs-assets", async () => {
   const originalFetch = globalThis.fetch;
   let calls = 0;
-  globalThis.fetch = async () => {
+  const messages: string[] = [];
+  globalThis.fetch = async (_input, init) => {
     calls += 1;
+    const body = JSON.parse(String(init?.body)) as {
+      messages: Array<{ role: string; content: string }>;
+    };
+    messages.push(body.messages[1]!.content);
     return chatResponse(VALID_SHOT_IR);
   };
   try {
@@ -178,8 +212,8 @@ test("semantic-revise：指令要求真实照片 → needs-assets 422 不调模�
       assert.equal(response.status, 422);
       const data = await response.json();
       assert.equal(data.kind, "needs-assets");
-      assert.equal(calls, 0);
-      assert.equal(data.shot, undefined);
+      assert.equal(calls, 2);
+      assert.match(messages[1]!, /素材位/);
     });
   } finally {
     globalThis.fetch = originalFetch;

@@ -107,18 +107,10 @@ export async function POST(request: Request) {
     );
   const instruction = body.instruction.trim();
 
-  // 素材边界（同整片口径）：真实素材需求未经授权不得静默降级为图解。
+  // N5：素材诉求放行——单镜以 media-slot 素材位承接（编辑器绑定入库素材）。
+  const assetDemand = requiresRealAssets(instruction);
   const substitutedForAssets =
-    body.allowDiagramSubstitute === true && requiresRealAssets(instruction);
-  if (requiresRealAssets(instruction) && !substitutedForAssets)
-    return Response.json(
-      {
-        kind: "needs-assets",
-        error:
-          "这条修改需要真实照片/素材，AI 修改只能画图解。请在素材面板人工导入素材，或点「改用图解生成」明示接受图解替代",
-      },
-      { status: 422 },
-    );
+    body.allowDiagramSubstitute === true && assetDemand;
 
   const provider = semanticProviderFromEnv(process.env);
   if (!provider)
@@ -149,13 +141,22 @@ export async function POST(request: Request) {
   const sourcingErrors = validation.ok
     ? verifySourcedNumbers(validation.shot, sourcedText)
     : [];
-  if (!validation.ok || sourcingErrors.length > 0) {
-    const retry = await provider.revise(
-      payload,
-      [...(validation.ok ? [] : validation.errors), ...sourcingErrors].join(
-        "；",
-      ),
-    );
+  // N5：素材诉求但首轮不是素材位 → 并入带因重试（要求 media-slot）。
+  const missingSlot =
+    assetDemand &&
+    !substitutedForAssets &&
+    validation.ok &&
+    validation.shot.intent !== "media-slot-explainer";
+  if (!validation.ok || sourcingErrors.length > 0 || missingSlot) {
+    const retryReasons = [
+      ...(validation.ok ? [] : validation.errors),
+      ...sourcingErrors,
+    ];
+    if (missingSlot)
+      retryReasons.push(
+        "这条修改明确需要真实照片/素材：请输出一个 media-slot-explainer 素材位镜头（slotKind/purpose），不要用图解冒充",
+      );
+    const retry = await provider.revise(payload, retryReasons.join("；"));
     if (!retry.ok)
       return Response.json(
         { error: retry.message, kind: retry.kind },
@@ -170,6 +171,20 @@ export async function POST(request: Request) {
       {
         error: "模型输出未通过校验，请换个说法或改用固定句式重做",
         errors: validation.errors,
+      },
+      { status: 422 },
+    );
+  // N5 终检：素材诉求两轮都不是素材位 → 拒绝（不给图解冒充真实素材）。
+  if (
+    assetDemand &&
+    !substitutedForAssets &&
+    validation.shot.intent !== "media-slot-explainer"
+  )
+    return Response.json(
+      {
+        kind: "needs-assets",
+        error:
+          "这条修改需要真实照片/素材，但候选未给出素材位。请重试（要求素材位），或明示改用图解（镜头仍可稍后绑定素材替换）",
       },
       { status: 422 },
     );

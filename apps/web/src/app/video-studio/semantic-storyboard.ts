@@ -34,7 +34,8 @@ export type SemanticIntent =
   | "timeline-explainer"
   | "bar-explainer"
   | "line-explainer"
-  | "counter-explainer";
+  | "counter-explainer"
+  | "media-slot-explainer";
 
 export type SemanticDraftShot = {
   intent: SemanticIntent;
@@ -57,6 +58,9 @@ export type SemanticDraftShot = {
   afterNote?: string;
   deltaText?: string;
   deltaPositive?: boolean;
+  /** media-slot 素材位（N5）：只提种类与用途，无 URL/资产 ID */
+  slotKind?: string;
+  purpose?: string;
   /** bar-explainer 的柱状数据（N4：value 只能来自用户原话） */
   bars?: Array<{ label: string; value: number }>;
   /** line-explainer 的折线数据（N4） */
@@ -110,6 +114,7 @@ const SHOT_KEYS_BY_INTENT: Record<SemanticIntent, Set<string>> = {
   "bar-explainer": new Set(["bars"]),
   "line-explainer": new Set(["points"]),
   "counter-explainer": new Set(["value", "prefix", "suffix", "decimals"]),
+  "media-slot-explainer": new Set(["slotKind", "purpose"]),
 };
 // 常见资产/代码字段名 → 指引文案（模型请求画不出的东西时明说下一步）。
 const ASSET_KEYS =
@@ -127,6 +132,7 @@ const INTENTS = new Set([
   "bar-explainer",
   "line-explainer",
   "counter-explainer",
+  "media-slot-explainer",
 ]);
 
 // 各 intent 的「演完 + 停留」时长下限（ms），由上方能力目录推出。
@@ -157,6 +163,9 @@ function minDurationMs(
       return 2800;
     // counter：countMs 2000 + 停留 400（N4）。
     case "counter-explainer":
+      return 2400;
+    // 素材位占位（text-animation 入场+停留）；绑定后按媒体片段重算。
+    case "media-slot-explainer":
       return 2400;
   }
 }
@@ -389,6 +398,7 @@ const INTENT_LABEL: Record<SemanticIntent, string> = {
   "bar-explainer": "柱状图表",
   "line-explainer": "折线图表",
   "counter-explainer": "数字计数",
+  "media-slot-explainer": "素材位",
 };
 
 // 确认卡预告观众将看到的屏幕文字（交接单 §3.3：目的、画面内容、屏幕文字、
@@ -532,6 +542,27 @@ function compileCounterExplainer(
   );
 }
 
+// N5：素材位占位——诚实的未完成态：标题点明「素材位·种类」，副标题给
+// 用途与待绑定说明。绑定后该版本回滚可见、新版本为媒体片段。
+function compileMediaSlotExplainer(
+  shot: SemanticDraftShot,
+  seed: number,
+): SceneSpec {
+  return baseSpec(
+    "text-animation",
+    effectiveDurationMs(shot),
+    {
+      title: `素材位·${shot.slotKind ?? ""}`,
+      subtitle: `待绑定素材——${shot.purpose ?? ""}`,
+      titleColor: "#f3f5f7",
+      subtitleColor: "#b4d8e4",
+      entrance: "fade-up",
+      enterMs: 600,
+    },
+    seed,
+  );
+}
+
 function renderHintFor(shot: SemanticDraftShot): string {
   const base = `${INTENT_LABEL[shot.intent]}「${shot.title}」`;
   switch (shot.intent) {
@@ -559,6 +590,8 @@ function renderHintFor(shot: SemanticDraftShot): string {
         .join(" → ")}`;
     case "counter-explainer":
       return `${base}，计数：${shot.prefix ?? ""}${shot.value ?? ""}${shot.suffix ?? ""}`;
+    case "media-slot-explainer":
+      return `素材位（待绑定素材）：${shot.slotKind ?? ""}——用途：${shot.purpose ?? ""}`;
   }
 }
 
@@ -851,6 +884,22 @@ export function validateSemanticShot(
     )
       errors.push(`${field}.decimals 须为 0..2 的整数`);
   }
+  // N5 素材位：种类/用途是全部输入；URL/资产 ID 类字段按资产口径拒绝并
+  // 给绑定指引（素材位只描述需要什么，绑定在编辑器媒体臂完成）。
+  if (intent === "media-slot-explainer") {
+    if (
+      typeof shot.slotKind !== "string" ||
+      shot.slotKind.length < 1 ||
+      shot.slotKind.length > 20
+    )
+      errors.push(`${field}.slotKind 须为 1..20 字的素材种类`);
+    if (
+      typeof shot.purpose !== "string" ||
+      shot.purpose.length < 1 ||
+      shot.purpose.length > 60
+    )
+      errors.push(`${field}.purpose 须为 1..60 字的叙事用途`);
+  }
   if (errors.length > 0) return { ok: false, errors };
   return { ok: true, shot: shot as unknown as SemanticDraftShot };
 }
@@ -889,11 +938,17 @@ export function compileSemanticShot(
     case "counter-explainer":
       spec = compileCounterExplainer(shot, seed);
       break;
+    case "media-slot-explainer":
+      spec = compileMediaSlotExplainer(shot, seed);
+      break;
   }
   validateSceneSpec(spec, defaultRegistry);
   return {
     label: INTENT_LABEL[shot.intent],
-    description: `${shot.title}（${INTENT_LABEL[shot.intent]}）`,
+    description:
+      shot.intent === "media-slot-explainer"
+        ? `【素材位】${shot.slotKind ?? ""}——${shot.purpose ?? ""}`
+        : `${shot.title}（${INTENT_LABEL[shot.intent]}）`,
     narrationText: shot.narrationText,
     plan: {
       ok: true,

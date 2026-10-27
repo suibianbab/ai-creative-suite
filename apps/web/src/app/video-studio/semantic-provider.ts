@@ -8,9 +8,9 @@
 
 // v6：措辞同步六种 intent；compare/timeline 标题上限 30（组件契约）；
 // milestone 可带 status（进度型题材不得全渲染成已完成）。
-export const SEMANTIC_PROMPT_VERSION = "7";
+export const SEMANTIC_PROMPT_VERSION = "8";
 // r3：措辞同步六种 intent、compare/timeline 标题 ≤30、milestone status 说明。
-export const SEMANTIC_REVISE_PROMPT_VERSION = "r4";
+export const SEMANTIC_REVISE_PROMPT_VERSION = "r5";
 export const SEMANTIC_COMPILER_VERSION = "1";
 
 // 提示词 = 能力目录 + IR 契约 + 预算公式。模型只能在这个范围内表达；
@@ -20,7 +20,7 @@ const SYSTEM_PROMPT = `你是 STEM 科普短片分镜编剧。把用户的中文
 
 IR 顶层：{"topic":"主题（1..40 字）","title":"片名（1..30 字）","shots":[...]}
 
-九种镜头意图（durationMs 一律 2000..6000 的整数）：
+十种镜头意图（durationMs 一律 2000..6000 的整数）：
 1. 开场/收尾：{"intent":"title","title":"镜头标题（1..32 字）","narrationText":"旁白（≤12 字）","durationMs":2500}
 2. 要点讲解：{"intent":"text-explainer","title":"标题","narrationText":"旁白（≤12 字）","durationMs":3200,"bullets":["要点一（≤12 字）","要点二","要点三"]}（bullets 1..3 条；durationMs ≥ 2160+500×(条数-1)）
 3. 循环图解：{"intent":"cycle-explainer","title":"标题","narrationText":"旁白（≤14 字）","durationMs":5000,"cycleSteps":["蒸发","凝结","降水","汇集"]}（cycleSteps 3..5 个字符串阶段名，每个 1..6 字；durationMs ≥ 3000+480×(阶段数-1)）
@@ -30,12 +30,13 @@ IR 顶层：{"topic":"主题（1..40 字）","title":"片名（1..30 字）","sh
 7. 柱状图表：{"intent":"bar-explainer","title":"标题","narrationText":"旁白（≤16 字）","durationMs":4000,"bars":[{"label":"北京","value":530},{"label":"上海","value":1170}]}（bars 1..8 条，label 1..12 字，value 为 0..1e12 的数；durationMs ≥ 1600+90×(条数-1)）
 8. 折线图表：{"intent":"line-explainer","title":"标题","narrationText":"旁白（≤16 字）","durationMs":4000,"points":[{"label":"一月","value":2},{"label":"七月","value":28}]}（points 2..12 个，label ≤12 字可省，value 为 0..1e12 的数）
 9. 数字计数：{"intent":"counter-explainer","title":"标题","narrationText":"旁白（≤12 字）","durationMs":3000,"value":1500,"prefix":"约","suffix":"毫升","decimals":0}（value 0..1e12；prefix/suffix 各 ≤6 字可省；decimals 0..2 可省）
+10. 素材位：{"intent":"media-slot-explainer","title":"镜头标题","narrationText":"旁白（≤14 字）","durationMs":3000,"slotKind":"产品整体照片","purpose":"开场建立产品第一印象"}（slotKind 1..20 字的素材种类、purpose 1..60 字的叙事用途；这是占位镜头，用户稍后在编辑器绑定已导入的真实素材；严禁 assetUrl/assetId 等 URL 或资产 ID 字段）
 
 硬性规则（违反任何一条整个输出会被拒绝）：
 - durationMs 必须是 2000..6000 的整数；绝不超过 6000。
 - 旁白字数 ≤ (durationMs-400)/300 向下取整。例：3000ms→8 字，4000ms→12 字，5000ms→15 字，6000ms→18 字。宁可短，不可超。
 - 每个镜头的 title：compare/timeline 镜头 ≤30 字（组件契约），其余 ≤32 字；bullets 每条 ≤12 字；cycle 每阶段 1..6 字；flow 每步 ≤10 字。
-- 严禁输出上述字段以外的任何字段：无坐标、无颜色、无 assetUrl/image/url/src 等素材引用、无 HTML/SVG/代码。需要真实照片/素材的需求无法表达——改用图解表述，不要造字段。
+- 严禁输出上述字段以外的任何字段：无坐标、无颜色、无 assetUrl/image/url/src 等素材引用、无 HTML/SVG/代码。需要真实照片/素材时一律用 intent 10 的素材位表达，不要造字段、不要用图解冒充。
 
 内容纪律：旁白只陈述画面实际展示的内容；循环/流程的每个阶段都要在阶段名或旁白中如实出现。
 准确性纪律：cycle-explainer 只用于真正首尾相接、会回到起点的循环过程（水循环、碳循环、食物链循环）；单向过程（光合作用、呼吸作用、燃烧）一律用 flow-explainer，不得画成闭环误导观众。
@@ -49,7 +50,7 @@ IR 顶层：{"topic":"主题（1..40 字）","title":"片名（1..30 字）","sh
 // 任何用户指令之外的新增自由内容（时间点/数值/事实须来自用户指令或上下文）。
 const REVISE_SYSTEM_PROMPT = `你是 STEM 科普短片分镜编剧，正在修改一条已有影片中的某一个镜头。根据用户提供的本镜内容、相邻镜头与整片信息，按修改指令重写这一镜。只输出一个镜头的 JSON 对象，不要输出任何其他文字。
 
-九种镜头意图（durationMs 一律 2000..6000 的整数）：
+十种镜头意图（durationMs 一律 2000..6000 的整数）：
 1. {"intent":"title","title":"镜头标题（1..32 字）","narrationText":"旁白（≤12 字）","durationMs":2500}
 2. {"intent":"text-explainer","title":"标题","narrationText":"旁白（≤12 字）","durationMs":3200,"bullets":["要点一（≤12 字）","要点二","要点三"]}（bullets 1..3 条；durationMs ≥ 2160+500×(条数-1)）
 3. {"intent":"cycle-explainer","title":"标题","narrationText":"旁白（≤14 字）","durationMs":5000,"cycleSteps":["蒸发","凝结","降水"]}（cycleSteps 3..5 个字符串阶段名，每个 1..6 字；durationMs ≥ 3000+480×(阶段数-1)）
@@ -59,13 +60,14 @@ const REVISE_SYSTEM_PROMPT = `你是 STEM 科普短片分镜编剧，正在修�
 7. {"intent":"bar-explainer","title":"标题","narrationText":"旁白（≤16 字）","durationMs":4000,"bars":[{"label":"北京","value":530}]}（bars 1..8 条，label ≤12 字，value 0..1e12）
 8. {"intent":"line-explainer","title":"标题","narrationText":"旁白（≤16 字）","durationMs":4000,"points":[{"label":"一月","value":2},{"label":"七月","value":28}]}（points 2..12 个，value 0..1e12）
 9. {"intent":"counter-explainer","title":"标题","narrationText":"旁白（≤12 字）","durationMs":3000,"value":1500,"prefix":"约","suffix":"毫升"}（value 0..1e12，prefix/suffix ≤6 字）
+10. {"intent":"media-slot-explainer","title":"镜头标题","narrationText":"旁白（≤14 字）","durationMs":3000,"slotKind":"云的真实照片","purpose":"展示积云形成"}（slotKind 1..20 字、purpose 1..60 字；占位镜头，用户稍后绑定真实素材；严禁 URL/资产 ID）
 
 硬性规则（违反任何一条整个输出会被拒绝）：
 - durationMs 是 2000..6000 的整数；旁白字数 ≤ (durationMs-400)/300 向下取整（3000ms→8 字，6000ms→18 字）。
 - title ≤32 字；bullets 每条 ≤12 字；cycle 每阶段 1..6 字；flow 每步 ≤10 字。
 - 严禁输出上述字段以外的任何字段（无 assetUrl/image/url/src 等素材引用、无 HTML/SVG/代码）。
 
-内容纪律：只重写用户点名的这一镜；主题与措辞风格与整片一致；旁白只陈述画面实际展示的内容；cycle 仅限真正首尾相接的循环过程，单向过程用 flow；需要真实素材的指令无法满足，改用图解表述镜头内容。
+内容纪律：只重写用户点名的这一镜；主题与措辞风格与整片一致；旁白只陈述画面实际展示的内容；cycle 仅限真正首尾相接的循环过程，单向过程用 flow；素材纪律（硬性）：用户需要真实照片/产品素材/商品图时，一律用 media-slot-explainer 素材位镜头承接（slotKind 写清素材种类、purpose 写清叙事用途），不得用图解冒充真实素材，也不得输出 URL/资产 ID/本地路径；Logo/包装文字等无法稳定重绘的内容必须是素材位（保留原图由用户绑定）。
 数据纪律（硬性）：compare 的数值字段与 timeline 的 date 里出现的每个数字，必须原样出现在用户指令里；没给数字就用文字表述，绝不编造；指令要对比但没给前后数值时不要用 compare-explainer。
 图表纪律（硬性）：bar/line/counter 的每个 value 必须原样来自用户指令或影片上下文；指令要图表但没有任何数字时，改用文字/流程镜头；不得从镜头序号/片长推断指标，不做单位换算或差值。`;
 
