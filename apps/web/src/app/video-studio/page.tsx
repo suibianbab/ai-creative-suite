@@ -629,7 +629,8 @@ export default function VideoStudioPage() {
             imageAssets: (document.mediaAssets ?? [])
               .filter((a) => a.original.kind === "image")
               .map((a) => ({
-                fileName: a.origin.kind === "local-upload" ? a.origin.fileName : "",
+                fileName:
+                  a.origin.kind === "local-upload" ? a.origin.fileName : "",
                 width: a.original.width,
                 height: a.original.height,
               })),

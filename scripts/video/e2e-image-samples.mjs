@@ -36,16 +36,28 @@ for (const [name, size, color] of [
 ]) {
   execFileSync(
     "ffmpeg",
-    ["-y", "-v", "error", "-f", "lavfi", "-i",
-      `testsrc2=duration=1:size=${size}:rate=24`, "-frames:v", "1",
-      path.join(OUT, name)],
+    [
+      "-y",
+      "-v",
+      "error",
+      "-f",
+      "lavfi",
+      "-i",
+      `testsrc2=duration=1:size=${size}:rate=24`,
+      "-frames:v",
+      "1",
+      path.join(OUT, name),
+    ],
     { cwd: ROOT },
   );
 }
 
 const browser = await chromium.launch({ headless: true });
 const page = await (
-  await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: "zh-CN" })
+  await browser.newContext({
+    viewport: { width: 1440, height: 900 },
+    locale: "zh-CN",
+  })
 ).newPage();
 const errors = [];
 // 语义端点 422（AI 规划两轮被拒后明示错误——生成重试的正常失败面）不计。
@@ -86,12 +98,23 @@ async function narratedExport(slug) {
   for (const url of hrefs) {
     const aspect = url.includes("portrait") ? "portrait" : "landscape";
     const file = path.join(OUT, `${slug}-${aspect}.mp4`);
-    execFileSync("curl", ["-s", "-o", file, `${BASE_URL}${url}`], { cwd: ROOT });
+    execFileSync("curl", ["-s", "-o", file, `${BASE_URL}${url}`], {
+      cwd: ROOT,
+    });
     const probe = JSON.parse(
       execFileSync(
         "ffprobe",
-        ["-v", "error", "-show_entries", "stream=codec_type,codec_name,width,height",
-          "-show_entries", "format=duration", "-of", "json", file],
+        [
+          "-v",
+          "error",
+          "-show_entries",
+          "stream=codec_type,codec_name,width,height",
+          "-show_entries",
+          "format=duration",
+          "-of",
+          "json",
+          file,
+        ],
         { encoding: "utf8" },
       ),
     );
@@ -117,12 +140,21 @@ function extractFrames(project, slug) {
   }
   for (const aspect of ["landscape", "portrait"])
     for (let i = 0; i < project.shots.length; i++) {
-      const t = ((bounds[i] + bounds[i + 1]) / 2) / 1000;
+      const t = (bounds[i] + bounds[i + 1]) / 2 / 1000;
       execFileSync(
         "ffmpeg",
-        ["-y", "-v", "error", "-ss", t.toFixed(2), "-i",
-          path.join(OUT, `${slug}-${aspect}.mp4`), "-frames:v", "1",
-          path.join(OUT, "frames", `${slug}-${aspect}-s${i}.png`)],
+        [
+          "-y",
+          "-v",
+          "error",
+          "-ss",
+          t.toFixed(2),
+          "-i",
+          path.join(OUT, `${slug}-${aspect}.mp4`),
+          "-frames:v",
+          "1",
+          path.join(OUT, "frames", `${slug}-${aspect}-s${i}.png`),
+        ],
         { cwd: ROOT },
       );
     }
@@ -159,15 +191,20 @@ const review = { productAd: {}, knowledgeFilm: {} };
 
 // ============ 样片 A：商品广告（15-20s）============
 try {
-  await page.goto(`${BASE_URL}/video-studio`, { waitUntil: "domcontentloaded" });
+  await page.goto(`${BASE_URL}/video-studio`, {
+    waitUntil: "domcontentloaded",
+  });
   await page.waitForSelector("html[data-studio-ready]", { timeout: 20_000 });
   await planViaAI(
     "用我上传的图做一条约18秒的保温杯产品广告：产品全景展示、杯口细节特写、核心卖点、品牌收尾",
     ["hero-bottle.png", "detail-cap.png"],
   );
   const cardA = await page.locator(".storyboard-card").textContent();
-  if (!cardA?.includes("素材位")) fail("样片A", "确认卡无素材位（图片引用未生效）");
-  const namesA = ["hero-bottle", "detail-cap"].filter((n) => cardA?.includes(n));
+  if (!cardA?.includes("素材位"))
+    fail("样片A", "确认卡无素材位（图片引用未生效）");
+  const namesA = ["hero-bottle", "detail-cap"].filter((n) =>
+    cardA?.includes(n),
+  );
   await page.screenshot({
     path: path.join(OUT, "product-confirm-card.png"),
     fullPage: true,
@@ -186,9 +223,10 @@ try {
       (v) => v.versionId === shot.workingVersionId,
     );
     if (!w.description.startsWith("【素材位】")) continue;
-    const fileName = w.description.includes("hero") || w.description.includes("全景")
-      ? "hero-bottle.png"
-      : "detail-cap.png";
+    const fileName =
+      w.description.includes("hero") || w.description.includes("全景")
+        ? "hero-bottle.png"
+        : "detail-cap.png";
     const card = page.locator(".shot-card").nth(i);
     await card.locator(".shot-edit-toggle").click();
     await card
@@ -224,7 +262,8 @@ try {
     const w = s.contentVersions.find((v) => v.versionId === s.workingVersionId);
     return w.description.startsWith("【素材位】");
   });
-  if (unboundA.length > 0) fail("样片A", `${unboundA.length} 素材位未绑定（导出闸会拒）`);
+  if (unboundA.length > 0)
+    fail("样片A", `${unboundA.length} 素材位未绑定（导出闸会拒）`);
 
   // 保存重开 → 绑定仍在。
   await page.click(".editor-save");
@@ -241,13 +280,18 @@ try {
   const lastCard = page.locator(".shot-card").nth(lastIdx);
   await lastCard.locator(".shot-edit-toggle").click();
   await lastCard.locator('textarea, input[type="text"]').first().fill("");
-  const narrationInput = lastCard.locator(".shot-narration-input, textarea").first();
-  if ((await narrationInput.count()) > 0) await narrationInput.fill("温暖随行。");
+  const narrationInput = lastCard
+    .locator(".shot-narration-input, textarea")
+    .first();
+  if ((await narrationInput.count()) > 0)
+    await narrationInput.fill("温暖随行。");
   await lastCard.locator("button.shot-apply").first().click();
   await page
     .locator(".editor-message", { hasText: "已修订" })
     .waitFor({ timeout: 15_000 })
-    .catch(() => {/* 文字镜头修订路径可能不同——忽略，镜头修改以绑定/运动为准 */});
+    .catch(() => {
+      /* 文字镜头修订路径可能不同——忽略，镜头修改以绑定/运动为准 */
+    });
 
   const metaA = await narratedExport("product");
   const finalA = await exportProject("product-final.json");
@@ -255,7 +299,9 @@ try {
   review.productAd = {
     totalMs: totalA,
     shots: finalA.shots.map((s, i) => {
-      const w = s.contentVersions.find((v) => v.versionId === s.workingVersionId);
+      const w = s.contentVersions.find(
+        (v) => v.versionId === s.workingVersionId,
+      );
       return {
         index: i + 1,
         source: w.sceneSource.type,
@@ -270,8 +316,12 @@ try {
     namedImages: namesA,
   };
   if (totalA < 15_000 || totalA > 20_000)
-    console.log(`[e2e-image-samples] 注意：样片A ${totalA / 1000}s 偏离 15-20s 目标`);
-  console.log(`[e2e-image-samples] 样片A OK：${finalA.shots.length} 镜 / ${(totalA / 1000).toFixed(1)}s`);
+    console.log(
+      `[e2e-image-samples] 注意：样片A ${totalA / 1000}s 偏离 15-20s 目标`,
+    );
+  console.log(
+    `[e2e-image-samples] 样片A OK：${finalA.shots.length} 镜 / ${(totalA / 1000).toFixed(1)}s`,
+  );
 } catch (e) {
   fail("样片A", String(e).slice(0, 300));
 }
@@ -307,7 +357,9 @@ try {
   review.knowledgeFilm = {
     totalMs: totalB,
     shots: finalB.shots.map((s, i) => {
-      const w = s.contentVersions.find((v) => v.versionId === s.workingVersionId);
+      const w = s.contentVersions.find(
+        (v) => v.versionId === s.workingVersionId,
+      );
       return {
         index: i + 1,
         source: w.sceneSource.type,
@@ -318,8 +370,12 @@ try {
     files: metaB,
   };
   if (totalB < 20_000 || totalB > 30_000)
-    console.log(`[e2e-image-samples] 注意：样片B ${totalB / 1000}s 偏离 20-30s 目标`);
-  console.log(`[e2e-image-samples] 样片B OK：${finalB.shots.length} 镜 / ${(totalB / 1000).toFixed(1)}s`);
+    console.log(
+      `[e2e-image-samples] 注意：样片B ${totalB / 1000}s 偏离 20-30s 目标`,
+    );
+  console.log(
+    `[e2e-image-samples] 样片B OK：${finalB.shots.length} 镜 / ${(totalB / 1000).toFixed(1)}s`,
+  );
 } catch (e) {
   fail("样片B", String(e).slice(0, 300));
 }
@@ -327,8 +383,7 @@ try {
 if (errors.length > 0) fail("浏览器控制台", errors.join(" | "));
 await browser.close();
 
-writeFileSync(
-  path.join(OUT, "review.json"),
-  JSON.stringify(review, null, 2),
+writeFileSync(path.join(OUT, "review.json"), JSON.stringify(review, null, 2));
+console.log(
+  "[e2e-image-samples] OK: 两条样片全链完成（创建/绑定/运动/叠加/保存重开/导出/抽帧）",
 );
-console.log("[e2e-image-samples] OK: 两条样片全链完成（创建/绑定/运动/叠加/保存重开/导出/抽帧）");

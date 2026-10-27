@@ -27,7 +27,10 @@ function fail(step, detail) {
 mkdirSync(OUT, { recursive: true });
 const browser = await chromium.launch({ headless: true });
 const page = await (
-  await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: "zh-CN" })
+  await browser.newContext({
+    viewport: { width: 1440, height: 900 },
+    locale: "zh-CN",
+  })
 ).newPage();
 const errors = [];
 page.on("console", (m) => {
@@ -36,7 +39,9 @@ page.on("console", (m) => {
 page.on("pageerror", (e) => errors.push(String(e).slice(0, 200)));
 
 try {
-  await page.goto(`${BASE_URL}/video-studio`, { waitUntil: "domcontentloaded" });
+  await page.goto(`${BASE_URL}/video-studio`, {
+    waitUntil: "domcontentloaded",
+  });
   await page.waitForSelector("html[data-studio-ready]", { timeout: 20_000 });
   await page.click(".project-create");
   await page.fill(
@@ -61,7 +66,8 @@ try {
     const hrefs = await page
       .locator(".editor-downloads a")
       .evaluateAll((nodes) => nodes.map((n) => n.getAttribute("href")));
-    if (hrefs.length !== 2) fail(`第 ${round} 次导出`, `下载链接 ${hrefs.length} ≠ 2`);
+    if (hrefs.length !== 2)
+      fail(`第 ${round} 次导出`, `下载链接 ${hrefs.length} ≠ 2`);
 
     // 下载两份并核对。
     const durations = [];
@@ -75,23 +81,34 @@ try {
         execFileSync(
           "ffprobe",
           [
-            "-v", "error",
-            "-show_entries", "stream=codec_type,codec_name",
-            "-show_entries", "format=duration",
-            "-of", "json", file,
+            "-v",
+            "error",
+            "-show_entries",
+            "stream=codec_type,codec_name",
+            "-show_entries",
+            "format=duration",
+            "-of",
+            "json",
+            file,
           ],
           { encoding: "utf8" },
         ),
       );
       const audio = probe.streams.find((s) => s.codec_type === "audio");
       if (audio?.codec_name !== "aac")
-        fail(`第 ${round} 次导出`, `${aspect} 音轨 ${audio?.codec_name ?? "无"}`);
+        fail(
+          `第 ${round} 次导出`,
+          `${aspect} 音轨 ${audio?.codec_name ?? "无"}`,
+        );
       durations.push(Number(probe.format.duration));
     }
     if (Math.abs(durations[0] - durations[1]) > 0.05)
       fail(`第 ${round} 次导出`, `两画幅时长不符 ${durations.join(" vs ")}`);
     if (round === 2 && Math.abs(durations[0] - prevDuration) > 0.05)
-      fail("第 2 次导出", `与第 1 次时长漂移 ${durations[0]} vs ${prevDuration}`);
+      fail(
+        "第 2 次导出",
+        `与第 1 次时长漂移 ${durations[0]} vs ${prevDuration}`,
+      );
     prevDuration = durations[0];
 
     // 渲染记录追加（3 镜 × 2 画幅 = +6/轮）。
@@ -127,7 +144,9 @@ try {
   }
 
   if (errors.length > 0) fail("浏览器控制台", errors.join(" | "));
-  console.log("[e2e-dual-export] OK: 连续两次一键横竖导出稳定，时长/音轨/记录全对账");
+  console.log(
+    "[e2e-dual-export] OK: 连续两次一键横竖导出稳定，时长/音轨/记录全对账",
+  );
 } finally {
   await browser.close();
 }

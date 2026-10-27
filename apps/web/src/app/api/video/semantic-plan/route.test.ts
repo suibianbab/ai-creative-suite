@@ -584,13 +584,17 @@ test("semantic-plan：图表诉求无数字 → 200 + dataHint", async () => {
   }
 });
 
-
 // 任务 4：图片账本摘要进规划上下文；slotKind 点名建议的图。
 const IMAGE_SLOT_IR = JSON.stringify({
   topic: "保温杯",
   title: "产品速览",
   shots: [
-    { intent: "title", title: "产品速览", narrationText: "看产品", durationMs: 2500 },
+    {
+      intent: "title",
+      title: "产品速览",
+      narrationText: "看产品",
+      durationMs: 2500,
+    },
     {
       intent: "media-slot-explainer",
       title: "产品整体",
@@ -607,7 +611,12 @@ const IMAGE_SLOT_IR = JSON.stringify({
       slotKind: "图片：detail-lid.png",
       purpose: "工艺可靠性",
     },
-    { intent: "title", title: "谢谢观看", narrationText: "谢谢", durationMs: 2500 },
+    {
+      intent: "title",
+      title: "谢谢观看",
+      narrationText: "谢谢",
+      durationMs: 2500,
+    },
   ],
 });
 
