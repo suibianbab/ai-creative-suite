@@ -10,10 +10,10 @@
 // 前置: dev server 无需——CLI 渲染直跑（图片从本地仓服务）。
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { createHash } from "node:crypto";
 
 const ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -33,15 +33,35 @@ mkdirSync(path.join(OUT, "frames"), { recursive: true });
 const pngPath = path.join(OUT, "board.png");
 execFileSync(
   "ffmpeg",
-  ["-y", "-v", "error", "-f", "lavfi", "-i",
-    "testsrc2=duration=1:size=800x600:rate=24", "-frames:v", "1", pngPath],
+  [
+    "-y",
+    "-v",
+    "error",
+    "-f",
+    "lavfi",
+    "-i",
+    "testsrc2=duration=1:size=800x600:rate=24",
+    "-frames:v",
+    "1",
+    pngPath,
+  ],
   { cwd: ROOT },
 );
 const clipPath = path.join(OUT, "clip.mp4");
 execFileSync(
   "ffmpeg",
-  ["-y", "-v", "error", "-f", "lavfi", "-i",
-    "testsrc=duration=4:size=640x360:rate=24", "-pix_fmt", "yuv420p", clipPath],
+  [
+    "-y",
+    "-v",
+    "error",
+    "-f",
+    "lavfi",
+    "-i",
+    "testsrc=duration=4:size=640x360:rate=24",
+    "-pix_fmt",
+    "yuv420p",
+    clipPath,
+  ],
   { cwd: ROOT },
 );
 
@@ -52,8 +72,8 @@ const { ingestMediaFile } = await import(
 function pathToFileURL(p) {
   return `file:///${p.replaceAll("\\", "/")}`;
 }
-const storeRoot = process.env.ACS_MEDIA_STORE_OVERRIDE ??
-  path.join(OUT, "store");
+const storeRoot =
+  process.env.ACS_MEDIA_STORE_OVERRIDE ?? path.join(OUT, "store");
 mkdirSync(path.join(storeRoot, "original"), { recursive: true });
 const pngAsset = await ingestMediaFile({
   bytes: readFileSync(pngPath),
@@ -125,8 +145,10 @@ const render = execFileSync(
   process.execPath,
   [
     path.join(ROOT, "scripts/video/render-scene.mjs"),
-    "--project", projectPath,
-    "--out", renderDir,
+    "--project",
+    projectPath,
+    "--out",
+    renderDir,
   ],
   { cwd: ROOT, encoding: "utf8", timeout: 900_000, env },
 );
@@ -150,6 +172,7 @@ function ffmpegSsim(a, b) {
 
 // 顶层 await import 一次，避免循环依赖拼写。
 import { spawnSync as _spawnSync } from "node:child_process";
+
 function await_importSpawnSync() {
   return { spawnSync: _spawnSync };
 }
@@ -158,8 +181,18 @@ function frameFile(aspect, t, name) {
   const out = path.join(OUT, "frames", `${aspect}-${name}.png`);
   execFileSync(
     "ffmpeg",
-    ["-y", "-v", "error", "-ss", t.toFixed(2), "-i",
-      path.join(renderDir, `${aspect}.mp4`), "-frames:v", "1", out],
+    [
+      "-y",
+      "-v",
+      "error",
+      "-ss",
+      t.toFixed(2),
+      "-i",
+      path.join(renderDir, `${aspect}.mp4`),
+      "-frames:v",
+      "1",
+      out,
+    ],
     { cwd: ROOT },
   );
   return out;
@@ -178,8 +211,10 @@ for (const aspect of ["landscape", "portrait"]) {
     const lastBytes = readFileSync(last);
     if (shot.name === "zoom") {
       // 推近：首尾帧必须不同（内容放大），且末帧中心区与首帧差异显著。
-      if (createHash("sha256").update(firstBytes).digest("hex") ===
-          createHash("sha256").update(lastBytes).digest("hex"))
+      if (
+        createHash("sha256").update(firstBytes).digest("hex") ===
+        createHash("sha256").update(lastBytes).digest("hex")
+      )
         fail(`${aspect} zoom`, "首尾帧完全一致（未见推近运动）");
     } else if (shot.name === "still") {
       // 静止：h264 有损编码下逐字节比较不可靠——用 SSIM 判定（≥0.995
@@ -201,8 +236,15 @@ for (const aspect of ["landscape", "portrait"]) {
   const probe = JSON.parse(
     execFileSync(
       "ffprobe",
-      ["-v", "error", "-show_entries", "stream=width,height",
-        "-of", "json", path.join(renderDir, `${aspect}.mp4`)],
+      [
+        "-v",
+        "error",
+        "-show_entries",
+        "stream=width,height",
+        "-of",
+        "json",
+        path.join(renderDir, `${aspect}.mp4`),
+      ],
       { encoding: "utf8" },
     ),
   );

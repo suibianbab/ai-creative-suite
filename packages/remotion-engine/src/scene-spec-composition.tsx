@@ -121,6 +121,12 @@ export type TimelineMediaProps = {
   motion?: "still" | "zoom-in" | "zoom-out" | "pan-left" | "pan-right";
   /** 任务 1：图片资产——<Img> 渲染（无 trimBefore/音轨语义）。 */
   isImage?: boolean;
+  /** 任务 3：图片镜受控文字叠加（标题/卖点；缺省无）。 */
+  overlay?: {
+    title: string;
+    position: "top" | "center" | "bottom";
+    enterMs: number;
+  };
 };
 
 export type TimelineShotProps = {
@@ -151,7 +157,7 @@ export type TimelineProps = {
 // 画幅宽高 useVideoConfig 现算——两画幅共用同一份 props。
 const MediaClipLayer: FC<{ shot: TimelineShotProps }> = ({ shot }) => {
   const media = shot.media!;
-  const { width, height } = useVideoConfig();
+  const { width, height, fps: FPS } = useVideoConfig();
   // 任务 2：Sequence 内取本地帧 → 运动进度（0..1，末帧=1）。变换来自
   // video-scene 单源 mediaMotionTransform，预览与出片同一份。
   const localFrame = useCurrentFrame();
@@ -192,8 +198,71 @@ const MediaClipLayer: FC<{ shot: TimelineShotProps }> = ({ shot }) => {
             style={stageStyle}
           />
         )}
+        {media.overlay ? (
+          <MediaOverlay
+            title={media.overlay.title}
+            position={media.overlay.position}
+            // 本地帧毫秒 → 淡入进度（enterMs 后恒 1）。
+            opacity={Math.min(
+              1,
+              localFrame / FPS / Math.max(media.overlay.enterMs, 1),
+            )}
+            width={width}
+            height={height}
+          />
+        ) : null}
       </div>
     </Sequence>
+  );
+};
+
+// 任务 3：图片镜文字叠加——位置三档（顶部/居中/底部），药丸底衬保证
+// 任意图片上的可读性；字号随画幅等比。位置避开运动变换（叠加在运动
+// 容器之上、不随 scale/translate 抖动——文字是编排层不是画面内容）。
+const MediaOverlay: FC<{
+  title: string;
+  position: "top" | "center" | "bottom";
+  opacity: number;
+  width: number;
+  height: number;
+}> = ({ title, position, opacity, width, height }) => {
+  const fontSize = Math.round(height * (width > height ? 0.055 : 0.05));
+  const bandHeight = Math.round(fontSize * 2.6);
+  const placement =
+    position === "top"
+      ? { top: Math.round(height * 0.06) }
+      : position === "center"
+        ? { top: "50%", transform: "translateY(-50%)" }
+        : { bottom: Math.round(height * 0.075) };
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: 0,
+        right: 0,
+        display: "flex",
+        justifyContent: "center",
+        pointerEvents: "none",
+        opacity,
+        ...placement,
+      }}
+    >
+      <span
+        style={{
+          background: "rgba(27,25,23,0.55)",
+          borderRadius: Math.round(height * 0.018),
+          padding: `${Math.round(height * 0.008)}px ${Math.round(height * 0.022)}px`,
+          color: "#ffffff",
+          fontWeight: 600,
+          fontSize,
+          lineHeight: 1.35,
+          whiteSpace: "nowrap",
+          minHeight: bandHeight * 0,
+        }}
+      >
+        {title}
+      </span>
+    </div>
   );
 };
 

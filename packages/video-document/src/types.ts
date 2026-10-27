@@ -21,6 +21,14 @@ export type SceneSource =
       /** 任务 2（2026-10-28）：受控基础运动（五档，缺省静止）。图片镜头
        *  的克制动效；视频镜头缺省不变（旧项目零迁移）。 */
       motion?: "still" | "zoom-in" | "zoom-out" | "pan-left" | "pan-right";
+      /** 任务 3（2026-10-28）：图片镜上的受控文字叠加（标题/卖点）。
+       *  Logo/包装文字保留源图不重绘——叠加是新增文字，不是重绘内容；
+       *  位置/时段受控枚举，不做自由排版。 */
+      overlay?: {
+        title: string; // 1..24 字
+        position: "top" | "center" | "bottom";
+        enterMs: number; // 0..5000（叠加淡入）
+      };
     }
   | {
       // —— P3-B 3D 镜头：程序化场景源。平台只解析字段、不 eval；

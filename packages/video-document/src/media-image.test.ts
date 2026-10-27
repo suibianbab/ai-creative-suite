@@ -207,3 +207,89 @@ test("motion 字段：五档合法、未知值拒绝", () => {
     /motion/,
   );
 });
+
+// 任务 3：overlay 校验（title 长度/位置枚举/enterMs 界）。
+test("overlay：合法通过、越界拒绝并点名", () => {
+  assert.doesNotThrow(() =>
+    validateVideoProject(
+      projectWith(
+        [imageAsset()],
+        [
+          {
+            source: {
+              type: "media-clip",
+              ...IMG_CLIP,
+              overlay: {
+                title: "轻便保温杯",
+                position: "bottom",
+                enterMs: 400,
+              },
+            },
+          },
+        ],
+      ),
+    ),
+  );
+  assert.throws(
+    () =>
+      validateVideoProject(
+        projectWith(
+          [imageAsset()],
+          [
+            {
+              source: {
+                type: "media-clip",
+                ...IMG_CLIP,
+                overlay: { title: "", position: "bottom" as const, enterMs: 0 },
+              },
+            },
+          ],
+        ),
+      ),
+    /overlay.title/,
+  );
+  assert.throws(
+    () =>
+      validateVideoProject(
+        projectWith(
+          [imageAsset()],
+          [
+            {
+              source: {
+                type: "media-clip",
+                ...IMG_CLIP,
+                overlay: {
+                  title: "X",
+                  position: "middle" as never,
+                  enterMs: 0,
+                },
+              },
+            },
+          ],
+        ),
+      ),
+    /overlay.position/,
+  );
+  assert.throws(
+    () =>
+      validateVideoProject(
+        projectWith(
+          [imageAsset()],
+          [
+            {
+              source: {
+                type: "media-clip",
+                ...IMG_CLIP,
+                overlay: {
+                  title: "X",
+                  position: "top" as const,
+                  enterMs: 9000,
+                },
+              },
+            },
+          ],
+        ),
+      ),
+    /overlay.enterMs/,
+  );
+});

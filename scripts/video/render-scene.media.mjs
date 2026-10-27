@@ -11,8 +11,7 @@ const { roundHalfUp } = await import(
 );
 
 // 任务 1：图片键位（png/jpg/webp）与视频键位并存。
-const STORE_KEY_PATTERN =
-  /^[0-9a-f]{16}\.(mp4|webm|mov|png|jpg|webp)$/;
+const STORE_KEY_PATTERN = /^[0-9a-f]{16}\.(mp4|webm|mov|png|jpg|webp)$/;
 
 // G1：media 镜头 → entry（含账本资产快照）。问题收集不抛——调用方统一大声拒。
 export function collectMediaShots(project, mediaAssets) {
@@ -60,6 +59,7 @@ export function collectMediaShots(project, mediaAssets) {
         focalX: media.focalX,
         motion: media.motion,
         audio: media.audio,
+        overlay: media.overlay,
       },
       asset: {
         assetId: asset.assetId,
@@ -100,6 +100,8 @@ export function buildTimelineShotMedia(entry, src, fps) {
       // 任务 2：受控运动 + 图片判别（渲染层选 <Img> vs OffthreadVideo）。
       motion: entry.media.motion,
       isImage: entry.asset.isImage === true,
+      // 任务 3：文字叠加透传。
+      overlay: entry.media.overlay,
     },
   };
 }

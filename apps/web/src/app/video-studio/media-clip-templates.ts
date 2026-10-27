@@ -29,6 +29,9 @@ export type MediaEditDraft = {
   audio: "mute" | "keep";
   // 任务 2（2026-10-28）：受控基础运动（缺省静止；图片/视频同枚举）。
   motion?: "still" | "zoom-in" | "zoom-out" | "pan-left" | "pan-right";
+  // 任务 3：图片镜文字叠加（标题 1..24 字；空串=无叠加）。
+  overlayTitle?: string;
+  overlayPosition?: "top" | "center" | "bottom";
 };
 
 // P2.5-T5：素材直接落成媒体镜头时的默认草稿（stock 导入共用最小默认值）。
@@ -64,6 +67,8 @@ export function mediaDraftForAsset(
     focalPercentText: "50",
     audio: "mute",
     motion: "still",
+    overlayTitle: "",
+    overlayPosition: "bottom",
   };
 }
 
@@ -84,6 +89,8 @@ export function draftMediaFromVersion(
         focalPercentText: String(Math.round(media.focalX * 100)),
         audio: media.audio,
         motion: media.motion,
+        overlayTitle: media.overlay?.title,
+        overlayPosition: media.overlay?.position,
       },
       error: null,
     };
@@ -211,6 +218,24 @@ export function buildMediaRevisePatch(
       warnings: [],
     };
   }
+  // 任务 3：叠加标题非空 → overlay 落库（enterMs 固定 400，淡入口径同
+  // 字幕带）；空串不写键（旧口径）。超长在行内拒（schema 24 字）。
+  const overlayTitle = (draft.overlayTitle ?? "").trim();
+  if (overlayTitle.length > 24) {
+    return {
+      patch: null,
+      error: "叠加标题须为 1..24 字（空=无叠加）",
+      warnings: [],
+    };
+  }
+  const overlay =
+    overlayTitle === ""
+      ? undefined
+      : {
+          title: overlayTitle,
+          position: draft.overlayPosition ?? "bottom",
+          enterMs: 400,
+        };
   return {
     patch: {
       narrationText,
@@ -223,6 +248,15 @@ export function buildMediaRevisePatch(
         audio: draft.audio,
         // 任务 2：运动随版本落库（缺省不写键=旧口径）。
         ...(draft.motion !== undefined ? { motion: draft.motion } : {}),
+        ...(overlay
+          ? {
+              overlay: {
+                title: overlay.title,
+                position: overlay.position,
+                enterMs: overlay.enterMs,
+              },
+            }
+          : {}),
       },
     },
     error: null,

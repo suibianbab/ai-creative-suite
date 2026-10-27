@@ -151,6 +151,8 @@ const EMPTY_MEDIA_DRAFT: MediaEditDraft = {
   focalPercentText: "50",
   audio: "mute",
   motion: "still",
+  overlayTitle: "",
+  overlayPosition: "bottom",
 };
 
 // 媒体/3D→spec 换装的合成基底：resolveAnyTemplate 会覆写 componentId/params，
@@ -2581,6 +2583,43 @@ export function ShotEditorCard({
                   <option value="pan-right">向右平移</option>
                 </select>
               </label>
+              <label className="shot-edit-field">
+                叠加标题
+                <input
+                  className="media-overlay-title-input"
+                  placeholder="留空=无叠加（Logo 等请保留在源图）"
+                  value={mediaDraft?.overlayTitle ?? ""}
+                  onChange={(event) =>
+                    setMediaDraft({
+                      ...(mediaDraft ?? EMPTY_MEDIA_DRAFT),
+                      overlayTitle: event.target.value,
+                    })
+                  }
+                />
+              </label>
+              {mediaDraft?.overlayTitle?.trim() ? (
+                <label className="shot-edit-field">
+                  叠加位置
+                  <select
+                    className="media-overlay-position-select"
+                    value={mediaDraft?.overlayPosition ?? "bottom"}
+                    onChange={(event) =>
+                      setMediaDraft({
+                        ...(mediaDraft ?? EMPTY_MEDIA_DRAFT),
+                        overlayPosition:
+                          event.target.value === "top" ||
+                          event.target.value === "center"
+                            ? event.target.value
+                            : "bottom",
+                      })
+                    }
+                  >
+                    <option value="top">顶部</option>
+                    <option value="center">居中</option>
+                    <option value="bottom">底部</option>
+                  </select>
+                </label>
+              ) : null}
               {mediaWarnings.map((warning) => (
                 <p key={warning} className="media-warning" role="status">
                   {warning}

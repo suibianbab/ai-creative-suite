@@ -1869,3 +1869,29 @@
   margin: 0 0 8px;
   padding-left: 18px;
 }
+
+/* 任务 3：图片镜文字叠加（药丸底衬三档位；与出片 MediaOverlay 同口径）。 */
+.media-overlay {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(27, 25, 23, 0.55);
+  border-radius: 999px;
+  padding: 0.6em 1.4em;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 2.6cqw;
+  line-height: 1.35;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.media-overlay-top {
+  top: 6%;
+}
+.media-overlay-center {
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+.media-overlay-bottom {
+  bottom: 8%;
+}

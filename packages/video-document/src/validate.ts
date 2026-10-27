@@ -289,6 +289,32 @@ function validateSceneSource(
         `${field}.sceneSource.motion 须为 still/zoom-in/zoom-out/pan-left/pan-right`,
       );
     }
+    // 任务 3：图片镜文字叠加（受控位置/时段；缺省无叠加=旧口径）。
+    if (value.overlay !== undefined) {
+      const ov = value.overlay;
+      if (!isRecord(ov)) fail(`${field}.sceneSource.overlay must be an object`);
+      if (
+        typeof ov.title !== "string" ||
+        ov.title.length < 1 ||
+        ov.title.length > 24
+      ) {
+        fail(`${field}.sceneSource.overlay.title 须为 1..24 字`);
+      }
+      if (
+        ov.position !== "top" &&
+        ov.position !== "center" &&
+        ov.position !== "bottom"
+      ) {
+        fail(`${field}.sceneSource.overlay.position 须为 top/center/bottom`);
+      }
+      if (
+        !Number.isInteger(ov.enterMs) ||
+        (ov.enterMs as number) < 0 ||
+        (ov.enterMs as number) > 5000
+      ) {
+        fail(`${field}.sceneSource.overlay.enterMs 须为 0..5000 的整数`);
+      }
+    }
     return;
   }
   // —— P3-B 3D 镜头：平台只做形状校验、不 eval；params 深度校验交给烘焙期注册表。——

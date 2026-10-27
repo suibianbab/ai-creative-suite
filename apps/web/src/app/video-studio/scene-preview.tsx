@@ -300,6 +300,12 @@ export type TimelinePreviewItem =
       focalX: number;
       // 任务 2：预览携带受控运动（出片同款五档）。
       motion?: "still" | "zoom-in" | "zoom-out" | "pan-left" | "pan-right";
+      // 任务 3：预览携带文字叠加。
+      overlay?: {
+        title: string;
+        position: "top" | "center" | "bottom";
+        enterMs: number;
+      };
       startFrame: number;
       frames: number;
       narrationText?: string;
@@ -470,6 +476,11 @@ function MediaStage({
     );
     const progress = frames > 1 ? localFrame / (frames - 1) : 1;
     const transform = mediaMotionTransform(item.motion, progress);
+    // 任务 3：叠加淡入进度（enterMs 后恒 1）——与出片同公式。
+    const overlayMs = (localFrame / EXPORT_FPS) * 1000;
+    const overlayOpacity = item.overlay
+      ? Math.min(1, overlayMs / Math.max(item.overlay.enterMs, 1))
+      : 0;
     return (
       <div
         className="media-motion"
@@ -482,6 +493,20 @@ function MediaStage({
           alt=""
           onError={() => setFailed(true)}
         />
+        {item.overlay ? (
+          <span
+            className={
+              item.overlay.position === "top"
+                ? "media-overlay media-overlay-top"
+                : item.overlay.position === "center"
+                  ? "media-overlay media-overlay-center"
+                  : "media-overlay media-overlay-bottom"
+            }
+            style={{ opacity: overlayOpacity }}
+          >
+            {item.overlay.title}
+          </span>
+        ) : null}
       </div>
     );
   }

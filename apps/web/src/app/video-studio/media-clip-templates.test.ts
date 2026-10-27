@@ -93,6 +93,8 @@ test("M2：media 工作版本 → 草稿回填（focal 取整为百分数）", (
     focalPercentText: "33",
     audio: "keep",
     motion: undefined,
+    overlayTitle: undefined,
+    overlayPosition: undefined,
   });
 });
 
@@ -110,6 +112,8 @@ test("M2：非 media 版本 + 有账本 → 默认草稿（outMs=min(2000, 时�
     focalPercentText: "50",
     audio: "mute",
     motion: "still",
+    overlayTitle: "",
+    overlayPosition: "bottom",
   });
   const short = asset();
   videoOriginal(short).durationMs = 1200;
@@ -278,6 +282,8 @@ test("M7：mediaDraftForAsset 默认草稿全值（入点 0 / 出点 min(2000, �
     focalPercentText: "50",
     audio: "mute",
     motion: "still",
+    overlayTitle: "",
+    overlayPosition: "bottom",
   });
 });
 
