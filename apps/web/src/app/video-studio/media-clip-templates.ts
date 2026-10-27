@@ -30,11 +30,22 @@ export type MediaEditDraft = {
 };
 
 // P2.5-T5：素材直接落成媒体镜头时的默认草稿（stock 导入共用最小默认值）。
-export function mediaDraftForAsset(asset: MediaAsset): MediaEditDraft {
+// N6：种子出点按旁白语速需求取 max(2000, 400+300×字)（素材够长时）——
+// 固定 2000 会给长旁白镜头埋下「出片期才爆旁白溢出」的远距离失败。
+export function mediaDraftForAsset(
+  asset: MediaAsset,
+  narrationText?: string,
+): MediaEditDraft {
+  const narrationMs =
+    narrationText === undefined
+      ? 2000
+      : speechAwareDurationMs(2000, narrationText);
   return {
     assetId: asset.assetId,
     inMsText: "0",
-    outMsText: String(Math.min(2000, asset.original.durationMs)),
+    outMsText: String(
+      Math.min(Math.max(2000, narrationMs), asset.original.durationMs),
+    ),
     fit: "cover",
     focalPercentText: "50",
     audio: "mute",
@@ -42,7 +53,9 @@ export function mediaDraftForAsset(asset: MediaAsset): MediaEditDraft {
 }
 
 export function draftMediaFromVersion(
-  working: { sceneSource: SceneSource; durationMs: number } | undefined,
+  working:
+    | { sceneSource: SceneSource; durationMs: number; narrationText?: string }
+    | undefined,
   assets: MediaAsset[],
 ): { draft: MediaEditDraft | null; error: string | null } {
   if (working && working.sceneSource.type === "media-clip") {
@@ -63,7 +76,10 @@ export function draftMediaFromVersion(
   if (!first) {
     return { draft: null, error: "项目尚无媒体素材，请先在素材面板上传" };
   }
-  return { draft: mediaDraftForAsset(first), error: null };
+  return {
+    draft: mediaDraftForAsset(first, working?.narrationText),
+    error: null,
+  };
 }
 
 export function buildMediaRevisePatch(
@@ -139,13 +155,21 @@ export function buildMediaRevisePatch(
   if ((inMs * fps) % 1000 !== 0 || (outMs * fps) % 1000 !== 0) {
     warnings.push(`入/出点非整帧（素材 ${fps}fps），出片将按帧取整`);
   }
-  // M5 语速溢出（与 shot-edit 同一速度模型；对齐语义归 T4，不自动改时长）
+  // M5→N6 语速溢出：从预警升级为应用时错误——非阻断版本会把「片段装不下
+  // 旁白」拖到出片期 500（绑定动作离反馈太远，混合样片实测）。素材够长
+  // 时扩出点即可；不够长则精简旁白。种子出点已按预算扩（mediaDraftForAsset）。
   const spanMs = outMs - inMs;
   const neededMs = speechAwareDurationMs(spanMs, narrationText);
   if (neededMs > spanMs) {
-    warnings.push(
-      `旁白按语速需 ${(neededMs / 1000).toFixed(1)}s，超出片段 ${(spanMs / 1000).toFixed(1)}s`,
-    );
+    const headroom = asset.original.durationMs - inMs;
+    return {
+      patch: null,
+      error:
+        headroom >= neededMs
+          ? `旁白按语速需 ${(neededMs / 1000).toFixed(1)}s，超出片段 ${(spanMs / 1000).toFixed(1)}s：请把出点扩到 ≥${inMs + neededMs}ms（素材最长 ${asset.original.durationMs}ms）`
+          : `旁白按语速需 ${(neededMs / 1000).toFixed(1)}s，素材剩余仅 ${(headroom / 1000).toFixed(1)}s：请精简旁白或换更长的素材`,
+      warnings: [],
+    };
   }
   return {
     patch: {

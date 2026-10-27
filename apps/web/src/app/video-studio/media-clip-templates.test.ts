@@ -205,11 +205,12 @@ test("M4：非整帧 → 软预警不阻塞；整帧 → 无预警", () => {
   assert.deepEqual(on.warnings, []);
 });
 
-test("M5：旁白语速超片段 → 软预警；短旁白无预警", () => {
+test("M5→N6：旁白语速超片段 → 应用时错误（不再软预警）；短旁白正常", () => {
   const long = buildMediaRevisePatch(draft(), [asset()], "一".repeat(20)); // 400+300×20 ≫ 2000ms
-  assert.ok(long.warnings.some((w) => /超出片段/.test(w)));
+  assert.equal(long.patch, null);
+  assert.match(String(long.error), /旁白按语速需|精简旁白/);
   const short = buildMediaRevisePatch(draft(), [asset()], "短句"); // 400+600 < 2000ms
-  assert.ok(!short.warnings.some((w) => /超出片段/.test(w)));
+  assert.ok(short.patch);
 });
 
 test("M3：fit/audio 非法枚举兜底拒", () => {
@@ -256,4 +257,38 @@ test("M7：mediaDraftForAsset 短素材 outMsText 取素材时长", () => {
   const short = asset();
   short.original.durationMs = 1200;
   assert.equal(mediaDraftForAsset(short).outMsText, "1200");
+});
+
+
+// N6（2026-10-27）：绑定动作处的旁白预算对齐——种子出点按旁白语速需求
+// 扩到 max(2000, 400+300×字)（素材够长时），应用时跨度不足 fail-fast
+// （不再拖到出片 500）。
+test("N6：媒体草稿种子按旁白预算扩出点", () => {
+  const a = asset();
+  // 8 字旁白 → 400+2400=2800ms；素材 5000ms 够长 → 种子出点 2800。
+  const seeded = mediaDraftForAsset(a, "八个字的旁白文本");
+  assert.equal(seeded.outMsText, "2800");
+  // 短旁白维持 2000 下限。
+  assert.equal(mediaDraftForAsset(a, "两字").outMsText, "2000");
+  // 素材不够长 → 取素材全长。
+  const short = { ...a, original: { ...a.original, durationMs: 2300 } };
+  assert.equal(mediaDraftForAsset(short, "八个字的旁白文本").outMsText, "2300");
+});
+
+test("N6：应用时片段跨度低于旁白预算 → 可操作错误（不落版本）", () => {
+  const built = buildMediaRevisePatch(
+    draft({ inMsText: "0", outMsText: "2000" }),
+    [asset()],
+    "八个字的旁白文本",
+  );
+  assert.equal(built.patch, null);
+  assert.match(String(built.error), /2800|旁白/);
+  assert.match(String(built.error), /把出点扩到|精简旁白/);
+  // 跨度足够 → 正常出 patch。
+  const ok = buildMediaRevisePatch(
+    draft({ inMsText: "0", outMsText: "2800" }),
+    [asset()],
+    "八个字的旁白文本",
+  );
+  assert.ok(ok.patch);
 });

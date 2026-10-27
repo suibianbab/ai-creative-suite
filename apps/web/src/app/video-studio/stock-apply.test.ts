@@ -162,12 +162,13 @@ test("U5 成功：追加账本 + 默认媒体工作版本 + 旁白沿用，save 
     type: "media-clip",
     mediaAssetId: ASSET_ID,
     inMs: 0,
-    outMs: 2000,
+    // N6：种子出点按旁白预算扩（6 字 → 400+300×6=2200ms）。
+    outMs: 2200,
     fit: "cover",
     focalX: 0.5,
     audio: "mute",
   });
-  assert.equal(working.durationMs, 2000, "durationMs = outMs − inMs");
+  assert.equal(working.durationMs, 2200, "durationMs = outMs − inMs");
   validateVideoProject(saved);
 
   assert.equal(latest.mediaAssets, undefined, "入参文档不得被修改");

@@ -1,0 +1,48 @@
+{
+  "sentence": "做一条约30秒的城市共享单车科普短片：用柱状图展示骑行量——北京年骑行从120万次涨到350万次，配一段真实街拍骑行画面，讲三步开锁流程，最后用数字强调每年减碳80万吨",
+  "totalMs": 21600,
+  "shots": [
+    {
+      "index": 0,
+      "source": "spec",
+      "component": "text-animation",
+      "versions": 1,
+      "narration": "城市绿色出行新方式"
+    },
+    {
+      "index": 1,
+      "source": "spec",
+      "component": "bar-chart",
+      "versions": 1,
+      "narration": "北京骑行量从120万到350万"
+    },
+    {
+      "index": 2,
+      "source": "media-clip",
+      "versions": 2,
+      "narration": "街头骑行，自然流畅"
+    },
+    {
+      "index": 3,
+      "source": "spec",
+      "component": "flow-steps",
+      "versions": 2,
+      "narration": "扫一扫、验个脸、咔哒开"
+    },
+    {
+      "index": 4,
+      "source": "spec",
+      "component": "number-counter",
+      "versions": 1,
+      "narration": "每年减少碳排放80万吨"
+    },
+    {
+      "index": 5,
+      "source": "spec",
+      "component": "text-animation",
+      "versions": 1,
+      "narration": "轻松骑行，守护蓝天"
+    }
+  ],
+  "renderJobId": "d18a78a2-6ce0-4883-9ee8-39f7150f5638"
+}

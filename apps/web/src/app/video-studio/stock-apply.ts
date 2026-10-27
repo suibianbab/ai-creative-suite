@@ -49,7 +49,8 @@ export function applyStockAsset(
     );
   }
   const { patch, error } = buildMediaRevisePatch(
-    mediaDraftForAsset(asset),
+    // N6：种子出点按旁白预算扩（与卡片媒体臂同口径）。
+    mediaDraftForAsset(asset, working.narrationText),
     withAsset.mediaAssets ?? [],
     working.narrationText,
   );

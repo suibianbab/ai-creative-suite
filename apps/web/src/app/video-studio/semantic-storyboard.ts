@@ -976,6 +976,28 @@ function numeralsOf(text: string): string[] {
   return [...normalized.matchAll(/\d+(?:\.\d+)?/g)].map((m) => m[0]);
 }
 
+// N6 量级词记数法：「120万」与 1200000 是同一数量的两种写法——图表 value
+// 是数字，模型按用户口径换算成绝对值是诚实行为，不是被禁的单位换算。
+// 把「数字串+万/亿」解析为绝对值集，两侧同口径比对；复合 token 的数字
+// 部分不再单独入集（120 ≠ 120万，量级不同即不同数量）。
+function absoluteNumeralsOf(text: string): Set<string> {
+  const normalized = text.replace(/[０-９]/g, (c) =>
+    String.fromCharCode(c.charCodeAt(0) - 0xfee0),
+  );
+  const values = new Set<string>();
+  // 先吃掉复合 token，再扫剩余裸数字（不重叠）。
+  let remaining = normalized.replace(
+    /(\d+(?:\.\d+)?)(万|亿)/g,
+    (_all, digits: string, unit: string) => {
+      const value = Number(digits) * (unit === "亿" ? 1e8 : 1e4);
+      values.add(String(value));
+      return "　"; // 占位，防止数字部分被二次扫描
+    },
+  );
+  for (const m of remaining.matchAll(/\d+(?:\.\d+)?/g)) values.add(m[0]);
+  return values;
+}
+
 // 汉字数值 token（I-1）：一二三…千萬 组合视为数值表述，按原样子集闸——
 // 原话没出现的组合（如「二十五」）不放行，原样引用（原话有「三十」）通过。
 const CHINESE_NUMERAL = /[一二三四五六七八九十百千万]+/g;
@@ -1057,15 +1079,17 @@ export function verifySourcedNumbers(
   shot: SemanticDraftShot,
   userText: string,
 ): string[] {
-  const sourced = new Set(numeralsOf(userText));
+  // N6：两侧都按绝对值集比对（万/亿 复合 token 解析为绝对值）。
+  const sourced = absoluteNumeralsOf(userText);
   const sourcedChinese = new Set(chineseNumeralsOf(userText));
   const errors: string[] = [];
   for (const [label, value] of displayedTexts(shot)) {
     const claims = withoutStructuralOrdinals(value);
-    for (const numeral of numeralsOf(claims)) {
+    const claimed = absoluteNumeralsOf(claims);
+    for (const numeral of claimed) {
       if (sourced.has(numeral)) continue;
       errors.push(
-        `数字「${numeral}」（${label}）不在你的原话里：数值/日期必须原样来自用户输入（差值也用原话数字表述），没给就改用文字表述`,
+        `数字「${numeral}」（${label}）不在你的原话里：数值/日期必须来自用户输入（同一数量可用 万/亿 记数法），没给就改用文字表述`,
       );
     }
     // 汉字数值组合：原话没出现且非结构性序数 → 拒绝（I-1）。

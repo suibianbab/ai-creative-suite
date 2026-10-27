@@ -158,3 +158,62 @@ test("N4 时长下限：图表镜头按组件时序延长", () => {
   // 3 柱：900(生长) + 2×90(逐柱) + 300(值淡入) + 400(停留) = 1780。
   assert.ok(c.plan.spec.durationMs >= 1780, `${c.plan.spec.durationMs}`);
 });
+
+// N6（2026-10-27）：中文量级词记数法——「120万」与 1200000 是同一数量，
+// 闸须认（图表 value 是数字，模型按用户口径换算是诚实行为）；量级不同
+// 仍拒（130万/8000万 冒充 120万/80万）。
+test("N6 数值闸：万/亿 量级词与阿拉伯数字同值互通", () => {
+  const userText = "北京年骑行从120万次涨到350万次，每年减碳80万吨";
+  const okBars = verifySourcedNumbers(
+    {
+      intent: "bar-explainer",
+      title: "骑行量增长",
+      narrationText: "骑行量翻倍增长",
+      durationMs: 4000,
+      bars: [
+        { label: "去年", value: 1200000 },
+        { label: "今年", value: 3500000 },
+      ],
+    },
+    userText,
+  );
+  assert.deepEqual(okBars, []);
+  const okCounter = verifySourcedNumbers(
+    {
+      intent: "counter-explainer",
+      title: "年减碳",
+      narrationText: "减碳可观",
+      durationMs: 3000,
+      value: 800000,
+      suffix: "吨",
+    },
+    userText,
+  );
+  assert.deepEqual(okCounter, []);
+  // 量级不同 → 拒：130万 冒充 120万。
+  const wrong = verifySourcedNumbers(
+    {
+      intent: "counter-explainer",
+      title: "年减碳",
+      narrationText: "减碳",
+      durationMs: 3000,
+      value: 1300000,
+    },
+    userText,
+  );
+  assert.ok(wrong.some((e) => /1300000/.test(e)), wrong.join("; "));
+  // 亿 同理：1.2亿 → 120000000。
+  assert.deepEqual(
+    verifySourcedNumbers(
+      {
+        intent: "counter-explainer",
+        title: "用户量",
+        narrationText: "用户多",
+        durationMs: 3000,
+        value: 120000000,
+      },
+      "平台用户1.2亿",
+    ),
+    [],
+  );
+});

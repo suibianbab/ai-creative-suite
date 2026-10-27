@@ -436,6 +436,8 @@ export function ShotEditorCard({
   // P2.5-T3 媒体草稿（第七族）：素材/入出点/fit/注视点/原声，校验与预警全走
   // media-clip-templates.ts 纯逻辑，非法草稿不回调。
   const [mediaDraft, setMediaDraft] = useState<MediaEditDraft | null>(
+    // N6：working 是完整 ContentVersion（含 narrationText），种子出点
+    // 按旁白预算扩（mediaDraftForAsset），长旁白不再默认 2000ms 埋雷。
     () => draftMediaFromVersion(working, mediaAssets).draft,
   );
   const [mediaError, setMediaError] = useState<string | null>(null);
@@ -800,7 +802,10 @@ export function ShotEditorCard({
                 if (templateId === THREE_TEMPLATE_ID) return;
                 // 第七族「媒体」：不走六族换装，选中即播种媒体草稿
                 if (templateId === MEDIA_TEMPLATE_ID) {
-                  const seeded = draftMediaFromVersion(working, mediaAssets);
+                  const seeded = draftMediaFromVersion(
+                    { ...working, narrationText: draft.narrationText },
+                    mediaAssets,
+                  );
                   setMediaDraft(seeded.draft);
                   setMediaError(seeded.error);
                   setMediaWarnings([]);
