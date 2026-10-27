@@ -18,6 +18,9 @@ export type SceneSource =
       fit: "cover" | "contain";
       focalX: number; // 0..1，cover 裁切注视点（contain 时忽略）
       audio: "mute" | "keep"; // keep = 原声与 TTS 旁白混音
+      /** 任务 2（2026-10-28）：受控基础运动（五档，缺省静止）。图片镜头
+       *  的克制动效；视频镜头缺省不变（旧项目零迁移）。 */
+      motion?: "still" | "zoom-in" | "zoom-out" | "pan-left" | "pan-right";
     }
   | {
       // —— P3-B 3D 镜头：程序化场景源。平台只解析字段、不 eval；

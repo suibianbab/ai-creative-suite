@@ -150,6 +150,7 @@ const EMPTY_MEDIA_DRAFT: MediaEditDraft = {
   fit: "cover",
   focalPercentText: "50",
   audio: "mute",
+  motion: "still",
 };
 
 // 媒体/3D→spec 换装的合成基底：resolveAnyTemplate 会覆写 componentId/params，
@@ -2548,6 +2549,36 @@ export function ShotEditorCard({
                 >
                   <option value="mute">静音（预览/出片均不带原声）</option>
                   <option value="keep">保留（出片与旁白混音，T4 兑现）</option>
+                </select>
+              </label>
+              <label className="shot-edit-field">
+                运动
+                <select
+                  className="media-motion-select"
+                  value={mediaDraft?.motion ?? "still"}
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    setMediaDraft({
+                      ...(mediaDraft ?? EMPTY_MEDIA_DRAFT),
+                      motion: (
+                        [
+                          "still",
+                          "zoom-in",
+                          "zoom-out",
+                          "pan-left",
+                          "pan-right",
+                        ] as const
+                      ).includes(value as never)
+                        ? (value as MediaEditDraft["motion"])
+                        : "still",
+                    });
+                  }}
+                >
+                  <option value="still">静止</option>
+                  <option value="zoom-in">缓慢推近</option>
+                  <option value="zoom-out">缓慢拉远</option>
+                  <option value="pan-left">向左平移</option>
+                  <option value="pan-right">向右平移</option>
                 </select>
               </label>
               {mediaWarnings.map((warning) => (

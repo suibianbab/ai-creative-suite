@@ -29,15 +29,17 @@ export function collectMediaShots(project, mediaAssets) {
       );
       continue;
     }
+    // 任务 1/2（2026-10-28）：图片资产无音轨/时长——展示时长由镜头给定。
+    const isImage = asset.original.kind === "image";
     // T4 终评 Important：audio=keep 是「保留素材原声」，素材本身无音轨时
     // 既不能静默丢原声（有旁白时会成功但少一轨），也不该等整片渲完才失败。
-    if (media.audio === "keep" && !asset.original.hasAudio) {
+    if (!isImage && media.audio === "keep" && !asset.original.hasAudio) {
       problems.push(
         `镜头 ${shotIndex + 1} 原声设为保留但素材无音轨：${asset.assetId}（${asset.original.storeKey}，请改为静音或更换有音轨的素材）`,
       );
       continue;
     }
-    if (media.outMs > asset.original.durationMs) {
+    if (!isImage && media.outMs > asset.original.durationMs) {
       problems.push(
         `镜头 ${shotIndex + 1} 片段出点 ${media.outMs}ms 超素材时长 ${asset.original.durationMs}ms（媒体镜头时长=出点−入点，出点以素材时长为上限）`,
       );
@@ -54,6 +56,7 @@ export function collectMediaShots(project, mediaAssets) {
         outMs: media.outMs,
         fit: media.fit,
         focalX: media.focalX,
+        motion: media.motion,
         audio: media.audio,
       },
       asset: {
@@ -62,8 +65,11 @@ export function collectMediaShots(project, mediaAssets) {
         sha256: asset.original.sha256,
         width: asset.original.width,
         height: asset.original.height,
-        fps: asset.original.fps,
-        durationMs: asset.original.durationMs,
+        // 图片无帧率/时长：fps 出片恒 24（OffthreadVideo 不参与）、
+        // durationMs 记账本统一上限（G3 校验已按 isImage 跳过）。
+        fps: isImage ? 24 : asset.original.fps,
+        durationMs: isImage ? 600000 : asset.original.durationMs,
+        isImage,
       },
     });
   }
@@ -89,6 +95,9 @@ export function buildTimelineShotMedia(entry, src, fps) {
       focalX: entry.media.focalX,
       audio: entry.media.audio,
       trimBefore: mediaTrimBefore(entry.media.inMs, fps),
+      // 任务 2：受控运动 + 图片判别（渲染层选 <Img> vs OffthreadVideo）。
+      motion: entry.media.motion,
+      isImage: entry.asset.isImage === true,
     },
   };
 }

@@ -239,7 +239,10 @@ test("不足 200 毫秒的媒体原件在创建镜头前拒绝", () => {
   const shortAsset: MediaAsset = {
     ...exampleAsset,
     original: {
-      ...(exampleAsset.original as Extract<MediaAsset["original"], { kind?: "video" }>),
+      ...(exampleAsset.original as Extract<
+        MediaAsset["original"],
+        { kind?: "video" }
+      >),
       durationMs: 150,
     },
   };
@@ -259,7 +262,10 @@ test("终审修复：短素材时长契约（durationMs=outMs−inMs）、稀疏
     ...exampleAsset,
     assetId: "22222222-3333-4333-8444-555555555555",
     original: {
-      ...(exampleAsset.original as Extract<MediaAsset["original"], { kind?: "video" }>),
+      ...(exampleAsset.original as Extract<
+        MediaAsset["original"],
+        { kind?: "video" }
+      >),
       durationMs: 2500,
     },
   };

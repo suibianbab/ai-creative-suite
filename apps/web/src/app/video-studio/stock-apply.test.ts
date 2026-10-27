@@ -31,9 +31,7 @@ const DERIVATIVE_URL =
 const AT = "2026-10-20T00:00:00.000Z";
 
 function stockAsset(
-  overrides: Partial<
-    Extract<MediaAsset["original"], { kind?: "video" }>
-  > = {},
+  overrides: Partial<Extract<MediaAsset["original"], { kind?: "video" }>> = {},
 ): MediaAsset {
   return {
     assetId: ASSET_ID,
@@ -166,7 +164,9 @@ test("U5 成功：追加账本 + 默认媒体工作版本 + 旁白沿用，save 
     mediaAssetId: ASSET_ID,
     inMs: 0,
     // N6：种子出点按旁白预算扩（6 字 → 400+300×6=2200ms）。
+    // 任务 2：种子默认带 motion: "still"（与 UI 默认一致）。
     outMs: 2200,
+    motion: "still",
     fit: "cover",
     focalX: 0.5,
     audio: "mute",

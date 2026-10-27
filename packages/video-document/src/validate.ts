@@ -43,8 +43,11 @@ function isIsoTime(value: unknown): value is string {
 
 // —— P2.5-T1：媒体资产账本校验（spec A1-A8）。
 // 返回 assetId → durationMs 映射，供 media-clip 出入点与 assetDigests 交叉校验。
-function validateMediaAssets(value: unknown): Map<string, { durationMs: number; isImage: boolean }> {
-  if (value === undefined) return new Map<string, { durationMs: number; isImage: boolean }>();
+function validateMediaAssets(
+  value: unknown,
+): Map<string, { durationMs: number; isImage: boolean }> {
+  if (value === undefined)
+    return new Map<string, { durationMs: number; isImage: boolean }>();
   if (!Array.isArray(value) || value.length > MAX_ARRAY) {
     fail(`mediaAssets must be an array of at most ${MAX_ARRAY} entries`);
   }
@@ -124,9 +127,12 @@ function validateMediaAssets(value: unknown): Map<string, { durationMs: number; 
       if (
         typeof o.storeKey !== "string" ||
         !/^[0-9a-f]{16}\.(png|jpg|webp)$/.test(o.storeKey) ||
-        (o.storeKey as string).slice(0, 16) !== (o.sha256 as string).slice(0, 16)
+        (o.storeKey as string).slice(0, 16) !==
+          (o.sha256 as string).slice(0, 16)
       ) {
-        fail(`${field}.original.storeKey 须为 sha256 前 16 位 + .png/.jpg/.webp`);
+        fail(
+          `${field}.original.storeKey 须为 sha256 前 16 位 + .png/.jpg/.webp`,
+        );
       }
       // 图片无固有时长：media-clip 出点上限取账本统一上限（展示时长由
       // 镜头给定）；inMs=0 / audio=mute 在 sceneSource 交叉校验里强制。
@@ -251,7 +257,9 @@ function validateSceneSource(
     // 图片素材：无时间轴概念——入点恒 0（出点=展示时长）、无音轨可留。
     if (asset?.isImage) {
       if ((value.inMs as number) !== 0) {
-        fail(`${field}.sceneSource.inMs：图片素材入点必须为 0（出点即展示时长）`);
+        fail(
+          `${field}.sceneSource.inMs：图片素材入点必须为 0（出点即展示时长）`,
+        );
       }
       if (value.audio === "keep") {
         fail(`${field}.sceneSource.audio：图片无音轨，须为 "mute"`);
@@ -270,6 +278,16 @@ function validateSceneSource(
     }
     if (value.audio !== "mute" && value.audio !== "keep") {
       fail(`${field}.sceneSource.audio 须为 "mute" 或 "keep"`);
+    }
+    if (
+      value.motion !== undefined &&
+      !["still", "zoom-in", "zoom-out", "pan-left", "pan-right"].includes(
+        String(value.motion),
+      )
+    ) {
+      fail(
+        `${field}.sceneSource.motion 须为 still/zoom-in/zoom-out/pan-left/pan-right`,
+      );
     }
     return;
   }

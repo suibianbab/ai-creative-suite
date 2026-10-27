@@ -965,6 +965,7 @@ export default function VideoStudioPage() {
                 outMs: media.outMs,
                 fit: media.fit,
                 focalX: media.focalX,
+                motion: media.motion,
                 startFrame: 0,
                 frames: 0,
                 narrationText: meta.narrationText,

@@ -12,8 +12,7 @@ import path from "node:path";
 import { parseArgs } from "node:util";
 
 // 任务 1（2026-10-28）：图片键位与视频键位并存。
-const STORE_KEY_PATTERN =
-  /^[0-9a-f]{16}\.(mp4|webm|mov|png|jpg|webp)$/;
+const STORE_KEY_PATTERN = /^[0-9a-f]{16}\.(mp4|webm|mov|png|jpg|webp)$/;
 const CONTENT_TYPES = {
   ".mp4": "video/mp4",
   ".webm": "video/webm",

@@ -99,42 +99,111 @@ test("旧视频资产（无 kind）继续通过——兼容不回归", () => {
 
 test("图片资产缺字段/坏 storeKey → 拒绝并点名", () => {
   assert.throws(
-    () => validateVideoProject(projectWith([imageAsset({
-      original: { ...imageAsset().original, storeKey: "xxxxxxxxxxxxxxxx.mp4" },
-    })])),
+    () =>
+      validateVideoProject(
+        projectWith([
+          imageAsset({
+            original: {
+              ...imageAsset().original,
+              storeKey: "xxxxxxxxxxxxxxxx.mp4",
+            },
+          }),
+        ]),
+      ),
     /storeKey/,
   );
   assert.throws(
-    () => validateVideoProject(projectWith([imageAsset({
-      original: { ...imageAsset().original, format: "gif" },
-    })])),
+    () =>
+      validateVideoProject(
+        projectWith([
+          imageAsset({
+            original: { ...imageAsset().original, format: "gif" },
+          }),
+        ]),
+      ),
     /format/,
   );
   assert.throws(
-    () => validateVideoProject(projectWith([imageAsset({
-      original: { ...imageAsset().original, width: 0 },
-    })])),
+    () =>
+      validateVideoProject(
+        projectWith([
+          imageAsset({
+            original: { ...imageAsset().original, width: 0 },
+          }),
+        ]),
+      ),
     /width/,
   );
 });
 
 test("图片资产的 media-clip：inMs 须为 0、audio 须 mute；时长无素材上限", () => {
   // 合法：in=0，out=任意展示时长（≤账本统一上限）。
-  assert.doesNotThrow(
-    () => validateVideoProject(projectWith([imageAsset()], [{ source: { type: "media-clip", ...IMG_CLIP } }])),
+  assert.doesNotThrow(() =>
+    validateVideoProject(
+      projectWith(
+        [imageAsset()],
+        [{ source: { type: "media-clip", ...IMG_CLIP } }],
+      ),
+    ),
   );
   // inMs>0 对图片无意义 → 拒。
   assert.throws(
-    () => validateVideoProject(projectWith([imageAsset()], [
-      { source: { type: "media-clip", ...IMG_CLIP, inMs: 500 } },
-    ])),
+    () =>
+      validateVideoProject(
+        projectWith(
+          [imageAsset()],
+          [{ source: { type: "media-clip", ...IMG_CLIP, inMs: 500 } }],
+        ),
+      ),
     /inMs.*0|图片/,
   );
   // 图片无音轨 → keep 拒。
   assert.throws(
-    () => validateVideoProject(projectWith([imageAsset()], [
-      { source: { type: "media-clip", ...IMG_CLIP, audio: "keep" } },
-    ])),
+    () =>
+      validateVideoProject(
+        projectWith(
+          [imageAsset()],
+          [{ source: { type: "media-clip", ...IMG_CLIP, audio: "keep" } }],
+        ),
+      ),
     /audio|静音/,
+  );
+});
+
+// 任务 2：media-clip motion 枚举校验。
+test("motion 字段：五档合法、未知值拒绝", () => {
+  for (const motion of [
+    "still",
+    "zoom-in",
+    "zoom-out",
+    "pan-left",
+    "pan-right",
+  ]) {
+    assert.doesNotThrow(() =>
+      validateVideoProject(
+        projectWith(
+          [imageAsset()],
+          [{ source: { type: "media-clip", ...IMG_CLIP, motion } }],
+        ),
+      ),
+    );
+  }
+  assert.throws(
+    () =>
+      validateVideoProject(
+        projectWith(
+          [imageAsset()],
+          [
+            {
+              source: {
+                type: "media-clip",
+                ...IMG_CLIP,
+                motion: "shake" as never,
+              },
+            },
+          ],
+        ),
+      ),
+    /motion/,
   );
 });

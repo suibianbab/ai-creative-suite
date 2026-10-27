@@ -9,6 +9,7 @@ import {
   assertNodeBudget,
   defaultRegistry,
   mediaClipCss,
+  mediaMotionTransform,
   reactSvgAttrs,
   type SceneSpec,
   type SvgNode,
@@ -19,6 +20,7 @@ import { createElement, type FC, type JSX } from "react";
 import {
   AbsoluteFill,
   Audio,
+  Img,
   OffthreadVideo,
   Sequence,
   useCurrentFrame,
@@ -115,6 +117,10 @@ export type TimelineMediaProps = {
   focalX: number;
   audio: "mute" | "keep"; // keep = 原声与旁白轨由 Remotion 音频管线自动混音（B4）
   trimBefore: number;
+  /** 任务 2（2026-10-28）：受控基础运动（缺省静止；视频镜头缺省不变）。 */
+  motion?: "still" | "zoom-in" | "zoom-out" | "pan-left" | "pan-right";
+  /** 任务 1：图片资产——<Img> 渲染（无 trimBefore/音轨语义）。 */
+  isImage?: boolean;
 };
 
 export type TimelineShotProps = {
@@ -146,6 +152,11 @@ export type TimelineProps = {
 const MediaClipLayer: FC<{ shot: TimelineShotProps }> = ({ shot }) => {
   const media = shot.media!;
   const { width, height } = useVideoConfig();
+  // 任务 2：Sequence 内取本地帧 → 运动进度（0..1，末帧=1）。变换来自
+  // video-scene 单源 mediaMotionTransform，预览与出片同一份。
+  const localFrame = useCurrentFrame();
+  const progress = shot.frames > 1 ? localFrame / (shot.frames - 1) : 1;
+  const transform = mediaMotionTransform(media.motion, progress);
   const crop = mediaClipCss(
     media.assetWidth,
     media.assetHeight,
@@ -154,19 +165,34 @@ const MediaClipLayer: FC<{ shot: TimelineShotProps }> = ({ shot }) => {
     media.fit,
     media.focalX,
   );
+  const stageStyle = {
+    width: "100%",
+    height: "100%",
+    objectFit: crop.objectFit,
+    objectPosition: crop.objectPosition,
+  } as const;
   return (
     <Sequence from={shot.startFrame} durationInFrames={shot.frames}>
-      <OffthreadVideo
-        src={media.src}
-        muted={media.audio === "mute"}
-        trimBefore={media.trimBefore}
+      <div
         style={{
           width: "100%",
           height: "100%",
-          objectFit: crop.objectFit,
-          objectPosition: crop.objectPosition,
+          overflow: "hidden",
+          transform,
+          transformOrigin: "center",
         }}
-      />
+      >
+        {media.isImage ? (
+          <Img src={media.src} style={stageStyle} />
+        ) : (
+          <OffthreadVideo
+            src={media.src}
+            muted={media.audio === "mute"}
+            trimBefore={media.trimBefore}
+            style={stageStyle}
+          />
+        )}
+      </div>
     </Sequence>
   );
 };

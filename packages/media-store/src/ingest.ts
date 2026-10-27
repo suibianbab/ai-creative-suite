@@ -36,7 +36,10 @@ import {
 // 任务 1（2026-10-28）：图片入账（png/jpg/webp；jpeg 归一 jpg）。
 const VIDEO_EXTENSIONS = new Set(["mp4", "webm", "mov"]);
 const IMAGE_EXTENSIONS = new Set(["png", "jpg", "jpeg", "webp"]);
-const SUPPORTED_EXTENSIONS = new Set([...VIDEO_EXTENSIONS, ...IMAGE_EXTENSIONS]);
+const SUPPORTED_EXTENSIONS = new Set([
+  ...VIDEO_EXTENSIONS,
+  ...IMAGE_EXTENSIONS,
+]);
 function imageFormatFor(ext: string): "png" | "jpeg" | "webp" {
   if (ext === "png") return "png";
   if (ext === "webp") return "webp";

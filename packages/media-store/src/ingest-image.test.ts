@@ -3,12 +3,7 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import {
-  mkdirSync,
-  mkdtempSync,
-  readdirSync,
-  readFileSync,
-} from "node:fs";
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -18,26 +13,32 @@ const WORK = mkdtempSync(path.join(tmpdir(), "acs-ingest-img-"));
 
 function fixture(name: string, args: string[]): Buffer {
   const file = path.join(WORK, name);
-  const spawned = spawnSync(
-    "ffmpeg",
-    ["-v", "error", "-y", ...args, file],
-    { encoding: "utf8" },
-  );
+  const spawned = spawnSync("ffmpeg", ["-v", "error", "-y", ...args, file], {
+    encoding: "utf8",
+  });
   assert.equal(spawned.status, 0, spawned.stderr);
   return readFileSync(file);
 }
 
 function makePng(): Buffer {
   return fixture("fx.png", [
-    "-f", "lavfi", "-i", "color=c=0x3f7f5f:s=320x240:d=1:r=24",
-    "-frames:v", "1",
+    "-f",
+    "lavfi",
+    "-i",
+    "color=c=0x3f7f5f:s=320x240:d=1:r=24",
+    "-frames:v",
+    "1",
   ]);
 }
 
 function makeJpeg(): Buffer {
   return fixture("fx.jpg", [
-    "-f", "lavfi", "-i", "color=c=0x7f3f5f:s=240x320:d=1:r=24",
-    "-frames:v", "1",
+    "-f",
+    "lavfi",
+    "-i",
+    "color=c=0x7f3f5f:s=240x320:d=1:r=24",
+    "-frames:v",
+    "1",
   ]);
 }
 

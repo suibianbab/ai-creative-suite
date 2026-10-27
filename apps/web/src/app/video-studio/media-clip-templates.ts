@@ -27,6 +27,8 @@ export type MediaEditDraft = {
   fit: "cover" | "contain";
   focalPercentText: string;
   audio: "mute" | "keep";
+  // 任务 2（2026-10-28）：受控基础运动（缺省静止；图片/视频同枚举）。
+  motion?: "still" | "zoom-in" | "zoom-out" | "pan-left" | "pan-right";
 };
 
 // P2.5-T5：素材直接落成媒体镜头时的默认草稿（stock 导入共用最小默认值）。
@@ -61,6 +63,7 @@ export function mediaDraftForAsset(
     fit: "cover",
     focalPercentText: "50",
     audio: "mute",
+    motion: "still",
   };
 }
 
@@ -80,6 +83,7 @@ export function draftMediaFromVersion(
         fit: media.fit,
         focalPercentText: String(Math.round(media.focalX * 100)),
         audio: media.audio,
+        motion: media.motion,
       },
       error: null,
     };
@@ -135,9 +139,10 @@ export function buildMediaRevisePatch(
   if (outMs < inMs + 200 || outMs > assetSpanLimitMs(asset)) {
     return {
       patch: null,
-      error: asset.original.kind === "image"
-        ? `出点越界：图片展示时长须满足 200..${assetSpanLimitMs(asset)}ms（当前 入=${inMs} 出=${outMs}）`
-        : `出点越界：须满足 入点+200 ≤ 出点 ≤ 素材时长 ${asset.original.durationMs}ms（当前 入=${inMs} 出=${outMs}）`,
+      error:
+        asset.original.kind === "image"
+          ? `出点越界：图片展示时长须满足 200..${assetSpanLimitMs(asset)}ms（当前 入=${inMs} 出=${outMs}）`
+          : `出点越界：须满足 入点+200 ≤ 出点 ≤ 素材时长 ${asset.original.durationMs}ms（当前 入=${inMs} 出=${outMs}）`,
       warnings: [],
     };
   }
@@ -161,6 +166,19 @@ export function buildMediaRevisePatch(
   }
   if (draft.audio !== "mute" && draft.audio !== "keep") {
     return { patch: null, error: "audio 须为 mute 或 keep", warnings: [] };
+  }
+  // 任务 2：motion 枚举校验（still/zoom-in/zoom-out/pan-left/pan-right）。
+  if (
+    draft.motion !== undefined &&
+    !["still", "zoom-in", "zoom-out", "pan-left", "pan-right"].includes(
+      draft.motion,
+    )
+  ) {
+    return {
+      patch: null,
+      error: "motion 须为 still/zoom-in/zoom-out/pan-left/pan-right",
+      warnings: [],
+    };
   }
   // 终评 Important：素材无音轨时 keep 无意义——行内拒，避免存进文档后才在
   // 出片阶段大声失败（静默丢原声的旧路径已由渲染期 G1 兜底）。
@@ -203,6 +221,8 @@ export function buildMediaRevisePatch(
         fit: draft.fit,
         focalX: focalPercent / 100,
         audio: draft.audio,
+        // 任务 2：运动随版本落库（缺省不写键=旧口径）。
+        ...(draft.motion !== undefined ? { motion: draft.motion } : {}),
       },
     },
     error: null,

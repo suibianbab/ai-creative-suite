@@ -379,21 +379,19 @@ function describeMismatch(
     typeof asset.original,
     { kind?: "video" }
   >;
-  if (Math.abs(original.durationMs - candidate.durationMs) > DURATION_TOLERANCE_MS) {
+  if (
+    Math.abs(original.durationMs - candidate.durationMs) > DURATION_TOLERANCE_MS
+  ) {
     problems.push(
       `时长不符：候选 ${candidate.durationMs}ms，实际 ${original.durationMs}ms`,
     );
   }
-  if (
-    Math.abs(original.width - derivative.width) > DIMENSION_TOLERANCE_PX
-  ) {
+  if (Math.abs(original.width - derivative.width) > DIMENSION_TOLERANCE_PX) {
     problems.push(
       `宽度不符：档位 ${derivative.width}px，实际 ${original.width}px`,
     );
   }
-  if (
-    Math.abs(original.height - derivative.height) > DIMENSION_TOLERANCE_PX
-  ) {
+  if (Math.abs(original.height - derivative.height) > DIMENSION_TOLERANCE_PX) {
     problems.push(
       `高度不符：档位 ${derivative.height}px，实际 ${original.height}px`,
     );

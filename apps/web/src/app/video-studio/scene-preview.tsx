@@ -34,6 +34,7 @@ import {
 import { mediaSrcUrl } from "./media-assets";
 import {
   mediaClipCss,
+  mediaMotionTransform,
   mediaSeekTargetSec,
   shouldSeekVideo,
 } from "./media-preview";
@@ -297,6 +298,8 @@ export type TimelinePreviewItem =
       outMs: number;
       fit: "cover" | "contain";
       focalX: number;
+      // 任务 2：预览携带受控运动（出片同款五档）。
+      motion?: "still" | "zoom-in" | "zoom-out" | "pan-left" | "pan-right";
       startFrame: number;
       frames: number;
       narrationText?: string;
@@ -460,14 +463,26 @@ function MediaStage({
       item.fit,
       item.focalX,
     );
+    // 任务 2：预览与出片同一变换（mediaMotionTransform 单源）。
+    const frames = Math.max(
+      1,
+      Math.round(((item.outMs - item.inMs) / 1000) * EXPORT_FPS),
+    );
+    const progress = frames > 1 ? localFrame / (frames - 1) : 1;
+    const transform = mediaMotionTransform(item.motion, progress);
     return (
-      <img
-        className="media-stage"
-        src={mediaSrcUrl(asset)}
-        style={css}
-        alt=""
-        onError={() => setFailed(true)}
-      />
+      <div
+        className="media-motion"
+        style={{ transform, transformOrigin: "center" }}
+      >
+        <img
+          className="media-stage"
+          src={mediaSrcUrl(asset)}
+          style={css}
+          alt=""
+          onError={() => setFailed(true)}
+        />
+      </div>
     );
   }
   const css = mediaClipCss(

@@ -27,14 +27,27 @@ mkdirSync(OUT, { recursive: true });
 const pngPath = path.join(OUT, "product-real.png");
 execFileSync(
   "ffmpeg",
-  ["-y", "-v", "error", "-f", "lavfi", "-i",
-    "testsrc=duration=1:size=800x600:rate=24", "-frames:v", "1", pngPath],
+  [
+    "-y",
+    "-v",
+    "error",
+    "-f",
+    "lavfi",
+    "-i",
+    "testsrc=duration=1:size=800x600:rate=24",
+    "-frames:v",
+    "1",
+    pngPath,
+  ],
   { cwd: ROOT },
 );
 
 const browser = await chromium.launch({ headless: true });
 const page = await (
-  await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: "zh-CN" })
+  await browser.newContext({
+    viewport: { width: 1440, height: 900 },
+    locale: "zh-CN",
+  })
 ).newPage();
 const errors = [];
 page.on("console", (m) => {
@@ -53,7 +66,9 @@ async function exportProject(name) {
 }
 
 try {
-  await page.goto(`${BASE_URL}/video-studio`, { waitUntil: "domcontentloaded" });
+  await page.goto(`${BASE_URL}/video-studio`, {
+    waitUntil: "domcontentloaded",
+  });
   await page.waitForSelector("html[data-studio-ready]", { timeout: 20_000 });
   await page.click(".project-create");
   // 固定句式出 3 镜（无需 AI）：含一个素材位的最短路径是先用规则规划，
@@ -68,9 +83,7 @@ try {
   await page.locator(".shot-card").first().waitFor({ timeout: 20_000 });
 
   // —— 上传 PNG ——
-  await page
-    .locator(".media-panel input[type=file]")
-    .setInputFiles(pngPath);
+  await page.locator(".media-panel input[type=file]").setInputFiles(pngPath);
   await page.locator("button.media-upload").click();
   await page
     .locator(".editor-message", { hasText: "素材已上传" })
@@ -161,7 +174,10 @@ try {
     .waitFor({ timeout: 15_000 })
     .catch(async () => {
       const texts = await page.locator(".editor-message").allTextContents();
-      fail("缺失素材错误面", `导入损坏件未见明确错误：${texts.join("|").slice(0, 160)}`);
+      fail(
+        "缺失素材错误面",
+        `导入损坏件未见明确错误：${texts.join("|").slice(0, 160)}`,
+      );
     });
 
   if (errors.length > 0) fail("浏览器控制台", errors.join(" | "));
