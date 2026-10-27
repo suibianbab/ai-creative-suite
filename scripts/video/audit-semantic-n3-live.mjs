@@ -77,7 +77,9 @@ for (const topic of TOPICS) {
       fail(`确认卡预告(${topic.slug})`, `缺「${word}」：${cardText?.slice(0, 200)}`);
   // 数值闸实证：镜头内容（预告/旁白，不含卡片元信息与列表序号）里的
   // 数字必须全部来自原话或两数之差。
-  const numerals = (t) => [...t.matchAll(/\d+(?:\.\d+)?/g)].map((m) => m[0]);
+  const numerals = (t) =>
+    [...t.replace(/[０-９]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0))
+      .matchAll(/\d+(?:\.\d+)?/g)].map((m) => m[0]);
   const userNums = numerals(topic.sentence).map(Number);
   const derivable = new Set();
   for (let i = 0; i < userNums.length; i++)

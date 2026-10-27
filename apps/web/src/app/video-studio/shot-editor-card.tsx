@@ -242,6 +242,8 @@ export type AiReviseCandidate = {
   plan: { ok: true; spec: unknown; title: string; renderHint: string };
   baseVersionId: string;
   totalAfterMs: number;
+  // P2-2（Codex 复核 2026-10-27）：素材需求的图解替代候选须明示并落档。
+  substitutedForAssets?: boolean;
   provenance: {
     provider: string;
     model: string;
@@ -2961,7 +2963,7 @@ export function ShotEditorCard({
                 <button
                   type="button"
                   className="shot-redo-button"
-                  disabled={aiRevise.busy}
+                  disabled={aiRevise.busy || aiInstruction.trim().length === 0}
                   onClick={() => onAiReviseGenerate(aiInstruction.trim(), true)}
                 >
                   改用图解生成
@@ -2975,6 +2977,11 @@ export function ShotEditorCard({
                 AI 修改候选（确认后才写入镜头）：
               </p>
               <ul>
+                {aiRevise.candidate.substitutedForAssets ? (
+                  <li className="shot-ai-substituted">
+                    图解替代：原要求真实素材，本候选为图解表述（将记入版本来源）
+                  </li>
+                ) : null}
                 <li>画面类型：{aiRevise.candidate.label}</li>
                 <li>屏幕文字：{aiRevise.candidate.plan.renderHint}</li>
                 <li>旁白：{aiRevise.candidate.narrationText}</li>

@@ -28,7 +28,10 @@ type ReviseContext = {
 
 // 上下文字段是模型提示词的数据面：一律截断后入提示，防注入/防膨胀。
 function clip(value: unknown, max: number): string {
-  return typeof value === "string" ? value.replace(/\s+/g, " ").slice(0, max) : "";
+  if (typeof value !== "string") return "";
+  // M-6：按码点切片，不劈代理对（emoji 上下文送模型的仍是完整字符）。
+  const squeezed = value.replace(/\s+/g, " ");
+  return [...squeezed].slice(0, max).join("");
 }
 
 function shotSummary(label: string, value: unknown): string {
@@ -61,7 +64,14 @@ export async function POST(request: Request) {
     return Response.json({ error: "请求过长" }, { status: 413 });
   let body: ReviseContext;
   try {
-    body = JSON.parse(await request.text());
+    const raw = await request.text();
+    // M-2：content-length 缺失（chunked）时请求体无界——对原文硬顶。
+    if (raw.length > 4096) throw new Error("too large");
+    const parsed: unknown = JSON.parse(raw);
+    // P2-1（Codex 复核 2026-10-27）：null/数组/原始值统一 400，不触模型。
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed))
+      throw new Error("not an object");
+    body = parsed as ReviseContext;
   } catch {
     return Response.json({ error: "请求格式无效" }, { status: 400 });
   }
@@ -106,8 +116,12 @@ export async function POST(request: Request) {
   if (first.usage) usageCalls.push(first.usage);
 
   // N3 数值防伪造 + IR 非法 → 一次带因修正重试（同整片纪律）。
+  // 数据源=指令+影片上下文（payload 里模型可见的全部文字）：影片自身的
+  // 数字（如邻镜旁白的心率 80/65）是合法引用对象，不得误拒。
+  const sourcedText = `${instruction}
+${payload}`;
   const sourcingErrors = validation.ok
-    ? verifySourcedNumbers(validation.shot, instruction)
+    ? verifySourcedNumbers(validation.shot, sourcedText)
     : [];
   if (!validation.ok || sourcingErrors.length > 0) {
     const retry = await provider.revise(
@@ -128,7 +142,7 @@ export async function POST(request: Request) {
       },
       { status: 422 },
     );
-  const finalSourcing = verifySourcedNumbers(validation.shot, instruction);
+  const finalSourcing = verifySourcedNumbers(validation.shot, sourcedText);
   if (finalSourcing.length > 0)
     return Response.json(
       {

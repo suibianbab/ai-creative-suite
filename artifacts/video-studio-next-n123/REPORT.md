@@ -13,7 +13,7 @@
 
 ## N2｜单镜自然语言修改（本批主要功能）
 
-四态：代码实现=完成；自动回归=359→364 全绿；真实浏览器=全链通过；视听质量=修改前后画面证据+有声出片取新版本实证。
+四态：代码实现=完成；自动回归=359→372 全绿；真实浏览器=全链通过；视听质量=修改前后画面证据+有声出片取新版本实证。
 
 ### 实现
 - `semantic-storyboard.ts` 抽出 `validateSemanticShot`/`compileSemanticShot`（与整片同源：严格键集合/旁白预算/确定性延长/renderHint）。
@@ -32,7 +32,7 @@
 
 ## N3｜前后对比与阶段时间线入语义 IR
 
-四态：代码实现=完成；自动回归=364 全绿（含 N3 专项 5 用例）；真实浏览器=双创意通过；视听质量=LAYOUT OK+数值闸实战。
+四态：代码实现=完成；自动回归=372 全绿（含 N3 专项 9 用例）；真实浏览器=双创意通过；视听质量=LAYOUT OK+数值闸实战。
 
 ### 实现
 - IR 新增 `compare-explainer`（compare-split@2 全字段，契约长度对齐）与 `timeline-explainer`（milestones 2..6，date 无日期用顺序词，status 可省默认 done）。编译器固定配色/入场/版本@2；时长下限按组件时序（compare 2500、timeline 2900+300×(n-1)）。
@@ -53,12 +53,24 @@
 ## 复跑命令
 
 ```bash
-pnpm --filter @acs/web test                                     # 364/364
+pnpm --filter @acs/web test                                     # 372/372
 node scripts/video/e2e-semantic-narrated.mjs                    # N1（需 DASHSCOPE_API_KEY dev server）
 node scripts/video/e2e-semantic-revise.mjs                      # N2（同上）
 node scripts/video/audit-semantic-n3-live.mjs                   # N3（同上）
 node artifacts/video-studio-semantic-n3/check-layout.mjs        # LAYOUT OK
 ```
+
+## 复核修复轮（2026-10-27，CODEX_REVIEW_ROUND 结果 + 独立全分支评审）
+
+Codex 四项（2 P1 + 2 P2）与独立评审增量全部闭合：
+
+- **P1-1 字段形状校验**：compare/timeline 全字段（含嵌套条目/status/title 上限）进 `validateSemanticShot`——坏 milestones/缺失对比字段在校验层带路径拒绝并走既有带因重试，不再 500 或拖到编译期。（成因：N3 首轮 python 补丁锚文本不匹配静默未落盘，测试缺反例未拦——已补 8 个反例用例。）
+- **P1-2 数值闸收紧**：覆盖**全部**上屏/朗读字段（title/旁白/notes/labels/条目）；**取消两数之差推导**（单位/可比量不可判定）；全角数字归一、汉字数值组合原样子集闸（「二十五」拒绝、原话有「三十」放行）；结构性序数豁免（第N步/X阶段）；revise 数据源=指令+影片上下文（影片自身数字可合法引用）。审计脚本同口径。
+- **P2-1** body null/数组/原始值 → 400 不触网（revise 补齐，plan 基线已有）。
+- **P2-2** 图解替代全链留痕：候选带 substitutedForAssets → 卡片「图解替代」行 → 确认落档 description 前缀【图解替代】+ provenance `/asset-substituted` 后缀（保存重开可见；浏览器实证）。
+- **独立评审增量**：I-3 compare/timeline title ≤30（组件契约，提示词 v6/r3 同步）；I-4 aiReviseByShot 三处项目切换重置 + 整片影响实时按当前文档重算；M-1 措辞六种 intent；M-2 无 content-length 时正文 4KB 硬顶；M-5 授权按钮空指令禁用；M-6 clip 按码点切片；M-7 revise 数值闸路径测试；M-8 报告计数更正。提示词补 milestone status 说明（进度型题材按事实给状态）。
+- **浏览器增量确认**（Codex 验收门槛）：新闸下对比镜头（慢跑 vs 久坐，数值 0/5/80/65 全来自原话）+ 单镜图解替代全链（needs-assets→授权→候选标记→落档 provenance/描述），`artifacts/video-studio-semantic-n3/review-fixes/`。
+- 递延 Minor（下批）：N1 e2e 补 cue 文本=旁白断言；revise e2e 目标镜按旁白精确匹配而非首个含「凝结」卡。
 
 ## 给 Codex 的复核重点
 

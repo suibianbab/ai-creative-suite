@@ -751,8 +751,12 @@ export default function VideoStudioPage() {
           }),
         });
         const data = (await response.json()) as {
-          shot?: Omit<AiReviseCandidate, "baseVersionId" | "totalAfterMs">;
+          shot?: Omit<
+            AiReviseCandidate,
+            "baseVersionId" | "totalAfterMs"
+          >;
           provenance?: AiReviseCandidate["provenance"];
+          substitutedForAssets?: boolean;
           error?: string;
           errors?: string[];
           kind?: string;
@@ -775,6 +779,7 @@ export default function VideoStudioPage() {
           needsAssetsChoice: false,
           candidate: {
             ...data.shot,
+            substitutedForAssets: data.substitutedForAssets === true,
             provenance:
               data.provenance ??
               // 兜底：响应缺 provenance 时卡片渲染仍可用（不会白屏）。
@@ -821,12 +826,18 @@ export default function VideoStudioPage() {
           versionId,
           createdAt: new Date().toISOString(),
           durationMs: candidate.durationMs,
-          description: candidate.description,
+          // P2-2：图解替代的镜头在版本选择器里一眼可辨（描述前缀），
+          // provenance 串里保留 /asset-substituted 标记（保存重开仍在）。
+          description: candidate.substitutedForAssets
+            ? `【图解替代】${candidate.description}`
+            : candidate.description,
           narrationText: candidate.narrationText,
           sceneSource: { type: "spec", spec: candidate.plan.spec },
           provenance: {
             engineId: "planner-semantic-revise",
-            engineVersion: `${candidate.provenance.model}/prompt${candidate.provenance.promptVersion}/compiler${candidate.provenance.compilerVersion}`,
+            engineVersion: `${candidate.provenance.model}/prompt${candidate.provenance.promptVersion}/compiler${candidate.provenance.compilerVersion}${
+              candidate.substitutedForAssets ? "/asset-substituted" : ""
+            }`,
             parentVersionId: working.versionId,
           },
         });
@@ -1053,6 +1064,7 @@ export default function VideoStudioPage() {
               // AI 状态随编辑器生命周期清理（I-2）：错误/provenance/飞行中
               // busy 不得带到列表或其他项目。
               semanticRequestRef.current += 1;
+              setAiReviseByShot({});
               setSemanticPlan({
                 busy: false,
                 error: null,
@@ -1616,7 +1628,30 @@ export default function VideoStudioPage() {
                         return message;
                       }
                     }}
-                    aiRevise={aiReviseByShot[shot.shotId] ?? AI_REVISE_IDLE}
+                    aiRevise={(() => {
+                      const state =
+                        aiReviseByShot[shot.shotId] ?? AI_REVISE_IDLE;
+                      if (!state.candidate) return state;
+                      // I-4：整片影响实时按当前文档重算（生成时算死的值会
+                      // 因邻镜变化而陈旧）；本镜未变（闸的前置）时差值恒准。
+                      const totalMs = document.shots.reduce((ms, s) => {
+                        const w = s.contentVersions.find(
+                          (v) => v.versionId === s.workingVersionId,
+                        );
+                        return ms + (w?.durationMs ?? 0);
+                      }, 0);
+                      const w = shot.contentVersions.find(
+                        (v) => v.versionId === shot.workingVersionId,
+                      );
+                      return {
+                        ...state,
+                        candidate: {
+                          ...state.candidate,
+                          totalAfterMs:
+                            totalMs - (w?.durationMs ?? 0) + state.candidate.durationMs,
+                        },
+                      };
+                    })()}
                     onAiReviseGenerate={(instruction, allowSubstitute) =>
                       runShotRevise(
                         shot.shotId,
@@ -1961,6 +1996,7 @@ export default function VideoStudioPage() {
                 storyboard: null,
               });
               semanticRequestRef.current += 1;
+              setAiReviseByShot({});
               setSemanticPlan({
                 busy: false,
                 error: null,
@@ -2140,6 +2176,9 @@ export default function VideoStudioPage() {
                           storyboard: null,
                         });
                         semanticRequestRef.current += 1;
+                setAiReviseByShot({});
+                        setAiReviseByShot({});
+              setAiReviseByShot({});
                         setSemanticPlan({
                           busy: false,
                           error: null,

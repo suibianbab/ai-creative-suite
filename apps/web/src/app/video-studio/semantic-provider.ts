@@ -6,11 +6,11 @@
 // json_object 而非 json_schema：与 plan-provider 实测结论一致（大 schema
 // 强约束让输出劣化），结构完备性交给 validateSemanticDraft 硬校验。
 
-// v5：新增 compare-explainer / timeline-explainer 两种 intent（N3）与
-// 数值/日期防伪造纪律（数字必须来自用户原话）。
-export const SEMANTIC_PROMPT_VERSION = "5";
-// N2 单镜修改提示词；r2：新增 compare/timeline intent（N3）与数值防伪造纪律。
-export const SEMANTIC_REVISE_PROMPT_VERSION = "r2";
+// v6：措辞同步六种 intent；compare/timeline 标题上限 30（组件契约）；
+// milestone 可带 status（进度型题材不得全渲染成已完成）。
+export const SEMANTIC_PROMPT_VERSION = "6";
+// r3：措辞同步六种 intent、compare/timeline 标题 ≤30、milestone status 说明。
+export const SEMANTIC_REVISE_PROMPT_VERSION = "r3";
 export const SEMANTIC_COMPILER_VERSION = "1";
 
 // 提示词 = 能力目录 + IR 契约 + 预算公式。模型只能在这个范围内表达；
@@ -20,18 +20,18 @@ const SYSTEM_PROMPT = `你是 STEM 科普短片分镜编剧。把用户的中文
 
 IR 顶层：{"topic":"主题（1..40 字）","title":"片名（1..30 字）","shots":[...]}
 
-四种镜头意图（durationMs 一律 2000..6000 的整数）：
+六种镜头意图（durationMs 一律 2000..6000 的整数）：
 1. 开场/收尾：{"intent":"title","title":"镜头标题（1..32 字）","narrationText":"旁白（≤12 字）","durationMs":2500}
 2. 要点讲解：{"intent":"text-explainer","title":"标题","narrationText":"旁白（≤12 字）","durationMs":3200,"bullets":["要点一（≤12 字）","要点二","要点三"]}（bullets 1..3 条；durationMs ≥ 2160+500×(条数-1)）
 3. 循环图解：{"intent":"cycle-explainer","title":"标题","narrationText":"旁白（≤14 字）","durationMs":5000,"cycleSteps":["蒸发","凝结","降水","汇集"]}（cycleSteps 3..5 个字符串阶段名，每个 1..6 字；durationMs ≥ 3000+480×(阶段数-1)）
 4. 流程图解：{"intent":"flow-explainer","title":"标题","narrationText":"旁白（≤16 字）","durationMs":3000,"flowSteps":["步骤一","步骤二","步骤三"]}（flowSteps 2..4 步，每步 1..10 字；durationMs ≥ 2500+120×(步数-1)）
 5. 前后对比：{"intent":"compare-explainer","title":"标题","narrationText":"旁白（≤16 字）","durationMs":3500,"metricLabel":"对比指标（≤20 字）","beforeLabel":"之前（≤12 字）","beforeValue":"之前的值（≤12 字）","beforeNote":"之前短注（≤20 字）","afterLabel":"之后（≤12 字）","afterValue":"之后的值（≤12 字）","afterNote":"之后短注（≤20 字）","deltaText":"变化（≤16 字）","deltaPositive":true}（durationMs ≥ 2500）
-6. 阶段时间线：{"intent":"timeline-explainer","title":"标题","narrationText":"旁白（≤16 字）","durationMs":4000,"milestones":[{"date":"第一步","label":"阶段名（≤12 字）"},{"date":"第二步","label":"…"}]}（milestones 2..6 项，date ≤10 字；durationMs ≥ 2900+300×(项数-1)）
+6. 阶段时间线：{"intent":"timeline-explainer","title":"标题","narrationText":"旁白（≤16 字）","durationMs":4000,"milestones":[{"date":"第一步","label":"阶段名（≤12 字）","status":"done"},{"date":"第二步","label":"…"}]}（milestones 2..6 项，date ≤10 字，可带 status=done/active/pending（默认 done；进行中/待办的阶段必须按事实给 active/pending，不得全画成已完成）；durationMs ≥ 2900+300×(项数-1)）
 
 硬性规则（违反任何一条整个输出会被拒绝）：
 - durationMs 必须是 2000..6000 的整数；绝不超过 6000。
 - 旁白字数 ≤ (durationMs-400)/300 向下取整。例：3000ms→8 字，4000ms→12 字，5000ms→15 字，6000ms→18 字。宁可短，不可超。
-- 每个镜头的 title ≤32 字；bullets 每条 ≤12 字；cycle 每阶段 1..6 字；flow 每步 ≤10 字。
+- 每个镜头的 title：compare/timeline 镜头 ≤30 字（组件契约），其余 ≤32 字；bullets 每条 ≤12 字；cycle 每阶段 1..6 字；flow 每步 ≤10 字。
 - 严禁输出上述字段以外的任何字段：无坐标、无颜色、无 assetUrl/image/url/src 等素材引用、无 HTML/SVG/代码。需要真实照片/素材的需求无法表达——改用图解表述，不要造字段。
 
 内容纪律：旁白只陈述画面实际展示的内容；循环/流程的每个阶段都要在阶段名或旁白中如实出现。
@@ -45,13 +45,13 @@ IR 顶层：{"topic":"主题（1..40 字）","title":"片名（1..30 字）","sh
 // 任何用户指令之外的新增自由内容（时间点/数值/事实须来自用户指令或上下文）。
 const REVISE_SYSTEM_PROMPT = `你是 STEM 科普短片分镜编剧，正在修改一条已有影片中的某一个镜头。根据用户提供的本镜内容、相邻镜头与整片信息，按修改指令重写这一镜。只输出一个镜头的 JSON 对象，不要输出任何其他文字。
 
-四种镜头意图（durationMs 一律 2000..6000 的整数）：
+六种镜头意图（durationMs 一律 2000..6000 的整数）：
 1. {"intent":"title","title":"镜头标题（1..32 字）","narrationText":"旁白（≤12 字）","durationMs":2500}
 2. {"intent":"text-explainer","title":"标题","narrationText":"旁白（≤12 字）","durationMs":3200,"bullets":["要点一（≤12 字）","要点二","要点三"]}（bullets 1..3 条；durationMs ≥ 2160+500×(条数-1)）
 3. {"intent":"cycle-explainer","title":"标题","narrationText":"旁白（≤14 字）","durationMs":5000,"cycleSteps":["蒸发","凝结","降水"]}（cycleSteps 3..5 个字符串阶段名，每个 1..6 字；durationMs ≥ 3000+480×(阶段数-1)）
 4. {"intent":"flow-explainer","title":"标题","narrationText":"旁白（≤16 字）","durationMs":3000,"flowSteps":["步骤一","步骤二","步骤三"]}（flowSteps 2..4 步，每步 1..10 字；durationMs ≥ 2500+120×(步数-1)）
 5. {"intent":"compare-explainer","title":"标题","narrationText":"旁白（≤16 字）","durationMs":3500,"metricLabel":"对比指标（≤20 字）","beforeLabel":"之前（≤12 字）","beforeValue":"之前的值（≤12 字）","beforeNote":"之前短注（≤20 字）","afterLabel":"之后（≤12 字）","afterValue":"之后的值（≤12 字）","afterNote":"之后短注（≤20 字）","deltaText":"变化（≤16 字）","deltaPositive":true}
-6. {"intent":"timeline-explainer","title":"标题","narrationText":"旁白（≤16 字）","durationMs":4000,"milestones":[{"date":"第一步","label":"阶段名（≤12 字）"}]}（milestones 2..6 项，date ≤10 字）
+6. {"intent":"timeline-explainer","title":"标题","narrationText":"旁白（≤16 字）","durationMs":4000,"milestones":[{"date":"第一步","label":"阶段名（≤12 字）","status":"done"}]}（milestones 2..6 项，date ≤10 字，可带 status=done/active/pending（默认 done；进行中/待办按事实给状态））
 
 硬性规则（违反任何一条整个输出会被拒绝）：
 - durationMs 是 2000..6000 的整数；旁白字数 ≤ (durationMs-400)/300 向下取整（3000ms→8 字，6000ms→18 字）。

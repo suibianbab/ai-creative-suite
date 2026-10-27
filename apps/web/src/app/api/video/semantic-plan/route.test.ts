@@ -102,7 +102,7 @@ test("semantic-plan：合法 IR → 200 返回 storyboard 与 provenance", async
       assert.equal(data.storyboard.totalMs, 10500);
       assert.equal(data.provenance.provider, "qwen-chat");
       assert.equal(data.provenance.model, "qwen-plus");
-      assert.equal(data.provenance.promptVersion, "5");
+      assert.equal(data.provenance.promptVersion, "6");
       assert.equal(data.provenance.compilerVersion, "1");
       assert.equal(data.provenance.sentence, "做一条约25秒的水循环科普短片");
     });

@@ -1,0 +1,284 @@
+{
+  "schemaVersion": 1,
+  "id": "49802551-49bc-4bc7-afd9-6372da23f6b8",
+  "title": "动一动，心跳更从容",
+  "brief": {
+    "sentence": "做一条约15秒的科普短片，对比慢跑和久坐：每周运动时间从0小时增加到5小时，静息心率从80降到65",
+    "aspectTargets": [
+      "landscape",
+      "portrait"
+    ],
+    "applications": [
+      {
+        "sentence": "做一条约15秒的科普短片，对比慢跑和久坐：每周运动时间从0小时增加到5小时，静息心率从80降到65",
+        "appendedShotCount": 4,
+        "appendedDurationMs": 15300,
+        "filmShotCountAfter": 4,
+        "filmTotalMsAfter": 15300,
+        "appliedAt": "2026-10-27T03:00:34.989Z"
+      }
+    ]
+  },
+  "shots": [
+    {
+      "shotId": "ba30ce1b-5b6e-4f6f-834a-b057860e91d4",
+      "order": 0,
+      "locked": false,
+      "workingVersionId": "2a61f5ff-beba-4013-842a-c2089278eac1",
+      "contentVersions": [
+        {
+          "versionId": "2a61f5ff-beba-4013-842a-c2089278eac1",
+          "createdAt": "2026-10-27T03:00:34.989Z",
+          "durationMs": 2800,
+          "description": "动一动，心跳更从容（标题）",
+          "narrationText": "慢跑 vs 久坐",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 2800,
+              "seed": 5000,
+              "background": "#101f34",
+              "params": {
+                "title": "动一动，心跳更从容",
+                "subtitle": "慢跑 vs 久坐",
+                "titleColor": "#f3f5f7",
+                "subtitleColor": "#b4d8e4",
+                "entrance": "fade-up",
+                "enterMs": 450
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-semantic",
+            "engineVersion": "qwen-plus/prompt6/compiler1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "2a61f5ff-beba-4013-842a-c2089278eac1",
+          "at": "2026-10-27T03:00:34.989Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "6ef7a033-890b-4130-b7d9-51fb7ad2b424",
+      "order": 1,
+      "locked": false,
+      "workingVersionId": "d524b626-cec6-4442-abbb-efce87a94021",
+      "contentVersions": [
+        {
+          "versionId": "7a9aaed1-3dff-4a2c-8477-3d4ec5fb2c86",
+          "createdAt": "2026-10-27T03:00:34.989Z",
+          "durationMs": 5000,
+          "description": "静息心率变化对比（前后对比）",
+          "narrationText": "每周运动从0到5小时",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "compare-split",
+              "componentVersion": 2,
+              "durationMs": 5000,
+              "seed": 5007,
+              "background": "#101f34",
+              "params": {
+                "title": "静息心率变化对比",
+                "metricLabel": "静息心率（次/分）",
+                "beforeLabel": "久坐时",
+                "beforeValue": "80",
+                "beforeNote": "每周0小时运动",
+                "afterLabel": "慢跑后",
+                "afterValue": "65",
+                "afterNote": "每周5小时",
+                "deltaText": "下降15次/分",
+                "deltaPositive": false,
+                "textColor": "#f3f5f7",
+                "panelColor": "#1b2f4a",
+                "accentColor": "#f5b652",
+                "positiveColor": "#37b26c",
+                "negativeColor": "#e2654f",
+                "enterMs": 900,
+                "sequence": "stagger"
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-semantic",
+            "engineVersion": "qwen-plus/prompt6/compiler1"
+          }
+        },
+        {
+          "versionId": "d524b626-cec6-4442-abbb-efce87a94021",
+          "createdAt": "2026-10-27T03:00:42.074Z",
+          "durationMs": 5000,
+          "description": "【图解替代】静息心率变化对比（前后对比）",
+          "narrationText": "每周运动从0到5小时",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "compare-split",
+              "componentVersion": 2,
+              "durationMs": 5000,
+              "seed": 5007,
+              "background": "#101f34",
+              "params": {
+                "title": "静息心率变化对比",
+                "metricLabel": "静息心率（次/分）",
+                "beforeLabel": "运动前",
+                "beforeValue": "较高",
+                "beforeNote": "个体差异较大",
+                "afterLabel": "运动后",
+                "afterValue": "较低",
+                "afterNote": "长期规律运动效果",
+                "deltaText": "明显下降",
+                "deltaPositive": false,
+                "textColor": "#f3f5f7",
+                "panelColor": "#1b2f4a",
+                "accentColor": "#f5b652",
+                "positiveColor": "#37b26c",
+                "negativeColor": "#e2654f",
+                "enterMs": 900,
+                "sequence": "stagger"
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-semantic-revise",
+            "engineVersion": "qwen-plus/promptr3/compiler1/asset-substituted",
+            "parentVersionId": "7a9aaed1-3dff-4a2c-8477-3d4ec5fb2c86"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "7a9aaed1-3dff-4a2c-8477-3d4ec5fb2c86",
+          "at": "2026-10-27T03:00:34.989Z",
+          "actor": "human"
+        },
+        {
+          "kind": "submitted",
+          "versionId": "d524b626-cec6-4442-abbb-efce87a94021",
+          "at": "2026-10-27T03:00:42.074Z",
+          "actor": "ai"
+        }
+      ]
+    },
+    {
+      "shotId": "6a1a9524-e4ba-42bc-825d-19348d906c8e",
+      "order": 2,
+      "locked": false,
+      "workingVersionId": "37814183-9664-495e-81a1-1a326d31f68e",
+      "contentVersions": [
+        {
+          "versionId": "37814183-9664-495e-81a1-1a326d31f68e",
+          "createdAt": "2026-10-27T03:00:34.989Z",
+          "durationMs": 3500,
+          "description": "为什么心率会降？（要点解说）",
+          "narrationText": "心脏变得更高效",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "sketch-note",
+              "componentVersion": 1,
+              "durationMs": 3500,
+              "seed": 5014,
+              "background": "#101f34",
+              "params": {
+                "title": "为什么心率会降？",
+                "items": [
+                  {
+                    "text": "泵血能力增强",
+                    "emphasis": "下划线"
+                  },
+                  {
+                    "text": "每次搏动供氧更多",
+                    "emphasis": "圈"
+                  },
+                  {
+                    "text": "自主神经更平衡",
+                    "emphasis": "圈"
+                  }
+                ],
+                "inkColor": "#f3f5f7",
+                "accentColor": "#f5b652",
+                "writeMs": 900,
+                "drawMs": 700,
+                "staggerMs": 500
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-semantic",
+            "engineVersion": "qwen-plus/prompt6/compiler1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "37814183-9664-495e-81a1-1a326d31f68e",
+          "at": "2026-10-27T03:00:34.989Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "5ab3aec3-f037-4a93-af5f-0772d072a282",
+      "order": 3,
+      "locked": false,
+      "workingVersionId": "a9fb1b4a-cc9d-4e4c-8757-5a2dfd226364",
+      "contentVersions": [
+        {
+          "versionId": "a9fb1b4a-cc9d-4e4c-8757-5a2dfd226364",
+          "createdAt": "2026-10-27T03:00:34.989Z",
+          "durationMs": 4000,
+          "description": "坚持运动，心跳更从容（标题）",
+          "narrationText": "从今天开始",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 4000,
+              "seed": 5021,
+              "background": "#101f34",
+              "params": {
+                "title": "坚持运动，心跳更从容",
+                "subtitle": "从今天开始",
+                "titleColor": "#f3f5f7",
+                "subtitleColor": "#b4d8e4",
+                "entrance": "fade-up",
+                "enterMs": 450
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-semantic",
+            "engineVersion": "qwen-plus/prompt6/compiler1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "a9fb1b4a-cc9d-4e4c-8757-5a2dfd226364",
+          "at": "2026-10-27T03:00:34.989Z",
+          "actor": "human"
+        }
+      ]
+    }
+  ],
+  "renderRecords": [],
+  "deliveries": [],
+  "savedVersion": 2
+}

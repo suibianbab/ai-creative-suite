@@ -525,12 +525,18 @@ export function validateSemanticShot(
       errors.push(
         `未知字段 ${field}.${key}${ASSET_KEYS.test(key) ? `。${ASSET_GUIDANCE}` : "（不在该 intent 的契约内）"}`,
       );
+  // I-3（独立评审）：compare-split/timeline-milestones 组件 title 上限 30，
+  // 其余组件 ≥40——按 intent 取各自真实契约，不共用 32。
+  const titleMax =
+    intent === "compare-explainer" || intent === "timeline-explainer"
+      ? 30
+      : 32;
   if (
     typeof shot.title !== "string" ||
     shot.title.length < 1 ||
-    shot.title.length > 32
+    shot.title.length > titleMax
   ) {
-    errors.push(`${field}.title 须为 1..32 字`);
+    errors.push(`${field}.title 须为 1..${titleMax} 字`);
   }
   if (typeof shot.narrationText !== "string" || shot.narrationText.length < 1) {
     errors.push(`${field}.narrationText 须为非空字符串`);
@@ -601,6 +607,73 @@ export function validateSemanticShot(
       }
     }
   }
+  // P1-1（Codex 复核 2026-10-27）：新 intent 的全部字段在校验层拦形状——
+  // 坏数据不得漏进数值闸（TypeError→500）或拖到编译期才失败。
+  if (intent === "compare-explainer") {
+    // compare-split@2 契约：metric ≤20、label/value ≤12、note ≤20、delta ≤16。
+    const stringFields: Array<[string, number]> = [
+      ["metricLabel", 20],
+      ["beforeLabel", 12],
+      ["beforeValue", 12],
+      ["beforeNote", 20],
+      ["afterLabel", 12],
+      ["afterValue", 12],
+      ["afterNote", 20],
+      ["deltaText", 16],
+    ];
+    for (const [key, max] of stringFields) {
+      const value = (shot as Record<string, unknown>)[key];
+      if (typeof value !== "string" || value.length < 1 || value.length > max)
+        errors.push(`${field}.${key} 须为 1..${max} 字`);
+    }
+    if (typeof shot.deltaPositive !== "boolean")
+      errors.push(`${field}.deltaPositive 须为布尔（true=改善）`);
+  }
+  if (intent === "timeline-explainer") {
+    // timeline-milestones@2 契约：2..6 项，date ≤10（无日期用顺序词）、
+    // label ≤12；status 可省（编译默认 done=已讲完的顺序）。
+    if (
+      !Array.isArray(shot.milestones) ||
+      shot.milestones.length < 2 ||
+      shot.milestones.length > 6
+    ) {
+      errors.push(`${field}.milestones 须为 2..6 项`);
+    } else {
+      for (const [j, item] of (
+        shot.milestones as Array<Record<string, unknown> | null>
+      ).entries()) {
+        if (
+          typeof item !== "object" ||
+          item === null ||
+          Array.isArray(item)
+        ) {
+          errors.push(`${field}.milestones[${j}] 须为对象`);
+          continue;
+        }
+        if (
+          typeof item.date !== "string" ||
+          item.date.length < 1 ||
+          item.date.length > 10
+        )
+          errors.push(
+            `${field}.milestones[${j}].date 须为 1..10 字（无日期用顺序词，不得编造）`,
+          );
+        if (
+          typeof item.label !== "string" ||
+          item.label.length < 1 ||
+          item.label.length > 12
+        )
+          errors.push(`${field}.milestones[${j}].label 须为 1..12 字`);
+        if (
+          item.status !== undefined &&
+          !["done", "active", "pending"].includes(String(item.status))
+        )
+          errors.push(
+            `${field}.milestones[${j}].status 须为 done/active/pending`,
+          );
+      }
+    }
+  }
   if (errors.length > 0) return { ok: false, errors };
   return { ok: true, shot: shot as unknown as SemanticDraftShot };
 }
@@ -646,44 +719,120 @@ export function compileSemanticShot(
 }
 
 
-// N3 数值/日期防伪造闸（交接单：时间点、数值和事实不能由模型伪造）：
-// compare 的 beforeValue/afterValue/deltaText 与 timeline 的 date 中出现
-// 的每个数字串，都必须出现在用户原话里；用户没给数字时模型只能用文字
-// 顺序词。纯函数，路由层在 IR 校验通过后调用。
+// N3 数值/日期防伪造闸（交接单：时间点、数值和事实不能由模型伪造）。
+// P1-2（Codex 复核 2026-10-27）收紧口径：
+//  - 覆盖所有会展示/朗读的字段（title/narrationText/各 intent 的文字
+//    条目），不再只查 value/delta/date——旁白里的编造数字同样拦。
+//  - 只接受用户原话原样出现的数字；「两数之差」推导已移除（单位与可比
+//    量无法可靠判定：1小时-30分钟 的差曾是 29 也被放行）。差值请模型
+//    用原话数字表述（「从40缩短到15」）。
+//  - 结构性序号豁免：「第N步/阶段/部分/幕/条/镜」不算事实数字。
+// 注意：本闸只核数字来源，不证明文字事实为真——通用事实核验另行评估。
 function numeralsOf(text: string): string[] {
-  return [...text.matchAll(/\d+(?:\.\d+)?/g)].map((m) => m[0]);
+  // 全角数字归一为半角（I-1：２５ 不得绕过）。
+  const normalized = text.replace(/[０-９]/g, (c) =>
+    String.fromCharCode(c.charCodeAt(0) - 0xfee0),
+  );
+  return [...normalized.matchAll(/\d+(?:\.\d+)?/g)].map((m) => m[0]);
+}
+
+// 汉字数值 token（I-1）：一二三…千萬 组合视为数值表述，按原样子集闸——
+// 原话没出现的组合（如「二十五」）不放行，原样引用（原话有「三十」）通过。
+const CHINESE_NUMERAL = /[一二三四五六七八九十百千万]+/g;
+function chineseNumeralsOf(text: string): string[] {
+  return [...text.matchAll(CHINESE_NUMERAL)].map((m) => m[0]);
+}
+// 结构性汉字序数/计数豁免：第X / X阶段·步·大·种·类·方面——按字段上下文
+// 判定（token 本身不含后缀），同阿拉伯数字 isOrdinalUse 口径。
+function isChineseOrdinalUse(field: string, token: string): boolean {
+  return (
+    new RegExp(`第${token}`).test(field) ||
+    new RegExp(`${token}(?:阶段|步|部分|幕|条|镜|大|种|类|方面|个阶段)`).test(
+      field,
+    )
+  );
+}
+
+// 序数豁免：第N步/第N阶段/第N部分/第N幕/第N条/第N镜（含汉字数字变体）。
+const ORDINAL_CONTEXT = /第\s*[0-9一二三四五六七八九十百]+\s*(?:步|阶段|部分|幕|条|镜)/;
+
+function isOrdinalUse(field: string, numeral: string): boolean {
+  return (
+    ORDINAL_CONTEXT.test(field) &&
+    // 该数字确实出现在序数结构里（而非同字段其他位置的事实数字）。
+    new RegExp(`第\\s*${numeral}\\s*(?:步|阶段|部分|幕|条|镜)`).test(field)
+  );
+}
+
+// 该镜头全部会上屏/被朗读的文字字段（P1-2 全覆盖口径）。
+function displayedTexts(shot: SemanticDraftShot): Array<[string, string]> {
+  const fields: Array<[string, string | undefined]> = [
+    ["title", shot.title],
+    ["narrationText", shot.narrationText],
+  ];
+  switch (shot.intent) {
+    case "text-explainer":
+      (shot.bullets ?? []).forEach((b, i) =>
+        fields.push([`bullets[${i}]`, b]),
+      );
+      break;
+    case "cycle-explainer":
+      (shot.cycleSteps ?? []).forEach((s, i) =>
+        fields.push([`cycleSteps[${i}]`, s]),
+      );
+      break;
+    case "flow-explainer":
+      (shot.flowSteps ?? []).forEach((s, i) =>
+        fields.push([`flowSteps[${i}]`, s]),
+      );
+      break;
+    case "compare-explainer":
+      fields.push(
+        ["metricLabel", shot.metricLabel],
+        ["beforeLabel", shot.beforeLabel],
+        ["beforeValue", shot.beforeValue],
+        ["beforeNote", shot.beforeNote],
+        ["afterLabel", shot.afterLabel],
+        ["afterValue", shot.afterValue],
+        ["afterNote", shot.afterNote],
+        ["deltaText", shot.deltaText],
+      );
+      break;
+    case "timeline-explainer":
+      (shot.milestones ?? []).forEach((m, i) => {
+        fields.push([`milestones[${i}].date`, m.date]);
+        fields.push([`milestones[${i}].label`, m.label]);
+      });
+      break;
+  }
+  return fields.filter(
+    (entry): entry is [string, string] => typeof entry[1] === "string",
+  );
 }
 
 export function verifySourcedNumbers(
   shot: SemanticDraftShot,
   userText: string,
 ): string[] {
-  const sourcedList = numeralsOf(userText).map(Number);
   const sourced = new Set(numeralsOf(userText));
-  // 可核来源（交接单口径）：两个原话数字之差也算（对比差值 40-15=25）。
-  const derivable = new Set<number>();
-  for (let i = 0; i < sourcedList.length; i++)
-    for (let j = i + 1; j < sourcedList.length; j++)
-      derivable.add(Math.abs(sourcedList[i]! - sourcedList[j]!));
+  const sourcedChinese = new Set(chineseNumeralsOf(userText));
   const errors: string[] = [];
-  const check = (label: string, value: string | undefined) => {
-    if (typeof value !== "string") return;
-    for (const numeral of numeralsOf(value))
-      if (
-        !sourced.has(numeral) &&
-        !derivable.has(Number(numeral))
-      )
-        errors.push(
-          `数字「${numeral}」（${label}）不在你的原话里：数值/日期必须来自用户输入或两数之差，没给就改用文字表述`,
-        );
-  };
-  if (shot.intent === "compare-explainer") {
-    check("beforeValue", shot.beforeValue);
-    check("afterValue", shot.afterValue);
-    check("deltaText", shot.deltaText);
+  for (const [label, value] of displayedTexts(shot)) {
+    for (const numeral of numeralsOf(value)) {
+      if (sourced.has(numeral)) continue;
+      if (isOrdinalUse(value, numeral)) continue;
+      errors.push(
+        `数字「${numeral}」（${label}）不在你的原话里：数值/日期必须原样来自用户输入（差值也用原话数字表述），没给就改用文字表述`,
+      );
+    }
+    // 汉字数值组合：原话没出现且非结构性序数 → 拒绝（I-1）。
+    for (const token of chineseNumeralsOf(value)) {
+      if (sourcedChinese.has(token)) continue;
+      if (isChineseOrdinalUse(value, token)) continue;
+      errors.push(
+        `数值表述「${token}」（${label}）不在你的原话里：汉字数字同样不得编造，没给就改用定性文字`,
+      );
+    }
   }
-  if (shot.intent === "timeline-explainer")
-    for (const [i, m] of (shot.milestones ?? []).entries())
-      check(`milestones[${i}].date`, m.date);
   return errors;
 }
