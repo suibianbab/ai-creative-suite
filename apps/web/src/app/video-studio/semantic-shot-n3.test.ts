@@ -79,11 +79,16 @@ test("N3 timeline-explainer：合法 IR 编译到 timeline-milestones@2（默认
   assert.match(c.plan.renderHint, /开花/);
 });
 
-test("N3 verifySourcedNumbers：数值必须来自用户原话", () => {
+test("N3 verifySourcedNumbers：数值必须来自用户原话或两数之差", () => {
   const userText = "睡前刷手机1小时 vs 阅读30分钟，入睡时间从40分钟缩短到15分钟";
   // IR 数值（40/15）都在原话里 → 通过。
   assert.deepEqual(
     verifySourcedNumbers(COMPARE_IR, userText),
+    [],
+  );
+  // 可核算术推导：40-15=25（deltaText 用差值表述）→ 通过（交接单「可核来源」）。
+  assert.deepEqual(
+    verifySourcedNumbers({ ...COMPARE_IR, deltaText: "缩短25分钟" }, userText),
     [],
   );
   // 模型编造 85% → 拒绝并点名。

@@ -658,14 +658,23 @@ export function verifySourcedNumbers(
   shot: SemanticDraftShot,
   userText: string,
 ): string[] {
+  const sourcedList = numeralsOf(userText).map(Number);
   const sourced = new Set(numeralsOf(userText));
+  // 可核来源（交接单口径）：两个原话数字之差也算（对比差值 40-15=25）。
+  const derivable = new Set<number>();
+  for (let i = 0; i < sourcedList.length; i++)
+    for (let j = i + 1; j < sourcedList.length; j++)
+      derivable.add(Math.abs(sourcedList[i]! - sourcedList[j]!));
   const errors: string[] = [];
   const check = (label: string, value: string | undefined) => {
     if (typeof value !== "string") return;
     for (const numeral of numeralsOf(value))
-      if (!sourced.has(numeral))
+      if (
+        !sourced.has(numeral) &&
+        !derivable.has(Number(numeral))
+      )
         errors.push(
-          `数字「${numeral}」（${label}）不在你的原话里：数值/日期必须来自用户输入，没给就改用文字表述`,
+          `数字「${numeral}」（${label}）不在你的原话里：数值/日期必须来自用户输入或两数之差，没给就改用文字表述`,
         );
   };
   if (shot.intent === "compare-explainer") {

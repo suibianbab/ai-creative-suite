@@ -1,0 +1,298 @@
+{
+  "schemaVersion": 1,
+  "id": "658ca2b4-21fb-4bad-8c67-2c48916a1c4c",
+  "title": "种子成长时间线",
+  "brief": {
+    "sentence": "做一条约20秒的种子发芽科普短片，用时间线展示播种、发芽、幼苗、开花四个阶段",
+    "aspectTargets": [
+      "landscape",
+      "portrait"
+    ],
+    "applications": [
+      {
+        "sentence": "做一条约20秒的种子发芽科普短片，用时间线展示播种、发芽、幼苗、开花四个阶段",
+        "appendedShotCount": 3,
+        "appendedDurationMs": 9200,
+        "filmShotCountAfter": 3,
+        "filmTotalMsAfter": 9200,
+        "appliedAt": "2026-10-27T02:11:17.108Z"
+      }
+    ]
+  },
+  "shots": [
+    {
+      "shotId": "82190eab-009f-47f1-af4a-d79ca88bf0f3",
+      "order": 0,
+      "locked": false,
+      "workingVersionId": "8c3ce507-3291-4127-a3b3-78fc6c03abd4",
+      "contentVersions": [
+        {
+          "versionId": "8c3ce507-3291-4127-a3b3-78fc6c03abd4",
+          "createdAt": "2026-10-27T02:11:17.108Z",
+          "durationMs": 2500,
+          "description": "种子发芽科普（标题）",
+          "narrationText": "种子如何长大？",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 2500,
+              "seed": 5000,
+              "background": "#101f34",
+              "params": {
+                "title": "种子发芽科普",
+                "subtitle": "种子如何长大？",
+                "titleColor": "#f3f5f7",
+                "subtitleColor": "#b4d8e4",
+                "entrance": "fade-up",
+                "enterMs": 450
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-semantic",
+            "engineVersion": "qwen-plus/prompt5/compiler1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "8c3ce507-3291-4127-a3b3-78fc6c03abd4",
+          "at": "2026-10-27T02:11:17.108Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "08bd2b6b-271c-4fcb-b872-46b1a16e4558",
+      "order": 1,
+      "locked": false,
+      "workingVersionId": "8d7d4306-850a-4ad3-9f17-9ec15f82388f",
+      "contentVersions": [
+        {
+          "versionId": "8d7d4306-850a-4ad3-9f17-9ec15f82388f",
+          "createdAt": "2026-10-27T02:11:17.108Z",
+          "durationMs": 4200,
+          "description": "种子成长四阶段（阶段时间线）",
+          "narrationText": "从播种到开花",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "timeline-milestones",
+              "componentVersion": 2,
+              "durationMs": 4200,
+              "seed": 5007,
+              "background": "#101f34",
+              "params": {
+                "title": "种子成长四阶段",
+                "milestones": [
+                  {
+                    "date": "播种",
+                    "label": "播种期",
+                    "status": "done"
+                  },
+                  {
+                    "date": "发芽",
+                    "label": "发芽期",
+                    "status": "done"
+                  },
+                  {
+                    "date": "幼苗",
+                    "label": "幼苗期",
+                    "status": "done"
+                  },
+                  {
+                    "date": "开花",
+                    "label": "开花期",
+                    "status": "done"
+                  }
+                ],
+                "textColor": "#f3f5f7",
+                "lineColor": "#3b5878",
+                "doneColor": "#37b26c",
+                "activeColor": "#f5b652",
+                "pendingColor": "#8fa3b8",
+                "enterMs": 1400,
+                "sequence": "stagger"
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-semantic",
+            "engineVersion": "qwen-plus/prompt5/compiler1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "8d7d4306-850a-4ad3-9f17-9ec15f82388f",
+          "at": "2026-10-27T02:11:17.108Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "d47a1cdc-a1d2-4a56-9be7-05f236c90928",
+      "order": 2,
+      "locked": false,
+      "workingVersionId": "b6062f9a-0883-459c-bfbe-319a93a19c60",
+      "contentVersions": [
+        {
+          "versionId": "b6062f9a-0883-459c-bfbe-319a93a19c60",
+          "createdAt": "2026-10-27T02:11:17.108Z",
+          "durationMs": 2500,
+          "description": "生命始于一颗种子（标题）",
+          "narrationText": "见证生长力量",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 2500,
+              "seed": 5014,
+              "background": "#101f34",
+              "params": {
+                "title": "生命始于一颗种子",
+                "subtitle": "见证生长力量",
+                "titleColor": "#f3f5f7",
+                "subtitleColor": "#b4d8e4",
+                "entrance": "fade-up",
+                "enterMs": 450
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-semantic",
+            "engineVersion": "qwen-plus/prompt5/compiler1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "b6062f9a-0883-459c-bfbe-319a93a19c60",
+          "at": "2026-10-27T02:11:17.108Z",
+          "actor": "human"
+        }
+      ]
+    }
+  ],
+  "renderRecords": [
+    {
+      "renderId": "5a9928c3-b4f6-4f43-a904-eda2cda09d85",
+      "versionId": "8c3ce507-3291-4127-a3b3-78fc6c03abd4",
+      "contentDigest": "7ae5e2c5c62be28ee57b0b94f643b60809fcf8282203af638e79907b700aacc7",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 60,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "seed-timeline-render/landscape.mp4"
+    },
+    {
+      "renderId": "4e09365d-be7f-4f80-a649-f30e32bd73dc",
+      "versionId": "8d7d4306-850a-4ad3-9f17-9ec15f82388f",
+      "contentDigest": "c1ba758fa961fd3b9be1c04e247b763798a6616fddc383bed9653de97b2a3419",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 101,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "seed-timeline-render/landscape.mp4"
+    },
+    {
+      "renderId": "6a3d09a7-92b3-4756-b1f9-a97752b68435",
+      "versionId": "b6062f9a-0883-459c-bfbe-319a93a19c60",
+      "contentDigest": "88bf40d8575ffff1ace90e5b49bd7242a5d632ad5879835dd72131ce32010309",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 60,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "seed-timeline-render/landscape.mp4"
+    },
+    {
+      "renderId": "8a67b275-8b27-414a-b5cf-2f7b15156ee2",
+      "versionId": "8c3ce507-3291-4127-a3b3-78fc6c03abd4",
+      "contentDigest": "7ae5e2c5c62be28ee57b0b94f643b60809fcf8282203af638e79907b700aacc7",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 60,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "seed-timeline-render/portrait.mp4"
+    },
+    {
+      "renderId": "55e2019e-b60d-4e24-80cb-80c3c05313f9",
+      "versionId": "8d7d4306-850a-4ad3-9f17-9ec15f82388f",
+      "contentDigest": "c1ba758fa961fd3b9be1c04e247b763798a6616fddc383bed9653de97b2a3419",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 101,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "seed-timeline-render/portrait.mp4"
+    },
+    {
+      "renderId": "44dd9d67-6b8e-4bc6-b45e-367d242397c9",
+      "versionId": "b6062f9a-0883-459c-bfbe-319a93a19c60",
+      "contentDigest": "88bf40d8575ffff1ace90e5b49bd7242a5d632ad5879835dd72131ce32010309",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 60,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "seed-timeline-render/portrait.mp4"
+    }
+  ],
+  "deliveries": [],
+  "savedVersion": 3
+}

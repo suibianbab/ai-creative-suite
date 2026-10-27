@@ -1,0 +1,24 @@
+[
+  {
+    "slug": "sleep-compare",
+    "shots": 5,
+    "componentIds": [
+      "text-animation",
+      "compare-split",
+      "sketch-note",
+      "sketch-note",
+      "text-animation"
+    ],
+    "totalMs": 17200
+  },
+  {
+    "slug": "seed-timeline",
+    "shots": 3,
+    "componentIds": [
+      "text-animation",
+      "timeline-milestones",
+      "text-animation"
+    ],
+    "totalMs": 9200
+  }
+]

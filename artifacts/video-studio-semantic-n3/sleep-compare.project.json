@@ -1,0 +1,477 @@
+{
+  "schemaVersion": 1,
+  "id": "82075a05-d031-4d4f-b382-7893f5d8e1f9",
+  "title": "刷手机vs读书：谁让你更快入睡？",
+  "brief": {
+    "sentence": "做一条约20秒的健康科普短片：睡前刷手机1小时 vs 阅读30分钟，入睡时间从40分钟缩短到15分钟",
+    "aspectTargets": [
+      "landscape",
+      "portrait"
+    ],
+    "applications": [
+      {
+        "sentence": "做一条约20秒的健康科普短片：睡前刷手机1小时 vs 阅读30分钟，入睡时间从40分钟缩短到15分钟",
+        "appendedShotCount": 5,
+        "appendedDurationMs": 17200,
+        "filmShotCountAfter": 5,
+        "filmTotalMsAfter": 17200,
+        "appliedAt": "2026-10-27T02:09:50.578Z"
+      }
+    ]
+  },
+  "shots": [
+    {
+      "shotId": "6f9726ed-4151-487f-81fe-b46dbfd2e69e",
+      "order": 0,
+      "locked": false,
+      "workingVersionId": "70334ea1-c86c-46aa-8f77-d14248b8cbfb",
+      "contentVersions": [
+        {
+          "versionId": "70334ea1-c86c-46aa-8f77-d14248b8cbfb",
+          "createdAt": "2026-10-27T02:09:50.578Z",
+          "durationMs": 2500,
+          "description": "刷手机vs读书：谁让你更快入睡？（标题）",
+          "narrationText": "睡前习惯大不同",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 2500,
+              "seed": 5000,
+              "background": "#101f34",
+              "params": {
+                "title": "刷手机vs读书：谁让你更快入睡？",
+                "subtitle": "睡前习惯大不同",
+                "titleColor": "#f3f5f7",
+                "subtitleColor": "#b4d8e4",
+                "entrance": "fade-up",
+                "enterMs": 450
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-semantic",
+            "engineVersion": "qwen-plus/prompt5/compiler1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "70334ea1-c86c-46aa-8f77-d14248b8cbfb",
+          "at": "2026-10-27T02:09:50.578Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "6e2efb0d-ab7e-48ab-920f-a73a056d8382",
+      "order": 1,
+      "locked": false,
+      "workingVersionId": "ee299ae3-8d8e-4664-9765-cafd05189cf5",
+      "contentVersions": [
+        {
+          "versionId": "ee299ae3-8d8e-4664-9765-cafd05189cf5",
+          "createdAt": "2026-10-27T02:09:50.578Z",
+          "durationMs": 5800,
+          "description": "入睡时间对比（前后对比）",
+          "narrationText": "睡前1小时刷手机 vs 30分钟阅读",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "compare-split",
+              "componentVersion": 2,
+              "durationMs": 5800,
+              "seed": 5007,
+              "background": "#101f34",
+              "params": {
+                "title": "入睡时间对比",
+                "metricLabel": "平均入睡时间",
+                "beforeLabel": "刷手机后",
+                "beforeValue": "40分钟",
+                "beforeNote": "蓝光抑制褪黑素",
+                "afterLabel": "阅读后",
+                "afterValue": "15分钟",
+                "afterNote": "放松促睡眠",
+                "deltaText": "缩短25分钟",
+                "deltaPositive": true,
+                "textColor": "#f3f5f7",
+                "panelColor": "#1b2f4a",
+                "accentColor": "#f5b652",
+                "positiveColor": "#37b26c",
+                "negativeColor": "#e2654f",
+                "enterMs": 900,
+                "sequence": "stagger"
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-semantic",
+            "engineVersion": "qwen-plus/prompt5/compiler1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "ee299ae3-8d8e-4664-9765-cafd05189cf5",
+          "at": "2026-10-27T02:09:50.578Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "fd61fe57-adee-4f29-bef5-bb86a4a23249",
+      "order": 2,
+      "locked": false,
+      "workingVersionId": "930658d7-89a6-4936-99cd-1bf3232543e6",
+      "contentVersions": [
+        {
+          "versionId": "930658d7-89a6-4936-99cd-1bf3232543e6",
+          "createdAt": "2026-10-27T02:09:50.578Z",
+          "durationMs": 3200,
+          "description": "为什么刷手机更难睡？（要点解说）",
+          "narrationText": "三大干扰因素",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "sketch-note",
+              "componentVersion": 1,
+              "durationMs": 3200,
+              "seed": 5014,
+              "background": "#101f34",
+              "params": {
+                "title": "为什么刷手机更难睡？",
+                "items": [
+                  {
+                    "text": "蓝光抑制褪黑素",
+                    "emphasis": "下划线"
+                  },
+                  {
+                    "text": "内容刺激大脑",
+                    "emphasis": "圈"
+                  },
+                  {
+                    "text": "打乱生物钟",
+                    "emphasis": "圈"
+                  }
+                ],
+                "inkColor": "#f3f5f7",
+                "accentColor": "#f5b652",
+                "writeMs": 900,
+                "drawMs": 700,
+                "staggerMs": 500
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-semantic",
+            "engineVersion": "qwen-plus/prompt5/compiler1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "930658d7-89a6-4936-99cd-1bf3232543e6",
+          "at": "2026-10-27T02:09:50.578Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "284251fb-3eda-49b9-a3db-548d2731ff46",
+      "order": 3,
+      "locked": false,
+      "workingVersionId": "f71842d2-67c8-4b71-8aa7-42b72ebdf2ba",
+      "contentVersions": [
+        {
+          "versionId": "f71842d2-67c8-4b71-8aa7-42b72ebdf2ba",
+          "createdAt": "2026-10-27T02:09:50.578Z",
+          "durationMs": 3200,
+          "description": "为什么阅读助眠？（要点解说）",
+          "narrationText": "三大助眠机制",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "sketch-note",
+              "componentVersion": 1,
+              "durationMs": 3200,
+              "seed": 5021,
+              "background": "#101f34",
+              "params": {
+                "title": "为什么阅读助眠？",
+                "items": [
+                  {
+                    "text": "无蓝光干扰",
+                    "emphasis": "下划线"
+                  },
+                  {
+                    "text": "节奏舒缓",
+                    "emphasis": "圈"
+                  },
+                  {
+                    "text": "建立睡眠信号",
+                    "emphasis": "圈"
+                  }
+                ],
+                "inkColor": "#f3f5f7",
+                "accentColor": "#f5b652",
+                "writeMs": 900,
+                "drawMs": 700,
+                "staggerMs": 500
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-semantic",
+            "engineVersion": "qwen-plus/prompt5/compiler1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "f71842d2-67c8-4b71-8aa7-42b72ebdf2ba",
+          "at": "2026-10-27T02:09:50.578Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "5a538b38-4ae3-4d26-b0e2-609487bf39f0",
+      "order": 4,
+      "locked": false,
+      "workingVersionId": "d3fc011d-58c3-4974-9d48-4d707ae22751",
+      "contentVersions": [
+        {
+          "versionId": "d3fc011d-58c3-4974-9d48-4d707ae22751",
+          "createdAt": "2026-10-27T02:09:50.578Z",
+          "durationMs": 2500,
+          "description": "今晚，试试放下手机（标题）",
+          "narrationText": "30分钟纸质书",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 2500,
+              "seed": 5028,
+              "background": "#101f34",
+              "params": {
+                "title": "今晚，试试放下手机",
+                "subtitle": "30分钟纸质书",
+                "titleColor": "#f3f5f7",
+                "subtitleColor": "#b4d8e4",
+                "entrance": "fade-up",
+                "enterMs": 450
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-semantic",
+            "engineVersion": "qwen-plus/prompt5/compiler1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "d3fc011d-58c3-4974-9d48-4d707ae22751",
+          "at": "2026-10-27T02:09:50.578Z",
+          "actor": "human"
+        }
+      ]
+    }
+  ],
+  "renderRecords": [
+    {
+      "renderId": "e4d19251-c45b-4f0d-aab8-78dc4ec780f2",
+      "versionId": "70334ea1-c86c-46aa-8f77-d14248b8cbfb",
+      "contentDigest": "67035ef6412780a99bdc8b12f8609581f0d2733da3ffcfcc6498badd07265522",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 60,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "sleep-compare-render/landscape.mp4"
+    },
+    {
+      "renderId": "baa24b83-aa9e-4e58-8514-75c3f7dca947",
+      "versionId": "ee299ae3-8d8e-4664-9765-cafd05189cf5",
+      "contentDigest": "d3112b4e355d94a87c9678a85e4de06588fe047ee48a49b89ea9b3f05510bba5",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 139,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "sleep-compare-render/landscape.mp4"
+    },
+    {
+      "renderId": "ea4d63bc-3dde-4a7a-b9ea-fbe40aab8801",
+      "versionId": "930658d7-89a6-4936-99cd-1bf3232543e6",
+      "contentDigest": "52b835a97720ae4a5f7e8d5e08a3d4b31f106eaf02826b283fcafc84cf437af4",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 77,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "sleep-compare-render/landscape.mp4"
+    },
+    {
+      "renderId": "2064b69a-424b-4422-a5de-3ff833a0bf88",
+      "versionId": "f71842d2-67c8-4b71-8aa7-42b72ebdf2ba",
+      "contentDigest": "bcdcb4471c065c85ce2b91f86340fce4855e5f4766502bc0cde0e774d0d63ed1",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 77,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "sleep-compare-render/landscape.mp4"
+    },
+    {
+      "renderId": "e5afff45-746c-42b5-b228-67ac7438a415",
+      "versionId": "d3fc011d-58c3-4974-9d48-4d707ae22751",
+      "contentDigest": "5c0300c56971fa3361f7ea4b5293417da8440d24bc3c021af63015802ef77656",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 60,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "sleep-compare-render/landscape.mp4"
+    },
+    {
+      "renderId": "3188e43d-69ad-4388-be86-11859b0a45cf",
+      "versionId": "70334ea1-c86c-46aa-8f77-d14248b8cbfb",
+      "contentDigest": "67035ef6412780a99bdc8b12f8609581f0d2733da3ffcfcc6498badd07265522",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 60,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "sleep-compare-render/portrait.mp4"
+    },
+    {
+      "renderId": "4dbbb616-1ab0-403c-a9c0-59d810b82fcb",
+      "versionId": "ee299ae3-8d8e-4664-9765-cafd05189cf5",
+      "contentDigest": "d3112b4e355d94a87c9678a85e4de06588fe047ee48a49b89ea9b3f05510bba5",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 139,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "sleep-compare-render/portrait.mp4"
+    },
+    {
+      "renderId": "980c771e-5494-445c-982a-be4255868c20",
+      "versionId": "930658d7-89a6-4936-99cd-1bf3232543e6",
+      "contentDigest": "52b835a97720ae4a5f7e8d5e08a3d4b31f106eaf02826b283fcafc84cf437af4",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 77,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "sleep-compare-render/portrait.mp4"
+    },
+    {
+      "renderId": "41748e0b-37a5-4edf-94a9-05979234da5e",
+      "versionId": "f71842d2-67c8-4b71-8aa7-42b72ebdf2ba",
+      "contentDigest": "bcdcb4471c065c85ce2b91f86340fce4855e5f4766502bc0cde0e774d0d63ed1",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 77,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "sleep-compare-render/portrait.mp4"
+    },
+    {
+      "renderId": "78ee5bf8-45b7-423e-9b12-99f93af5c927",
+      "versionId": "d3fc011d-58c3-4974-9d48-4d707ae22751",
+      "contentDigest": "5c0300c56971fa3361f7ea4b5293417da8440d24bc3c021af63015802ef77656",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 60,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "sleep-compare-render/portrait.mp4"
+    }
+  ],
+  "deliveries": [],
+  "savedVersion": 3
+}
