@@ -139,6 +139,7 @@ function renderPortrait(
     const grow = easeOutCubic(clamp01((tMs - delay) / params.enterMs));
     const center = safe.left + slot * (index + 0.5);
     const height = (bar.value / yMax) * plotHeight * grow;
+    const valueLabel = `${params.cnUnits === true ? formatCnCount(bar.value) : String(bar.value)}${params.valueSuffix ?? ""}`;
     bars.push({
       tag: "rect",
       attrs: {
@@ -155,17 +156,13 @@ function renderPortrait(
       attrs: {
         x: center,
         y: baseline - height - ctx.height * 0.022,
-        "font-size": fitFontSize(
-          ctx.width * 0.038,
-          String(bar.value),
-          slot * 0.78,
-        ),
+        "font-size": fitFontSize(ctx.width * 0.038, valueLabel, slot * 0.78),
         fill: params.textColor,
         "text-anchor": "middle",
         "dominant-baseline": "middle",
         opacity: clamp01((tMs - delay - params.enterMs) / VALUE_FADE_MS),
       },
-      text: String(bar.value),
+      text: valueLabel,
     });
     labels.push({
       tag: "text",

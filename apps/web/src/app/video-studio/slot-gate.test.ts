@@ -31,7 +31,18 @@ function project(
             narrationText: "旁白",
             sceneSource:
               s.source === "spec"
-                ? { type: "spec", spec: {} }
+                ? {
+                    type: "spec",
+                    spec: s.desc.startsWith("【素材位】")
+                      ? {
+                          componentId: "text-animation",
+                          params: {
+                            title: "素材位·产品整体照片",
+                            subtitle: "待绑定素材——开场",
+                          },
+                        }
+                      : {},
+                  }
                 : {
                     type: "media-clip",
                     mediaAssetId: "a1",
@@ -93,4 +104,16 @@ test("slot-gate：历史版本里的素材位不算（只看工作版本）", ()
     provenance: { engineId: "planner-semantic", engineVersion: "1" },
   });
   assert.deepEqual(unboundSlotReasons(p), []);
+});
+
+test("slot-gate：只删可编辑的说明前缀仍阻断旧项目占位画面", () => {
+  const p = project([{ desc: "【素材位】产品整体照片——开场", source: "spec" }]);
+  p.shots[0]!.contentVersions[0]!.description = "产品整体照片——开场";
+  assert.equal(unboundSlotReasons(p).length, 1);
+});
+
+test("slot-gate：结构化素材位不依赖说明和占位文字", () => {
+  const p = project([{ desc: "普通说明", source: "spec" }]);
+  p.shots[0]!.contentVersions[0]!.assetSlot = { kind: "产品特写" };
+  assert.match(unboundSlotReasons(p)[0]!, /产品特写/);
 });

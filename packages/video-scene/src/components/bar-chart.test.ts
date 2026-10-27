@@ -282,4 +282,13 @@ test("cnUnits=true 柱值显示万记法；缺省原数字", () => {
   const without = collect(barChart.render(spec({}), ctx as never));
   if (!without.some((t) => t.includes("1200000")))
     throw new Error("缺省应保持原数字");
+  const portrait = collect(
+    barChart.render(spec({ cnUnits: true }), {
+      ...ctx,
+      width: 720,
+      height: 1280,
+    } as never),
+  );
+  if (!portrait.some((t) => t.includes("120万")))
+    throw new Error("竖版 cnUnits 也应显示 120万: " + portrait.join("|"));
 });

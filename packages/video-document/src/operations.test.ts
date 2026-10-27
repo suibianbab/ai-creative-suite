@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { unboundMediaSlotReasons } from "./asset-slots.js";
 import {
   addCandidateVersion,
   reviseWorkingVersion,
@@ -60,6 +61,44 @@ function baseProject(): VideoProject {
     deliveries: [],
   };
 }
+
+test("素材位：改说明仍待绑定；明确改为普通画面才在新版本清除", () => {
+  const project = baseProject();
+  const original = project.shots[0]!.contentVersions[0]!;
+  original.assetSlot = { kind: "产品照片" };
+  const placeholder = original.sceneSource;
+  if (placeholder.type !== "spec") throw new Error("fixture must be spec");
+  const placeholderSpec = placeholder.spec as Record<string, unknown>;
+  placeholderSpec.params = {
+    title: "素材位·产品照片",
+    subtitle: "待绑定素材——展示产品",
+  };
+  const renamed = reviseWorkingVersion(
+    project,
+    UUID,
+    { description: "只修改可编辑说明" },
+    UUID2,
+    at,
+  );
+  assert.equal(unboundMediaSlotReasons(renamed).length, 1);
+  const converted = reviseWorkingVersion(
+    project,
+    UUID,
+    {
+      spec: {
+        ...placeholderSpec,
+        params: { title: "普通图解", subtitle: "不再需要媒体" },
+      },
+    },
+    UUID2,
+    at,
+  );
+  assert.deepEqual(unboundMediaSlotReasons(converted), []);
+  assert.equal(
+    converted.shots[0]!.contentVersions[0]!.assetSlot?.kind,
+    "产品照片",
+  );
+});
 
 test("锁定镜头拒绝 AI 重生成", () => {
   const p = setLocked(baseProject(), baseProject().shots[0]!.shotId, true, at);

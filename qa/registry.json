@@ -1891,6 +1891,25 @@
         "Narrated dual-aspect MP4s: AAC audio, per-shot manifest narration versionIds equal working versions, every shot has subtitle cues",
         "Per-shot frames in both aspects; layout checker clean on text shots"
       ]
+    },
+    {
+      "id": "VID-069",
+      "tier": "integration",
+      "title": "Unbound media slot is rejected at the CLI render boundary",
+      "cwd": ".",
+      "argv": [
+        "node",
+        "--test",
+        "scripts/video/render-scene.slot-gate.test.mjs"
+      ],
+      "requiresPorts": [],
+      "requiresFiles": [
+        "scripts/video/fixtures/interactive-sample.video-project.json"
+      ],
+      "checks": [
+        "Editing the human-readable description does not clear a structured media slot",
+        "Direct CLI render exits before success records when any working shot has an unbound media slot"
+      ]
     }
   ],
   "manual": [

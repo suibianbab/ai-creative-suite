@@ -61,7 +61,12 @@ const FONT_REL =
 const FPS = 24;
 
 // scripts/ 不进 workspace 包图，按预检裁决用相对路径引 dist。
-const { canonicalJson, quantizeTimeline, validateVideoProject } = await import(
+const {
+  canonicalJson,
+  quantizeTimeline,
+  validateVideoProject,
+  unboundMediaSlotReasons,
+} = await import(
   pathToFileURL(path.join(ROOT, "packages/video-document/dist/index.js")).href
 );
 const { defaultRegistry, validateSceneSpec } = await import(
@@ -198,6 +203,9 @@ try {
 } catch (error) {
   fail(`项目校验失败: ${error.message}`);
 }
+const pendingSlots = unboundMediaSlotReasons(project);
+if (pendingSlots.length > 0)
+  fail(`未绑定素材位，不能正式出片：${pendingSlots.join("；")}`);
 try {
   await verifyProjectStyleBible(project, values["style-bible"]);
 } catch (error) {

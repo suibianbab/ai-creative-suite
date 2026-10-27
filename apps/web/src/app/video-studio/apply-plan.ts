@@ -1,4 +1,4 @@
-import type { VideoProject } from "@acs/video-document";
+import { mediaSlotKindFromSpec, type VideoProject } from "@acs/video-document";
 import type { SceneSpec } from "@acs/video-scene";
 import { componentLabel } from "./component-labels";
 import type { StoryboardResult } from "./planner";
@@ -50,6 +50,9 @@ function firstShotDocument(
             description: `${label}动画：${plan.title}`,
             narrationText: "",
             sceneSource: { type: "spec", spec: plan.spec },
+            ...(mediaSlotKindFromSpec(plan.spec)
+              ? { assetSlot: { kind: mediaSlotKindFromSpec(plan.spec)! } }
+              : {}),
             provenance: { engineId: "planner-rules", engineVersion: "1" },
           },
         ],
@@ -178,6 +181,9 @@ export function applyStoryboard(
           description: shot.description,
           narrationText: shot.narrationText,
           sceneSource: { type: "spec" as const, spec: shot.plan.spec },
+          ...(mediaSlotKindFromSpec(shot.plan.spec)
+            ? { assetSlot: { kind: mediaSlotKindFromSpec(shot.plan.spec)! } }
+            : {}),
           provenance: { ...provenance },
         },
       ],

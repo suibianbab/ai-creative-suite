@@ -43,6 +43,8 @@ export type ContentVersion = {
   description: string; // 1..200 字符
   narrationText: string; // 0..2000 字符
   sceneSource: SceneSource;
+  /** 未绑定的真实媒体素材位。绑定媒体或明确换为普通图解时由新版本清除。 */
+  assetSlot?: { kind: string };
   provenance: {
     engineId: string;
     engineVersion: string;

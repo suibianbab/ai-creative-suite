@@ -66,3 +66,14 @@ node artifacts/video-studio-semantic-mixed/check-layout.mjs
 ## 计费台账
 
 N4 审计 3 链 + N5 e2e 2 轮 + N6 e2e 3 轮（含失败轮）+ 探针：qwen-plus 约 2.5 万 tokens；TTS 2 轮（N6 有声 + 失败重试）。远低于 ¥50 预算。
+
+## Codex 二轮整改与重新验收（2026-10-28）
+
+**覆盖前述修复轮中“有声双画幅已按新版重渲染”的说法：当时新版 20s 文件是无声重渲染，目录里的 21.589s 有声文件仍是旧图表版本。两者不能拼成一次验收。** 此节记录修正后的证据。
+
+- 素材位状态现写入 `ContentVersion.assetSlot.kind`，旧项目由占位 SceneSpec 识别；可编辑的说明文字不再是出片判据。`@acs/video-document` 提供同一判断，工作台、`/api/video/render` 与 `render-scene.mjs` 均在正式 MP4 前拦截。删除说明前缀、直连 API、CLI 三条反例通过；绑定媒体或明确改用普通图解后，新工作版本可放行。项目 JSON 导出仍允许，以便继续编辑。
+- 使用修复后 `project-final.json` 与六段已有计费缓存旁白重合成：`mixed-landscape.mp4` 和 `mixed-portrait.mp4` 各为 20.011s、H.264 + AAC（画面 480 帧 @24fps），均从同一内容版本生成。摘要与逐镜版本见 `report.json`。
+- 横版有声片 3.5s 抽帧显示字幕位于图表轴标签下方且未碰撞；5.5s 抽帧显示“120万/350万”。本机文件在 `frames/landscape-s1-subtitle.png` 与 `frames/landscape-s1-values.png`，遵循 `.gitignore`：MP4/PNG 仅留本机，入库的 JSON/报告记录校验摘要。
+- 重新抽帧抓到新增遗漏：`bar-chart` 的竖版分支仍输出原数字。代码与测试已补齐，最终竖版有声片 `frames/portrait-s1-subtitle.png` 实测显示“120万/350万”且字幕与轴标签分离；旧片保存在 `mixed-portrait-before-unit-fix.mp4`，不作为新版证据。
+- 环境诊断：Image Studio 本地蒙版服务占用约 19 GB，导致可用虚拟内存不足，竖版曾报 Chromium/FFmpeg 内存错误。暂时停用该服务后，竖版单画幅全片渲染成功，已按原命令重启服务。**两画幅各自完整通过；本轮仍未证明单次请求连续双画幅事务在这台机器上成功**，应在资源隔离环境重跑 VID-068。
+- 验证：`video-document` 163/163、素材位/API/应用目标测试 30/30、CLI 未绑定反例通过、Biome 510 文件零问题。完整 Web 套件将在指定 Node/pnpm 环境复跑；本机默认 Node 22.0.0/pnpm 9 的并行测试曾有媒体子进程失败，不能当作本轮代码结论。

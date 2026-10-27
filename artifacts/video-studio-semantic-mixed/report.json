@@ -1,48 +1,78 @@
 {
   "sentence": "做一条约30秒的城市共享单车科普短片：用柱状图展示骑行量——北京年骑行从120万次涨到350万次，配一段真实街拍骑行画面，讲三步开锁流程，最后用数字强调每年减碳80万吨",
-  "totalMs": 21600,
+  "totalMs": 20000,
   "shots": [
     {
       "index": 0,
       "source": "spec",
       "component": "text-animation",
       "versions": 1,
-      "narration": "城市绿色出行新方式"
+      "narration": "城市出行新选择",
+      "versionId": "124fd0f7-3767-4f5d-a7af-56b6b3ebade4",
+      "durationMs": 2800
     },
     {
       "index": 1,
       "source": "spec",
       "component": "bar-chart",
       "versions": 1,
-      "narration": "北京骑行量从120万到350万"
+      "narration": "骑行次数大幅增长",
+      "versionId": "62349569-7520-4d2e-bbed-f047b63a25ad",
+      "durationMs": 4200
     },
     {
       "index": 2,
       "source": "media-clip",
       "versions": 2,
-      "narration": "街头骑行，自然流畅"
+      "narration": "街头骑行真实画面",
+      "versionId": "69535859-b471-4e32-a80d-c24103aaaa96",
+      "durationMs": 2800
     },
     {
       "index": 3,
       "source": "spec",
       "component": "flow-steps",
       "versions": 2,
-      "narration": "扫一扫、验个脸、咔哒开"
+      "narration": "扫一扫→验个脸→就开锁",
+      "versionId": "9b6baf0d-2ced-4fbc-a67f-781df8f5a200",
+      "durationMs": 3700
     },
     {
       "index": 4,
       "source": "spec",
       "component": "number-counter",
       "versions": 1,
-      "narration": "每年减少碳排放80万吨"
+      "narration": "相当于减少80万吨碳",
+      "versionId": "9e016b02-acad-4e1e-b49c-d6563a1fb723",
+      "durationMs": 3400
     },
     {
       "index": 5,
       "source": "spec",
       "component": "text-animation",
       "versions": 1,
-      "narration": "轻松骑行，守护蓝天"
+      "narration": "骑上单车，改变开始",
+      "versionId": "37e73e6b-e0a0-454a-abf5-d595772e5ef6",
+      "durationMs": 3100
     }
   ],
-  "renderJobId": "d18a78a2-6ce0-4883-9ee8-39f7150f5638"
+  "verification": {
+    "method": "同一修复后项目和缓存旁白，因本机内存压力分别运行横竖画幅完整有声渲染",
+    "landscape": {
+      "file": "mixed-landscape.mp4",
+      "sha256": "97509632ef5643e1a17d0ac6e6b557d2ce92d98bb17e5c82c33fd98853e519bc",
+      "durationSeconds": 20.011,
+      "video": "h264",
+      "audio": "aac"
+    },
+    "portrait": {
+      "file": "mixed-portrait.mp4",
+      "sha256": "bf01391ca9ebaa2114264f426b4568d14228da0c9561343bc2471bf083a5bbbf",
+      "durationSeconds": 20.011,
+      "video": "h264",
+      "audio": "aac",
+      "correctedFrame": "frames/portrait-s1-subtitle.png"
+    },
+    "limitations": "两画幅各自完整通过，但本机高内存压力下未复现单次请求连续双画幅成功；MP4/PNG 按仓库忽略规则仅留本机。"
+  }
 }

@@ -321,6 +321,19 @@ function validateContentVersion(
     fail(`${field}.narrationText must be a string of at most 2000 characters`);
   }
   validateSceneSource(value.sceneSource, field, mediaAssets);
+  if (value.assetSlot !== undefined) {
+    if (
+      !isRecord(value.assetSlot) ||
+      typeof value.assetSlot.kind !== "string" ||
+      value.assetSlot.kind.trim().length < 1 ||
+      value.assetSlot.kind.length > 20
+    ) {
+      fail(`${field}.assetSlot.kind 须为 1..20 字符的素材种类`);
+    }
+    if (!isRecord(value.sceneSource) || value.sceneSource.type !== "spec") {
+      fail(`${field}.assetSlot 只能标记待绑定的 spec 镜头`);
+    }
+  }
   // C4 对账：媒体镜头时长恒等于片段长度（渲染量化与交付 frameMap 依赖此恒等）
   if (isRecord(value.sceneSource) && value.sceneSource.type === "media-clip") {
     if (

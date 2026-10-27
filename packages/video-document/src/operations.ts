@@ -1,3 +1,4 @@
+import { mediaSlotKindFromSpec } from "./asset-slots.js";
 import type {
   ContentVersion,
   Shot,
@@ -156,6 +157,13 @@ export function reviseWorkingVersion(
   }
   const version: ContentVersion = {
     ...base,
+    // 文本修订保留未绑定状态；媒体绑定和改用普通组件会清除它。
+    assetSlot:
+      patch.mediaClip !== undefined || patch.threeScene !== undefined
+        ? undefined
+        : patch.spec !== undefined && mediaSlotKindFromSpec(patch.spec) === null
+          ? undefined
+          : base.assetSlot,
     versionId: newVersionId,
     createdAt: at,
     durationMs:

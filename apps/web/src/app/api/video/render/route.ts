@@ -1,5 +1,6 @@
 import {
   resolveStyleBibleRef,
+  unboundMediaSlotReasons,
   validateStyleBible,
   validateVideoProject,
   workingStyleIssues,
@@ -53,6 +54,9 @@ async function handleRender(request: Request) {
     narrated = payload.narrated === true;
     project = validateVideoProject(payload.project);
     if (project.shots.length === 0) throw new Error("空项目不能出片");
+    const pendingSlots = unboundMediaSlotReasons(project);
+    if (pendingSlots.length > 0)
+      throw new Error(`未绑定素材位，不能正式出片：${pendingSlots.join("；")}`);
     if (
       narrated &&
       !project.shots.some((shot) =>

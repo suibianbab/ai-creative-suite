@@ -78,6 +78,31 @@ const narratedProject = JSON.parse(
   ),
 );
 
+test("未绑定素材位直接 POST 也被服务端拒绝，不产生交付", async () => {
+  await withEnv("development", async () => {
+    const project = structuredClone(narratedProject);
+    const working = project.shots[0].contentVersions.find(
+      (v: { versionId: string }) =>
+        v.versionId === project.shots[0].workingVersionId,
+    );
+    working.description = "用户已删掉素材位说明前缀";
+    working.assetSlot = { kind: "产品整体照片" };
+    const before = jobDirCount();
+    const response = await POST(
+      new Request(url, {
+        method: "POST",
+        headers: { Origin: "http://localhost:3210", Host: "localhost:3210" },
+        body: JSON.stringify({ project }),
+      }),
+    );
+    assert.equal(response.status, 400);
+    const payload = await response.json();
+    assert.match(payload.error, /未绑定素材位/);
+    assert.equal(payload.downloads, undefined);
+    assert.equal(jobDirCount(), before);
+  });
+});
+
 test("有声选项拒绝错型和没有旁白的项目", async () => {
   await withEnv("development", async () => {
     const headers = {
