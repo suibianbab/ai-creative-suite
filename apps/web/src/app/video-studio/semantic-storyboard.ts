@@ -31,7 +31,10 @@ export type SemanticIntent =
   | "cycle-explainer"
   | "flow-explainer"
   | "compare-explainer"
-  | "timeline-explainer";
+  | "timeline-explainer"
+  | "bar-explainer"
+  | "line-explainer"
+  | "counter-explainer";
 
 export type SemanticDraftShot = {
   intent: SemanticIntent;
@@ -54,6 +57,15 @@ export type SemanticDraftShot = {
   afterNote?: string;
   deltaText?: string;
   deltaPositive?: boolean;
+  /** bar-explainer 的柱状数据（N4：value 只能来自用户原话） */
+  bars?: Array<{ label: string; value: number }>;
+  /** line-explainer 的折线数据（N4） */
+  points?: Array<{ label?: string; value: number }>;
+  /** counter-explainer 的计数动画（N4） */
+  value?: number;
+  prefix?: string;
+  suffix?: string;
+  decimals?: number;
   /** timeline-explainer 的 2-6 里程碑（无日期时用顺序词，N3） */
   milestones?: Array<{
     date: string;
@@ -95,6 +107,9 @@ const SHOT_KEYS_BY_INTENT: Record<SemanticIntent, Set<string>> = {
     "deltaPositive",
   ]),
   "timeline-explainer": new Set(["milestones"]),
+  "bar-explainer": new Set(["bars"]),
+  "line-explainer": new Set(["points"]),
+  "counter-explainer": new Set(["value", "prefix", "suffix", "decimals"]),
 };
 // 常见资产/代码字段名 → 指引文案（模型请求画不出的东西时明说下一步）。
 const ASSET_KEYS =
@@ -109,6 +124,9 @@ const INTENTS = new Set([
   "flow-explainer",
   "compare-explainer",
   "timeline-explainer",
+  "bar-explainer",
+  "line-explainer",
+  "counter-explainer",
 ]);
 
 // 各 intent 的「演完 + 停留」时长下限（ms），由上方能力目录推出。
@@ -131,6 +149,15 @@ function minDurationMs(
     // timeline：enterMs 1400 + 轴线/节点 span 600+(n-1)×300+500 + 停留。
     case "timeline-explainer":
       return 2900 + Math.max(0, (shot.milestones?.length ?? 2) - 1) * 300;
+    // bar：enterMs 900 + 逐柱 90×(n-1) + 值淡入 300 + 停留 400（N4）。
+    case "bar-explainer":
+      return 1600 + Math.max(0, (shot.bars?.length ?? 1) - 1) * 90;
+    // line：drawMs 1600 + 端点/标签淡入 800 + 停留 400（N4）。
+    case "line-explainer":
+      return 2800;
+    // counter：countMs 2000 + 停留 400（N4）。
+    case "counter-explainer":
+      return 2400;
   }
 }
 
@@ -359,6 +386,9 @@ const INTENT_LABEL: Record<SemanticIntent, string> = {
   "flow-explainer": "流程图解",
   "compare-explainer": "前后对比",
   "timeline-explainer": "阶段时间线",
+  "bar-explainer": "柱状图表",
+  "line-explainer": "折线图表",
+  "counter-explainer": "数字计数",
 };
 
 // 确认卡预告观众将看到的屏幕文字（交接单 §3.3：目的、画面内容、屏幕文字、
@@ -435,6 +465,73 @@ function compileTimelineExplainer(
   );
 }
 
+// N4：数据图表——模型只给业务数据（label/value，来自用户原话），模板、
+// 配色、时序、安全区全部是编译器常量，不接受模型原始参数。
+const CHART_COLORS = {
+  text: "#f3f5f7",
+  primary: "#4f8fd6",
+  accent: "#f5b652",
+};
+
+function compileBarExplainer(
+  shot: SemanticDraftShot,
+  seed: number,
+): SceneSpec {
+  return baseSpec(
+    "bar-chart",
+    effectiveDurationMs(shot),
+    {
+      title: shot.title,
+      bars: shot.bars ?? [],
+      barColor: CHART_COLORS.primary,
+      accentColor: CHART_COLORS.accent,
+      textColor: CHART_COLORS.text,
+      enterMs: 900,
+    },
+    seed,
+  );
+}
+
+function compileLineExplainer(
+  shot: SemanticDraftShot,
+  seed: number,
+): SceneSpec {
+  return baseSpec(
+    "line-chart",
+    effectiveDurationMs(shot),
+    {
+      title: shot.title,
+      points: shot.points ?? [],
+      lineColor: CHART_COLORS.accent,
+      markerColor: CHART_COLORS.primary,
+      textColor: CHART_COLORS.text,
+      drawMs: 1600,
+    },
+    seed,
+  );
+}
+
+function compileCounterExplainer(
+  shot: SemanticDraftShot,
+  seed: number,
+): SceneSpec {
+  return baseSpec(
+    "number-counter",
+    effectiveDurationMs(shot),
+    {
+      title: shot.title,
+      value: shot.value ?? 0,
+      prefix: shot.prefix ?? "",
+      suffix: shot.suffix ?? "",
+      decimals: shot.decimals ?? 0,
+      countMs: 2000,
+      numberColor: CHART_COLORS.text,
+      accentColor: CHART_COLORS.accent,
+    },
+    seed,
+  );
+}
+
 function renderHintFor(shot: SemanticDraftShot): string {
   const base = `${INTENT_LABEL[shot.intent]}「${shot.title}」`;
   switch (shot.intent) {
@@ -452,6 +549,16 @@ function renderHintFor(shot: SemanticDraftShot): string {
       return `${base}，阶段：${(shot.milestones ?? [])
         .map((m) => `${m.date}·${m.label}`)
         .join(" → ")}`;
+    case "bar-explainer":
+      return `${base}，柱状数据：${(shot.bars ?? [])
+        .map((b) => `${b.label} ${b.value}`)
+        .join("、")}`;
+    case "line-explainer":
+      return `${base}，折线数据：${(shot.points ?? [])
+        .map((p) => `${p.label ?? ""} ${p.value}`)
+        .join(" → ")}`;
+    case "counter-explainer":
+      return `${base}，计数：${shot.prefix ?? ""}${shot.value ?? ""}${shot.suffix ?? ""}`;
   }
 }
 
@@ -664,6 +771,86 @@ export function validateSemanticShot(
       }
     }
   }
+  // N4 图表 intent：数据形状与值域对齐组件契约（bar-chart/line-chart/
+  // number-counter 的 0..1e12、label ≤12、points 2..12 等）。
+  if (intent === "bar-explainer") {
+    if (!Array.isArray(shot.bars) || shot.bars.length < 1 || shot.bars.length > 8) {
+      errors.push(`${field}.bars 须为 1..8 条 {label, value}`);
+    } else {
+      for (const [j, item] of (
+        shot.bars as Array<Record<string, unknown> | null>
+      ).entries()) {
+        if (typeof item !== "object" || item === null || Array.isArray(item)) {
+          errors.push(`${field}.bars[${j}] 须为对象`);
+          continue;
+        }
+        if (
+          typeof item.label !== "string" ||
+          item.label.length < 1 ||
+          item.label.length > 12
+        )
+          errors.push(`${field}.bars[${j}].label 须为 1..12 字`);
+        if (
+          typeof item.value !== "number" ||
+          !Number.isFinite(item.value) ||
+          item.value < 0 ||
+          item.value > 1e12
+        )
+          errors.push(`${field}.bars[${j}].value 须为 0..1e12 的数`);
+      }
+    }
+  }
+  if (intent === "line-explainer") {
+    if (
+      !Array.isArray(shot.points) ||
+      shot.points.length < 2 ||
+      shot.points.length > 12
+    ) {
+      errors.push(`${field}.points 须为 2..12 个 {label?, value}`);
+    } else {
+      for (const [j, item] of (
+        shot.points as Array<Record<string, unknown> | null>
+      ).entries()) {
+        if (typeof item !== "object" || item === null || Array.isArray(item)) {
+          errors.push(`${field}.points[${j}] 须为对象`);
+          continue;
+        }
+        if (
+          item.label !== undefined &&
+          (typeof item.label !== "string" || item.label.length > 12)
+        )
+          errors.push(`${field}.points[${j}].label 须为 ≤12 字`);
+        if (
+          typeof item.value !== "number" ||
+          !Number.isFinite(item.value) ||
+          item.value < 0 ||
+          item.value > 1e12
+        )
+          errors.push(`${field}.points[${j}].value 须为 0..1e12 的数`);
+      }
+    }
+  }
+  if (intent === "counter-explainer") {
+    if (
+      typeof shot.value !== "number" ||
+      !Number.isFinite(shot.value) ||
+      shot.value < 0 ||
+      shot.value > 1e12
+    )
+      errors.push(`${field}.value 须为 0..1e12 的数`);
+    for (const key of ["prefix", "suffix"] as const) {
+      const v = (shot as Record<string, unknown>)[key];
+      if (v !== undefined && (typeof v !== "string" || v.length > 6))
+        errors.push(`${field}.${key} 须为 ≤6 字`);
+    }
+    if (
+      shot.decimals !== undefined &&
+      (!Number.isInteger(shot.decimals) ||
+        (shot.decimals as number) < 0 ||
+        (shot.decimals as number) > 2)
+    )
+      errors.push(`${field}.decimals 须为 0..2 的整数`);
+  }
   if (errors.length > 0) return { ok: false, errors };
   return { ok: true, shot: shot as unknown as SemanticDraftShot };
 }
@@ -692,6 +879,15 @@ export function compileSemanticShot(
       break;
     case "timeline-explainer":
       spec = compileTimelineExplainer(shot, seed);
+      break;
+    case "bar-explainer":
+      spec = compileBarExplainer(shot, seed);
+      break;
+    case "line-explainer":
+      spec = compileLineExplainer(shot, seed);
+      break;
+    case "counter-explainer":
+      spec = compileCounterExplainer(shot, seed);
       break;
   }
   validateSceneSpec(spec, defaultRegistry);
@@ -734,7 +930,7 @@ function chineseNumeralsOf(text: string): string[] {
 // Remove only the ordinal span, then check every remaining number. A field
 // such as "第6步提高6%" contains one structural number and one factual claim.
 const STRUCTURAL_ORDINAL =
-  /第\s*[0-9０-９一二三四五六七八九十百千万]+\s*(?:步|阶段|部分|幕|条|镜)|[一二三四五六七八九十百千万]+(?:个阶段|阶段|步|部分|幕|条|镜|大|种|类|方面)/g;
+  /第\s*[0-9０-９一二三四五六七八九十百千万]+\s*(?:步|阶段|部分|幕|条|镜)|[一二三四五六七八九十百千万]+(?:个阶段|阶段|步|部分|幕|条|镜|大|种|类|方面|城市|项)/g;
 
 function withoutStructuralOrdinals(value: string): string {
   return value.replace(STRUCTURAL_ORDINAL, "");
@@ -778,6 +974,24 @@ function displayedTexts(shot: SemanticDraftShot): Array<[string, string]> {
         fields.push([`milestones[${i}].label`, m.label]);
       });
       break;
+    case "bar-explainer":
+      // N4：value 数字字符串化参与闸（编造值与文字数字同罪）。
+      (shot.bars ?? []).forEach((b, i) => {
+        fields.push([`bars[${i}].label`, b.label]);
+        fields.push([`bars[${i}].value`, String(b.value)]);
+      });
+      break;
+    case "line-explainer":
+      (shot.points ?? []).forEach((p, i) => {
+        if (p.label !== undefined) fields.push([`points[${i}].label`, p.label]);
+        fields.push([`points[${i}].value`, String(p.value)]);
+      });
+      break;
+    case "counter-explainer":
+      fields.push(["value", String(shot.value ?? "")]);
+      if (shot.prefix !== undefined) fields.push(["prefix", shot.prefix]);
+      if (shot.suffix !== undefined) fields.push(["suffix", shot.suffix]);
+      break;
   }
   return fields.filter(
     (entry): entry is [string, string] => typeof entry[1] === "string",
@@ -802,6 +1016,9 @@ export function verifySourcedNumbers(
     // 汉字数值组合：原话没出现且非结构性序数 → 拒绝（I-1）。
     for (const token of chineseNumeralsOf(claims)) {
       if (sourcedChinese.has(token)) continue;
+      // 独立「一」豁免：一天/统一/一起等结构/习语用法占绝对多数，单字
+      // 不足以构成事实量主张；组合（十一/二十五…）仍受闸（N4）。
+      if (token === "一") continue;
       errors.push(
         `数值表述「${token}」（${label}）不在你的原话里：汉字数字同样不得编造，没给就改用定性文字`,
       );

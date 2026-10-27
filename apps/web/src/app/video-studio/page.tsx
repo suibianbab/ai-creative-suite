@@ -117,6 +117,8 @@ type SemanticPlanState = {
   } | null;
   // 路由透明标注：重试后 Σ时长仍偏离句中目标（确认卡如实告知，用户决定）。
   durationDeviation: { targetMs: number; actualMs: number } | null;
+  // N4：图表诉求但句子无数字的非阻断提示（补数据后可用图表镜头）。
+  dataHint: string | null;
   // P1（Codex 二轮复核）：句要求真实素材被 needs-assets 拦下时，界面提供
   // 「改用图解生成」明示授权入口——静默替换不被允许，降级必须用户点头。
   needsAssetsChoice: boolean;
@@ -165,6 +167,7 @@ export default function VideoStudioPage() {
     error: null,
     provenance: null,
     durationDeviation: null,
+dataHint: null,
     needsAssetsChoice: false,
   });
   // N2：单镜 AI 修改状态按 shotId 分片；切换项目时随编辑器重建清空。
@@ -587,6 +590,7 @@ export default function VideoStudioPage() {
         error: null,
         provenance: null,
         durationDeviation: null,
+dataHint: null,
         needsAssetsChoice: false,
       });
       // P1-1（Codex 复核 2026-10-26）：新请求开始即撤销旧候选——请求期间/
@@ -619,6 +623,7 @@ export default function VideoStudioPage() {
           errors?: string[];
           kind?: string;
           durationDeviation?: { targetMs: number; actualMs: number };
+          dataHint?: string;
         };
         const storyboardResult = data.storyboard;
         if (!response.ok || !storyboardResult?.ok) {
@@ -631,6 +636,7 @@ export default function VideoStudioPage() {
             ].join("；"),
             provenance: null,
             durationDeviation: null,
+dataHint: null,
             needsAssetsChoice: data.kind === "needs-assets",
           });
           return;
@@ -641,6 +647,7 @@ export default function VideoStudioPage() {
           error: null,
           provenance: data.provenance ?? null,
           durationDeviation: data.durationDeviation ?? null,
+          dataHint: data.dataHint ?? null,
           needsAssetsChoice: false,
         });
         setEditor((current) =>
@@ -659,6 +666,7 @@ export default function VideoStudioPage() {
           error: "AI 分镜请求失败（网络或服务错误），未修改项目",
           provenance: null,
           durationDeviation: null,
+dataHint: null,
           needsAssetsChoice: false,
         });
       }
@@ -1071,6 +1079,7 @@ export default function VideoStudioPage() {
                 error: null,
                 provenance: null,
                 durationDeviation: null,
+dataHint: null,
                 needsAssetsChoice: false,
               });
               refreshProjects().catch(() => {});
@@ -1229,6 +1238,7 @@ export default function VideoStudioPage() {
                     error: null,
                     provenance: null,
                     durationDeviation: null,
+dataHint: null,
                     needsAssetsChoice: false,
                   });
                   // 分镜句式 → 多镜头规划器；其余 → P0 单镜头规划器
@@ -1315,6 +1325,9 @@ export default function VideoStudioPage() {
                   已按你的选择改用图解生成；本分镜不包含原要求的真实照片或素材。
                 </p>
               ) : null}
+              {semanticPlan.dataHint ? (
+                <p className="plan-summary">{semanticPlan.dataHint}</p>
+              ) : null}
               {semanticPlan.durationDeviation ? (
                 <p className="planner-reason">
                   注意：总时长 {semanticPlan.durationDeviation.actualMs / 1000}s
@@ -1377,6 +1390,7 @@ export default function VideoStudioPage() {
                         error: null,
                         provenance: null,
                         durationDeviation: null,
+dataHint: null,
                         needsAssetsChoice: false,
                       });
                     } catch (error) {
@@ -1402,6 +1416,7 @@ export default function VideoStudioPage() {
                       error: null,
                       provenance: null,
                       durationDeviation: null,
+dataHint: null,
                       needsAssetsChoice: false,
                     });
                   }}
@@ -2007,6 +2022,7 @@ export default function VideoStudioPage() {
                 error: null,
                 provenance: null,
                 durationDeviation: null,
+dataHint: null,
                 needsAssetsChoice: false,
               });
             }}
@@ -2187,6 +2203,7 @@ export default function VideoStudioPage() {
                           error: null,
                           provenance: null,
                           durationDeviation: null,
+dataHint: null,
                           needsAssetsChoice: false,
                         });
                       }}

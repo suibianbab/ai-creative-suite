@@ -163,8 +163,21 @@ export async function POST(request: Request) {
       }
     : null;
 
+  // N4：图表诉求但句中无数字且成片无图表镜 → 非阻断提示（补数据可用图表）。
+  const chartWords = /图表|柱状|折线|计数|数据/.test(text);
+  const hasChartShot = validation.draft.shots.some((shot) =>
+    ["bar-explainer", "line-explainer", "counter-explainer"].includes(
+      shot.intent,
+    ),
+  );
+  const dataHint =
+    chartWords && !hasChartShot && !/\d/.test(text)
+      ? "这句话没有可用数字：补充具体数值后可用柱状/折线/计数图表镜头"
+      : undefined;
+
   return Response.json({
     storyboard: compiled,
+    ...(dataHint ? { dataHint } : {}),
     provenance: {
       provider: draftSource.provider,
       model: draftSource.model,

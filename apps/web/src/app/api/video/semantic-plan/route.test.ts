@@ -102,7 +102,7 @@ test("semantic-plan：合法 IR → 200 返回 storyboard 与 provenance", async
       assert.equal(data.storyboard.totalMs, 10500);
       assert.equal(data.provenance.provider, "qwen-chat");
       assert.equal(data.provenance.model, "qwen-plus");
-      assert.equal(data.provenance.promptVersion, "6");
+      assert.equal(data.provenance.promptVersion, "7");
       assert.equal(data.provenance.compilerVersion, "1");
       assert.equal(data.provenance.sentence, "做一条约25秒的水循环科普短片");
     });
@@ -507,4 +507,22 @@ test("semantic-plan：合法 JSON null → 400，不抛未处理异常", async (
   );
   assert.equal(response.status, 400);
   assert.match(String((await response.json()).error), /格式/);
+});
+
+
+// N4：图表诉求但句中无任何数字 → 成功响应附 dataHint（非阻断，提示补数据）。
+test("semantic-plan：图表诉求无数字 → 200 + dataHint", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => chatResponse(VALID_IR);
+  try {
+    await withEnv(WITH_KEY, async () => {
+      const response = await POST(ask("做一条销量增长图表科普短片"));
+      assert.equal(response.status, 200);
+      const data = await response.json();
+      assert.equal(data.storyboard.ok, true);
+      assert.match(String(data.dataHint), /数字|数据/);
+    });
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });
