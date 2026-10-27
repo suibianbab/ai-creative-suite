@@ -8,6 +8,7 @@ import {
   projectedTotalMs,
   requiresRealAssets,
   validateSemanticDraft,
+  verifySourcedNumbers,
 } from "../../../video-studio/semantic-storyboard";
 import { isSameOriginRequest } from "../../same-origin";
 
@@ -95,14 +96,21 @@ export async function POST(request: Request) {
     targetMs !== null &&
     validation.ok &&
     !withinRange(projectedTotalMs(validation.draft), lo, hi);
+  // N3 数值/日期防伪造：compare/timeline 镜头的数字必须来自用户原话。
+  const sourcingErrors = validation.ok
+    ? validation.draft.shots.flatMap((shot) =>
+        verifySourcedNumbers(shot, text),
+      )
+    : [];
 
-  // 第二轮：IR 非法或时长偏离时带原因修正重试，恰好一次。
-  if (!validation.ok || offTarget) {
+  // 第二轮：IR 非法、时长偏离或编造数值时带原因修正重试，恰好一次。
+  if (!validation.ok || offTarget || sourcingErrors.length > 0) {
     const reasons = validation.ok ? [] : validation.errors.slice();
     if (offTarget && validation.ok)
       reasons.push(
         `总时长（延长后）${projectedTotalMs(validation.draft)}ms 偏离要求：句子目标 ${targetMs}ms，Σ durationMs 须落在 ${lo}..${hi}ms`,
       );
+    reasons.push(...(validation.ok ? sourcingErrors : []));
     const retry = await provider.plan(text, reasons.join("；"));
     if (!retry.ok)
       return Response.json(
@@ -118,6 +126,18 @@ export async function POST(request: Request) {
       {
         error: "模型输出未通过校验，请换个说法或改用固定句式规划",
         errors: validation.errors,
+      },
+      { status: 422 },
+    );
+  // 重试后仍编造数值：拒绝（不猜、不静默改写模型的事实主张）。
+  const finalSourcing = validation.draft.shots.flatMap((shot) =>
+    verifySourcedNumbers(shot, text),
+  );
+  if (finalSourcing.length > 0)
+    return Response.json(
+      {
+        error: "模型输出了你原话里没有的数值/日期，已拒绝（不给编造数据出片）",
+        errors: finalSourcing,
       },
       { status: 422 },
     );

@@ -29,7 +29,9 @@ export type SemanticIntent =
   | "title"
   | "text-explainer"
   | "cycle-explainer"
-  | "flow-explainer";
+  | "flow-explainer"
+  | "compare-explainer"
+  | "timeline-explainer";
 
 export type SemanticDraftShot = {
   intent: SemanticIntent;
@@ -42,6 +44,22 @@ export type SemanticDraftShot = {
   cycleSteps?: string[];
   /** flow-explainer 的 2-4 步骤 */
   flowSteps?: string[];
+  /** compare-explainer 的前后对比（数值/事实须来自用户原话，N3） */
+  metricLabel?: string;
+  beforeLabel?: string;
+  beforeValue?: string;
+  beforeNote?: string;
+  afterLabel?: string;
+  afterValue?: string;
+  afterNote?: string;
+  deltaText?: string;
+  deltaPositive?: boolean;
+  /** timeline-explainer 的 2-6 里程碑（无日期时用顺序词，N3） */
+  milestones?: Array<{
+    date: string;
+    label: string;
+    status?: "done" | "active" | "pending";
+  }>;
 };
 
 export type SemanticStoryboardDraft = {
@@ -65,6 +83,18 @@ const SHOT_KEYS_BY_INTENT: Record<SemanticIntent, Set<string>> = {
   "text-explainer": new Set(["bullets"]),
   "cycle-explainer": new Set(["cycleSteps"]),
   "flow-explainer": new Set(["flowSteps"]),
+  "compare-explainer": new Set([
+    "metricLabel",
+    "beforeLabel",
+    "beforeValue",
+    "beforeNote",
+    "afterLabel",
+    "afterValue",
+    "afterNote",
+    "deltaText",
+    "deltaPositive",
+  ]),
+  "timeline-explainer": new Set(["milestones"]),
 };
 // 常见资产/代码字段名 → 指引文案（模型请求画不出的东西时明说下一步）。
 const ASSET_KEYS =
@@ -77,6 +107,8 @@ const INTENTS = new Set([
   "text-explainer",
   "cycle-explainer",
   "flow-explainer",
+  "compare-explainer",
+  "timeline-explainer",
 ]);
 
 // 各 intent 的「演完 + 停留」时长下限（ms），由上方能力目录推出。
@@ -93,6 +125,12 @@ function minDurationMs(
       return 3000 + Math.max(0, (shot.cycleSteps?.length ?? 3) - 1) * 480;
     case "flow-explainer":
       return 2500 + Math.max(0, (shot.flowSteps?.length ?? 2) - 1) * 120;
+    // compare：before(200+900)→after(1600)→delta(1400+600=2000)+停留。
+    case "compare-explainer":
+      return 2500;
+    // timeline：enterMs 1400 + 轴线/节点 span 600+(n-1)×300+500 + 停留。
+    case "timeline-explainer":
+      return 2900 + Math.max(0, (shot.milestones?.length ?? 2) - 1) * 300;
   }
 }
 
@@ -190,11 +228,12 @@ function baseSpec(
   params: Record<string, unknown>,
   seed: number,
   background = "#101f34",
+  componentVersion = 1,
 ): SceneSpec {
   return {
     specVersion: 1,
     componentId,
-    componentVersion: 1,
+    componentVersion,
     durationMs,
     seed,
     background,
@@ -318,10 +357,84 @@ const INTENT_LABEL: Record<SemanticIntent, string> = {
   "text-explainer": "要点解说",
   "cycle-explainer": "循环图解",
   "flow-explainer": "流程图解",
+  "compare-explainer": "前后对比",
+  "timeline-explainer": "阶段时间线",
 };
 
 // 确认卡预告观众将看到的屏幕文字（交接单 §3.3：目的、画面内容、屏幕文字、
 // 旁白、时长及模板边界）——不只报组件名/意图词。
+// N3：前后对比（compare-split@2）——数值/事实来自用户原话（路由层经
+// verifySourcedNumbers 把关），编译器决定配色/入场/布局，不接受模型原始参数。
+const COMPARE_COLORS = {
+  textColor: "#f3f5f7",
+  panelColor: "#1b2f4a",
+  accentColor: "#f5b652",
+  positiveColor: "#37b26c",
+  negativeColor: "#e2654f",
+};
+
+function compileCompareExplainer(
+  shot: SemanticDraftShot,
+  seed: number,
+): SceneSpec {
+  return baseSpec(
+    "compare-split",
+    effectiveDurationMs(shot),
+    {
+      title: shot.title,
+      metricLabel: shot.metricLabel ?? "",
+      beforeLabel: shot.beforeLabel ?? "",
+      beforeValue: shot.beforeValue ?? "",
+      beforeNote: shot.beforeNote ?? "",
+      afterLabel: shot.afterLabel ?? "",
+      afterValue: shot.afterValue ?? "",
+      afterNote: shot.afterNote ?? "",
+      deltaText: shot.deltaText ?? "",
+      deltaPositive: shot.deltaPositive === true,
+      ...COMPARE_COLORS,
+      enterMs: 900,
+      sequence: "stagger",
+    },
+    seed,
+    "#101f34",
+    2,
+  );
+}
+
+// N3：阶段时间线（timeline-milestones@2）——date 槽用户没给日期时用顺序词，
+// 编译默认 status=done（已讲完的顺序叙事）；配色/入场为编译器常量。
+const TIMELINE_COLORS = {
+  textColor: "#f3f5f7",
+  lineColor: "#3b5878",
+  doneColor: "#37b26c",
+  activeColor: "#f5b652",
+  pendingColor: "#8fa3b8",
+};
+
+function compileTimelineExplainer(
+  shot: SemanticDraftShot,
+  seed: number,
+): SceneSpec {
+  return baseSpec(
+    "timeline-milestones",
+    effectiveDurationMs(shot),
+    {
+      title: shot.title,
+      milestones: (shot.milestones ?? []).map((m) => ({
+        date: m.date,
+        label: m.label,
+        status: m.status ?? "done",
+      })),
+      ...TIMELINE_COLORS,
+      enterMs: 1400,
+      sequence: "stagger",
+    },
+    seed,
+    "#101f34",
+    2,
+  );
+}
+
 function renderHintFor(shot: SemanticDraftShot): string {
   const base = `${INTENT_LABEL[shot.intent]}「${shot.title}」`;
   switch (shot.intent) {
@@ -333,6 +446,12 @@ function renderHintFor(shot: SemanticDraftShot): string {
       return `${base}，循环阶段：${(shot.cycleSteps ?? []).join(" → ")}`;
     case "flow-explainer":
       return `${base}，流程：${(shot.flowSteps ?? []).join(" → ")}`;
+    case "compare-explainer":
+      return `${base}，${shot.metricLabel ?? ""}：${shot.beforeLabel ?? ""}${shot.beforeValue ?? ""} → ${shot.afterLabel ?? ""}${shot.afterValue ?? ""}（${shot.deltaText ?? ""}）`;
+    case "timeline-explainer":
+      return `${base}，阶段：${(shot.milestones ?? [])
+        .map((m) => `${m.date}·${m.label}`)
+        .join(" → ")}`;
   }
 }
 
@@ -505,6 +624,12 @@ export function compileSemanticShot(
     case "flow-explainer":
       spec = compileFlowExplainer(shot, seed);
       break;
+    case "compare-explainer":
+      spec = compileCompareExplainer(shot, seed);
+      break;
+    case "timeline-explainer":
+      spec = compileTimelineExplainer(shot, seed);
+      break;
   }
   validateSceneSpec(spec, defaultRegistry);
   return {
@@ -518,4 +643,38 @@ export function compileSemanticShot(
       renderHint: renderHintFor(shot),
     },
   };
+}
+
+
+// N3 数值/日期防伪造闸（交接单：时间点、数值和事实不能由模型伪造）：
+// compare 的 beforeValue/afterValue/deltaText 与 timeline 的 date 中出现
+// 的每个数字串，都必须出现在用户原话里；用户没给数字时模型只能用文字
+// 顺序词。纯函数，路由层在 IR 校验通过后调用。
+function numeralsOf(text: string): string[] {
+  return [...text.matchAll(/\d+(?:\.\d+)?/g)].map((m) => m[0]);
+}
+
+export function verifySourcedNumbers(
+  shot: SemanticDraftShot,
+  userText: string,
+): string[] {
+  const sourced = new Set(numeralsOf(userText));
+  const errors: string[] = [];
+  const check = (label: string, value: string | undefined) => {
+    if (typeof value !== "string") return;
+    for (const numeral of numeralsOf(value))
+      if (!sourced.has(numeral))
+        errors.push(
+          `数字「${numeral}」（${label}）不在你的原话里：数值/日期必须来自用户输入，没给就改用文字表述`,
+        );
+  };
+  if (shot.intent === "compare-explainer") {
+    check("beforeValue", shot.beforeValue);
+    check("afterValue", shot.afterValue);
+    check("deltaText", shot.deltaText);
+  }
+  if (shot.intent === "timeline-explainer")
+    for (const [i, m] of (shot.milestones ?? []).entries())
+      check(`milestones[${i}].date`, m.date);
+  return errors;
 }

@@ -9,6 +9,7 @@ import {
   compileSemanticShot,
   requiresRealAssets,
   validateSemanticShot,
+  verifySourcedNumbers,
 } from "../../../video-studio/semantic-storyboard";
 
 // N2 单镜自然语言修改（交接单 2026-10-27）：客户端送「本镜工作版本摘要 +
@@ -104,9 +105,15 @@ export async function POST(request: Request) {
   const usageCalls: Array<NonNullable<SemanticTokenUsage>> = [];
   if (first.usage) usageCalls.push(first.usage);
 
-  // IR 非法 → 一次带因修正重试（同整片纪律）。
-  if (!validation.ok) {
-    const retry = await provider.revise(payload, validation.errors.join("；"));
+  // N3 数值防伪造 + IR 非法 → 一次带因修正重试（同整片纪律）。
+  const sourcingErrors = validation.ok
+    ? verifySourcedNumbers(validation.shot, instruction)
+    : [];
+  if (!validation.ok || sourcingErrors.length > 0) {
+    const retry = await provider.revise(
+      payload,
+      [...(validation.ok ? [] : validation.errors), ...sourcingErrors].join("；"),
+    );
     if (!retry.ok)
       return Response.json({ error: retry.message, kind: retry.kind }, { status: 422 });
     validation = validateSemanticShot(retry.draft, "shot");
@@ -118,6 +125,15 @@ export async function POST(request: Request) {
       {
         error: "模型输出未通过校验，请换个说法或改用固定句式重做",
         errors: validation.errors,
+      },
+      { status: 422 },
+    );
+  const finalSourcing = verifySourcedNumbers(validation.shot, instruction);
+  if (finalSourcing.length > 0)
+    return Response.json(
+      {
+        error: "模型输出了指令里没有的数值/日期，已拒绝（不给编造数据出片）",
+        errors: finalSourcing,
       },
       { status: 422 },
     );
