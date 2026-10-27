@@ -43,12 +43,12 @@ function isIsoTime(value: unknown): value is string {
 
 // —— P2.5-T1：媒体资产账本校验（spec A1-A8）。
 // 返回 assetId → durationMs 映射，供 media-clip 出入点与 assetDigests 交叉校验。
-function validateMediaAssets(value: unknown): Map<string, number> {
-  if (value === undefined) return new Map();
+function validateMediaAssets(value: unknown): Map<string, { durationMs: number; isImage: boolean }> {
+  if (value === undefined) return new Map<string, { durationMs: number; isImage: boolean }>();
   if (!Array.isArray(value) || value.length > MAX_ARRAY) {
     fail(`mediaAssets must be an array of at most ${MAX_ARRAY} entries`);
   }
-  const durations = new Map<string, number>();
+  const durations = new Map<string, { durationMs: number; isImage: boolean }>();
   for (const [index, asset] of value.entries()) {
     const field = `mediaAssets[${index}]`;
     if (!isRecord(asset)) fail(`${field} must be an object`);
@@ -108,6 +108,38 @@ function validateMediaAssets(value: unknown): Map<string, number> {
       fail(`${field}.original.bytes 须为正整数`);
     }
     if (
+      !Number.isInteger(o.width) ||
+      (o.width as number) < 1 ||
+      !Number.isInteger(o.height) ||
+      (o.height as number) < 1
+    ) {
+      fail(`${field}.original.width/height 须为正整数`);
+    }
+    // —— 任务 1（2026-10-28）：图片判别。kind==="image" 走图片契约（无
+    // 时长/帧率/编码/音轨）；缺省/“video” 走原视频契约（旧资产不动）。
+    if (o.kind === "image") {
+      if (o.format !== "png" && o.format !== "jpeg" && o.format !== "webp") {
+        fail(`${field}.original.format 须为 png/jpeg/webp`);
+      }
+      if (
+        typeof o.storeKey !== "string" ||
+        !/^[0-9a-f]{16}\.(png|jpg|webp)$/.test(o.storeKey) ||
+        (o.storeKey as string).slice(0, 16) !== (o.sha256 as string).slice(0, 16)
+      ) {
+        fail(`${field}.original.storeKey 须为 sha256 前 16 位 + .png/.jpg/.webp`);
+      }
+      // 图片无固有时长：media-clip 出点上限取账本统一上限（展示时长由
+      // 镜头给定）；inMs=0 / audio=mute 在 sceneSource 交叉校验里强制。
+      durations.set(asset.assetId as string, {
+        durationMs: MAX_DURATION_MS,
+        isImage: true,
+      });
+      continue;
+    }
+    if (o.kind !== undefined && o.kind !== "video") {
+      fail(`${field}.original.kind 须为 "video" 或 "image"`);
+    }
+    if (
       !Number.isInteger(o.durationMs) ||
       (o.durationMs as number) < 200 ||
       (o.durationMs as number) > MAX_DURATION_MS
@@ -115,14 +147,6 @@ function validateMediaAssets(value: unknown): Map<string, number> {
       fail(
         `${field}.original.durationMs 须为 200..${MAX_DURATION_MS} 的整数毫秒`,
       );
-    }
-    if (
-      !Number.isInteger(o.width) ||
-      (o.width as number) < 1 ||
-      !Number.isInteger(o.height) ||
-      (o.height as number) < 1
-    ) {
-      fail(`${field}.original.width/height 须为正整数`);
     }
     if (
       typeof o.fps !== "number" ||
@@ -169,7 +193,10 @@ function validateMediaAssets(value: unknown): Map<string, number> {
         fail(`${field}.proxy.note 须为 1..200 字符`);
       }
     }
-    durations.set(asset.assetId as string, o.durationMs as number);
+    durations.set(asset.assetId as string, {
+      durationMs: o.durationMs as number,
+      isImage: false,
+    });
   }
   return durations;
 }
@@ -177,7 +204,7 @@ function validateMediaAssets(value: unknown): Map<string, number> {
 function validateSceneSource(
   value: unknown,
   field: string,
-  mediaAssets: Map<string, number>,
+  mediaAssets: Map<string, { durationMs: number; isImage: boolean }>,
 ): void {
   if (!isRecord(value)) fail(`${field}.sceneSource must be an object`);
   if (value.type === "spec") {
@@ -210,7 +237,8 @@ function validateSceneSource(
       if (!Number.isInteger(value[key]))
         fail(`${field}.sceneSource.${key} 须为整数毫秒`);
     }
-    const assetDurationMs = mediaAssets.get(value.mediaAssetId as string);
+    const asset = mediaAssets.get(value.mediaAssetId as string);
+    const assetDurationMs = asset?.durationMs;
     if (
       (value.inMs as number) < 0 ||
       (value.outMs as number) < (value.inMs as number) + 200 ||
@@ -219,6 +247,15 @@ function validateSceneSource(
       fail(
         `${field}.sceneSource 出入点越界（合法 inMs ≥ 0、inMs+200 ≤ outMs ≤ 素材 durationMs=${assetDurationMs}）`,
       );
+    }
+    // 图片素材：无时间轴概念——入点恒 0（出点=展示时长）、无音轨可留。
+    if (asset?.isImage) {
+      if ((value.inMs as number) !== 0) {
+        fail(`${field}.sceneSource.inMs：图片素材入点必须为 0（出点即展示时长）`);
+      }
+      if (value.audio === "keep") {
+        fail(`${field}.sceneSource.audio：图片无音轨，须为 "mute"`);
+      }
     }
     if (value.fit !== "cover" && value.fit !== "contain") {
       fail(`${field}.sceneSource.fit 须为 "cover" 或 "contain"`);
@@ -292,7 +329,7 @@ function validateSceneSource(
 function validateContentVersion(
   value: unknown,
   field: string,
-  mediaAssets: Map<string, number>,
+  mediaAssets: Map<string, { durationMs: number; isImage: boolean }>,
 ): ContentVersion {
   if (!isRecord(value)) fail(`${field} must be an object`);
   if (!isUuid(value.versionId)) fail(`${field}.versionId must be a UUID`);
@@ -438,7 +475,7 @@ function validateShotEvent(
 function validateShot(
   value: unknown,
   field: string,
-  mediaAssets: Map<string, number>,
+  mediaAssets: Map<string, { durationMs: number; isImage: boolean }>,
 ): Shot {
   if (!isRecord(value)) fail(`${field} must be an object`);
   if (!isUuid(value.shotId)) fail(`${field}.shotId must be a UUID`);

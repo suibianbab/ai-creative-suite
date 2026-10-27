@@ -33,7 +33,16 @@ import {
   writeAtomically,
 } from "./store.js";
 
-const SUPPORTED_EXTENSIONS = new Set(["mp4", "webm", "mov"]);
+// 任务 1（2026-10-28）：图片入账（png/jpg/webp；jpeg 归一 jpg）。
+const VIDEO_EXTENSIONS = new Set(["mp4", "webm", "mov"]);
+const IMAGE_EXTENSIONS = new Set(["png", "jpg", "jpeg", "webp"]);
+const SUPPORTED_EXTENSIONS = new Set([...VIDEO_EXTENSIONS, ...IMAGE_EXTENSIONS]);
+function imageFormatFor(ext: string): "png" | "jpeg" | "webp" {
+  if (ext === "png") return "png";
+  if (ext === "webp") return "webp";
+  return "jpeg";
+}
+
 const MIN_DURATION_MS = 200;
 const MAX_DURATION_MS = 600000;
 
@@ -145,12 +154,17 @@ export async function ingestMediaFile(input: {
       return fail(
         `不支持的媒体格式 ${
           extension === "" ? "（无扩展名）" : `.${extension}`
-        }：仅支持 mp4 / webm / mov`,
+        }：仅支持 mp4 / webm / mov / png / jpg / webp`,
         "unsupported-format",
       );
     }
+    const isImageUpload = IMAGE_EXTENSIONS.has(extension);
+    const storeExt = extension === "jpeg" ? "jpg" : extension;
     const sha256 = createHash("sha256").update(input.bytes).digest("hex");
-    const storeKey = storeKeyFor(sha256, extension as "mp4" | "webm" | "mov");
+    const storeKey = storeKeyFor(
+      sha256,
+      storeExt as "mp4" | "webm" | "mov" | "png" | "jpg" | "webp",
+    );
     tempDir = mkdtempSync(path.join(input.tempDir ?? tmpdir(), "acs-ingest-"));
     const tempFile = path.join(tempDir, `source.${extension}`);
     writeFileSync(tempFile, input.bytes);
@@ -158,6 +172,45 @@ export async function ingestMediaFile(input: {
     const probed = await probeFn(tempFile);
     if (!probed.ok) return fail(probed.error, "probe-failed");
     const probe = probed.probe;
+    // 图片路径（任务 1）：探测出的格式须与扩展名一致（防改名伪装），
+    // 无时长/转码；解码门照走（损坏图在这里拒）。
+    if (probe.image) {
+      if (!isImageUpload || probe.image.format !== imageFormatFor(storeExt)) {
+        return fail(
+          `文件内容与扩展名不符（探测为 ${probe.image.format} 图，上传为 .${extension}）`,
+          "probe-failed",
+        );
+      }
+      const decoded = await decodeFn(tempFile);
+      if (!decoded.ok) return fail(decoded.error, "decode-failed");
+      const dest = originalPath(input.root, storeKey);
+      const wroteOriginal =
+        writeAtomically(dest, input.bytes) === "written" ? true : false;
+      if (!wroteOriginal && !existsSync(dest)) {
+        return fail("图片落仓失败", "store-error");
+      }
+      cleanup();
+      return {
+        ok: true,
+        asset: {
+          assetId: randomUUID(),
+          createdAt: input.now?.() ?? new Date().toISOString(),
+          origin: input.origin ?? {
+            kind: "local-upload",
+            fileName: input.fileName,
+          },
+          original: {
+            kind: "image",
+            sha256,
+            bytes: input.bytes.byteLength,
+            width: probe.image.width,
+            height: probe.image.height,
+            format: probe.image.format,
+            storeKey,
+          },
+        },
+      };
+    }
     if (
       probe.durationMs < MIN_DURATION_MS ||
       probe.durationMs > MAX_DURATION_MS

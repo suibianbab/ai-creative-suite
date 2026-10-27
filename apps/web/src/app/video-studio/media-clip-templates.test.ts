@@ -19,6 +19,7 @@ function asset(): MediaAsset {
     createdAt: "2026-10-19T00:00:00.000Z",
     origin: { kind: "local-upload", fileName: "clip.mp4" },
     original: {
+      kind: "video" as const,
       sha256: "a".repeat(64),
       bytes: 100,
       durationMs: 5000,
@@ -30,6 +31,30 @@ function asset(): MediaAsset {
       storeKey: "aaaaaaaaaaaaaaaa.mp4",
     },
   };
+}
+
+// 任务 1（2026-10-28）：图片夹具——无时长/帧率/编码/音轨。
+// 视频 original 可变窄化（判别联合下直接改字段需要先窄化）。
+function videoOriginal(asset: MediaAsset) {
+  return asset.original as Extract<MediaAsset["original"], { kind?: "video" }>;
+}
+
+function imageAsset(overrides: Record<string, unknown> = {}): MediaAsset {
+  return {
+    assetId: ASSET_ID,
+    createdAt: "2026-10-19T00:00:00.000Z",
+    origin: { kind: "local-upload", fileName: "product.png" },
+    original: {
+      kind: "image" as const,
+      sha256: "b".repeat(64),
+      bytes: 20480,
+      width: 1200,
+      height: 900,
+      format: "png" as const,
+      storeKey: "bbbbbbbbbbbbbbbb.png",
+    },
+    ...overrides,
+  } as MediaAsset;
 }
 
 function draft(overrides: Partial<MediaEditDraft> = {}): MediaEditDraft {
@@ -85,7 +110,7 @@ test("M2：非 media 版本 + 有账本 → 默认草稿（outMs=min(2000, 时�
     audio: "mute",
   });
   const short = asset();
-  short.original.durationMs = 1200;
+  videoOriginal(short).durationMs = 1200;
   assert.equal(
     draftMediaFromVersion(specWorking, [short]).draft?.outMsText,
     "1200",
@@ -127,7 +152,7 @@ test("M3：audio=keep 需素材有音轨（无音轨 → 行内拒；有音轨 �
   assert.match(rejected.error!, new RegExp(ASSET_ID));
 
   const withAudio = asset();
-  withAudio.original.hasAudio = true;
+  videoOriginal(withAudio).hasAudio = true;
   const accepted = buildMediaRevisePatch(
     draft({ audio: "keep" }),
     [withAudio],
@@ -255,7 +280,7 @@ test("M7：mediaDraftForAsset 默认草稿全值（入点 0 / 出点 min(2000, �
 
 test("M7：mediaDraftForAsset 短素材 outMsText 取素材时长", () => {
   const short = asset();
-  short.original.durationMs = 1200;
+  videoOriginal(short).durationMs = 1200;
   assert.equal(mediaDraftForAsset(short).outMsText, "1200");
 });
 

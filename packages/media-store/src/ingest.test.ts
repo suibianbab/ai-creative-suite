@@ -77,12 +77,17 @@ test("happy path：640x360 h264（无需代理）→ 契约合法 MediaAsset，�
     kind: "local-upload",
     fileName: "小片.mp4",
   });
-  assert.equal(asset.original.durationMs, 2000);
-  assert.equal(asset.original.width, 640);
-  assert.equal(asset.original.height, 360);
-  assert.equal(asset.original.fps, 24);
-  assert.equal(asset.original.codec, "h264");
-  assert.equal(asset.original.hasAudio, false);
+  // 任务 1 起 original 是视频|图片判别联合：视频夹具显式窄化。
+  const video = asset.original as Extract<
+    typeof asset.original,
+    { kind?: "video" }
+  >;
+  assert.equal(video.durationMs, 2000);
+  assert.equal(video.width, 640);
+  assert.equal(video.height, 360);
+  assert.equal(video.fps, 24);
+  assert.equal(video.codec, "h264");
+  assert.equal(video.hasAudio, false);
   assert.equal(asset.original.bytes, bytes.byteLength);
   assert.equal(
     asset.original.storeKey,

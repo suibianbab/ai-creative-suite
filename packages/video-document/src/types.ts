@@ -224,18 +224,33 @@ export type MediaAsset = {
         license: { name: string; author?: string; usageNote?: string };
         retrievedAt: string;
       };
-  original: {
-    // ffprobe 实测，导入核验通过才落账；不可变（ADR 0001）
-    sha256: string; // 64 位小写 hex
-    bytes: number;
-    durationMs: number; // 200..600000
-    width: number;
-    height: number;
-    fps: number; // 正有限数（29.97 合法）
-    codec: string;
-    hasAudio: boolean;
-    storeKey: string; // `${sha256 前 16 位}.${mp4|webm|mov}` 内容寻址
-  };
+  original:
+    | {
+        // 视频（缺省判别：旧资产无 kind 字段按视频读取——2026-10-28 图片
+        // 入账前的全部存量资产不动，读取兼容）。
+        kind?: "video";
+        // ffprobe 实测，导入核验通过才落账；不可变（ADR 0001）
+        sha256: string; // 64 位小写 hex
+        bytes: number;
+        durationMs: number; // 200..600000
+        width: number;
+        height: number;
+        fps: number; // 正有限数（29.97 合法）
+        codec: string;
+        hasAudio: boolean;
+        storeKey: string; // `${sha256 前 16 位}.${mp4|webm|mov}` 内容寻址
+      }
+    | {
+        // 图片（2026-10-28 任务 1）：无时长/帧率/编码/音轨——展示时长由
+        // 绑定镜头的出点给定；不可变口径与视频一致。
+        kind: "image";
+        sha256: string;
+        bytes: number;
+        width: number;
+        height: number;
+        format: "png" | "jpeg" | "webp";
+        storeKey: string; // `${sha256 前 16 位}.${png|jpg|webp}`
+      };
   proxy?: {
     // 浏览器预览用转码代理，可再生成
     sha256: string;

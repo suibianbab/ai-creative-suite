@@ -10,6 +10,9 @@ export type ProbeResult = {
   codec: string;
   hasAudio: boolean;
   formatName: string;
+  // 任务 1（2026-10-28）：图片探测分支。image 存在时视频字段全部
+  // undefined——ffprobe 对单帧图不给时长/帧率，解析侧按图片契约出。
+  image?: { width: number; height: number; format: "png" | "jpeg" | "webp" };
 };
 
 export type ProbeOutcome =
@@ -48,6 +51,38 @@ export function parseProbeOutput(raw: string): ProbeOutcome {
   }
   const format = asRecord(root?.format);
   const durationSeconds = format ? Number(format.duration) : Number.NaN;
+  const codecName = String(video?.codec_name ?? "");
+  // 图片分支（任务 1）：codec 是图片解码器且无时长——单帧图。
+  const IMAGE_CODEC: Record<string, "png" | "jpeg" | "webp"> = {
+    png: "png",
+    mjpeg: "jpeg",
+    webp: "webp",
+  };
+  if (codecName in IMAGE_CODEC && !Number.isFinite(durationSeconds)) {
+    const width = Number(video?.width);
+    const height = Number(video?.height);
+    if (
+      !Number.isInteger(width) ||
+      !Number.isInteger(height) ||
+      width <= 0 ||
+      height <= 0
+    ) {
+      return { ok: false, error: "无法读取图片画幅（文件可能不完整）" };
+    }
+    return {
+      ok: true,
+      probe: {
+        durationMs: 0,
+        width,
+        height,
+        fps: 0,
+        codec: codecName,
+        hasAudio: false,
+        formatName: String(format?.format_name ?? ""),
+        image: { width, height, format: IMAGE_CODEC[codecName]! },
+      },
+    };
+  }
   if (!Number.isFinite(durationSeconds) || durationSeconds <= 0) {
     return { ok: false, error: "无法读取视频时长（文件可能不完整）" };
   }

@@ -226,7 +226,11 @@ test("追加不改动既有镜头；商品配方校验资产并构造受控媒�
   if (source.type === "media-clip") {
     assert.equal(source.mediaAssetId, exampleAsset.assetId);
     assert.equal(source.inMs, 0);
-    assert.ok(source.outMs <= exampleAsset.original.durationMs);
+    const original = exampleAsset.original as Extract<
+      MediaAsset["original"],
+      { kind?: "video" }
+    >;
+    assert.ok(source.outMs <= original.durationMs);
   }
   assert.deepEqual(media.document.mediaAssets, [exampleAsset]);
 });
@@ -234,7 +238,10 @@ test("追加不改动既有镜头；商品配方校验资产并构造受控媒�
 test("不足 200 毫秒的媒体原件在创建镜头前拒绝", () => {
   const shortAsset: MediaAsset = {
     ...exampleAsset,
-    original: { ...exampleAsset.original, durationMs: 150 },
+    original: {
+      ...(exampleAsset.original as Extract<MediaAsset["original"], { kind?: "video" }>),
+      durationMs: 150,
+    },
   };
   const result = applyShotRecipe(
     emptyProject(),
@@ -251,7 +258,10 @@ test("终审修复：短素材时长契约（durationMs=outMs−inMs）、稀疏
   const shortAsset: MediaAsset = {
     ...exampleAsset,
     assetId: "22222222-3333-4333-8444-555555555555",
-    original: { ...exampleAsset.original, durationMs: 2500 },
+    original: {
+      ...(exampleAsset.original as Extract<MediaAsset["original"], { kind?: "video" }>),
+      durationMs: 2500,
+    },
   };
   const short = applyShotRecipe(
     emptyProject(),

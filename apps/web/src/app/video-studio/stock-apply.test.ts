@@ -31,7 +31,9 @@ const DERIVATIVE_URL =
 const AT = "2026-10-20T00:00:00.000Z";
 
 function stockAsset(
-  overrides: Partial<MediaAsset["original"]> = {},
+  overrides: Partial<
+    Extract<MediaAsset["original"], { kind?: "video" }>
+  > = {},
 ): MediaAsset {
   return {
     assetId: ASSET_ID,
@@ -44,6 +46,7 @@ function stockAsset(
       retrievedAt: AT,
     },
     original: {
+      kind: "video" as const,
       sha256: "a".repeat(64),
       bytes: 100,
       durationMs: 5000,

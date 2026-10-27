@@ -11,11 +11,13 @@ import {
 import { homedir } from "node:os";
 import path from "node:path";
 
-export const STORE_KEY_PATTERN = /^[0-9a-f]{16}\.(mp4|webm|mov)$/;
+// 任务 1（2026-10-28）：图片键位（png/jpg/webp）与视频键位并存。
+export const STORE_KEY_PATTERN =
+  /^[0-9a-f]{16}\.(mp4|webm|mov|png|jpg|webp)$/;
 
 export function storeKeyFor(
   sha256: string,
-  ext: "mp4" | "webm" | "mov",
+  ext: "mp4" | "webm" | "mov" | "png" | "jpg" | "webp",
 ): string {
   return `${sha256.slice(0, 16)}.${ext}`;
 }

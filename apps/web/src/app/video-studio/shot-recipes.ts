@@ -413,12 +413,17 @@ export function applyShotRecipe(
   if (recipe.componentId === "media-clip") {
     const asset = mediaAssets.find((item) => item.assetId === inputs.assetId);
     if (!asset) return { error: "请先选择项目内已导入的媒体素材" };
-    if (asset.original.durationMs < 200)
+    // 任务 1：图片无时长下限（展示时长由配方给定）；视频维持 200ms 门。
+    const assetDurationMs =
+      asset.original.kind === "image"
+        ? Number.POSITIVE_INFINITY
+        : asset.original.durationMs;
+    if (assetDurationMs < 200)
       return { error: "媒体素材短于 200 毫秒，不能创建有效镜头" };
     usedAsset = asset;
     // 媒体镜头契约：durationMs 必须等于 outMs−inMs。素材比配方时长短时，
-    // 镜头时长取片段长度，而不是留下保存必炸的半吊子镜头。
-    durationMs = Math.min(durationMs, asset.original.durationMs);
+    // 镜头时长取片段长度，而不是留下保存必炸的半吊子镜头（图片恒取配方）。
+    durationMs = Math.min(durationMs, assetDurationMs);
     sceneSource = {
       type: "media-clip",
       mediaAssetId: asset.assetId,

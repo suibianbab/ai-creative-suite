@@ -767,7 +767,11 @@ function sampleShots(
         source: text("维护到位，风味常在", "到期自动提醒更省心", 3500, 4505),
       },
     ];
-  if (!productAsset || productAsset.original.durationMs < 3000)
+  if (
+    !productAsset ||
+    (productAsset.original.kind !== "image" &&
+      productAsset.original.durationMs < 3000)
+  )
     throw new Error("产品样片需要完整的 3 秒商品示例素材");
   return [
     {

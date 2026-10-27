@@ -449,6 +449,27 @@ function MediaStage({
       </div>
     );
   }
+  // 任务 1（2026-10-28）：图片资产预览——<img> 同 cover/contain 裁切口径
+  //（无 seek/无音轨；出点即展示时长）。缺失/损坏同样降级占位。
+  if (asset.original.kind === "image") {
+    const css = mediaClipCss(
+      asset.original.width,
+      asset.original.height,
+      stageWidth,
+      stageHeight,
+      item.fit,
+      item.focalX,
+    );
+    return (
+      <img
+        className="media-stage"
+        src={mediaSrcUrl(asset)}
+        style={css}
+        alt=""
+        onError={() => setFailed(true)}
+      />
+    );
+  }
   const css = mediaClipCss(
     asset.original.width,
     asset.original.height,

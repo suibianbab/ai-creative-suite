@@ -23,7 +23,7 @@ export function MediaPanel({
       <h4>素材</h4>
       {assets.length === 0 ? (
         <p className="media-empty">
-          尚无素材——上传 mp4/webm/mov（≤500MB，仅本地开发环境）
+          尚无素材——上传 mp4/webm/mov 或 png/jpg/webp（≤500MB，仅本地开发环境）
         </p>
       ) : (
         <ul className="media-list">
@@ -37,7 +37,7 @@ export function MediaPanel({
       <input
         ref={inputRef}
         type="file"
-        accept=".mp4,.webm,.mov,video/mp4,video/webm,video/quicktime"
+        accept=".mp4,.webm,.mov,video/mp4,video/webm,video/quicktime,.png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
       />
       <button
         type="button"

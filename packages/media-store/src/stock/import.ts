@@ -373,26 +373,29 @@ function describeMismatch(
   derivative: StockDerivative,
 ): string {
   const problems: string[] = [];
-  if (
-    Math.abs(asset.original.durationMs - candidate.durationMs) >
-    DURATION_TOLERANCE_MS
-  ) {
+  // 任务 1 起 original 是视频|图片判别联合；stock 源当前只出视频——显式
+  // 窄化（将来接图片 stock 时在判别上加分支）。
+  const original = asset.original as Extract<
+    typeof asset.original,
+    { kind?: "video" }
+  >;
+  if (Math.abs(original.durationMs - candidate.durationMs) > DURATION_TOLERANCE_MS) {
     problems.push(
-      `时长不符：候选 ${candidate.durationMs}ms，实际 ${asset.original.durationMs}ms`,
+      `时长不符：候选 ${candidate.durationMs}ms，实际 ${original.durationMs}ms`,
     );
   }
   if (
-    Math.abs(asset.original.width - derivative.width) > DIMENSION_TOLERANCE_PX
+    Math.abs(original.width - derivative.width) > DIMENSION_TOLERANCE_PX
   ) {
     problems.push(
-      `宽度不符：档位 ${derivative.width}px，实际 ${asset.original.width}px`,
+      `宽度不符：档位 ${derivative.width}px，实际 ${original.width}px`,
     );
   }
   if (
-    Math.abs(asset.original.height - derivative.height) > DIMENSION_TOLERANCE_PX
+    Math.abs(original.height - derivative.height) > DIMENSION_TOLERANCE_PX
   ) {
     problems.push(
-      `高度不符：档位 ${derivative.height}px，实际 ${asset.original.height}px`,
+      `高度不符：档位 ${derivative.height}px，实际 ${original.height}px`,
     );
   }
   return problems.join("；");

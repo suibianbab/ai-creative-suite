@@ -32,6 +32,18 @@ export type MediaEditDraft = {
 // P2.5-T5：素材直接落成媒体镜头时的默认草稿（stock 导入共用最小默认值）。
 // N6：种子出点按旁白语速需求取 max(2000, 400+300×字)（素材够长时）——
 // 固定 2000 会给长旁白镜头埋下「出片期才爆旁白溢出」的远距离失败。
+// 任务 1（2026-10-28）：图片资产无固有时长——展示时长上限取账本统一上限
+//（600s，与 video-document validate 同口径）；入点恒 0、无音轨。
+const IMAGE_MAX_SPAN_MS = 600_000;
+function assetSpanLimitMs(asset: MediaAsset): number {
+  return asset.original.kind === "image"
+    ? IMAGE_MAX_SPAN_MS
+    : asset.original.durationMs;
+}
+function assetHasAudio(asset: MediaAsset): boolean {
+  return asset.original.kind === "image" ? false : asset.original.hasAudio;
+}
+
 export function mediaDraftForAsset(
   asset: MediaAsset,
   narrationText?: string,
@@ -44,7 +56,7 @@ export function mediaDraftForAsset(
     assetId: asset.assetId,
     inMsText: "0",
     outMsText: String(
-      Math.min(Math.max(2000, narrationMs), asset.original.durationMs),
+      Math.min(Math.max(2000, narrationMs), assetSpanLimitMs(asset)),
     ),
     fit: "cover",
     focalPercentText: "50",
@@ -120,10 +132,20 @@ export function buildMediaRevisePatch(
   if (inMs < 0) {
     return { patch: null, error: "入点须为 ≥0 的整数毫秒", warnings: [] };
   }
-  if (outMs < inMs + 200 || outMs > asset.original.durationMs) {
+  if (outMs < inMs + 200 || outMs > assetSpanLimitMs(asset)) {
     return {
       patch: null,
-      error: `出点越界：须满足 入点+200 ≤ 出点 ≤ 素材时长 ${asset.original.durationMs}ms（当前 入=${inMs} 出=${outMs}）`,
+      error: asset.original.kind === "image"
+        ? `出点越界：图片展示时长须满足 200..${assetSpanLimitMs(asset)}ms（当前 入=${inMs} 出=${outMs}）`
+        : `出点越界：须满足 入点+200 ≤ 出点 ≤ 素材时长 ${asset.original.durationMs}ms（当前 入=${inMs} 出=${outMs}）`,
+      warnings: [],
+    };
+  }
+  // 图片无时间轴：入点恒 0（出点即展示时长）。
+  if (asset.original.kind === "image" && inMs !== 0) {
+    return {
+      patch: null,
+      error: "图片素材入点必须为 0（出点即展示时长）",
       warnings: [],
     };
   }
@@ -142,7 +164,7 @@ export function buildMediaRevisePatch(
   }
   // 终评 Important：素材无音轨时 keep 无意义——行内拒，避免存进文档后才在
   // 出片阶段大声失败（静默丢原声的旧路径已由渲染期 G1 兜底）。
-  if (draft.audio === "keep" && !asset.original.hasAudio) {
+  if (draft.audio === "keep" && !assetHasAudio(asset)) {
     return {
       patch: null,
       error: `素材无音轨，无法保留原声：${draft.assetId}（请改选「静音」或更换素材）`,
@@ -151,7 +173,7 @@ export function buildMediaRevisePatch(
   }
   const warnings: string[] = [];
   // M4 非整帧（fps=29.97 时为浮点近似，预警非阻塞，T4 兑现取整语义）
-  const fps = asset.original.fps;
+  const fps = asset.original.kind === "image" ? 24 : asset.original.fps;
   if ((inMs * fps) % 1000 !== 0 || (outMs * fps) % 1000 !== 0) {
     warnings.push(`入/出点非整帧（素材 ${fps}fps），出片将按帧取整`);
   }
@@ -161,12 +183,12 @@ export function buildMediaRevisePatch(
   const spanMs = outMs - inMs;
   const neededMs = speechAwareDurationMs(spanMs, narrationText);
   if (neededMs > spanMs) {
-    const headroom = asset.original.durationMs - inMs;
+    const headroom = assetSpanLimitMs(asset) - inMs;
     return {
       patch: null,
       error:
         headroom >= neededMs
-          ? `旁白按语速需 ${(neededMs / 1000).toFixed(1)}s，超出片段 ${(spanMs / 1000).toFixed(1)}s：请把出点扩到 ≥${inMs + neededMs}ms（素材最长 ${asset.original.durationMs}ms）`
+          ? `旁白按语速需 ${(neededMs / 1000).toFixed(1)}s，超出片段 ${(spanMs / 1000).toFixed(1)}s：请把出点扩到 ≥${inMs + neededMs}ms（素材最长 ${assetSpanLimitMs(asset)}ms）`
           : `旁白按语速需 ${(neededMs / 1000).toFixed(1)}s，素材剩余仅 ${(headroom / 1000).toFixed(1)}s：请精简旁白或换更长的素材`,
       warnings: [],
     };

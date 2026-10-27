@@ -10,6 +10,10 @@ const CONTENT_TYPES: Record<string, string> = {
   mp4: "video/mp4",
   webm: "video/webm",
   mov: "video/quicktime",
+  // 任务 1（2026-10-28）：图片素材内容类型。
+  png: "image/png",
+  jpg: "image/jpeg",
+  webp: "image/webp",
 };
 
 function streamFile(

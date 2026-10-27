@@ -24,9 +24,15 @@ export function assetLabel(asset: MediaAsset, all: MediaAsset[]): string {
       (existing) => existing.original.storeKey === asset.original.storeKey,
     ).length > 1;
   const duplicateNote = duplicate ? "（同内容已在册）" : "";
-  const meta = `${asset.original.width}×${asset.original.height} · ${(
-    asset.original.durationMs / 1000
-  ).toFixed(1)}s`;
+  // 任务 1（2026-10-28）：图片资产无时长——元信息给 图片·格式；视频口径不变。
+  const meta =
+    asset.original.kind === "image"
+      ? `图片 ${asset.original.width}×${asset.original.height} · ${
+          asset.original.format === "jpeg" ? "jpg" : asset.original.format
+        }`
+      : `${asset.original.width}×${asset.original.height} · ${(
+          asset.original.durationMs / 1000
+        ).toFixed(1)}s`;
   // P2.5-T5：stock 资产无 displayTitle，名称位取来源页；作者缺失则省略该段。
   if (asset.origin.kind === "stock-source") {
     const author = asset.origin.license.author
