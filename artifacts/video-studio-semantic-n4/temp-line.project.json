@@ -1,0 +1,387 @@
+{
+  "schemaVersion": 1,
+  "id": "dca238aa-ff9a-42c6-b6a3-99b9d47afc62",
+  "title": "四季气温折线图",
+  "brief": {
+    "sentence": "做一条约15秒的气候科普短片，用折线图展示月均气温：一月2度，四月15度，七月28度，十月17度",
+    "aspectTargets": [
+      "landscape",
+      "portrait"
+    ],
+    "applications": [
+      {
+        "sentence": "做一条约15秒的气候科普短片，用折线图展示月均气温：一月2度，四月15度，七月28度，十月17度",
+        "appendedShotCount": 4,
+        "appendedDurationMs": 12200,
+        "filmShotCountAfter": 4,
+        "filmTotalMsAfter": 12200,
+        "appliedAt": "2026-10-27T03:47:07.828Z"
+      }
+    ]
+  },
+  "shots": [
+    {
+      "shotId": "401de3a3-7a66-4131-af14-4ef512d52247",
+      "order": 0,
+      "locked": false,
+      "workingVersionId": "f1f715b8-0e92-4883-9e80-7c9c2ef107e2",
+      "contentVersions": [
+        {
+          "versionId": "f1f715b8-0e92-4883-9e80-7c9c2ef107e2",
+          "createdAt": "2026-10-27T03:47:07.828Z",
+          "durationMs": 2500,
+          "description": "月均气温变化趋势（标题）",
+          "narrationText": "看气温如何变化",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 2500,
+              "seed": 5000,
+              "background": "#101f34",
+              "params": {
+                "title": "月均气温变化趋势",
+                "subtitle": "看气温如何变化",
+                "titleColor": "#f3f5f7",
+                "subtitleColor": "#b4d8e4",
+                "entrance": "fade-up",
+                "enterMs": 450
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-semantic",
+            "engineVersion": "qwen-plus/prompt7/compiler1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "f1f715b8-0e92-4883-9e80-7c9c2ef107e2",
+          "at": "2026-10-27T03:47:07.828Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "f7451176-4140-4dda-98be-f5a1e1fa9089",
+      "order": 1,
+      "locked": false,
+      "workingVersionId": "c7e49474-d136-4c4a-9fd2-16ba8efe9290",
+      "contentVersions": [
+        {
+          "versionId": "c7e49474-d136-4c4a-9fd2-16ba8efe9290",
+          "createdAt": "2026-10-27T03:47:07.828Z",
+          "durationMs": 4000,
+          "description": "一年中四个月的气温（折线图表）",
+          "narrationText": "一月2度，四月15度",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "line-chart",
+              "componentVersion": 1,
+              "durationMs": 4000,
+              "seed": 5007,
+              "background": "#101f34",
+              "params": {
+                "title": "一年中四个月的气温",
+                "points": [
+                  {
+                    "label": "一月",
+                    "value": 2
+                  },
+                  {
+                    "label": "四月",
+                    "value": 15
+                  },
+                  {
+                    "label": "七月",
+                    "value": 28
+                  },
+                  {
+                    "label": "十月",
+                    "value": 17
+                  }
+                ],
+                "lineColor": "#f5b652",
+                "markerColor": "#4f8fd6",
+                "textColor": "#f3f5f7",
+                "drawMs": 1600
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-semantic",
+            "engineVersion": "qwen-plus/prompt7/compiler1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "c7e49474-d136-4c4a-9fd2-16ba8efe9290",
+          "at": "2026-10-27T03:47:07.828Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "88311e88-e231-41ea-97be-50716cf2ae29",
+      "order": 2,
+      "locked": false,
+      "workingVersionId": "d346730a-4003-46b1-9e6b-ebfc161aeb29",
+      "contentVersions": [
+        {
+          "versionId": "d346730a-4003-46b1-9e6b-ebfc161aeb29",
+          "createdAt": "2026-10-27T03:47:07.828Z",
+          "durationMs": 3200,
+          "description": "气温变化说明（要点解说）",
+          "narrationText": "夏季最热，冬季最冷",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "sketch-note",
+              "componentVersion": 1,
+              "durationMs": 3200,
+              "seed": 5014,
+              "background": "#101f34",
+              "params": {
+                "title": "气温变化说明",
+                "items": [
+                  {
+                    "text": "一月2℃→全年最低",
+                    "emphasis": "下划线"
+                  },
+                  {
+                    "text": "七月28℃→全年最高",
+                    "emphasis": "圈"
+                  },
+                  {
+                    "text": "呈单峰型变化",
+                    "emphasis": "圈"
+                  }
+                ],
+                "inkColor": "#f3f5f7",
+                "accentColor": "#f5b652",
+                "writeMs": 900,
+                "drawMs": 700,
+                "staggerMs": 500
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-semantic",
+            "engineVersion": "qwen-plus/prompt7/compiler1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "d346730a-4003-46b1-9e6b-ebfc161aeb29",
+          "at": "2026-10-27T03:47:07.828Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "666c1a48-4774-42ab-a8e6-7cfe36fb44fa",
+      "order": 3,
+      "locked": false,
+      "workingVersionId": "5c7fc5de-2116-42a1-b2d0-78933e6171c4",
+      "contentVersions": [
+        {
+          "versionId": "5c7fc5de-2116-42a1-b2d0-78933e6171c4",
+          "createdAt": "2026-10-27T03:47:07.828Z",
+          "durationMs": 2500,
+          "description": "气候小知识（标题）",
+          "narrationText": "气温随季节波动",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 2500,
+              "seed": 5021,
+              "background": "#101f34",
+              "params": {
+                "title": "气候小知识",
+                "subtitle": "气温随季节波动",
+                "titleColor": "#f3f5f7",
+                "subtitleColor": "#b4d8e4",
+                "entrance": "fade-up",
+                "enterMs": 450
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-semantic",
+            "engineVersion": "qwen-plus/prompt7/compiler1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "5c7fc5de-2116-42a1-b2d0-78933e6171c4",
+          "at": "2026-10-27T03:47:07.828Z",
+          "actor": "human"
+        }
+      ]
+    }
+  ],
+  "renderRecords": [
+    {
+      "renderId": "721d0fef-6fc4-4d67-9910-477e07129598",
+      "versionId": "f1f715b8-0e92-4883-9e80-7c9c2ef107e2",
+      "contentDigest": "484373c01e0357706772b11f2e8a5538400c2b9989136a99401d5735db4b1ce1",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 60,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "temp-line-render/landscape.mp4"
+    },
+    {
+      "renderId": "827386a3-4e8d-4c6b-b062-efd310665254",
+      "versionId": "c7e49474-d136-4c4a-9fd2-16ba8efe9290",
+      "contentDigest": "0921b014d9795aea6a56f3c7a4a4456112f2882fa78e25780cfcd15e822612e2",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 96,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "temp-line-render/landscape.mp4"
+    },
+    {
+      "renderId": "9644133a-fbe5-4275-a17a-bf5782e6cdc3",
+      "versionId": "d346730a-4003-46b1-9e6b-ebfc161aeb29",
+      "contentDigest": "f6780e188ea565d03762e8fe6f82add2598bdd74363f23c75740f61ee923eede",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 77,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "temp-line-render/landscape.mp4"
+    },
+    {
+      "renderId": "f34e26f2-a59a-43ad-b42e-30792e7cfafe",
+      "versionId": "5c7fc5de-2116-42a1-b2d0-78933e6171c4",
+      "contentDigest": "b4a7b417f8780e23f61893615662247fd8a71d833ac9c17582f070c9d807b00d",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 60,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "temp-line-render/landscape.mp4"
+    },
+    {
+      "renderId": "e37ad5f4-cbc0-48f1-a84a-3211bf0c1f12",
+      "versionId": "f1f715b8-0e92-4883-9e80-7c9c2ef107e2",
+      "contentDigest": "484373c01e0357706772b11f2e8a5538400c2b9989136a99401d5735db4b1ce1",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 60,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "temp-line-render/portrait.mp4"
+    },
+    {
+      "renderId": "e95bb12b-b1f0-4cdb-a2d1-8190c11732dd",
+      "versionId": "c7e49474-d136-4c4a-9fd2-16ba8efe9290",
+      "contentDigest": "0921b014d9795aea6a56f3c7a4a4456112f2882fa78e25780cfcd15e822612e2",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 96,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "temp-line-render/portrait.mp4"
+    },
+    {
+      "renderId": "35bd610c-53c7-4e52-a61b-f6795eaf886f",
+      "versionId": "d346730a-4003-46b1-9e6b-ebfc161aeb29",
+      "contentDigest": "f6780e188ea565d03762e8fe6f82add2598bdd74363f23c75740f61ee923eede",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 77,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "temp-line-render/portrait.mp4"
+    },
+    {
+      "renderId": "0317dbcf-5cc2-4a21-9795-f9163e6ee408",
+      "versionId": "5c7fc5de-2116-42a1-b2d0-78933e6171c4",
+      "contentDigest": "b4a7b417f8780e23f61893615662247fd8a71d833ac9c17582f070c9d807b00d",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 60,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "temp-line-render/portrait.mp4"
+    }
+  ],
+  "deliveries": [],
+  "savedVersion": 3
+}

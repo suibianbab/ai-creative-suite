@@ -1,0 +1,372 @@
+{
+  "schemaVersion": 1,
+  "id": "851c4050-402f-4047-b8b9-7d23f1de08e4",
+  "title": "每天喝够1500毫升水",
+  "brief": {
+    "sentence": "做一条约12秒的健康科普短片，用数字动画强调每天建议饮水1500毫升",
+    "aspectTargets": [
+      "landscape",
+      "portrait"
+    ],
+    "applications": [
+      {
+        "sentence": "做一条约12秒的健康科普短片，用数字动画强调每天建议饮水1500毫升",
+        "appendedShotCount": 4,
+        "appendedDurationMs": 11200,
+        "filmShotCountAfter": 4,
+        "filmTotalMsAfter": 11200,
+        "appliedAt": "2026-10-27T03:48:09.041Z"
+      }
+    ]
+  },
+  "shots": [
+    {
+      "shotId": "0c167250-ac65-4bb2-9509-7a387c81497a",
+      "order": 0,
+      "locked": false,
+      "workingVersionId": "cd6d11fc-0dab-4032-b229-761d2bb4966b",
+      "contentVersions": [
+        {
+          "versionId": "cd6d11fc-0dab-4032-b229-761d2bb4966b",
+          "createdAt": "2026-10-27T03:48:09.041Z",
+          "durationMs": 2500,
+          "description": "每天喝够1500毫升水（标题）",
+          "narrationText": "健康饮水小知识",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 2500,
+              "seed": 5000,
+              "background": "#101f34",
+              "params": {
+                "title": "每天喝够1500毫升水",
+                "subtitle": "健康饮水小知识",
+                "titleColor": "#f3f5f7",
+                "subtitleColor": "#b4d8e4",
+                "entrance": "fade-up",
+                "enterMs": 450
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-semantic",
+            "engineVersion": "qwen-plus/prompt7/compiler1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "cd6d11fc-0dab-4032-b229-761d2bb4966b",
+          "at": "2026-10-27T03:48:09.041Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "c73ec0c7-6bce-4a7e-a961-5e0a71acac45",
+      "order": 1,
+      "locked": false,
+      "workingVersionId": "86df776f-c592-4ae2-931e-cf037810a92a",
+      "contentVersions": [
+        {
+          "versionId": "86df776f-c592-4ae2-931e-cf037810a92a",
+          "createdAt": "2026-10-27T03:48:09.041Z",
+          "durationMs": 3000,
+          "description": "每日建议饮水量（数字计数）",
+          "narrationText": "约1500毫升",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "number-counter",
+              "componentVersion": 1,
+              "durationMs": 3000,
+              "seed": 5007,
+              "background": "#101f34",
+              "params": {
+                "title": "每日建议饮水量",
+                "value": 1500,
+                "prefix": "约",
+                "suffix": "毫升",
+                "decimals": 0,
+                "countMs": 2000,
+                "numberColor": "#f3f5f7",
+                "accentColor": "#f5b652"
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-semantic",
+            "engineVersion": "qwen-plus/prompt7/compiler1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "86df776f-c592-4ae2-931e-cf037810a92a",
+          "at": "2026-10-27T03:48:09.041Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "5a82448d-2cbb-4d16-8633-e74e5905e4c5",
+      "order": 2,
+      "locked": false,
+      "workingVersionId": "1daa06cd-c862-4c66-a1b0-f9f30debd282",
+      "contentVersions": [
+        {
+          "versionId": "1daa06cd-c862-4c66-a1b0-f9f30debd282",
+          "createdAt": "2026-10-27T03:48:09.041Z",
+          "durationMs": 3200,
+          "description": "为什么是1500毫升？（要点解说）",
+          "narrationText": "成人日均需求",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "sketch-note",
+              "componentVersion": 1,
+              "durationMs": 3200,
+              "seed": 5014,
+              "background": "#101f34",
+              "params": {
+                "title": "为什么是1500毫升？",
+                "items": [
+                  {
+                    "text": "维持基础代谢",
+                    "emphasis": "下划线"
+                  },
+                  {
+                    "text": "保障肾脏排毒",
+                    "emphasis": "圈"
+                  },
+                  {
+                    "text": "预防尿路感染",
+                    "emphasis": "圈"
+                  }
+                ],
+                "inkColor": "#f3f5f7",
+                "accentColor": "#f5b652",
+                "writeMs": 900,
+                "drawMs": 700,
+                "staggerMs": 500
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-semantic",
+            "engineVersion": "qwen-plus/prompt7/compiler1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "1daa06cd-c862-4c66-a1b0-f9f30debd282",
+          "at": "2026-10-27T03:48:09.041Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "014c6421-413e-42d3-aa25-6d0c246618d2",
+      "order": 3,
+      "locked": false,
+      "workingVersionId": "47e18836-c591-4b79-bffb-68a19f4f6787",
+      "contentVersions": [
+        {
+          "versionId": "47e18836-c591-4b79-bffb-68a19f4f6787",
+          "createdAt": "2026-10-27T03:48:09.041Z",
+          "durationMs": 2500,
+          "description": "喝够水，更健康（标题）",
+          "narrationText": "记得随时补水",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 2500,
+              "seed": 5021,
+              "background": "#101f34",
+              "params": {
+                "title": "喝够水，更健康",
+                "subtitle": "记得随时补水",
+                "titleColor": "#f3f5f7",
+                "subtitleColor": "#b4d8e4",
+                "entrance": "fade-up",
+                "enterMs": 450
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-semantic",
+            "engineVersion": "qwen-plus/prompt7/compiler1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "47e18836-c591-4b79-bffb-68a19f4f6787",
+          "at": "2026-10-27T03:48:09.041Z",
+          "actor": "human"
+        }
+      ]
+    }
+  ],
+  "renderRecords": [
+    {
+      "renderId": "784d1e5f-32cc-415d-8d31-3f5514b2a0c1",
+      "versionId": "cd6d11fc-0dab-4032-b229-761d2bb4966b",
+      "contentDigest": "6af6125674b1ebc1c700bfc6a14a73e776ba2df854c8eec8af1c820ee512a0a5",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 60,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "water-counter-render/landscape.mp4"
+    },
+    {
+      "renderId": "3cecbc60-4453-47e1-9e94-14a56c97cea6",
+      "versionId": "86df776f-c592-4ae2-931e-cf037810a92a",
+      "contentDigest": "72a7378359905b7e86c06c8c19929cf7c5f17e986a9526dcee0db3e8e04d9382",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "water-counter-render/landscape.mp4"
+    },
+    {
+      "renderId": "7027ecbc-dfc2-403f-b534-5162faee2356",
+      "versionId": "1daa06cd-c862-4c66-a1b0-f9f30debd282",
+      "contentDigest": "d89a5d1ad4dd6db39a0de0c9a99980205203bf663e81825eb962aa51ce8716cd",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 77,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "water-counter-render/landscape.mp4"
+    },
+    {
+      "renderId": "4a40c5ea-49a3-4372-a374-a590a4cb886a",
+      "versionId": "47e18836-c591-4b79-bffb-68a19f4f6787",
+      "contentDigest": "26658c43e0bc4d68a64f437ed6243f05fcd1f0191280192a2ea5455b1746ea7d",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 60,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "water-counter-render/landscape.mp4"
+    },
+    {
+      "renderId": "9639ec38-ecf3-445c-b93e-8f71845ef824",
+      "versionId": "cd6d11fc-0dab-4032-b229-761d2bb4966b",
+      "contentDigest": "6af6125674b1ebc1c700bfc6a14a73e776ba2df854c8eec8af1c820ee512a0a5",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 60,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "water-counter-render/portrait.mp4"
+    },
+    {
+      "renderId": "863d259a-7b35-4c94-bb76-8c20fd7b31f6",
+      "versionId": "86df776f-c592-4ae2-931e-cf037810a92a",
+      "contentDigest": "72a7378359905b7e86c06c8c19929cf7c5f17e986a9526dcee0db3e8e04d9382",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "water-counter-render/portrait.mp4"
+    },
+    {
+      "renderId": "ddfa3800-a43c-4b6d-b135-2a615490fda3",
+      "versionId": "1daa06cd-c862-4c66-a1b0-f9f30debd282",
+      "contentDigest": "d89a5d1ad4dd6db39a0de0c9a99980205203bf663e81825eb962aa51ce8716cd",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 77,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "water-counter-render/portrait.mp4"
+    },
+    {
+      "renderId": "def04d40-5dfb-466f-bc22-cdfec449b01b",
+      "versionId": "47e18836-c591-4b79-bffb-68a19f4f6787",
+      "contentDigest": "26658c43e0bc4d68a64f437ed6243f05fcd1f0191280192a2ea5455b1746ea7d",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 60,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "water-counter-render/portrait.mp4"
+    }
+  ],
+  "deliveries": [],
+  "savedVersion": 3
+}

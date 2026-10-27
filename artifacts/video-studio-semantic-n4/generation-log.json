@@ -1,0 +1,35 @@
+[
+  {
+    "slug": "rain-bar",
+    "shots": 4,
+    "components": [
+      "text-animation",
+      "bar-chart",
+      "sketch-note",
+      "text-animation"
+    ],
+    "totalMs": 12200
+  },
+  {
+    "slug": "temp-line",
+    "shots": 4,
+    "components": [
+      "text-animation",
+      "line-chart",
+      "sketch-note",
+      "text-animation"
+    ],
+    "totalMs": 12200
+  },
+  {
+    "slug": "water-counter",
+    "shots": 4,
+    "components": [
+      "text-animation",
+      "number-counter",
+      "sketch-note",
+      "text-animation"
+    ],
+    "totalMs": 11200
+  }
+]
