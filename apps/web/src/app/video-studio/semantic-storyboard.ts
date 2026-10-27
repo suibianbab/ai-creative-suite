@@ -528,9 +528,7 @@ export function validateSemanticShot(
   // I-3（独立评审）：compare-split/timeline-milestones 组件 title 上限 30，
   // 其余组件 ≥40——按 intent 取各自真实契约，不共用 32。
   const titleMax =
-    intent === "compare-explainer" || intent === "timeline-explainer"
-      ? 30
-      : 32;
+    intent === "compare-explainer" || intent === "timeline-explainer" ? 30 : 32;
   if (
     typeof shot.title !== "string" ||
     shot.title.length < 1 ||
@@ -567,11 +565,7 @@ export function validateSemanticShot(
       errors.push(`${field}.bullets 须为 1..3 条`);
     } else {
       for (const [j, b] of (shot.bullets as unknown[]).entries()) {
-        if (
-          typeof b !== "string" ||
-          [...b].length < 1 ||
-          [...b].length > 12
-        ) {
+        if (typeof b !== "string" || [...b].length < 1 || [...b].length > 12) {
           errors.push(`${field}.bullets[${j}] 须为 1..12 字`);
         }
       }
@@ -642,11 +636,7 @@ export function validateSemanticShot(
       for (const [j, item] of (
         shot.milestones as Array<Record<string, unknown> | null>
       ).entries()) {
-        if (
-          typeof item !== "object" ||
-          item === null ||
-          Array.isArray(item)
-        ) {
+        if (typeof item !== "object" || item === null || Array.isArray(item)) {
           errors.push(`${field}.milestones[${j}] 须为对象`);
           continue;
         }
@@ -718,7 +708,6 @@ export function compileSemanticShot(
   };
 }
 
-
 // N3 数值/日期防伪造闸（交接单：时间点、数值和事实不能由模型伪造）。
 // P1-2（Codex 复核 2026-10-27）收紧口径：
 //  - 覆盖所有会展示/朗读的字段（title/narrationText/各 intent 的文字
@@ -742,26 +731,13 @@ const CHINESE_NUMERAL = /[一二三四五六七八九十百千万]+/g;
 function chineseNumeralsOf(text: string): string[] {
   return [...text.matchAll(CHINESE_NUMERAL)].map((m) => m[0]);
 }
-// 结构性汉字序数/计数豁免：第X / X阶段·步·大·种·类·方面——按字段上下文
-// 判定（token 本身不含后缀），同阿拉伯数字 isOrdinalUse 口径。
-function isChineseOrdinalUse(field: string, token: string): boolean {
-  return (
-    new RegExp(`第${token}`).test(field) ||
-    new RegExp(`${token}(?:阶段|步|部分|幕|条|镜|大|种|类|方面|个阶段)`).test(
-      field,
-    )
-  );
-}
+// Remove only the ordinal span, then check every remaining number. A field
+// such as "第6步提高6%" contains one structural number and one factual claim.
+const STRUCTURAL_ORDINAL =
+  /第\s*[0-9０-９一二三四五六七八九十百千万]+\s*(?:步|阶段|部分|幕|条|镜)|[一二三四五六七八九十百千万]+(?:个阶段|阶段|步|部分|幕|条|镜|大|种|类|方面)/g;
 
-// 序数豁免：第N步/第N阶段/第N部分/第N幕/第N条/第N镜（含汉字数字变体）。
-const ORDINAL_CONTEXT = /第\s*[0-9一二三四五六七八九十百]+\s*(?:步|阶段|部分|幕|条|镜)/;
-
-function isOrdinalUse(field: string, numeral: string): boolean {
-  return (
-    ORDINAL_CONTEXT.test(field) &&
-    // 该数字确实出现在序数结构里（而非同字段其他位置的事实数字）。
-    new RegExp(`第\\s*${numeral}\\s*(?:步|阶段|部分|幕|条|镜)`).test(field)
-  );
+function withoutStructuralOrdinals(value: string): string {
+  return value.replace(STRUCTURAL_ORDINAL, "");
 }
 
 // 该镜头全部会上屏/被朗读的文字字段（P1-2 全覆盖口径）。
@@ -772,9 +748,7 @@ function displayedTexts(shot: SemanticDraftShot): Array<[string, string]> {
   ];
   switch (shot.intent) {
     case "text-explainer":
-      (shot.bullets ?? []).forEach((b, i) =>
-        fields.push([`bullets[${i}]`, b]),
-      );
+      (shot.bullets ?? []).forEach((b, i) => fields.push([`bullets[${i}]`, b]));
       break;
     case "cycle-explainer":
       (shot.cycleSteps ?? []).forEach((s, i) =>
@@ -818,17 +792,16 @@ export function verifySourcedNumbers(
   const sourcedChinese = new Set(chineseNumeralsOf(userText));
   const errors: string[] = [];
   for (const [label, value] of displayedTexts(shot)) {
-    for (const numeral of numeralsOf(value)) {
+    const claims = withoutStructuralOrdinals(value);
+    for (const numeral of numeralsOf(claims)) {
       if (sourced.has(numeral)) continue;
-      if (isOrdinalUse(value, numeral)) continue;
       errors.push(
         `数字「${numeral}」（${label}）不在你的原话里：数值/日期必须原样来自用户输入（差值也用原话数字表述），没给就改用文字表述`,
       );
     }
     // 汉字数值组合：原话没出现且非结构性序数 → 拒绝（I-1）。
-    for (const token of chineseNumeralsOf(value)) {
+    for (const token of chineseNumeralsOf(claims)) {
       if (sourcedChinese.has(token)) continue;
-      if (isChineseOrdinalUse(value, token)) continue;
       errors.push(
         `数值表述「${token}」（${label}）不在你的原话里：汉字数字同样不得编造，没给就改用定性文字`,
       );

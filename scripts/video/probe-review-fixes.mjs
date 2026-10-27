@@ -25,7 +25,10 @@ function fail(step, detail) {
 
 const browser = await chromium.launch({ headless: true });
 const page = await (
-  await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: "zh-CN" })
+  await browser.newContext({
+    viewport: { width: 1440, height: 900 },
+    locale: "zh-CN",
+  })
 ).newPage();
 const errors = [];
 // 预期失败面对账：语义端点的 422（needs-assets 等）会被浏览器记为资源
@@ -59,7 +62,9 @@ async function exportProject(name) {
 
 try {
   // —— ① 新闸下的对比镜头 ——
-  await page.goto(`${BASE_URL}/video-studio`, { waitUntil: "domcontentloaded" });
+  await page.goto(`${BASE_URL}/video-studio`, {
+    waitUntil: "domcontentloaded",
+  });
   await page.waitForSelector("html[data-studio-ready]", { timeout: 20_000 });
   await page.click(".project-create");
   await page.fill(
@@ -147,7 +152,9 @@ try {
   if (errors.length > 0) fail("浏览器控制台", errors.join(" | "));
   if (seen4xxLogs > expected4xx)
     fail("浏览器控制台", `4xx 资源日志 ${seen4xxLogs} > 预期 ${expected4xx}`);
-  console.log("[review-fixes] OK: 对比镜头（新闸）+ 单镜图解替代全链（标记+落档）");
+  console.log(
+    "[review-fixes] OK: 对比镜头（新闸）+ 单镜图解替代全链（标记+落档）",
+  );
 } finally {
   await browser.close();
 }

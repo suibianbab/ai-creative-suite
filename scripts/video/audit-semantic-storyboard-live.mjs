@@ -31,7 +31,8 @@ const TOPICS = [
   },
   {
     slug: "photosynthesis",
-    sentence: "做一条约25秒的光合作用科普短片，讲清阳光、二氧化碳和水如何变成养分",
+    sentence:
+      "做一条约25秒的光合作用科普短片，讲清阳光、二氧化碳和水如何变成养分",
     mustMention: [["阳光", "光能"], ["二氧化碳", "CO₂", "CO2"], ["水"]],
   },
 ];
@@ -126,7 +127,10 @@ for (const topic of TOPICS) {
     .join("\n");
   for (const synonyms of topic.mustMention)
     if (!synonyms.some((word) => browserAllText.includes(word)))
-      fail(`交付轮主题覆盖(${topic.slug})`, `分镜未提及「${synonyms.join("/")}」`);
+      fail(
+        `交付轮主题覆盖(${topic.slug})`,
+        `分镜未提及「${synonyms.join("/")}」`,
+      );
   // M-7：偏离标注与总时长/目标的逻辑一致性（不只落盘）。
   const dev = browserData.durationDeviation;
   if (dev) {
@@ -135,7 +139,8 @@ for (const topic of TOPICS) {
         `偏离一致性(${topic.slug})`,
         `durationDeviation.actualMs=${dev.actualMs} ≠ totalMs=${browserData.storyboard.totalMs}`,
       );
-    const inBand = dev.actualMs >= dev.targetMs * 0.8 && dev.actualMs <= dev.targetMs * 1.2;
+    const inBand =
+      dev.actualMs >= dev.targetMs * 0.8 && dev.actualMs <= dev.targetMs * 1.2;
     if (inBand)
       fail(
         `偏离一致性(${topic.slug})`,
@@ -175,9 +180,14 @@ for (const topic of TOPICS) {
     );
   // provenance 必须是语义引擎（防错标 planner-rules，P1-1 相关口径）。
   for (const shot of exported.shots) {
-    const v = shot.contentVersions.find((x) => x.versionId === shot.workingVersionId);
+    const v = shot.contentVersions.find(
+      (x) => x.versionId === shot.workingVersionId,
+    );
     if (!v.provenance.engineId.startsWith("planner-semantic"))
-      fail(`provenance(${topic.slug})`, `镜 ${shot.order + 1} 落档 ${v.provenance.engineId}`);
+      fail(
+        `provenance(${topic.slug})`,
+        `镜 ${shot.order + 1} 落档 ${v.provenance.engineId}`,
+      );
   }
   await page.click(".project-action");
 

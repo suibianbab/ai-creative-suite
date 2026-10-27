@@ -55,7 +55,9 @@ test("semantic provider：合法调用返回 IR 原文解析结果与元信息",
     });
     assert.equal(calls.length, 1);
     assert.match(calls[0]!.url, /dashscope\.aliyuncs\.com/);
-    const body = JSON.parse(calls[0]!.body) as { response_format?: { type: string } };
+    const body = JSON.parse(calls[0]!.body) as {
+      response_format?: { type: string };
+    };
     assert.equal(body.response_format?.type, "json_object");
   } finally {
     globalThis.fetch = originalFetch;

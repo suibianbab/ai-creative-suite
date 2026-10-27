@@ -16,8 +16,14 @@ const CONTEXT = {
     componentId: "sketch-note",
   },
   neighbors: {
-    prev: { description: "太阳加热（要点解说）", narrationText: "太阳加热，液态水汽化" },
-    next: { description: "水滴变重（要点解说）", narrationText: "水滴变重，降落为雨雪" },
+    prev: {
+      description: "太阳加热（要点解说）",
+      narrationText: "太阳加热，液态水汽化",
+    },
+    next: {
+      description: "水滴变重（要点解说）",
+      narrationText: "水滴变重，降落为雨雪",
+    },
   },
   film: { title: "水循环", shotCount: 6, totalMs: 21000 },
 };
@@ -118,10 +124,7 @@ test("semantic-revise：合法指令+合法单镜 IR → 200 候选（含屏幕�
       assert.match(userMessages[0]!, /把这一镜改成凝结/);
       // provenance：修改链自己的提示词版本 + 指令快照。
       assert.equal(data.provenance.promptVersion, "r3");
-      assert.equal(
-        data.provenance.instruction,
-        CONTEXT.instruction,
-      );
+      assert.equal(data.provenance.instruction, CONTEXT.instruction);
       assert.deepEqual(data.usage, {
         prompt_tokens: 80,
         completion_tokens: 30,
@@ -202,7 +205,6 @@ test("semantic-revise：指令空/超长 → 400 不触网", async () => {
   }
 });
 
-
 // P2-1（Codex 复核 2026-10-27）：请求体 null/数组/原始值 → 400，不抛 500。
 test("semantic-revise：body 为 null/数组/字符串 → 400 不触网", async () => {
   const originalFetch = globalThis.fetch;
@@ -251,7 +253,6 @@ test("semantic-revise：needs-assets 授权轮响应带 substitutedForAssets", a
     globalThis.fetch = originalFetch;
   }
 });
-
 
 // M-7（独立评审）：revise 路由的数值闸路径——候选编造原话没有的数字，
 // 带因重试一次后仍编造 → 422 无候选。
@@ -304,7 +305,6 @@ test("semantic-revise：编造数值 → 重试一次后仍 422（数值闸接�
   }
 });
 
-
 // I-1 补充（修复验证）：影片上下文里的数字是模型合法数据源——指令没提
 // 但本镜/邻镜/片名里有（如心率 80/65），引用它们不得被数值闸误拒。
 test("semantic-revise：引用影片上下文数字不被误拒", async () => {
@@ -344,6 +344,49 @@ test("semantic-revise：引用影片上下文数字不被误拒", async () => {
       assert.equal(response.status, 200);
       const data = await response.json();
       assert.equal(data.shot.plan.spec.componentId, "compare-split");
+    });
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("semantic-revise：镜数等编辑器元数据不能作为画面数值来源", async () => {
+  const originalFetch = globalThis.fetch;
+  let calls = 0;
+  globalThis.fetch = async () => {
+    calls += 1;
+    return chatResponse(
+      JSON.stringify({
+        intent: "compare-explainer",
+        title: "读书与手机",
+        narrationText: "读书睡得更快",
+        durationMs: 3500,
+        metricLabel: "入睡时间",
+        beforeLabel: "手机",
+        beforeValue: "6%",
+        beforeNote: "越刷越精神",
+        afterLabel: "读书",
+        afterValue: "更快",
+        afterNote: "放松身心",
+        deltaText: "更快入睡",
+        deltaPositive: true,
+      }),
+    );
+  };
+  try {
+    await withEnv(WITH_KEY, async () => {
+      const response = await POST(
+        ask({
+          ...CONTEXT,
+          instruction: "把这一镜改成读书和手机的对比",
+          film: { title: "睡眠习惯", shotCount: 6, totalMs: 21000 },
+        }),
+      );
+      assert.equal(response.status, 422);
+      const data = await response.json();
+      assert.equal(calls, 2);
+      assert.ok((data.errors as string[]).some((e) => /6/.test(e)));
+      assert.equal(data.shot, undefined);
     });
   } finally {
     globalThis.fetch = originalFetch;

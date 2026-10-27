@@ -36,18 +36,18 @@
 
 ### 实现
 - IR 新增 `compare-explainer`（compare-split@2 全字段，契约长度对齐）与 `timeline-explainer`（milestones 2..6，date 无日期用顺序词，status 可省默认 done）。编译器固定配色/入场/版本@2；时长下限按组件时序（compare 2500、timeline 2900+300×(n-1)）。
-- **数值/日期防伪造闸** `verifySourcedNumbers`：compare 数值与 timeline date 的每个数字必须 =原话出现 ∨ 两原话数字之差（可核算术推导，如 40-15=25）；否则带因重试一次、仍编造 422 拒绝。plan/revise 两路由都接闸；提示词 v5/r2 写明数据纪律。
+- **数值/日期来源闸** `verifySourcedNumbers`：检查所有上屏和朗读字段；数字必须在用户原话中出现，单镜修改也可引用本镜、相邻镜的既有内容文本和片名。镜头序号、镜数、总时长等编辑器元数据不算来源；不接受自动计算两数之差。违规时带因重试一次、仍违规则 422。此闸只核数字来源，不证明文字事实为真；提示词现为 v6/r3。
 - renderHint 预告对比数值/阶段（确认卡明确屏幕内容）。
 
 ### 样片（`artifacts/video-studio-semantic-n3/`）
-- `sleep-compare`：5 镜含 compare-split（数值 1/30/40/15 全来自原话，差值 25 为推导）；确认卡预告+数值闸审计（镜头内容不得出现原话外数字）。
+- `sleep-compare`：5 镜含 compare-split。这是收紧数字闸之前生成的历史样片，画面中的“缩短25分钟”曾按两数之差放行；现行规则会拒绝该推导，不能把此样片当作新数字闸的通过证据。新规则的对比镜头证据见 `review-fixes/compare.project.json`。
 - `seed-timeline`：3 镜含 timeline-milestones（播种→发芽→幼苗→开花，顺序词无日期）。
 - 双画幅 MP4+逐镜抽帧（横竖）；check-layout（参数化入 N3 目录）：130 文本零出界零重叠。
-- 旧四 intent 回归：364 全绿 + N1/N2 样片仍为 title/sketch/cycle/flow 组件。
+- 旧四 intent 回归：截至本轮 374 项 Web 测试通过；N1/N2 样片仍为 title/sketch/cycle/flow 组件。
 
 ### 已知限制
 - 模型对含糊「阶段」表述可能选 flow 而非 timeline（N3 审计首轮实测）；明确「用时间线展示」后稳定。属模型选型倾向，未做句法强制。
-- compare 的 delta 推导只支持两数之差（不解析单位/百分比换算）；更复杂推导按「没给就文字表述」处理。
+- 不自动推导数值差异；如用户未明确给出差值，用已有两个数描述前后变化，或使用定性文字。
 - 有声链在 N3 样片未重复跑（N1 已证链路，组件渲染与旁白机制与 N1 相同）。
 
 ## 复跑命令
@@ -65,7 +65,7 @@ node artifacts/video-studio-semantic-n3/check-layout.mjs        # LAYOUT OK
 Codex 四项（2 P1 + 2 P2）与独立评审增量全部闭合：
 
 - **P1-1 字段形状校验**：compare/timeline 全字段（含嵌套条目/status/title 上限）进 `validateSemanticShot`——坏 milestones/缺失对比字段在校验层带路径拒绝并走既有带因重试，不再 500 或拖到编译期。（成因：N3 首轮 python 补丁锚文本不匹配静默未落盘，测试缺反例未拦——已补 8 个反例用例。）
-- **P1-2 数值闸收紧**：覆盖**全部**上屏/朗读字段（title/旁白/notes/labels/条目）；**取消两数之差推导**（单位/可比量不可判定）；全角数字归一、汉字数值组合原样子集闸（「二十五」拒绝、原话有「三十」放行）；结构性序数豁免（第N步/X阶段）；revise 数据源=指令+影片上下文（影片自身数字可合法引用）。审计脚本同口径。
+- **P1-2 数值闸收紧**：覆盖**全部**上屏/朗读字段（title/旁白/notes/labels/条目）；**取消两数之差推导**（单位/可比量不可判定）；全角数字归一、汉字数值组合原样子集闸（「二十五」拒绝、原话有「三十」放行）。序数只豁免自身片段，不遮蔽同字段其他数字。revise 来源限于指令、片名与本镜/相邻镜现有内容文本；镜头序号、镜数、总时长不算业务事实来源。
 - **P2-1** body null/数组/原始值 → 400 不触网（revise 补齐，plan 基线已有）。
 - **P2-2** 图解替代全链留痕：候选带 substitutedForAssets → 卡片「图解替代」行 → 确认落档 description 前缀【图解替代】+ provenance `/asset-substituted` 后缀（保存重开可见；浏览器实证）。
 - **独立评审增量**：I-3 compare/timeline title ≤30（组件契约，提示词 v6/r3 同步）；I-4 aiReviseByShot 三处项目切换重置 + 整片影响实时按当前文档重算；M-1 措辞六种 intent；M-2 无 content-length 时正文 4KB 硬顶；M-5 授权按钮空指令禁用；M-6 clip 按码点切片；M-7 revise 数值闸路径测试；M-8 报告计数更正。提示词补 milestone status 说明（进度型题材按事实给状态）。
@@ -74,7 +74,7 @@ Codex 四项（2 P1 + 2 P2）与独立评审增量全部闭合：
 
 ## 给 Codex 的复核重点
 
-1. `verifySourcedNumbers` 的「两数之差」推导口径（会不会过宽/过窄；单位混用如 1小时 vs 30分钟 的差是否该放行——当前纯数值比较，单位不参与）。
+1. `verifySourcedNumbers` 只检查数字是否见于允许来源；不自动推导差值，也不证明数字与指标的语义关联或文字事实真实性。更严格的事实核查需单独设计。
 2. N2 版本冲突闸只在确认时校验 baseVersionId；生成期间镜头变化不影响候选预览（预览基于候选快照）——口径是否需要生成时也锁。
 3. revise 路由的上下文由客户端组包（防注入截断 60/40/30 字符）——服务端信任边界的残余面。
 4. compare/timeline 的编译配色/入场常量（深色底）与旧四 intent 风格一致性。

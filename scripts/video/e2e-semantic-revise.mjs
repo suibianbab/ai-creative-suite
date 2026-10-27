@@ -20,8 +20,7 @@ const root = path.resolve(
 );
 const BASE_URL = process.env.BASE_URL ?? "http://localhost:3224";
 const out = path.join(root, "artifacts/video-studio-semantic-revise");
-const SENTENCE =
-  "做一条约25秒的水循环科普短片，讲清蒸发、凝结和降水";
+const SENTENCE = "做一条约25秒的水循环科普短片，讲清蒸发、凝结和降水";
 const REVISE_INSTRUCTION =
   "把这一镜改成凝结过程，强调水汽遇冷形成云；旁白也同步修改";
 
@@ -33,7 +32,10 @@ function fail(step, detail) {
 mkdirSync(out, { recursive: true });
 const browser = await chromium.launch({ headless: true });
 const page = await (
-  await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: "zh-CN" })
+  await browser.newContext({
+    viewport: { width: 1440, height: 900 },
+    locale: "zh-CN",
+  })
 ).newPage();
 const errors = [];
 page.on("console", (m) => {
@@ -87,7 +89,10 @@ try {
     cardTexts.push(await page.locator(".shot-card").nth(i).textContent());
   const targetIndex = cardTexts.findIndex((t) => /凝结/.test(t ?? ""));
   if (targetIndex < 0)
-    fail("定位凝结镜", `卡文本未见凝结：${cardTexts.map((t) => t?.slice(0, 30))}`);
+    fail(
+      "定位凝结镜",
+      `卡文本未见凝结：${cardTexts.map((t) => t?.slice(0, 30))}`,
+    );
   const targetCard = page.locator(".shot-card").nth(targetIndex);
   await targetCard.locator(".shot-edit-toggle").click();
   // 修改前画面证据（卡片预览区）。
@@ -95,7 +100,9 @@ try {
     .locator(".scene-preview, svg")
     .first()
     .screenshot({ path: path.join(out, "before-preview.png") })
-    .catch(() => targetCard.screenshot({ path: path.join(out, "before-preview.png") }));
+    .catch(() =>
+      targetCard.screenshot({ path: path.join(out, "before-preview.png") }),
+    );
 
   const before = await exportProject("project-before.json");
   const beforeTarget = before.shots[targetIndex];
@@ -146,8 +153,11 @@ try {
     fail("版本演进", "新版本 parentVersionId 不指向旧工作版本");
   if (newVersion.provenance.engineId !== "planner-semantic-revise")
     fail("provenance", `engineId=${newVersion.provenance.engineId}`);
-  if (newVersion.narrationText ===
-      beforeTarget.contentVersions.find((v) => v.versionId === beforeWorkingId).narrationText)
+  if (
+    newVersion.narrationText ===
+    beforeTarget.contentVersions.find((v) => v.versionId === beforeWorkingId)
+      .narrationText
+  )
     fail("旁白更新", "AI 修改未更新旁白");
   for (const [i, shot] of after.shots.entries()) {
     if (i === targetIndex) continue;
@@ -170,14 +180,22 @@ try {
   const jobId = hrefs[0].split("/").at(-2);
   const manifest = JSON.parse(
     readFileSync(
-      path.join(root, ".tools/video-workbench-renders", jobId, "render/render-manifest.json"),
+      path.join(
+        root,
+        ".tools/video-workbench-renders",
+        jobId,
+        "render/render-manifest.json",
+      ),
       "utf8",
     ),
   );
   const narrationEntry = manifest.aspects.landscape.narration.find(
     (n) => n.shotIndex === targetIndex,
   );
-  if (!narrationEntry || narrationEntry.versionId !== afterTarget.workingVersionId)
+  if (
+    !narrationEntry ||
+    narrationEntry.versionId !== afterTarget.workingVersionId
+  )
     fail(
       "有声取新版本",
       `镜 ${targetIndex + 1} 音轨 versionId ${narrationEntry?.versionId} ≠ 新工作版本`,
@@ -242,9 +260,7 @@ try {
     .locator(".shot-redo-row input")
     .first()
     .fill("做一个5秒的文字动画，标题是冲突测试");
-  await lockedCard
-    .locator("button", { hasText: "重做此镜头" })
-    .click();
+  await lockedCard.locator("button", { hasText: "重做此镜头" }).click();
   await page
     .locator(".editor-message", { hasText: "已重做" })
     .waitFor({ timeout: 15_000 })

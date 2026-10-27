@@ -171,7 +171,10 @@ test("应用分镜：默认 provenance=planner-rules；语义路径可传入 AI 
       shot: uuidFactory("cccccccc", 300),
       version: uuidFactory("dddddddd", 300),
     },
-    { engineId: "planner-semantic", engineVersion: "qwen-plus/prompt1/compiler1" },
+    {
+      engineId: "planner-semantic",
+      engineVersion: "qwen-plus/prompt1/compiler1",
+    },
   );
   assert.equal(
     semantic.document.shots[0]!.contentVersions[0]!.provenance.engineId,

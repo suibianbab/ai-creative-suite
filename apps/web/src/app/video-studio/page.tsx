@@ -59,9 +59,9 @@ import {
   type TimelinePreviewItem,
 } from "./scene-preview";
 import {
-  ShotEditorCard,
   type AiReviseCandidate,
   type AiReviseState,
+  ShotEditorCard,
 } from "./shot-editor-card";
 import { applyShotRecipe } from "./shot-recipes";
 import { shotWorkingMediaClip, shotWorkingSpec } from "./shot-specs";
@@ -717,8 +717,8 @@ export default function VideoStudioPage() {
               durationMs: working.durationMs,
               componentId:
                 working.sceneSource.type === "spec"
-                  ? (working.sceneSource.spec as { componentId?: string })
-                      .componentId ?? "spec"
+                  ? ((working.sceneSource.spec as { componentId?: string })
+                      .componentId ?? "spec")
                   : working.sceneSource.type,
             },
             neighbors: {
@@ -729,7 +729,10 @@ export default function VideoStudioPage() {
                   (v) => v.versionId === p.workingVersionId,
                 );
                 return w
-                  ? { description: w.description, narrationText: w.narrationText }
+                  ? {
+                      description: w.description,
+                      narrationText: w.narrationText,
+                    }
                   : undefined;
               })(),
               next: (() => {
@@ -739,7 +742,10 @@ export default function VideoStudioPage() {
                   (v) => v.versionId === n.workingVersionId,
                 );
                 return w
-                  ? { description: w.description, narrationText: w.narrationText }
+                  ? {
+                      description: w.description,
+                      narrationText: w.narrationText,
+                    }
                   : undefined;
               })(),
             },
@@ -751,10 +757,7 @@ export default function VideoStudioPage() {
           }),
         });
         const data = (await response.json()) as {
-          shot?: Omit<
-            AiReviseCandidate,
-            "baseVersionId" | "totalAfterMs"
-          >;
+          shot?: Omit<AiReviseCandidate, "baseVersionId" | "totalAfterMs">;
           provenance?: AiReviseCandidate["provenance"];
           substitutedForAssets?: boolean;
           error?: string;
@@ -780,15 +783,13 @@ export default function VideoStudioPage() {
           candidate: {
             ...data.shot,
             substitutedForAssets: data.substitutedForAssets === true,
-            provenance:
-              data.provenance ??
-              // 兜底：响应缺 provenance 时卡片渲染仍可用（不会白屏）。
-              {
-                provider: "?",
-                model: "?",
-                promptVersion: "?",
-                compilerVersion: "?",
-              },
+            // 兜底：响应缺 provenance 时卡片渲染仍可用（不会白屏）。
+            provenance: data.provenance ?? {
+              provider: "?",
+              model: "?",
+              promptVersion: "?",
+              compilerVersion: "?",
+            },
             baseVersionId: working.versionId,
             totalAfterMs:
               currentTotalMs - working.durationMs + data.shot.durationMs,
@@ -1648,7 +1649,9 @@ export default function VideoStudioPage() {
                         candidate: {
                           ...state.candidate,
                           totalAfterMs:
-                            totalMs - (w?.durationMs ?? 0) + state.candidate.durationMs,
+                            totalMs -
+                            (w?.durationMs ?? 0) +
+                            state.candidate.durationMs,
                         },
                       };
                     })()}
@@ -1660,7 +1663,9 @@ export default function VideoStudioPage() {
                         allowSubstitute,
                       )
                     }
-                    onAiReviseConfirm={() => confirmShotRevise(shot.shotId, index)}
+                    onAiReviseConfirm={() =>
+                      confirmShotRevise(shot.shotId, index)
+                    }
                     onAiReviseDiscard={() => discardShotRevise(shot.shotId)}
                     onToggleLock={(locked) => {
                       try {
@@ -2176,9 +2181,7 @@ export default function VideoStudioPage() {
                           storyboard: null,
                         });
                         semanticRequestRef.current += 1;
-                setAiReviseByShot({});
                         setAiReviseByShot({});
-              setAiReviseByShot({});
                         setSemanticPlan({
                           busy: false,
                           error: null,

@@ -45,7 +45,10 @@ mkdirSync(OUT, { recursive: true });
 mkdirSync(path.join(OUT, "frames"), { recursive: true });
 const browser = await chromium.launch({ headless: true });
 const page = await (
-  await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: "zh-CN" })
+  await browser.newContext({
+    viewport: { width: 1440, height: 900 },
+    locale: "zh-CN",
+  })
 ).newPage();
 const errors = [];
 page.on("console", (m) => {
@@ -74,12 +77,20 @@ for (const topic of TOPICS) {
   const cardText = await page.locator(".storyboard-card").textContent();
   for (const word of topic.expectCard)
     if (!cardText?.includes(word))
-      fail(`确认卡预告(${topic.slug})`, `缺「${word}」：${cardText?.slice(0, 200)}`);
+      fail(
+        `确认卡预告(${topic.slug})`,
+        `缺「${word}」：${cardText?.slice(0, 200)}`,
+      );
   // 数值闸实证：镜头内容（预告/旁白，不含卡片元信息与列表序号）里的
   // 数字必须全部来自原话或两数之差。
   const numerals = (t) =>
-    [...t.replace(/[０-９]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0))
-      .matchAll(/\d+(?:\.\d+)?/g)].map((m) => m[0]);
+    [
+      ...t
+        .replace(/[０-９]/g, (c) =>
+          String.fromCharCode(c.charCodeAt(0) - 0xfee0),
+        )
+        .matchAll(/\d+(?:\.\d+)?/g),
+    ].map((m) => m[0]);
   const userNums = numerals(topic.sentence).map(Number);
   const derivable = new Set();
   for (let i = 0; i < userNums.length; i++)
@@ -91,7 +102,10 @@ for (const topic of TOPICS) {
   ].join("|");
   for (const n of numerals(shotTexts))
     if (!userNums.includes(Number(n)) && !derivable.has(Number(n)))
-      fail(`数值闸(${topic.slug})`, `镜头内容出现原话没有的数字「${n}」：${shotTexts.slice(0, 200)}`);
+      fail(
+        `数值闸(${topic.slug})`,
+        `镜头内容出现原话没有的数字「${n}」：${shotTexts.slice(0, 200)}`,
+      );
   await page.screenshot({
     path: path.join(OUT, `${topic.slug}-confirm-card.png`),
     fullPage: true,
@@ -116,13 +130,16 @@ for (const topic of TOPICS) {
 
   // 项目必须含目标组件镜头。
   const project = JSON.parse(readFileSync(projectPath, "utf8"));
-  const componentIds = project.shots.map((s) =>
-    s.contentVersions
-      .find((v) => v.versionId === s.workingVersionId)
-      .sceneSource.spec.componentId,
+  const componentIds = project.shots.map(
+    (s) =>
+      s.contentVersions.find((v) => v.versionId === s.workingVersionId)
+        .sceneSource.spec.componentId,
   );
   if (!componentIds.includes(topic.expectComponent))
-    fail(`组件落位(${topic.slug})`, `未见 ${topic.expectComponent}：${componentIds}`);
+    fail(
+      `组件落位(${topic.slug})`,
+      `未见 ${topic.expectComponent}：${componentIds}`,
+    );
 
   // CLI 双画幅出片。
   const renderDir = path.join(OUT, `${topic.slug}-render`);
@@ -131,8 +148,10 @@ for (const topic of TOPICS) {
     process.execPath,
     [
       path.join(ROOT, "scripts/video/render-scene.mjs"),
-      "--project", projectPath,
-      "--out", renderDir,
+      "--project",
+      projectPath,
+      "--out",
+      renderDir,
     ],
     { cwd: ROOT, encoding: "utf8", timeout: 600_000 },
   );
@@ -149,12 +168,21 @@ for (const topic of TOPICS) {
   }
   for (const aspect of ["landscape", "portrait"]) {
     for (let i = 0; i < project.shots.length; i++) {
-      const t = ((bounds[i] + bounds[i + 1]) / 2) / 1000;
+      const t = (bounds[i] + bounds[i + 1]) / 2 / 1000;
       execFileSync(
         "ffmpeg",
-        ["-y", "-v", "error", "-ss", t.toFixed(2), "-i",
-          path.join(renderDir, `${aspect}.mp4`), "-frames:v", "1",
-          path.join(OUT, `frames/${topic.slug}-${aspect}-s${i}.png`)],
+        [
+          "-y",
+          "-v",
+          "error",
+          "-ss",
+          t.toFixed(2),
+          "-i",
+          path.join(renderDir, `${aspect}.mp4`),
+          "-frames:v",
+          "1",
+          path.join(OUT, `frames/${topic.slug}-${aspect}-s${i}.png`),
+        ],
         { cwd: ROOT },
       );
     }

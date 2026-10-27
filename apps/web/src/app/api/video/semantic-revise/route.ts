@@ -1,9 +1,8 @@
-import { isSameOriginRequest } from "../../same-origin";
 import {
   SEMANTIC_COMPILER_VERSION,
   SEMANTIC_REVISE_PROMPT_VERSION,
-  semanticProviderFromEnv,
   type SemanticTokenUsage,
+  semanticProviderFromEnv,
 } from "../../../video-studio/semantic-provider";
 import {
   compileSemanticShot,
@@ -11,6 +10,7 @@ import {
   validateSemanticShot,
   verifySourcedNumbers,
 } from "../../../video-studio/semantic-storyboard";
+import { isSameOriginRequest } from "../../same-origin";
 
 // N2 单镜自然语言修改（交接单 2026-10-27）：客户端送「本镜工作版本摘要 +
 // 相邻镜头摘要 + 整片信息 + 用户指令」，模型只产一个受限 IR 镜头，服务端
@@ -54,6 +54,27 @@ function buildPayload(body: ReviseContext, instruction: string): string {
     shotSummary("前一镜", neighbors.prev),
     shotSummary("后一镜", neighbors.next),
     `用户修改指令：${instruction}`,
+  ].join("\n");
+}
+
+// Only creative content can substantiate a number in the generated shot. The
+// prompt also contains shot indexes, shot counts and duration metadata; those
+// numbers describe the editor and cannot substantiate a claim in the video.
+function numericSourceText(body: ReviseContext, instruction: string): string {
+  const shot = (body.shot ?? {}) as Record<string, unknown>;
+  const neighbors = (body.neighbors ?? {}) as Record<string, unknown>;
+  const film = (body.film ?? {}) as Record<string, unknown>;
+  const previous = (neighbors.prev ?? {}) as Record<string, unknown>;
+  const next = (neighbors.next ?? {}) as Record<string, unknown>;
+  return [
+    instruction,
+    clip(film.title, 30),
+    clip(shot.description, 60),
+    clip(shot.narrationText, 40),
+    clip(previous.description, 60),
+    clip(previous.narrationText, 40),
+    clip(next.description, 60),
+    clip(next.narrationText, 40),
   ].join("\n");
 }
 
@@ -102,34 +123,44 @@ export async function POST(request: Request) {
   const provider = semanticProviderFromEnv(process.env);
   if (!provider)
     return Response.json(
-      { error: "未配置 DASHSCOPE_API_KEY，AI 修改不可用（固定句式重做不受影响）" },
+      {
+        error:
+          "未配置 DASHSCOPE_API_KEY，AI 修改不可用（固定句式重做不受影响）",
+      },
       { status: 503 },
     );
 
   const payload = buildPayload(body, instruction);
   const first = await provider.revise(payload);
   if (!first.ok)
-    return Response.json({ error: first.message, kind: first.kind }, { status: 422 });
+    return Response.json(
+      { error: first.message, kind: first.kind },
+      { status: 422 },
+    );
   let validation = validateSemanticShot(first.draft, "shot");
   let draftSource = first;
   const usageCalls: Array<NonNullable<SemanticTokenUsage>> = [];
   if (first.usage) usageCalls.push(first.usage);
 
   // N3 数值防伪造 + IR 非法 → 一次带因修正重试（同整片纪律）。
-  // 数据源=指令+影片上下文（payload 里模型可见的全部文字）：影片自身的
-  // 数字（如邻镜旁白的心率 80/65）是合法引用对象，不得误拒。
-  const sourcedText = `${instruction}
-${payload}`;
+  // Existing creative text may be cited, but editor metadata must not become
+  // evidence for a metric (e.g. six shots does not justify a generated 6%).
+  const sourcedText = numericSourceText(body, instruction);
   const sourcingErrors = validation.ok
     ? verifySourcedNumbers(validation.shot, sourcedText)
     : [];
   if (!validation.ok || sourcingErrors.length > 0) {
     const retry = await provider.revise(
       payload,
-      [...(validation.ok ? [] : validation.errors), ...sourcingErrors].join("；"),
+      [...(validation.ok ? [] : validation.errors), ...sourcingErrors].join(
+        "；",
+      ),
     );
     if (!retry.ok)
-      return Response.json({ error: retry.message, kind: retry.kind }, { status: 422 });
+      return Response.json(
+        { error: retry.message, kind: retry.kind },
+        { status: 422 },
+      );
     validation = validateSemanticShot(retry.draft, "shot");
     draftSource = retry;
     if (retry.usage) usageCalls.push(retry.usage);
@@ -154,7 +185,8 @@ ${payload}`;
 
   // 确定性编译：seed 与整片同式（5000+镜序×7），同镜重生成可复现。
   const shotIndex =
-    typeof (body.shot as Record<string, unknown> | undefined)?.index === "number"
+    typeof (body.shot as Record<string, unknown> | undefined)?.index ===
+    "number"
       ? ((body.shot as { index: number }).index as number)
       : 0;
   let compiled;
@@ -173,7 +205,10 @@ ${payload}`;
   const usage = usageCalls.length
     ? {
         prompt_tokens: usageCalls.reduce((n, u) => n + u.prompt_tokens, 0),
-        completion_tokens: usageCalls.reduce((n, u) => n + u.completion_tokens, 0),
+        completion_tokens: usageCalls.reduce(
+          (n, u) => n + u.completion_tokens,
+          0,
+        ),
         total_tokens: usageCalls.reduce((n, u) => n + u.total_tokens, 0),
       }
     : null;

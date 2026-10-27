@@ -23,8 +23,7 @@ const root = path.resolve(
 );
 const BASE_URL = process.env.BASE_URL ?? "http://localhost:3224";
 const out = path.join(root, "artifacts/video-studio-semantic-narrated");
-const SENTENCE =
-  "做一条约25秒的水循环科普短片，讲清蒸发、凝结和降水";
+const SENTENCE = "做一条约25秒的水循环科普短片，讲清蒸发、凝结和降水";
 
 function fail(step, detail) {
   console.error(`[e2e-semantic-narrated] FAIL at ${step}: ${detail ?? ""}`);
@@ -38,7 +37,10 @@ function sha256(file) {
 mkdirSync(out, { recursive: true });
 const browser = await chromium.launch({ headless: true });
 const page = await (
-  await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: "zh-CN" })
+  await browser.newContext({
+    viewport: { width: 1440, height: 900 },
+    locale: "zh-CN",
+  })
 ).newPage();
 const errors = [];
 page.on("console", (m) => {
@@ -62,10 +64,18 @@ try {
     .first()
     .waitFor({ timeout: 90_000 })
     .catch(() => fail("AI 生成", "确认卡未出现（真实千问调用）"));
-  await page.screenshot({ path: path.join(out, "confirm-card.png"), fullPage: true });
+  await page.screenshot({
+    path: path.join(out, "confirm-card.png"),
+    fullPage: true,
+  });
   // 确认卡旁白即后续 TTS 输入：逐镜非空且与项目落库一致（后核对）。
-  const cardNarrations = await page.locator(".plan-shot-narration").allTextContents();
-  if (cardNarrations.length < 3 || cardNarrations.some((t) => !/旁白：.+/.test(t)))
+  const cardNarrations = await page
+    .locator(".plan-shot-narration")
+    .allTextContents();
+  if (
+    cardNarrations.length < 3 ||
+    cardNarrations.some((t) => !/旁白：.+/.test(t))
+  )
     fail("确认卡旁白", JSON.stringify(cardNarrations));
   await page.click(".plan-apply");
   await page
@@ -83,7 +93,9 @@ try {
   await page
     .locator(".editor-message", { hasText: "有声横竖版视频已生成" })
     .waitFor({ timeout: 300_000 })
-    .catch(() => fail("有声出片", "未出现生成完成提示（TTS 可能失败，看消息文案）"));
+    .catch(() =>
+      fail("有声出片", "未出现生成完成提示（TTS 可能失败，看消息文案）"),
+    );
   // 双视频预览的整页截图会压垮 headless renderer（实测 OOM 关页）：
   // 只截消息元素，并立即取下载链接。
   const messageBox = page.locator(".editor-message").first();
@@ -100,24 +112,32 @@ try {
     assert(url);
     const aspect = url.includes("portrait") ? "portrait" : "landscape";
     const file = path.join(out, `semantic-${aspect}.mp4`);
-    execFileSync("curl", ["-s", "-o", file, `${BASE_URL}${url}`], { cwd: root });
+    execFileSync("curl", ["-s", "-o", file, `${BASE_URL}${url}`], {
+      cwd: root,
+    });
     files[aspect] = file;
     downloads[aspect] = url;
     const probe = JSON.parse(
       execFileSync(
         "ffprobe",
         [
-          "-v", "error",
-          "-show_entries", "stream=codec_type,codec_name,width,height",
-          "-of", "json", file,
+          "-v",
+          "error",
+          "-show_entries",
+          "stream=codec_type,codec_name,width,height",
+          "-of",
+          "json",
+          file,
         ],
         { encoding: "utf8" },
       ),
     );
     const audio = probe.streams.find((s) => s.codec_type === "audio");
     const video = probe.streams.find((s) => s.codec_type === "video");
-    if (audio?.codec_name !== "aac") fail("音轨", `${aspect}: ${JSON.stringify(probe.streams)}`);
-    if (video?.codec_name !== "h264") fail("视频轨", `${aspect}: ${video?.codec_name}`);
+    if (audio?.codec_name !== "aac")
+      fail("音轨", `${aspect}: ${JSON.stringify(probe.streams)}`);
+    if (video?.codec_name !== "h264")
+      fail("视频轨", `${aspect}: ${video?.codec_name}`);
     if (video.width !== (aspect === "landscape" ? 1280 : 720))
       fail("尺寸", `${aspect}: ${video.width}x${video.height}`);
   }
@@ -135,7 +155,8 @@ try {
     const working = shot.contentVersions.find(
       (v) => v.versionId === shot.workingVersionId,
     );
-    if (!working.narrationText) fail("旁白落库", `镜 ${i + 1} narrationText 为空`);
+    if (!working.narrationText)
+      fail("旁白落库", `镜 ${i + 1} narrationText 为空`);
   }
   // 确认卡旁白 ↔ 项目旁白一致（逐镜，取「旁白：」后的文本）。
   project.shots.forEach((shot, i) => {
@@ -144,7 +165,10 @@ try {
     );
     const card = (cardNarrations[i] ?? "").replace(/^旁白：/, "");
     if (card && card !== working.narrationText)
-      fail("旁白一致", `镜 ${i + 1}: 卡「${card}」≠ 库「${working.narrationText}」`);
+      fail(
+        "旁白一致",
+        `镜 ${i + 1}: 卡「${card}」≠ 库「${working.narrationText}」`,
+      );
   });
 
   // —— render-manifest：逐镜音轨指纹 + 字幕 cue ——
@@ -158,19 +182,28 @@ try {
     if (m.narration.length !== shotCount)
       fail("manifest 旁白", `${aspect}: ${m.narration.length} ≠ ${shotCount}`);
     if (m.subtitleCues.length !== shotCount)
-      fail("manifest 字幕", `${aspect}: ${m.subtitleCues.length} ≠ ${shotCount}`);
+      fail(
+        "manifest 字幕",
+        `${aspect}: ${m.subtitleCues.length} ≠ ${shotCount}`,
+      );
     if (!m.subtitleCues.every((c) => c.cues > 0))
       fail("manifest 字幕", `${aspect}: 存在无 cue 镜头`);
     // 旁白不串镜：每镜音轨归属自己的工作版本，时长不越镜头。
     for (const entry of m.narration) {
       const shot = project.shots[entry.shotIndex];
       if (!shot || entry.versionId !== shot.workingVersionId)
-        fail("旁白串镜", `${aspect}: 镜 ${entry.shotIndex + 1} 音轨版本不属于该镜`);
+        fail(
+          "旁白串镜",
+          `${aspect}: 镜 ${entry.shotIndex + 1} 音轨版本不属于该镜`,
+        );
       const durationMs = shot.contentVersions.find(
         (v) => v.versionId === shot.workingVersionId,
       ).durationMs;
       if (entry.durationMs > durationMs + 200)
-        fail("旁白越界", `镜 ${entry.shotIndex + 1}: ${entry.durationMs} > ${durationMs}+200`);
+        fail(
+          "旁白越界",
+          `镜 ${entry.shotIndex + 1}: ${entry.durationMs} > ${durationMs}+200`,
+        );
     }
   }
 
@@ -183,11 +216,21 @@ try {
     bounds.push(bounds.at(-1) + working.durationMs);
   }
   for (let i = 0; i < shotCount; i++) {
-    const t = ((bounds[i] + bounds[i + 1]) / 2) / 1000;
+    const t = (bounds[i] + bounds[i + 1]) / 2 / 1000;
     execFileSync(
       "ffmpeg",
-      ["-y", "-v", "error", "-ss", t.toFixed(2), "-i", files.landscape,
-        "-frames:v", "1", path.join(out, `shot-${i + 1}-subtitle.png`)],
+      [
+        "-y",
+        "-v",
+        "error",
+        "-ss",
+        t.toFixed(2),
+        "-i",
+        files.landscape,
+        "-frames:v",
+        "1",
+        path.join(out, `shot-${i + 1}-subtitle.png`),
+      ],
       { cwd: root },
     );
   }
@@ -201,8 +244,10 @@ try {
     files: Object.fromEntries(
       Object.entries(files).map(([a, f]) => [a, { sha256: sha256(f) }]),
     ),
-    narrations: project.shots.map((s) =>
-      s.contentVersions.find((v) => v.versionId === s.workingVersionId).narrationText,
+    narrations: project.shots.map(
+      (s) =>
+        s.contentVersions.find((v) => v.versionId === s.workingVersionId)
+          .narrationText,
     ),
     jobId,
   };

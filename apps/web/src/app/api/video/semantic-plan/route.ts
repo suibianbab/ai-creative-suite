@@ -98,9 +98,7 @@ export async function POST(request: Request) {
     !withinRange(projectedTotalMs(validation.draft), lo, hi);
   // N3 数值/日期防伪造：compare/timeline 镜头的数字必须来自用户原话。
   const sourcingErrors = validation.ok
-    ? validation.draft.shots.flatMap((shot) =>
-        verifySourcedNumbers(shot, text),
-      )
+    ? validation.draft.shots.flatMap((shot) => verifySourcedNumbers(shot, text))
     : [];
 
   // 第二轮：IR 非法、时长偏离或编造数值时带原因修正重试，恰好一次。

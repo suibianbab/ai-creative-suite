@@ -73,32 +73,38 @@ test("N3 timeline-explainer：合法 IR 编译到 timeline-milestones@2（默认
   const c = compileSemanticShot(v.shot, 5011);
   assert.equal(c.plan.spec.componentId, "timeline-milestones");
   assert.equal(c.plan.spec.componentVersion, 2);
-  const params = c.plan.spec.params as { milestones: Array<{ status: string }> };
+  const params = c.plan.spec.params as {
+    milestones: Array<{ status: string }>;
+  };
   assert.ok(params.milestones.every((m) => m.status === "done"));
   assert.match(c.plan.renderHint, /播种/);
   assert.match(c.plan.renderHint, /开花/);
 });
 
 test("N3 verifySourcedNumbers：数值必须原样来自用户原话（P1-2 收紧）", () => {
-  const userText = "睡前刷手机1小时 vs 阅读30分钟，入睡时间从40分钟缩短到15分钟";
+  const userText =
+    "睡前刷手机1小时 vs 阅读30分钟，入睡时间从40分钟缩短到15分钟";
   // IR 数值（40/15）都在原话里 → 通过。
-  assert.deepEqual(
-    verifySourcedNumbers(COMPARE_IR, userText),
-    [],
-  );
+  assert.deepEqual(verifySourcedNumbers(COMPARE_IR, userText), []);
   // P1-2：差值推导不可靠（单位/可比量无法判定）→ 只接受原话数字。
   // 40-15=25 不再放行——deltaText 须用原话数字表述（如「缩短到15分钟」）。
   const derived = verifySourcedNumbers(
     { ...COMPARE_IR, deltaText: "缩短25分钟" },
     userText,
   );
-  assert.ok(derived.some((e) => /25/.test(e)), "差值数字应被拒绝");
+  assert.ok(
+    derived.some((e) => /25/.test(e)),
+    "差值数字应被拒绝",
+  );
   // 混合单位差（1小时-30分钟=29?）同样拒绝。
   const mixedUnit = verifySourcedNumbers(
     { ...COMPARE_IR, deltaText: "缩短29分钟" },
     "耗时从1小时变为30分钟",
   );
-  assert.ok(mixedUnit.some((e) => /29/.test(e)), "混合单位差值应被拒绝");
+  assert.ok(
+    mixedUnit.some((e) => /29/.test(e)),
+    "混合单位差值应被拒绝",
+  );
   // P1-2：旁白/短注里的编造数字也要拦（此前只查 value/delta/date）。
   const noteFabricated = verifySourcedNumbers(
     { ...COMPARE_IR, beforeNote: "提高85%" },
@@ -173,7 +179,11 @@ test("N3 P1-1：timeline milestones 形状校验（字符串/null 条目/坏 sta
 
   const r2 = validateSemanticShot({
     ...base,
-    milestones: [{ date: "播种", label: "a" }, null, { date: "发芽", label: "b" }],
+    milestones: [
+      { date: "播种", label: "a" },
+      null,
+      { date: "发芽", label: "b" },
+    ],
   });
   assert.ok(!r2.ok, "null 条目必须被拒");
   assert.ok(r2.errors.some((e) => e.includes("milestones[1]")));
@@ -204,15 +214,19 @@ test("N3 P1-1：compare 字段缺失/错型在校验层拒绝（带字段路径�
   const r2 = validateSemanticShot({
     ...base,
     metricLabel: 123,
-    beforeLabel: "A", beforeValue: "1", beforeNote: "x",
-    afterLabel: "B", afterValue: "2", afterNote: "y",
-    deltaText: "d", deltaPositive: "yes",
+    beforeLabel: "A",
+    beforeValue: "1",
+    beforeNote: "x",
+    afterLabel: "B",
+    afterValue: "2",
+    afterNote: "y",
+    deltaText: "d",
+    deltaPositive: "yes",
   });
   assert.ok(!r2.ok);
   assert.ok(r2.errors.some((e) => e.includes("metricLabel")));
   assert.ok(r2.errors.some((e) => e.includes("deltaPositive")));
 });
-
 
 // I-1（独立评审 2026-10-27）：全角数字与汉字数值不得绕过闸。
 test("N3 I-1：全角/汉字数字同样受闸", () => {
@@ -250,9 +264,43 @@ test("N3 I-1：全角/汉字数字同样受闸", () => {
   assert.deepEqual(okCase, []);
 });
 
+test("N3：序号只豁免自身，不能掩盖同字段的事实数字", () => {
+  const base = {
+    ...COMPARE_IR,
+    beforeValue: "较慢",
+    afterValue: "较快",
+    deltaText: "改善",
+  };
+  const arabic = verifySourcedNumbers(
+    { ...base, beforeNote: "第6步提高6%" },
+    "比较读书和手机",
+  );
+  assert.ok(
+    arabic.some((e) => /beforeNote/.test(e) && /6/.test(e)),
+    arabic.join("; "),
+  );
+  const chinese = verifySourcedNumbers(
+    { ...base, beforeNote: "第八步提高八成" },
+    "比较读书和手机",
+  );
+  assert.ok(
+    chinese.some((e) => /beforeNote/.test(e) && /八/.test(e)),
+    chinese.join("; "),
+  );
+  assert.deepEqual(
+    verifySourcedNumbers({ ...base, beforeNote: "第6步" }, "比较读书和手机"),
+    [],
+  );
+  assert.deepEqual(
+    verifySourcedNumbers({ ...base, beforeNote: "第八步" }, "比较读书和手机"),
+    [],
+  );
+});
+
 // I-3（独立评审）：compare/timeline 标题上限对齐组件契约 30 字。
 test("N3 I-3：compare/timeline 标题 ≤30 字（组件契约）", () => {
-  const longTitle = "一二三四五六七八九十一二三四五六七八九十一二三四五六七八九十一";
+  const longTitle =
+    "一二三四五六七八九十一二三四五六七八九十一二三四五六七八九十一";
   const r1 = validateSemanticShot({ ...COMPARE_IR, title: longTitle });
   assert.ok(!r1.ok);
   assert.ok(
