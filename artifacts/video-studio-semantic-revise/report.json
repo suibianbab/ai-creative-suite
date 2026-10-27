@@ -1,0 +1,9 @@
+{
+  "sentence": "做一条约25秒的水循环科普短片，讲清蒸发、凝结和降水",
+  "instruction": "把这一镜改成凝结过程，强调水汽遇冷形成云；旁白也同步修改",
+  "targetIndex": 1,
+  "beforeWorkingId": "60f6c9e5-b99a-4ff9-b174-62bbf3c776f8",
+  "afterWorkingId": "9ba17b5c-1caa-4f59-a011-66f7321f324b",
+  "narrationAfter": "水汽遇冷，聚成云",
+  "renderJobId": "b547b488-28f3-4b3d-8d2b-4f53713760de"
+}

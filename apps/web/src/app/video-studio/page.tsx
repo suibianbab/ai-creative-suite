@@ -752,6 +752,7 @@ export default function VideoStudioPage() {
         });
         const data = (await response.json()) as {
           shot?: Omit<AiReviseCandidate, "baseVersionId" | "totalAfterMs">;
+          provenance?: AiReviseCandidate["provenance"];
           error?: string;
           errors?: string[];
           kind?: string;
@@ -774,6 +775,15 @@ export default function VideoStudioPage() {
           needsAssetsChoice: false,
           candidate: {
             ...data.shot,
+            provenance:
+              data.provenance ??
+              // 兜底：响应缺 provenance 时卡片渲染仍可用（不会白屏）。
+              {
+                provider: "?",
+                model: "?",
+                promptVersion: "?",
+                compilerVersion: "?",
+              },
             baseVersionId: working.versionId,
             totalAfterMs:
               currentTotalMs - working.durationMs + data.shot.durationMs,
