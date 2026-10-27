@@ -39,16 +39,28 @@ for (const [name, color] of [
 ]) {
   execFileSync(
     "ffmpeg",
-    ["-y", "-v", "error", "-f", "lavfi", "-i",
+    [
+      "-y",
+      "-v",
+      "error",
+      "-f",
+      "lavfi",
+      "-i",
       `color=c=${color}:s=640x480:d=4:r=24`,
-      "-pix_fmt", "yuv420p", path.join(OUT, name)],
+      "-pix_fmt",
+      "yuv420p",
+      path.join(OUT, name),
+    ],
     { cwd: ROOT },
   );
 }
 
 const browser = await chromium.launch({ headless: true });
 const page = await (
-  await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: "zh-CN" })
+  await browser.newContext({
+    viewport: { width: 1440, height: 900 },
+    locale: "zh-CN",
+  })
 ).newPage();
 const errors = [];
 page.on("console", (m) => {
@@ -68,7 +80,9 @@ async function exportProject(name) {
 
 try {
   // —— 生成：素材诉求句 → 含素材位的确认卡 ——
-  await page.goto(`${BASE_URL}/video-studio`, { waitUntil: "domcontentloaded" });
+  await page.goto(`${BASE_URL}/video-studio`, {
+    waitUntil: "domcontentloaded",
+  });
   await page.waitForSelector("html[data-studio-ready]", { timeout: 20_000 });
   await page.click(".project-create");
   await page.fill("#planner-sentence", SENTENCE);
@@ -86,9 +100,11 @@ try {
   const cardText = await page.locator(".storyboard-card").textContent();
   if (!cardText?.includes("素材位"))
     fail("素材位", `确认卡无素材位行：${cardText?.slice(0, 200)}`);
-  if (!cardText?.includes("待绑定"))
-    fail("素材位", "确认卡未明示待绑定");
-  await page.screenshot({ path: path.join(OUT, "confirm-card.png"), fullPage: true });
+  if (!cardText?.includes("待绑定")) fail("素材位", "确认卡未明示待绑定");
+  await page.screenshot({
+    path: path.join(OUT, "confirm-card.png"),
+    fullPage: true,
+  });
   await page.click(".plan-apply");
   await page
     .locator(".editor-message", { hasText: "已应用分镜" })
@@ -109,8 +125,7 @@ try {
 
   // —— 上传测试素材入账本（MediaPanel 真实入口）——
   const uploadInput = page.locator(".media-panel input[type=file]").first();
-  if ((await uploadInput.count()) === 0)
-    fail("素材面板", "未找到上传入口");
+  if ((await uploadInput.count()) === 0) fail("素材面板", "未找到上传入口");
   await uploadInput.setInputFiles(path.join(OUT, "product-overall.mp4"));
   await page.locator("button.media-upload").click();
   await page
@@ -172,14 +187,75 @@ try {
   if (reopenedWorking.sceneSource.type !== "media-clip")
     fail("重开", "重开后绑定丢失");
 
+  // —— P1-2 导出闸：未绑定素材位 → 工作台导出被阻断（草稿预览不冒充成片）。
+  // 重开后先绑第一个素材位之前的状态已导出过 project-slots.json；
+  // 现在从「只绑 1 个、其余未绑」状态点导出 → 必须被阻断并点名剩余素材位。
+  const remainingSlots = reopened.shots.filter((s) => {
+    const w = s.contentVersions.find((v) => v.versionId === s.workingVersionId);
+    return w.description.startsWith("【素材位】");
+  });
+  if (remainingSlots.length === 0) {
+    // 生成轮只出了一个素材位且已绑定 → 用 UI 直接验证闸的空放行即可。
+    console.log(
+      "[e2e-semantic-slots] 本轮只有一个素材位且已绑定，导出闸负例跳过（单测覆盖）",
+    );
+  } else {
+    await page.locator(".editor-render-narrated").click();
+    await page
+      .locator(".editor-message", { hasText: "素材位未绑定" })
+      .waitFor({ timeout: 15_000 })
+      .catch(() => fail("导出闸", "未绑定素材位未阻断导出"));
+    await page.screenshot({
+      path: path.join(OUT, "export-blocked.png"),
+      fullPage: false,
+    });
+
+    // —— 绑定其余素材位（全部 → 闸放行）——
+    for (let i = 0; i < reopened.shots.length; i++) {
+      const w = reopened.shots[i].contentVersions.find(
+        (v) => v.versionId === reopened.shots[i].workingVersionId,
+      );
+      if (!w.description.startsWith("【素材位】")) continue;
+      const bindCard = page.locator(".shot-card").nth(i);
+      await bindCard.locator(".shot-edit-toggle").click();
+      await bindCard
+        .locator(".chart-template-select")
+        .selectOption({ label: "媒体镜头（选素材设入出点）" });
+      await bindCard.locator(".media-asset-select").selectOption({ index: 0 });
+      await bindCard.locator("button.shot-apply").first().click();
+      await page
+        .locator(".editor-message", { hasText: "已修订" })
+        .waitFor({ timeout: 15_000 })
+        .catch(() => fail(`补绑镜 ${i + 1}`, "未出现修订提示"));
+    }
+    await page.click(".editor-save");
+    await page
+      .locator(".editor-message", { hasText: "已保存" })
+      .waitFor({ timeout: 15_000 })
+      .catch(() => fail("补绑保存", "未出现保存提示"));
+    await page.click(".project-action");
+    await page.locator(".project-open").first().waitFor({ timeout: 15_000 });
+    await page.locator(".project-open").first().click();
+    await page.locator(".shot-card").first().waitFor({ timeout: 20_000 });
+  }
+  const allBound = await exportProject("project-all-bound.json");
+  const stillUnbound = allBound.shots.filter((s) => {
+    const w = s.contentVersions.find((v) => v.versionId === s.workingVersionId);
+    return w.description.startsWith("【素材位】");
+  });
+  if (stillUnbound.length > 0)
+    fail("全绑定", `仍有 ${stillUnbound.length} 个素材位未绑定`);
+
   // —— CLI 双画幅出片（媒体+图解混排）+ 抽帧 ——
   const renderDir = path.join(OUT, "render");
   const render = execFileSync(
     process.execPath,
     [
       path.join(ROOT, "scripts/video/render-scene.mjs"),
-      "--project", path.join(OUT, "project-reopened.json"),
-      "--out", renderDir,
+      "--project",
+      path.join(OUT, "project-all-bound.json"),
+      "--out",
+      renderDir,
     ],
     { cwd: ROOT, encoding: "utf8", timeout: 600_000 },
   );
@@ -193,12 +269,21 @@ try {
   }
   for (const aspect of ["landscape", "portrait"])
     for (let i = 0; i < reopened.shots.length; i++) {
-      const t = ((bounds[i] + bounds[i + 1]) / 2) / 1000;
+      const t = (bounds[i] + bounds[i + 1]) / 2 / 1000;
       execFileSync(
         "ffmpeg",
-        ["-y", "-v", "error", "-ss", t.toFixed(2), "-i",
-          path.join(renderDir, `${aspect}.mp4`), "-frames:v", "1",
-          path.join(OUT, `frames/${aspect}-s${i}.png`)],
+        [
+          "-y",
+          "-v",
+          "error",
+          "-ss",
+          t.toFixed(2),
+          "-i",
+          path.join(renderDir, `${aspect}.mp4`),
+          "-frames:v",
+          "1",
+          path.join(OUT, `frames/${aspect}-s${i}.png`),
+        ],
         { cwd: ROOT },
       );
     }

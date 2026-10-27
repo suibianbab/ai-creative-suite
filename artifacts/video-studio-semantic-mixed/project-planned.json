@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "id": "cfb8789a-4105-47a5-a7d8-3374d2e28331",
-  "title": "共享单车：绿色出行三步走",
+  "id": "32879cb1-9f9b-4e1c-8227-1f6ff165aea1",
+  "title": "共享单车：绿色出行新日常",
   "brief": {
     "sentence": "做一条约30秒的城市共享单车科普短片：用柱状图展示骑行量——北京年骑行从120万次涨到350万次，配一段真实街拍骑行画面，讲三步开锁流程，最后用数字强调每年减碳80万吨",
     "aspectTargets": [
@@ -12,38 +12,38 @@
       {
         "sentence": "做一条约30秒的城市共享单车科普短片：用柱状图展示骑行量——北京年骑行从120万次涨到350万次，配一段真实街拍骑行画面，讲三步开锁流程，最后用数字强调每年减碳80万吨",
         "appendedShotCount": 6,
-        "appendedDurationMs": 21500,
+        "appendedDurationMs": 20100,
         "filmShotCountAfter": 6,
-        "filmTotalMsAfter": 21500,
-        "appliedAt": "2026-10-27T05:13:02.621Z"
+        "filmTotalMsAfter": 20100,
+        "appliedAt": "2026-10-27T13:56:06.837Z"
       }
     ]
   },
   "shots": [
     {
-      "shotId": "93e90acb-f71e-4d31-8315-ca554b24c524",
+      "shotId": "93a02cb6-4d51-4498-9c9e-41e381d04f68",
       "order": 0,
       "locked": false,
-      "workingVersionId": "7d19336d-f306-4896-87ce-208d8fc79490",
+      "workingVersionId": "124fd0f7-3767-4f5d-a7af-56b6b3ebade4",
       "contentVersions": [
         {
-          "versionId": "7d19336d-f306-4896-87ce-208d8fc79490",
-          "createdAt": "2026-10-27T05:13:02.621Z",
-          "durationMs": 3100,
-          "description": "共享单车：绿色出行三步走（标题）",
-          "narrationText": "城市绿色出行新方式",
+          "versionId": "124fd0f7-3767-4f5d-a7af-56b6b3ebade4",
+          "createdAt": "2026-10-27T13:56:06.837Z",
+          "durationMs": 2800,
+          "description": "共享单车：绿色出行新日常（标题）",
+          "narrationText": "城市出行新选择",
           "sceneSource": {
             "type": "spec",
             "spec": {
               "specVersion": 1,
               "componentId": "text-animation",
               "componentVersion": 1,
-              "durationMs": 3100,
+              "durationMs": 2800,
               "seed": 5000,
               "background": "#101f34",
               "params": {
-                "title": "共享单车：绿色出行三步走",
-                "subtitle": "城市绿色出行新方式",
+                "title": "共享单车：绿色出行新日常",
+                "subtitle": "城市出行新选择",
                 "titleColor": "#f3f5f7",
                 "subtitleColor": "#b4d8e4",
                 "entrance": "fade-up",
@@ -53,98 +53,99 @@
           },
           "provenance": {
             "engineId": "planner-semantic",
-            "engineVersion": "qwen-plus/prompt8/compiler1"
+            "engineVersion": "qwen-plus/prompt9/compiler1"
           }
         }
       ],
       "events": [
         {
           "kind": "submitted",
-          "versionId": "7d19336d-f306-4896-87ce-208d8fc79490",
-          "at": "2026-10-27T05:13:02.621Z",
+          "versionId": "124fd0f7-3767-4f5d-a7af-56b6b3ebade4",
+          "at": "2026-10-27T13:56:06.837Z",
           "actor": "human"
         }
       ]
     },
     {
-      "shotId": "0fa781ca-b2db-4ea3-871d-e7a2185f3a69",
+      "shotId": "ebb3f277-99cd-4046-bada-0cda55e394a8",
       "order": 1,
       "locked": false,
-      "workingVersionId": "4bb57d1f-5000-4a95-a7dd-bcdcc096b661",
+      "workingVersionId": "62349569-7520-4d2e-bbed-f047b63a25ad",
       "contentVersions": [
         {
-          "versionId": "4bb57d1f-5000-4a95-a7dd-bcdcc096b661",
-          "createdAt": "2026-10-27T05:13:02.621Z",
-          "durationMs": 4900,
-          "description": "年骑行量显著增长（柱状图表）",
-          "narrationText": "北京骑行量从120万到350万",
+          "versionId": "62349569-7520-4d2e-bbed-f047b63a25ad",
+          "createdAt": "2026-10-27T13:56:06.837Z",
+          "durationMs": 4200,
+          "description": "北京年骑行量变化（柱状图表）",
+          "narrationText": "骑行次数大幅增长",
           "sceneSource": {
             "type": "spec",
             "spec": {
               "specVersion": 1,
               "componentId": "bar-chart",
               "componentVersion": 1,
-              "durationMs": 4900,
+              "durationMs": 4200,
               "seed": 5007,
               "background": "#101f34",
               "params": {
-                "title": "年骑行量显著增长",
+                "title": "北京年骑行量变化",
                 "bars": [
                   {
                     "label": "之前",
                     "value": 1200000
                   },
                   {
-                    "label": "之后",
+                    "label": "现在",
                     "value": 3500000
                   }
                 ],
                 "barColor": "#4f8fd6",
                 "accentColor": "#f5b652",
                 "textColor": "#f3f5f7",
-                "enterMs": 900
+                "enterMs": 900,
+                "cnUnits": true
               }
             }
           },
           "provenance": {
             "engineId": "planner-semantic",
-            "engineVersion": "qwen-plus/prompt8/compiler1"
+            "engineVersion": "qwen-plus/prompt9/compiler1"
           }
         }
       ],
       "events": [
         {
           "kind": "submitted",
-          "versionId": "4bb57d1f-5000-4a95-a7dd-bcdcc096b661",
-          "at": "2026-10-27T05:13:02.621Z",
+          "versionId": "62349569-7520-4d2e-bbed-f047b63a25ad",
+          "at": "2026-10-27T13:56:06.837Z",
           "actor": "human"
         }
       ]
     },
     {
-      "shotId": "c3a30151-ddad-40ef-8de8-7c0d1c79f5cf",
+      "shotId": "0dc79ec2-3f7e-4b43-91ce-a9ddf536461a",
       "order": 2,
       "locked": false,
-      "workingVersionId": "a8663b77-dcea-41c4-ac68-9520c05e118a",
+      "workingVersionId": "561acb1f-2f6d-42f0-aa16-82ad0d3bd569",
       "contentVersions": [
         {
-          "versionId": "a8663b77-dcea-41c4-ac68-9520c05e118a",
-          "createdAt": "2026-10-27T05:13:02.621Z",
-          "durationMs": 3100,
-          "description": "【素材位】城市街景骑行实拍——展示共享单车在真实道路环境中的使用状态",
-          "narrationText": "街头骑行，自然流畅",
+          "versionId": "561acb1f-2f6d-42f0-aa16-82ad0d3bd569",
+          "createdAt": "2026-10-27T13:56:06.837Z",
+          "durationMs": 3000,
+          "description": "【素材位】城市街景骑行实拍——展示共享单车在真实街道中的使用场景",
+          "narrationText": "街头骑行真实画面",
           "sceneSource": {
             "type": "spec",
             "spec": {
               "specVersion": 1,
               "componentId": "text-animation",
               "componentVersion": 1,
-              "durationMs": 3100,
+              "durationMs": 3000,
               "seed": 5014,
               "background": "#101f34",
               "params": {
                 "title": "素材位·城市街景骑行实拍",
-                "subtitle": "待绑定素材——展示共享单车在真实道路环境中的使用状态",
+                "subtitle": "待绑定素材——展示共享单车在真实街道中的使用场景",
                 "titleColor": "#f3f5f7",
                 "subtitleColor": "#b4d8e4",
                 "entrance": "fade-up",
@@ -154,31 +155,31 @@
           },
           "provenance": {
             "engineId": "planner-semantic",
-            "engineVersion": "qwen-plus/prompt8/compiler1"
+            "engineVersion": "qwen-plus/prompt9/compiler1"
           }
         }
       ],
       "events": [
         {
           "kind": "submitted",
-          "versionId": "a8663b77-dcea-41c4-ac68-9520c05e118a",
-          "at": "2026-10-27T05:13:02.621Z",
+          "versionId": "561acb1f-2f6d-42f0-aa16-82ad0d3bd569",
+          "at": "2026-10-27T13:56:06.837Z",
           "actor": "human"
         }
       ]
     },
     {
-      "shotId": "a78ea265-95c5-4390-a550-c302953db666",
+      "shotId": "4fceb144-dfbf-4095-9c2b-0dcf76a12023",
       "order": 3,
       "locked": false,
-      "workingVersionId": "4a4e5f58-6c5e-46a7-a4d6-8ee089b7124a",
+      "workingVersionId": "3c83ee7c-1819-4801-8858-d38c94537ce6",
       "contentVersions": [
         {
-          "versionId": "4a4e5f58-6c5e-46a7-a4d6-8ee089b7124a",
-          "createdAt": "2026-10-27T05:13:02.621Z",
+          "versionId": "3c83ee7c-1819-4801-8858-d38c94537ce6",
+          "createdAt": "2026-10-27T13:56:06.837Z",
           "durationMs": 3600,
-          "description": "三步开锁流程（流程图解）",
-          "narrationText": "扫码、验证、解锁",
+          "description": "三步轻松开锁（流程图解）",
+          "narrationText": "扫码→验证→解锁",
           "sceneSource": {
             "type": "spec",
             "spec": {
@@ -189,16 +190,16 @@
               "seed": 5021,
               "background": "#101f34",
               "params": {
-                "title": "三步开锁流程",
+                "title": "三步轻松开锁",
                 "steps": [
                   {
-                    "label": "扫码"
+                    "label": "扫码车筐二维码"
                   },
                   {
-                    "label": "验证身份"
+                    "label": "输入验证码"
                   },
                   {
-                    "label": "解锁用车"
+                    "label": "听到‘滴’声即开"
                   }
                 ],
                 "direction": "vertical",
@@ -211,47 +212,48 @@
           },
           "provenance": {
             "engineId": "planner-semantic",
-            "engineVersion": "qwen-plus/prompt8/compiler1"
+            "engineVersion": "qwen-plus/prompt9/compiler1"
           }
         }
       ],
       "events": [
         {
           "kind": "submitted",
-          "versionId": "4a4e5f58-6c5e-46a7-a4d6-8ee089b7124a",
-          "at": "2026-10-27T05:13:02.621Z",
+          "versionId": "3c83ee7c-1819-4801-8858-d38c94537ce6",
+          "at": "2026-10-27T13:56:06.837Z",
           "actor": "human"
         }
       ]
     },
     {
-      "shotId": "b935d2bc-9bcc-4eb5-ba3f-96feac0ccceb",
+      "shotId": "558ad550-ff54-43a9-8c97-142ca98bf363",
       "order": 4,
       "locked": false,
-      "workingVersionId": "a0feeb81-5b0c-4aaf-a9e5-04a863b4bbfe",
+      "workingVersionId": "9e016b02-acad-4e1e-b49c-d6563a1fb723",
       "contentVersions": [
         {
-          "versionId": "a0feeb81-5b0c-4aaf-a9e5-04a863b4bbfe",
-          "createdAt": "2026-10-27T05:13:02.621Z",
-          "durationMs": 3700,
-          "description": "年度减碳成效（数字计数）",
-          "narrationText": "每年减少碳排放80万吨",
+          "versionId": "9e016b02-acad-4e1e-b49c-d6563a1fb723",
+          "createdAt": "2026-10-27T13:56:06.837Z",
+          "durationMs": 3400,
+          "description": "每年减碳量（数字计数）",
+          "narrationText": "相当于减少80万吨碳",
           "sceneSource": {
             "type": "spec",
             "spec": {
               "specVersion": 1,
               "componentId": "number-counter",
               "componentVersion": 1,
-              "durationMs": 3700,
+              "durationMs": 3400,
               "seed": 5028,
               "background": "#101f34",
               "params": {
-                "title": "年度减碳成效",
+                "title": "每年减碳量",
                 "value": 800000,
                 "prefix": "约",
                 "suffix": "吨",
                 "decimals": 0,
                 "countMs": 2000,
+                "cnUnits": true,
                 "numberColor": "#f3f5f7",
                 "accentColor": "#f5b652"
               }
@@ -259,31 +261,31 @@
           },
           "provenance": {
             "engineId": "planner-semantic",
-            "engineVersion": "qwen-plus/prompt8/compiler1"
+            "engineVersion": "qwen-plus/prompt9/compiler1"
           }
         }
       ],
       "events": [
         {
           "kind": "submitted",
-          "versionId": "a0feeb81-5b0c-4aaf-a9e5-04a863b4bbfe",
-          "at": "2026-10-27T05:13:02.621Z",
+          "versionId": "9e016b02-acad-4e1e-b49c-d6563a1fb723",
+          "at": "2026-10-27T13:56:06.837Z",
           "actor": "human"
         }
       ]
     },
     {
-      "shotId": "06e21c35-b2ed-4d68-8d11-ce9ca4f3785b",
+      "shotId": "c4ec8897-e823-4810-8c79-58e57489a229",
       "order": 5,
       "locked": false,
-      "workingVersionId": "024b5617-20bb-4217-9501-3a6a5254c569",
+      "workingVersionId": "37e73e6b-e0a0-454a-abf5-d595772e5ef6",
       "contentVersions": [
         {
-          "versionId": "024b5617-20bb-4217-9501-3a6a5254c569",
-          "createdAt": "2026-10-27T05:13:02.621Z",
+          "versionId": "37e73e6b-e0a0-454a-abf5-d595772e5ef6",
+          "createdAt": "2026-10-27T13:56:06.837Z",
           "durationMs": 3100,
           "description": "绿色出行，触手可及（标题）",
-          "narrationText": "轻松骑行，守护蓝天",
+          "narrationText": "骑上单车，改变开始",
           "sceneSource": {
             "type": "spec",
             "spec": {
@@ -295,7 +297,7 @@
               "background": "#101f34",
               "params": {
                 "title": "绿色出行，触手可及",
-                "subtitle": "轻松骑行，守护蓝天",
+                "subtitle": "骑上单车，改变开始",
                 "titleColor": "#f3f5f7",
                 "subtitleColor": "#b4d8e4",
                 "entrance": "fade-up",
@@ -305,15 +307,15 @@
           },
           "provenance": {
             "engineId": "planner-semantic",
-            "engineVersion": "qwen-plus/prompt8/compiler1"
+            "engineVersion": "qwen-plus/prompt9/compiler1"
           }
         }
       ],
       "events": [
         {
           "kind": "submitted",
-          "versionId": "024b5617-20bb-4217-9501-3a6a5254c569",
-          "at": "2026-10-27T05:13:02.621Z",
+          "versionId": "37e73e6b-e0a0-454a-abf5-d595772e5ef6",
+          "at": "2026-10-27T13:56:06.837Z",
           "actor": "human"
         }
       ]

@@ -53,11 +53,13 @@ test("N4 bar-explainer：合法 IR 校验并编译到 bar-chart@1（值/标签�
   assert.equal(c.plan.spec.componentId, "bar-chart");
   const params = c.plan.spec.params as {
     bars: Array<{ label: string; value: number }>;
+    cnUnits?: boolean;
   };
   assert.deepEqual(
     params.bars.map((b) => `${b.label}${b.value}`),
     ["北京530", "上海1170", "广州1720"],
   );
+  assert.equal(params.cnUnits, true);
   // 确认卡逐项对账：renderHint 列出每条 label+value。
   assert.match(c.plan.renderHint, /北京 530/);
   assert.match(c.plan.renderHint, /广州 1720/);
@@ -106,9 +108,12 @@ test("N4 counter-explainer：合法 IR 编译到 number-counter@1；前后缀/�
     value: number;
     prefix: string;
     suffix: string;
+    cnUnits?: boolean;
   };
   assert.equal(params.value, 1500);
   assert.equal(params.suffix, "毫升");
+  // P2-2：语义链开启中文量级记法（组件参数 opt-in，手工模板不受影响）。
+  assert.equal(params.cnUnits, true);
   assert.match(c.plan.renderHint, /1500/);
   assert.match(c.plan.renderHint, /毫升/);
   const bad = validateSemanticShot({
@@ -141,14 +146,8 @@ test("N4 数值闸：图表 value 参与来源校验（编造值拒绝、原话�
     verifySourcedNumbers(COUNTER_IR, "每天喝水").length > 0,
     "counter 编造值应被拒",
   );
-  assert.deepEqual(
-    verifySourcedNumbers(COUNTER_IR, "建议每天约1500毫升"),
-    [],
-  );
-  assert.deepEqual(
-    verifySourcedNumbers(LINE_IR, "一月2度，七月28度"),
-    [],
-  );
+  assert.deepEqual(verifySourcedNumbers(COUNTER_IR, "建议每天约1500毫升"), []);
+  assert.deepEqual(verifySourcedNumbers(LINE_IR, "一月2度，七月28度"), []);
 });
 
 test("N4 时长下限：图表镜头按组件时序延长", () => {
@@ -157,6 +156,45 @@ test("N4 时长下限：图表镜头按组件时序延长", () => {
   const c = compileSemanticShot(v.shot, 5020);
   // 3 柱：900(生长) + 2×90(逐柱) + 300(值淡入) + 400(停留) = 1780。
   assert.ok(c.plan.spec.durationMs >= 1780, `${c.plan.spec.durationMs}`);
+});
+
+// P1-1（Codex 复核 2026-10-28）：图表条目键集合白名单——模型在 bars/points
+// 条目里塞 assetUrl/任意扩展键必须在校验层拒绝（编译器不得把未授权键
+// 原样持久化进 SceneSpec）。
+test("N4 P1-1：条目未知字段拒绝（assetUrl/扩展键/条目错型）", () => {
+  const r1 = validateSemanticShot({
+    ...BAR_IR,
+    bars: [{ label: "A", value: 5, assetUrl: "https://example.com/x" }],
+  });
+  assert.ok(!r1.ok, "bars 条目 assetUrl 必须被拒");
+  assert.ok(
+    r1.errors.some((e) => e.includes("assetUrl")),
+    r1.errors.join("; "),
+  );
+  const r2 = validateSemanticShot({
+    ...BAR_IR,
+    bars: [{ label: "A", value: 5, note: "扩展键" }],
+  });
+  assert.ok(!r2.ok && r2.errors.some((e) => e.includes("note")));
+  const r3 = validateSemanticShot({
+    ...LINE_IR,
+    points: [
+      { label: "一月", value: 2, extra: 1 },
+      { label: "七月", value: 28 },
+    ],
+  });
+  assert.ok(!r3.ok && r3.errors.some((e) => e.includes("extra")));
+});
+
+test("N4 P1-1：编译只投影白名单键（条目残留键不进 SceneSpec）", () => {
+  const v = validateSemanticShot({
+    ...BAR_IR,
+    bars: [{ label: "A", value: 530 }],
+  });
+  assert.ok(v.ok);
+  const c = compileSemanticShot(v.shot, 5020);
+  const bars = (c.plan.spec.params as { bars: unknown[] }).bars;
+  assert.deepEqual(Object.keys(bars[0] as object).sort(), ["label", "value"]);
 });
 
 // N6（2026-10-27）：中文量级词记数法——「120万」与 1200000 是同一数量，
@@ -201,7 +239,10 @@ test("N6 数值闸：万/亿 量级词与阿拉伯数字同值互通", () => {
     },
     userText,
   );
-  assert.ok(wrong.some((e) => /1300000/.test(e)), wrong.join("; "));
+  assert.ok(
+    wrong.some((e) => /1300000/.test(e)),
+    wrong.join("; "),
+  );
   // 亿 同理：1.2亿 → 120000000。
   assert.deepEqual(
     verifySourcedNumbers(

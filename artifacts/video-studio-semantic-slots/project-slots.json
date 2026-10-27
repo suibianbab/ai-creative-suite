@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "id": "344bb3fa-947a-4fe3-8c32-f161fc501032",
-  "title": "恒温随行·XX保温杯",
+  "id": "5be5a275-6fc4-469b-b857-167e29d12371",
+  "title": "恒温随行·保温杯",
   "brief": {
     "sentence": "做一条约25秒的保温杯产品短片：整体展示、杯口细节特写、户外使用场景、三个核心卖点、品牌收尾，产品画面用真实照片",
     "aspectTargets": [
@@ -12,33 +12,33 @@
       {
         "sentence": "做一条约25秒的保温杯产品短片：整体展示、杯口细节特写、户外使用场景、三个核心卖点、品牌收尾，产品画面用真实照片",
         "appendedShotCount": 5,
-        "appendedDurationMs": 13200,
+        "appendedDurationMs": 15000,
         "filmShotCountAfter": 5,
-        "filmTotalMsAfter": 13200,
-        "appliedAt": "2026-10-27T04:27:28.281Z"
+        "filmTotalMsAfter": 15000,
+        "appliedAt": "2026-10-27T13:21:26.268Z"
       }
     ]
   },
   "shots": [
     {
-      "shotId": "8928beb1-ad12-439b-a5c5-b7c62ab38d51",
+      "shotId": "ac1b66d3-7cfc-47ef-8d66-0c047f370258",
       "order": 0,
       "locked": false,
-      "workingVersionId": "40fa5d52-2e6c-46aa-af9b-282d770d3f08",
+      "workingVersionId": "a950ab2a-6b31-4d35-9bd4-3a43a74b0784",
       "contentVersions": [
         {
-          "versionId": "40fa5d52-2e6c-46aa-af9b-282d770d3f08",
-          "createdAt": "2026-10-27T04:27:28.281Z",
-          "durationMs": 2500,
+          "versionId": "a950ab2a-6b31-4d35-9bd4-3a43a74b0784",
+          "createdAt": "2026-10-27T13:21:26.268Z",
+          "durationMs": 3100,
           "description": "【素材位】产品整体照片——开场建立产品第一印象",
-          "narrationText": "一眼识别设计感",
+          "narrationText": "经典设计，一手掌握",
           "sceneSource": {
             "type": "spec",
             "spec": {
               "specVersion": 1,
               "componentId": "text-animation",
               "componentVersion": 1,
-              "durationMs": 2500,
+              "durationMs": 3100,
               "seed": 5000,
               "background": "#101f34",
               "params": {
@@ -60,36 +60,36 @@
       "events": [
         {
           "kind": "submitted",
-          "versionId": "40fa5d52-2e6c-46aa-af9b-282d770d3f08",
-          "at": "2026-10-27T04:27:28.281Z",
+          "versionId": "a950ab2a-6b31-4d35-9bd4-3a43a74b0784",
+          "at": "2026-10-27T13:21:26.268Z",
           "actor": "human"
         }
       ]
     },
     {
-      "shotId": "239c7d7b-3e58-4964-b890-477cf0de27ce",
+      "shotId": "b152f9db-3702-4e4b-b9b9-96a64535a159",
       "order": 1,
       "locked": false,
-      "workingVersionId": "db7450f9-a84d-43f8-93bd-2384bf09dd8b",
+      "workingVersionId": "72ba27c7-88fd-4830-95f0-94cb5768c594",
       "contentVersions": [
         {
-          "versionId": "db7450f9-a84d-43f8-93bd-2384bf09dd8b",
-          "createdAt": "2026-10-27T04:27:28.281Z",
-          "durationMs": 2500,
-          "description": "【素材位】杯口高清特写照片——突出工艺可靠性",
-          "narrationText": "精密密封结构",
+          "versionId": "72ba27c7-88fd-4830-95f0-94cb5768c594",
+          "createdAt": "2026-10-27T13:21:26.268Z",
+          "durationMs": 3100,
+          "description": "【素材位】产品局部特写照片——突出密封结构与工艺质感",
+          "narrationText": "精密杯口，严密封合",
           "sceneSource": {
             "type": "spec",
             "spec": {
               "specVersion": 1,
               "componentId": "text-animation",
               "componentVersion": 1,
-              "durationMs": 2500,
+              "durationMs": 3100,
               "seed": 5007,
               "background": "#101f34",
               "params": {
-                "title": "素材位·杯口高清特写照片",
-                "subtitle": "待绑定素材——突出工艺可靠性",
+                "title": "素材位·产品局部特写照片",
+                "subtitle": "待绑定素材——突出密封结构与工艺质感",
                 "titleColor": "#f3f5f7",
                 "subtitleColor": "#b4d8e4",
                 "entrance": "fade-up",
@@ -106,36 +106,36 @@
       "events": [
         {
           "kind": "submitted",
-          "versionId": "db7450f9-a84d-43f8-93bd-2384bf09dd8b",
-          "at": "2026-10-27T04:27:28.281Z",
+          "versionId": "72ba27c7-88fd-4830-95f0-94cb5768c594",
+          "at": "2026-10-27T13:21:26.268Z",
           "actor": "human"
         }
       ]
     },
     {
-      "shotId": "2912d3c6-d6f9-4416-b671-1bccbc7b9d80",
+      "shotId": "68e7794f-8d38-49ff-be25-83e697eb71df",
       "order": 2,
       "locked": false,
-      "workingVersionId": "58953f06-ca85-4fa3-abb2-1d29824941ab",
+      "workingVersionId": "12dca6a0-5a08-41b4-a3bc-6d55803d3cfe",
       "contentVersions": [
         {
-          "versionId": "58953f06-ca85-4fa3-abb2-1d29824941ab",
-          "createdAt": "2026-10-27T04:27:28.281Z",
-          "durationMs": 2500,
-          "description": "【素材位】户外真人使用照片——呈现真实使用环境",
-          "narrationText": "山野间随时畅饮",
+          "versionId": "12dca6a0-5a08-41b4-a3bc-6d55803d3cfe",
+          "createdAt": "2026-10-27T13:21:26.268Z",
+          "durationMs": 3100,
+          "description": "【素材位】产品户外实景照片——呈现真实使用环境与便携性",
+          "narrationText": "山野湖畔，随时畅饮",
           "sceneSource": {
             "type": "spec",
             "spec": {
               "specVersion": 1,
               "componentId": "text-animation",
               "componentVersion": 1,
-              "durationMs": 2500,
+              "durationMs": 3100,
               "seed": 5014,
               "background": "#101f34",
               "params": {
-                "title": "素材位·户外真人使用照片",
-                "subtitle": "待绑定素材——呈现真实使用环境",
+                "title": "素材位·产品户外实景照片",
+                "subtitle": "待绑定素材——呈现真实使用环境与便携性",
                 "titleColor": "#f3f5f7",
                 "subtitleColor": "#b4d8e4",
                 "entrance": "fade-up",
@@ -152,24 +152,24 @@
       "events": [
         {
           "kind": "submitted",
-          "versionId": "58953f06-ca85-4fa3-abb2-1d29824941ab",
-          "at": "2026-10-27T04:27:28.281Z",
+          "versionId": "12dca6a0-5a08-41b4-a3bc-6d55803d3cfe",
+          "at": "2026-10-27T13:21:26.268Z",
           "actor": "human"
         }
       ]
     },
     {
-      "shotId": "c0863f72-7e4a-4415-a688-8bb501c2cdfc",
+      "shotId": "78f28859-255f-4768-8216-a2897cf12eb8",
       "order": 3,
       "locked": false,
-      "workingVersionId": "9c35c2c2-169d-4858-a44e-bd2fcba71175",
+      "workingVersionId": "345b6aaf-aed8-4b84-a1f6-8356223837c5",
       "contentVersions": [
         {
-          "versionId": "9c35c2c2-169d-4858-a44e-bd2fcba71175",
-          "createdAt": "2026-10-27T04:27:28.281Z",
+          "versionId": "345b6aaf-aed8-4b84-a1f6-8356223837c5",
+          "createdAt": "2026-10-27T13:21:26.268Z",
           "durationMs": 3200,
           "description": "三大核心卖点（要点解说）",
-          "narrationText": "性能优势一览",
+          "narrationText": "实力守护每一口温度",
           "sceneSource": {
             "type": "spec",
             "spec": {
@@ -187,7 +187,7 @@
                     "emphasis": "下划线"
                   },
                   {
-                    "text": "防漏密封",
+                    "text": "安全材质",
                     "emphasis": "圈"
                   },
                   {
@@ -212,24 +212,24 @@
       "events": [
         {
           "kind": "submitted",
-          "versionId": "9c35c2c2-169d-4858-a44e-bd2fcba71175",
-          "at": "2026-10-27T04:27:28.281Z",
+          "versionId": "345b6aaf-aed8-4b84-a1f6-8356223837c5",
+          "at": "2026-10-27T13:21:26.268Z",
           "actor": "human"
         }
       ]
     },
     {
-      "shotId": "c4dc8b3e-393b-46f6-8c13-8fdcef3104cf",
+      "shotId": "9b68dab5-0462-47b7-8946-b44b5d0f9431",
       "order": 4,
       "locked": false,
-      "workingVersionId": "a8d7ba88-a173-4b01-acad-6b1c3bdc4ae6",
+      "workingVersionId": "f6fec7f3-8fae-4661-a1d4-397af2e31104",
       "contentVersions": [
         {
-          "versionId": "a8d7ba88-a173-4b01-acad-6b1c3bdc4ae6",
-          "createdAt": "2026-10-27T04:27:28.281Z",
+          "versionId": "f6fec7f3-8fae-4661-a1d4-397af2e31104",
+          "createdAt": "2026-10-27T13:21:26.268Z",
           "durationMs": 2500,
-          "description": "【素材位】品牌LOGO与产品组合照片——强化品牌记忆",
-          "narrationText": "XX保温杯",
+          "description": "恒温随行·保温杯（标题）",
+          "narrationText": "信赖之选",
           "sceneSource": {
             "type": "spec",
             "spec": {
@@ -240,12 +240,12 @@
               "seed": 5028,
               "background": "#101f34",
               "params": {
-                "title": "素材位·品牌LOGO与产品组合照片",
-                "subtitle": "待绑定素材——强化品牌记忆",
+                "title": "恒温随行·保温杯",
+                "subtitle": "信赖之选",
                 "titleColor": "#f3f5f7",
                 "subtitleColor": "#b4d8e4",
                 "entrance": "fade-up",
-                "enterMs": 600
+                "enterMs": 450
               }
             }
           },
@@ -258,8 +258,8 @@
       "events": [
         {
           "kind": "submitted",
-          "versionId": "a8d7ba88-a173-4b01-acad-6b1c3bdc4ae6",
-          "at": "2026-10-27T04:27:28.281Z",
+          "versionId": "f6fec7f3-8fae-4661-a1d4-397af2e31104",
+          "at": "2026-10-27T13:21:26.268Z",
           "actor": "human"
         }
       ]

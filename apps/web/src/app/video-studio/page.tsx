@@ -65,6 +65,7 @@ import {
 } from "./shot-editor-card";
 import { applyShotRecipe } from "./shot-recipes";
 import { shotWorkingMediaClip, shotWorkingSpec } from "./shot-specs";
+import { unboundSlotReasons } from "./slot-gate";
 import { importStockForShot } from "./stock-apply";
 import { StyleBiblePanel } from "./style-bible-panel";
 import { threeSceneFromVersion } from "./three-templates";
@@ -167,7 +168,7 @@ export default function VideoStudioPage() {
     error: null,
     provenance: null,
     durationDeviation: null,
-dataHint: null,
+    dataHint: null,
     needsAssetsChoice: false,
   });
   // N2：单镜 AI 修改状态按 shotId 分片；切换项目时随编辑器重建清空。
@@ -267,6 +268,17 @@ dataHint: null,
         ...state,
         busy: false,
         message: `代表帧确认已失效，未导出：${approval.reasons.join("；")}`,
+      });
+      return;
+    }
+    // P1-2（Codex 复核 2026-10-28）：未绑定素材位阻断最终导出——占位画面
+    // 只作草稿预览（ScenePreview/时间线可见），不得冒充素材齐备的成片。
+    const slotReasons = unboundSlotReasons(project);
+    if (slotReasons.length > 0) {
+      setEditor({
+        ...state,
+        busy: false,
+        message: `有 ${slotReasons.length} 个素材位未绑定素材，未导出：${slotReasons.join("；")}`,
       });
       return;
     }
@@ -590,7 +602,7 @@ dataHint: null,
         error: null,
         provenance: null,
         durationDeviation: null,
-dataHint: null,
+        dataHint: null,
         needsAssetsChoice: false,
       });
       // P1-1（Codex 复核 2026-10-26）：新请求开始即撤销旧候选——请求期间/
@@ -636,7 +648,7 @@ dataHint: null,
             ].join("；"),
             provenance: null,
             durationDeviation: null,
-dataHint: null,
+            dataHint: null,
             needsAssetsChoice: data.kind === "needs-assets",
           });
           return;
@@ -666,7 +678,7 @@ dataHint: null,
           error: "AI 分镜请求失败（网络或服务错误），未修改项目",
           provenance: null,
           durationDeviation: null,
-dataHint: null,
+          dataHint: null,
           needsAssetsChoice: false,
         });
       }
@@ -1079,7 +1091,7 @@ dataHint: null,
                 error: null,
                 provenance: null,
                 durationDeviation: null,
-dataHint: null,
+                dataHint: null,
                 needsAssetsChoice: false,
               });
               refreshProjects().catch(() => {});
@@ -1238,7 +1250,7 @@ dataHint: null,
                     error: null,
                     provenance: null,
                     durationDeviation: null,
-dataHint: null,
+                    dataHint: null,
                     needsAssetsChoice: false,
                   });
                   // 分镜句式 → 多镜头规划器；其余 → P0 单镜头规划器
@@ -1390,7 +1402,7 @@ dataHint: null,
                         error: null,
                         provenance: null,
                         durationDeviation: null,
-dataHint: null,
+                        dataHint: null,
                         needsAssetsChoice: false,
                       });
                     } catch (error) {
@@ -1416,7 +1428,7 @@ dataHint: null,
                       error: null,
                       provenance: null,
                       durationDeviation: null,
-dataHint: null,
+                      dataHint: null,
                       needsAssetsChoice: false,
                     });
                   }}
@@ -2022,7 +2034,7 @@ dataHint: null,
                 error: null,
                 provenance: null,
                 durationDeviation: null,
-dataHint: null,
+                dataHint: null,
                 needsAssetsChoice: false,
               });
             }}
@@ -2203,7 +2215,7 @@ dataHint: null,
                           error: null,
                           provenance: null,
                           durationDeviation: null,
-dataHint: null,
+                          dataHint: null,
                           needsAssetsChoice: false,
                         });
                       }}

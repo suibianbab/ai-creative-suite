@@ -1,3 +1,4 @@
+import { formatCnCount } from "../cn-number-format.js";
 import { clamp01, easeOutCubic } from "../easing.js";
 import type {
   FrameContext,
@@ -21,6 +22,9 @@ type NumberCounterParams = {
   countMs: number; // 200..6000
   numberColor: string;
   accentColor: string;
+  /** 可选中文量级记法（P2-2）：≥1e4 显示 万/亿（800000→80万）；
+   *  缺省 false 保持原样（既有模板口径不变）。 */
+  cnUnits?: boolean;
 };
 
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
@@ -71,6 +75,9 @@ function validateParams(value: unknown): NumberCounterParams {
   ) {
     throw new Error("number-counter params.countMs 必须是 200..6000 的整数");
   }
+  if (value.cnUnits !== undefined && typeof value.cnUnits !== "boolean") {
+    throw new Error("number-counter params.cnUnits 必须是布尔");
+  }
   if (!isHexColor(value.numberColor))
     throw new Error("number-counter params.numberColor 必须是 #rrggbb");
   if (!isHexColor(value.accentColor))
@@ -82,7 +89,13 @@ function render(spec: SceneSpecLike, ctx: FrameContext): SvgNode {
   const params = spec.params as NumberCounterParams;
   const tMs = (ctx.frame / ctx.fps) * 1000;
   const progress = easeOutCubic(clamp01(tMs / params.countMs));
-  const displayed = (params.value * progress).toFixed(params.decimals);
+  // P2-2（opt-in cnUnits）：≥1e4 的计数中间值/终值按万/亿记法显示
+  // （800000→80万）；缺省 false 保持 toFixed 原样（既有模板口径不变）。
+  const raw = (params.value * progress).toFixed(params.decimals);
+  const displayed =
+    params.cnUnits === true && Number(raw) >= 10000
+      ? formatCnCount(Number(raw))
+      : raw;
   const text = `${params.prefix}${displayed}${params.suffix}`;
   const underlineW = UNDERLINE_FULL * progress;
 

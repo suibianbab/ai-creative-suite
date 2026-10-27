@@ -31,14 +31,27 @@ mkdirSync(OUT, { recursive: true });
 mkdirSync(path.join(OUT, "frames"), { recursive: true });
 execFileSync(
   "ffmpeg",
-  ["-y", "-v", "error", "-f", "lavfi", "-i", "color=c=0x3f7f5f:s=640x480:d=5:r=24",
-    "-pix_fmt", "yuv420p", path.join(OUT, "street-ride.mp4")],
+  [
+    "-y",
+    "-v",
+    "error",
+    "-f",
+    "lavfi",
+    "-i",
+    "color=c=0x3f7f5f:s=640x480:d=5:r=24",
+    "-pix_fmt",
+    "yuv420p",
+    path.join(OUT, "street-ride.mp4"),
+  ],
   { cwd: ROOT },
 );
 
 const browser = await chromium.launch({ headless: true });
 const page = await (
-  await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: "zh-CN" })
+  await browser.newContext({
+    viewport: { width: 1440, height: 900 },
+    locale: "zh-CN",
+  })
 ).newPage();
 const errors = [];
 page.on("console", (m) => {
@@ -58,7 +71,9 @@ async function exportProject(name) {
 
 try {
   // —— 生成 → 确认卡 → 应用 ——
-  await page.goto(`${BASE_URL}/video-studio`, { waitUntil: "domcontentloaded" });
+  await page.goto(`${BASE_URL}/video-studio`, {
+    waitUntil: "domcontentloaded",
+  });
   await page.waitForSelector("html[data-studio-ready]", { timeout: 20_000 });
   await page.click(".project-create");
   await page.fill("#planner-sentence", SENTENCE);
@@ -77,7 +92,10 @@ try {
   for (const word of ["120", "350", "80"])
     if (!cardText?.includes(word))
       fail("数据对账", `确认卡缺原话数值「${word}」`);
-  await page.screenshot({ path: path.join(OUT, "confirm-card.png"), fullPage: true });
+  await page.screenshot({
+    path: path.join(OUT, "confirm-card.png"),
+    fullPage: true,
+  });
   await page.click(".plan-apply");
   await page
     .locator(".editor-message", { hasText: "已应用分镜" })
@@ -97,10 +115,7 @@ try {
     return w.sceneSource.spec?.componentId === "flow-steps";
   });
   if (!hasBar || !hasSlot || !hasFlow)
-    fail(
-      "混排结构",
-      `柱状${hasBar}·素材位${hasSlot}·流程${hasFlow} 不齐`,
-    );
+    fail("混排结构", `柱状${hasBar}·素材位${hasSlot}·流程${hasFlow} 不齐`);
 
   // —— 上传素材 + 绑定素材位 ——
   await page
@@ -168,7 +183,7 @@ try {
   await page.locator(".editor-render-narrated").click();
   await page
     .locator(".editor-message", { hasText: "有声横竖版视频已生成" })
-    .waitFor({ timeout: 300_000 })
+    .waitFor({ timeout: 480_000 })
     .catch(() => fail("有声出片", "未出现生成完成提示"));
   const hrefs = await page
     .locator(".editor-downloads a")
@@ -177,19 +192,31 @@ try {
   for (const [i, url] of hrefs.entries()) {
     const aspect = url.includes("portrait") ? "portrait" : "landscape";
     const file = path.join(OUT, `mixed-${aspect}.mp4`);
-    execFileSync("curl", ["-s", "-o", file, `${BASE_URL}${url}`], { cwd: ROOT });
+    execFileSync("curl", ["-s", "-o", file, `${BASE_URL}${url}`], {
+      cwd: ROOT,
+    });
     const probe = JSON.parse(
       execFileSync(
         "ffprobe",
-        ["-v", "error", "-show_entries", "stream=codec_type,codec_name,width,height",
-          "-of", "json", file],
+        [
+          "-v",
+          "error",
+          "-show_entries",
+          "stream=codec_type,codec_name,width,height",
+          "-of",
+          "json",
+          file,
+        ],
         { encoding: "utf8" },
       ),
     );
     const audio = probe.streams.find((s) => s.codec_type === "audio");
     const video = probe.streams.find((s) => s.codec_type === "video");
     if (audio?.codec_name !== "aac" || video?.codec_name !== "h264")
-      fail("有声出片", `${aspect}: ${JSON.stringify(probe.streams.map((s) => s.codec_name))}`);
+      fail(
+        "有声出片",
+        `${aspect}: ${JSON.stringify(probe.streams.map((s) => s.codec_name))}`,
+      );
     if (video.width !== (aspect === "landscape" ? 1280 : 720))
       fail("有声出片", `${aspect} 尺寸 ${video.width}`);
   }
@@ -197,37 +224,59 @@ try {
   // manifest：逐镜旁白归属 + 字幕 cue（含被 AI 修改的镜头取新版本）。
   const manifest = JSON.parse(
     readFileSync(
-      path.join(ROOT, ".tools/video-workbench-renders", jobId, "render/render-manifest.json"),
+      path.join(
+        ROOT,
+        ".tools/video-workbench-renders",
+        jobId,
+        "render/render-manifest.json",
+      ),
       "utf8",
     ),
   );
   for (const aspect of ["landscape", "portrait"]) {
     const m = manifest.aspects[aspect];
     if (m.narration.length !== final.shots.length)
-      fail("manifest", `${aspect} narration ${m.narration.length} ≠ ${final.shots.length}`);
+      fail(
+        "manifest",
+        `${aspect} narration ${m.narration.length} ≠ ${final.shots.length}`,
+      );
     if (!m.subtitleCues.every((c) => c.cues > 0))
       fail("manifest", `${aspect} 存在无字幕镜头`);
     for (const entry of m.narration) {
       const shot = final.shots[entry.shotIndex];
       if (!shot || entry.versionId !== shot.workingVersionId)
-        fail("旁白归属", `镜 ${entry.shotIndex + 1} 音轨版本不属于当前工作版本`);
+        fail(
+          "旁白归属",
+          `镜 ${entry.shotIndex + 1} 音轨版本不属于当前工作版本`,
+        );
     }
   }
 
   // —— 抽帧（横竖逐镜稳定段）——
   const bounds = [0];
   for (const shot of final.shots) {
-    const w = shot.contentVersions.find((v) => v.versionId === shot.workingVersionId);
+    const w = shot.contentVersions.find(
+      (v) => v.versionId === shot.workingVersionId,
+    );
     bounds.push(bounds.at(-1) + w.durationMs);
   }
   for (const aspect of ["landscape", "portrait"])
     for (let i = 0; i < final.shots.length; i++) {
-      const t = ((bounds[i] + bounds[i + 1]) / 2) / 1000;
+      const t = (bounds[i] + bounds[i + 1]) / 2 / 1000;
       execFileSync(
         "ffmpeg",
-        ["-y", "-v", "error", "-ss", t.toFixed(2), "-i",
-          path.join(OUT, `mixed-${aspect}.mp4`), "-frames:v", "1",
-          path.join(OUT, `frames/${aspect}-s${i}.png`)],
+        [
+          "-y",
+          "-v",
+          "error",
+          "-ss",
+          t.toFixed(2),
+          "-i",
+          path.join(OUT, `mixed-${aspect}.mp4`),
+          "-frames:v",
+          "1",
+          path.join(OUT, `frames/${aspect}-s${i}.png`),
+        ],
         { cwd: ROOT },
       );
     }
@@ -237,7 +286,9 @@ try {
     sentence: SENTENCE,
     totalMs: bounds.at(-1),
     shots: final.shots.map((s, i) => {
-      const w = s.contentVersions.find((v) => v.versionId === s.workingVersionId);
+      const w = s.contentVersions.find(
+        (v) => v.versionId === s.workingVersionId,
+      );
       return {
         index: i,
         source: w.sceneSource.type,

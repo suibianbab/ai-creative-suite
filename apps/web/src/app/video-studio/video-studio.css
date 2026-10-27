@@ -733,7 +733,7 @@
   position: absolute;
   left: 0;
   right: 0;
-  bottom: calc(var(--stage-h-ratio, 0.5625) * 8 * 1cqw);
+  bottom: calc(var(--stage-h-ratio, 0.5625) * 2.5 * 1cqw);
   display: flex;
   justify-content: center;
   pointer-events: none;

@@ -188,3 +188,31 @@ test("params 校验：value 负/超界、decimals 越界、prefix/suffix 超 6�
     /numberColor/,
   );
 });
+
+// P2-2（Codex 复核 2026-10-28）：cnUnits opt-in——≥1e4 按万/亿记法显示，
+// 缺省不传保持原数字（既有模板口径不变）。
+test("cnUnits=true：大数字按万/亿记法；缺省原样", () => {
+  const textOf = (node: SvgNode): string => {
+    const found = collect(node, "text").find((t) => t.text!.includes("吨"));
+    if (!found) throw new Error("数字文本节点未找到");
+    return found.text!;
+  };
+  const withUnits = numberCounter.render(
+    specWith({
+      ...BASE,
+      value: 800000,
+      suffix: "吨",
+      decimals: 0,
+      cnUnits: true,
+    }),
+    makeCtx({ frame: 24 * 3 }),
+  );
+  const text = textOf(withUnits);
+  if (!text.includes("80万")) throw new Error(`期望 80万 记法: ${text}`);
+  const without = numberCounter.render(
+    specWith({ ...BASE, value: 800000, suffix: "吨", decimals: 0 }),
+    makeCtx({ frame: 24 * 3 }),
+  );
+  if (!textOf(without).includes("800000"))
+    throw new Error("缺省 cnUnits 应保持原数字");
+});

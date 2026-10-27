@@ -259,7 +259,6 @@ test("M7：mediaDraftForAsset 短素材 outMsText 取素材时长", () => {
   assert.equal(mediaDraftForAsset(short).outMsText, "1200");
 });
 
-
 // N6（2026-10-27）：绑定动作处的旁白预算对齐——种子出点按旁白语速需求
 // 扩到 max(2000, 400+300×字)（素材够长时），应用时跨度不足 fail-fast
 // （不再拖到出片 500）。

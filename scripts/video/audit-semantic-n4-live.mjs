@@ -22,19 +22,39 @@ const TOPICS = [
     slug: "rain-bar",
     sentence:
       "做一条约15秒的地理科普短片，用柱状图对比三城市年降水：北京530毫米，上海1170毫米，广州1720毫米",
-    expect: { componentId: "bar-chart", pairs: [["北京", "530"], ["上海", "1170"], ["广州", "1720"]] },
+    expect: {
+      componentId: "bar-chart",
+      pairs: [
+        ["北京", "530"],
+        ["上海", "1170"],
+        ["广州", "1720"],
+      ],
+    },
   },
   {
     slug: "temp-line",
     sentence:
       "做一条约15秒的气候科普短片，用折线图展示月均气温：一月2度，四月15度，七月28度，十月17度",
-    expect: { componentId: "line-chart", pairs: [["一月", "2"], ["四月", "15"], ["七月", "28"], ["十月", "17"]] },
+    expect: {
+      componentId: "line-chart",
+      pairs: [
+        ["一月", "2"],
+        ["四月", "15"],
+        ["七月", "28"],
+        ["十月", "17"],
+      ],
+    },
   },
   {
     slug: "water-counter",
-    sentence:
-      "做一条约12秒的健康科普短片，用数字动画强调每天建议饮水1500毫升",
-    expect: { componentId: "number-counter", pairs: [["1500", ""], ["毫升", ""]] },
+    sentence: "做一条约12秒的健康科普短片，用数字动画强调每天建议饮水1500毫升",
+    expect: {
+      componentId: "number-counter",
+      pairs: [
+        ["1500", ""],
+        ["毫升", ""],
+      ],
+    },
   },
 ];
 
@@ -47,7 +67,10 @@ mkdirSync(OUT, { recursive: true });
 mkdirSync(path.join(OUT, "frames"), { recursive: true });
 const browser = await chromium.launch({ headless: true });
 const page = await (
-  await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: "zh-CN" })
+  await browser.newContext({
+    viewport: { width: 1440, height: 900 },
+    locale: "zh-CN",
+  })
 ).newPage();
 const errors = [];
 page.on("console", (m) => {
@@ -57,7 +80,9 @@ page.on("pageerror", (e) => errors.push(String(e).slice(0, 200)));
 
 const log = [];
 for (const topic of TOPICS) {
-  await page.goto(`${BASE_URL}/video-studio`, { waitUntil: "domcontentloaded" });
+  await page.goto(`${BASE_URL}/video-studio`, {
+    waitUntil: "domcontentloaded",
+  });
   await page
     .waitForSelector("html[data-studio-ready]", { timeout: 20_000 })
     .catch(() => fail("打开工作台", "客户端未就绪"));
@@ -87,7 +112,9 @@ for (const topic of TOPICS) {
   const numerals = (t) =>
     [
       ...t
-        .replace(/[０-９]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0))
+        .replace(/[０-９]/g, (c) =>
+          String.fromCharCode(c.charCodeAt(0) - 0xfee0),
+        )
         .matchAll(/\d+(?:\.\d+)?/g),
     ].map((m) => m[0]);
   const userNums = new Set(numerals(topic.sentence));
@@ -123,11 +150,19 @@ for (const topic of TOPICS) {
   const project = JSON.parse(readFileSync(projectPath, "utf8"));
   const workingIds = project.shots.map((s) => {
     const w = s.contentVersions.find((v) => v.versionId === s.workingVersionId);
-    return { componentId: w.sceneSource.spec.componentId, params: w.sceneSource.spec.params };
+    return {
+      componentId: w.sceneSource.spec.componentId,
+      params: w.sceneSource.spec.params,
+    };
   });
-  const target = workingIds.find((w) => w.componentId === topic.expect.componentId);
+  const target = workingIds.find(
+    (w) => w.componentId === topic.expect.componentId,
+  );
   if (!target)
-    fail(`组件落位(${topic.slug})`, `未见 ${topic.expect.componentId}：${workingIds.map((w) => w.componentId).join("/")}`);
+    fail(
+      `组件落位(${topic.slug})`,
+      `未见 ${topic.expect.componentId}：${workingIds.map((w) => w.componentId).join("/")}`,
+    );
 
   // CLI 双画幅出片 + 抽帧。
   const renderDir = path.join(OUT, `${topic.slug}-render`);
@@ -136,25 +171,39 @@ for (const topic of TOPICS) {
     process.execPath,
     [
       path.join(ROOT, "scripts/video/render-scene.mjs"),
-      "--project", projectPath,
-      "--out", renderDir,
+      "--project",
+      projectPath,
+      "--out",
+      renderDir,
     ],
     { cwd: ROOT, encoding: "utf8", timeout: 600_000 },
   );
-  if (!render.includes("landscape.mp4")) fail(`出片(${topic.slug})`, render.slice(-200));
+  if (!render.includes("landscape.mp4"))
+    fail(`出片(${topic.slug})`, render.slice(-200));
   const bounds = [0];
   for (const shot of project.shots) {
-    const w = shot.contentVersions.find((v) => v.versionId === shot.workingVersionId);
+    const w = shot.contentVersions.find(
+      (v) => v.versionId === shot.workingVersionId,
+    );
     bounds.push(bounds.at(-1) + w.durationMs);
   }
   for (const aspect of ["landscape", "portrait"]) {
     for (let i = 0; i < project.shots.length; i++) {
-      const t = ((bounds[i] + bounds[i + 1]) / 2) / 1000;
+      const t = (bounds[i] + bounds[i + 1]) / 2 / 1000;
       execFileSync(
         "ffmpeg",
-        ["-y", "-v", "error", "-ss", t.toFixed(2), "-i",
-          path.join(renderDir, `${aspect}.mp4`), "-frames:v", "1",
-          path.join(OUT, `frames/${topic.slug}-${aspect}-s${i}.png`)],
+        [
+          "-y",
+          "-v",
+          "error",
+          "-ss",
+          t.toFixed(2),
+          "-i",
+          path.join(renderDir, `${aspect}.mp4`),
+          "-frames:v",
+          "1",
+          path.join(OUT, `frames/${topic.slug}-${aspect}-s${i}.png`),
+        ],
         { cwd: ROOT },
       );
     }
@@ -171,5 +220,8 @@ for (const topic of TOPICS) {
 }
 if (errors.length > 0) fail("浏览器控制台", errors.join(" | "));
 await browser.close();
-writeFileSync(path.join(OUT, "generation-log.json"), JSON.stringify(log, null, 2));
+writeFileSync(
+  path.join(OUT, "generation-log.json"),
+  JSON.stringify(log, null, 2),
+);
 console.log("[audit-semantic-n4] OK: 三图表生成/对账/出片/抽帧完成");

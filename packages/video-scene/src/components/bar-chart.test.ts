@@ -1,8 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { defaultRegistry } from "../default-registry.js";
 import { seededRandom } from "../random.js";
 import type { FrameContext } from "../registry.js";
 import type { SceneSpec } from "../spec.js";
+import { validateSceneSpec } from "../spec.js";
 import type { SvgNode } from "../svg.js";
 import { emUnits } from "../text-width.js";
 import { barChart } from "./bar-chart.js";
@@ -228,4 +230,56 @@ test("params 校验：bars 空/超 8、label 空/超 12、value 负/NaN/超 1e12
     () => barChart.validateParams({ ...BASE, barColor: "green" }),
     /barColor/,
   );
+});
+
+// P2-2：bar-chart cnUnits/valueSuffix opt-in（缺省原样）。
+test("cnUnits=true 柱值显示万记法；缺省原数字", () => {
+  const spec = (extra: Record<string, unknown>) => {
+    const base = {
+      specVersion: 1,
+      componentId: "bar-chart",
+      componentVersion: 1,
+      durationMs: 3000,
+      seed: 7,
+      background: "#101f34",
+      params: {
+        title: "骑行量",
+        bars: [
+          { label: "之前", value: 1200000 },
+          { label: "之后", value: 3500000 },
+        ],
+        barColor: "#4f8fd6",
+        accentColor: "#f5b652",
+        textColor: "#f3f5f7",
+        enterMs: 900,
+        ...extra,
+      },
+    };
+    return validateSceneSpec(base, defaultRegistry);
+  };
+  const collect = (node: unknown): string[] => {
+    const out: string[] = [];
+    const walk = (n: { tag?: string; text?: string; children?: unknown[] }) => {
+      if (n.tag === "text" && typeof n.text === "string") out.push(n.text);
+      for (const c of n.children ?? []) walk(c as never);
+    };
+    walk(node as never);
+    return out;
+  };
+  const ctx = {
+    frame: 71,
+    fps: 24,
+    durationFrames: 72,
+    width: 1280,
+    height: 720,
+    random: { r: () => 0.5 },
+  };
+  const withUnits = collect(
+    barChart.render(spec({ cnUnits: true }), ctx as never),
+  );
+  if (!withUnits.some((t) => t.includes("120万")))
+    throw new Error("cnUnits 应显示 120万: " + withUnits.join("|"));
+  const without = collect(barChart.render(spec({}), ctx as never));
+  if (!without.some((t) => t.includes("1200000")))
+    throw new Error("缺省应保持原数字");
 });

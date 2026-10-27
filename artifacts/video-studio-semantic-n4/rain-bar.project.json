@@ -376,8 +376,152 @@
         "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
       },
       "outputAssetRef": "rain-bar-render/portrait.mp4"
+    },
+    {
+      "renderId": "ccb90784-41c1-49a0-bfda-4a018b81eb1f",
+      "versionId": "bec6e43c-d05c-4d89-a812-66ecf6c86586",
+      "contentDigest": "902c8652d2df88a78954473721f42fc72e0bca05ace9bd6b26e11db110961704",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 60,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "C:/Users/惠普/AppData/Local/Temp/n456-iso-n4/landscape.mp4"
+    },
+    {
+      "renderId": "ef879fdf-4d7a-449c-a51f-76b0f9b3f6c6",
+      "versionId": "4b6fb201-fe7d-49da-9882-b686cad26b04",
+      "contentDigest": "8e59b74f08798c739b9c8230950133a81da65473828323faff223a9e93158be3",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 96,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "C:/Users/惠普/AppData/Local/Temp/n456-iso-n4/landscape.mp4"
+    },
+    {
+      "renderId": "b381d4ad-fb73-44ad-8c7a-6d1b423a1211",
+      "versionId": "0c0ca281-de9f-4d74-9e72-f58a613494a9",
+      "contentDigest": "1507268affa781a5248436b1c05a039955fd584c29e8701f2d15bf78b1128fcb",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 77,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "C:/Users/惠普/AppData/Local/Temp/n456-iso-n4/landscape.mp4"
+    },
+    {
+      "renderId": "67104f26-8a6f-4468-89b1-e72a33294138",
+      "versionId": "1eb5f23f-e170-44ac-ac62-5ab0ba3231f4",
+      "contentDigest": "e9683cac8c4bb35542ca559d23f8695ac64d75caf89276b543a9f99662bfc8f9",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 60,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "C:/Users/惠普/AppData/Local/Temp/n456-iso-n4/landscape.mp4"
+    },
+    {
+      "renderId": "dddf57b9-20eb-4ede-b135-4afc95676295",
+      "versionId": "bec6e43c-d05c-4d89-a812-66ecf6c86586",
+      "contentDigest": "902c8652d2df88a78954473721f42fc72e0bca05ace9bd6b26e11db110961704",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 60,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "C:/Users/惠普/AppData/Local/Temp/n456-iso-n4/portrait.mp4"
+    },
+    {
+      "renderId": "ccc1bd1c-51e5-4041-8542-1de2d804f371",
+      "versionId": "4b6fb201-fe7d-49da-9882-b686cad26b04",
+      "contentDigest": "8e59b74f08798c739b9c8230950133a81da65473828323faff223a9e93158be3",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 96,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "C:/Users/惠普/AppData/Local/Temp/n456-iso-n4/portrait.mp4"
+    },
+    {
+      "renderId": "6a3ac39e-cbe3-48d5-bd31-ed20d674c8b0",
+      "versionId": "0c0ca281-de9f-4d74-9e72-f58a613494a9",
+      "contentDigest": "1507268affa781a5248436b1c05a039955fd584c29e8701f2d15bf78b1128fcb",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 77,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "C:/Users/惠普/AppData/Local/Temp/n456-iso-n4/portrait.mp4"
+    },
+    {
+      "renderId": "fbfa9536-f481-402b-852e-588cfe6b01b3",
+      "versionId": "1eb5f23f-e170-44ac-ac62-5ab0ba3231f4",
+      "contentDigest": "e9683cac8c4bb35542ca559d23f8695ac64d75caf89276b543a9f99662bfc8f9",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 60,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "C:/Users/惠普/AppData/Local/Temp/n456-iso-n4/portrait.mp4"
     }
   ],
   "deliveries": [],
-  "savedVersion": 3
+  "savedVersion": 4
 }

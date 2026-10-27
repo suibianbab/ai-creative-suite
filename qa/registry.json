@@ -1852,6 +1852,45 @@
         "The legacy fixed-syntax storyboard planner still plans the same four-shot card (regression)",
         "Discard clears the card; no browser console errors"
       ]
+    },
+    {
+      "id": "VID-066",
+      "tier": "browser-video",
+      "title": "N4 chart intents: bar/line/counter live chains with per-item card reconciliation",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/audit-semantic-n4-live.mjs"],
+      "requiresPorts": [],
+      "checks": [
+        "Three natural-language chart asks (rainfall bar, temperature line, water counter) each yield a confirm card whose shot hints carry the exact user-sourced label+value pairs",
+        "Sourced-number audit: shot hint/narration numerals all appear in the user sentence (fullwidth-normalized)",
+        "Dual-aspect CLI renders plus per-shot frames; layout checker reports zero text-box collisions"
+      ]
+    },
+    {
+      "id": "VID-067",
+      "tier": "browser-video",
+      "title": "N5 media slots: plan asset demands as bindable placeholders and gate unbound export",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/e2e-semantic-slots.mjs"],
+      "requiresPorts": [],
+      "checks": [
+        "Asset-demanding product ask yields honest slot placeholder shots (card says 待绑定; descriptions carry 【素材位】)",
+        "Upload via the real media panel, bind a slot through the existing media arm, placeholder version stays on the rollback chain",
+        "With any slot unbound, workbench export is blocked naming each slot; after binding all slots the dual-aspect render succeeds"
+      ]
+    },
+    {
+      "id": "VID-068",
+      "tier": "browser-video",
+      "title": "N6 mixed narrated film: chart + bound media + AI-revised flow + counter with subtitles",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/e2e-semantic-mixed-film.mjs"],
+      "requiresPorts": [],
+      "checks": [
+        "One creative ask mixes bar data, a real-asset slot (bound in-browser), a three-step flow (AI-revised in-browser) and a counter; save/reopen keeps versions",
+        "Narrated dual-aspect MP4s: AAC audio, per-shot manifest narration versionIds equal working versions, every shot has subtitle cues",
+        "Per-shot frames in both aspects; layout checker clean on text shots"
+      ]
     }
   ],
   "manual": [

@@ -250,7 +250,9 @@ export const TimelineScene: FC<TimelineProps> = ({ shots, transitions }) => {
             position: "absolute",
             left: 0,
             right: 0,
-            bottom: "8%",
+            // 字幕带下移（P2-2，Codex 复核 2026-10-28）：8% 带与图表轴标签
+            // （设计 y≈875..885）重叠；2.5% 带让出组件内容区（最深 ~90%）。
+            bottom: "2.5%",
             display: "flex",
             justifyContent: "center",
             pointerEvents: "none",
@@ -263,7 +265,7 @@ export const TimelineScene: FC<TimelineProps> = ({ shots, transitions }) => {
               padding: `${Math.round(height * 0.008)}px ${Math.round(height * 0.022)}px`,
               color: "#ffffff",
               fontWeight: 600,
-              fontSize: Math.round(height * (width > height ? 0.05 : 0.045)),
+              fontSize: Math.round(height * 0.045),
               lineHeight: 1.35,
               whiteSpace: "nowrap",
             }}

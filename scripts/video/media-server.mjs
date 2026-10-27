@@ -79,7 +79,17 @@ const server = http.createServer((req, res) => {
     "Content-Length": statSync(file).size,
     "Accept-Ranges": "none",
   });
-  createReadStream(file).pipe(res);
+  // 中断安全（2026-10-28 渲染死因修复）：Chrome 155+ 的 compositor 取帧会
+  // 中途放弃下载连接——未接 error 的读流会以未捕获事件击杀整个服务进程，
+  // 之后所有帧提取 ECONNREFUSED、渲染以 delayRender 超时收场。放弃是正常
+  // 客户端行为：双向 destroy，服务进程必须活着服务下一次请求。
+  const stream = createReadStream(file);
+  stream.on("error", () => {
+    stream.destroy();
+    res.destroy();
+  });
+  res.on("close", () => stream.destroy());
+  stream.pipe(res);
 });
 server.listen(0, "127.0.0.1", () => {
   process.stdout.write(`${JSON.stringify({ port: server.address().port })}\n`);

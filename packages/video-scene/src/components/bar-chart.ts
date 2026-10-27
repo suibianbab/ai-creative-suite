@@ -1,3 +1,4 @@
+import { formatCnCount } from "../cn-number-format.js";
 import { clamp01, easeOutCubic } from "../easing.js";
 import type {
   FrameContext,
@@ -19,6 +20,11 @@ type BarChartParams = {
   accentColor: string;
   textColor: string;
   enterMs: number; // 200..6000
+  /** 可选单位后缀（P2-2）：拼在柱值后展示（如 120万次）；缺省无后缀。 */
+  valueSuffix?: string;
+  /** 可选中文量级记法（P2-2）：true 时 ≥1e4 的柱值显示为 万/亿 记法
+   *  （1200000→120万）；缺省 false 保持原数字（既有模板口径不变）。 */
+  cnUnits?: boolean;
 };
 
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
@@ -90,6 +96,15 @@ function validateParams(value: unknown): BarChartParams {
     (value.enterMs as number) > 6000
   ) {
     throw new Error("bar-chart params.enterMs 必须是 200..6000 的整数");
+  }
+  if (
+    value.valueSuffix !== undefined &&
+    (typeof value.valueSuffix !== "string" || value.valueSuffix.length > 6)
+  ) {
+    throw new Error("bar-chart params.valueSuffix 必须是 ≤6 个字符");
+  }
+  if (value.cnUnits !== undefined && typeof value.cnUnits !== "boolean") {
+    throw new Error("bar-chart params.cnUnits 必须是布尔");
   }
   return value as BarChartParams;
 }
@@ -278,7 +293,7 @@ function render(spec: SceneSpecLike, ctx: FrameContext): SvgNode {
         "text-anchor": "middle",
         opacity: clamp01((tMs - delay - params.enterMs) / VALUE_FADE_MS),
       },
-      text: String(bar.value),
+      text: `${params.cnUnits === true ? formatCnCount(bar.value) : String(bar.value)}${params.valueSuffix ?? ""}`,
     });
   });
 

@@ -483,20 +483,21 @@ const CHART_COLORS = {
   accent: "#f5b652",
 };
 
-function compileBarExplainer(
-  shot: SemanticDraftShot,
-  seed: number,
-): SceneSpec {
+function compileBarExplainer(shot: SemanticDraftShot, seed: number): SceneSpec {
   return baseSpec(
     "bar-chart",
     effectiveDurationMs(shot),
     {
       title: shot.title,
-      bars: shot.bars ?? [],
+      // P1-1：只投影白名单键——条目上的任何残留键不落 SceneSpec。
+      bars: (shot.bars ?? []).map((b) => ({ label: b.label, value: b.value })),
       barColor: CHART_COLORS.primary,
       accentColor: CHART_COLORS.accent,
       textColor: CHART_COLORS.text,
       enterMs: 900,
+      // P2-2：语义链开中文量级记法（1200000 显示 120万，与用户口径一致）；
+      // 手工模板不传该参数，显示口径不变。
+      cnUnits: true,
     },
     seed,
   );
@@ -511,7 +512,12 @@ function compileLineExplainer(
     effectiveDurationMs(shot),
     {
       title: shot.title,
-      points: shot.points ?? [],
+      // P1-1：只投影白名单键。
+      points: (shot.points ?? []).map((p) =>
+        p.label === undefined
+          ? { value: p.value }
+          : { label: p.label, value: p.value },
+      ),
       lineColor: CHART_COLORS.accent,
       markerColor: CHART_COLORS.primary,
       textColor: CHART_COLORS.text,
@@ -535,6 +541,8 @@ function compileCounterExplainer(
       suffix: shot.suffix ?? "",
       decimals: shot.decimals ?? 0,
       countMs: 2000,
+      // P2-2：同 bar——语义链显示用户口径的万/亿记法。
+      cnUnits: true,
       numberColor: CHART_COLORS.text,
       accentColor: CHART_COLORS.accent,
     },
@@ -807,7 +815,11 @@ export function validateSemanticShot(
   // N4 图表 intent：数据形状与值域对齐组件契约（bar-chart/line-chart/
   // number-counter 的 0..1e12、label ≤12、points 2..12 等）。
   if (intent === "bar-explainer") {
-    if (!Array.isArray(shot.bars) || shot.bars.length < 1 || shot.bars.length > 8) {
+    if (
+      !Array.isArray(shot.bars) ||
+      shot.bars.length < 1 ||
+      shot.bars.length > 8
+    ) {
       errors.push(`${field}.bars 须为 1..8 条 {label, value}`);
     } else {
       for (const [j, item] of (
@@ -817,6 +829,13 @@ export function validateSemanticShot(
           errors.push(`${field}.bars[${j}] 须为对象`);
           continue;
         }
+        // P1-1（Codex 2026-10-28）：条目级键白名单——未授权键（含 assetUrl
+        // 等素材引用）在校验层拒绝，编译器只投影 label/value。
+        for (const key of Object.keys(item))
+          if (key !== "label" && key !== "value")
+            errors.push(
+              `未知字段 ${field}.bars[${j}].${key}${ASSET_KEYS.test(key) ? `。${ASSET_GUIDANCE}` : "（条目只允许 label/value）"}`,
+            );
         if (
           typeof item.label !== "string" ||
           item.label.length < 1 ||
@@ -848,6 +867,12 @@ export function validateSemanticShot(
           errors.push(`${field}.points[${j}] 须为对象`);
           continue;
         }
+        // P1-1：同 bars——points 条目只允许 label/value。
+        for (const key of Object.keys(item))
+          if (key !== "label" && key !== "value")
+            errors.push(
+              `未知字段 ${field}.points[${j}].${key}${ASSET_KEYS.test(key) ? `。${ASSET_GUIDANCE}` : "（条目只允许 label/value）"}`,
+            );
         if (
           item.label !== undefined &&
           (typeof item.label !== "string" || item.label.length > 12)
@@ -1095,9 +1120,9 @@ export function verifySourcedNumbers(
     // 汉字数值组合：原话没出现且非结构性序数 → 拒绝（I-1）。
     for (const token of chineseNumeralsOf(claims)) {
       if (sourcedChinese.has(token)) continue;
-      // 独立「一」豁免：一天/统一/一起等结构/习语用法占绝对多数，单字
-      // 不足以构成事实量主张；组合（十一/二十五…）仍受闸（N4）。
-      if (token === "一") continue;
+      // 独立单字豁免（一/二）：一天/统一/一起、二维码/二手/二氧化碳——
+      // 单字在习语里出现频率远高于事实量主张，组合（十一/二十五…）仍受闸。
+      if (token === "一" || token === "二") continue;
       errors.push(
         `数值表述「${token}」（${label}）不在你的原话里：汉字数字同样不得编造，没给就改用定性文字`,
       );

@@ -559,11 +559,9 @@ export function TimelinePreview({
 
   const stage = stageDimensions(aspect);
   // 字幕近似层的比例参数与出片 TimelineScene 同口径：字号 = 画布高 ×
-  // （横版 5% / 竖版 4.5%）换算为 cqw；底距恒 8% 高。药丸内边距随字号等比。
-  const subtitleCqw =
-    (Math.round(stage.height * (aspect === "portrait" ? 0.045 : 0.05)) /
-      stage.width) *
-    100;
+  // 4.5% 换算为 cqw；底距 2.5% 高（P2-2 字幕带下移，避让图表轴标签）。
+  // 药丸内边距随字号等比。
+  const subtitleCqw = (Math.round(stage.height * 0.045) / stage.width) * 100;
   const stageVars = {
     ...stageStyle(aspect),
     "--stage-h-ratio": `${stage.height / stage.width}`,

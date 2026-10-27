@@ -49,7 +49,13 @@ const ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   "../..",
 );
-const CHROME = "C:/Program Files/Google/Chrome/Application/chrome.exe";
+// 渲染浏览器可覆写（RENDER_BROWSER_EXECUTABLE）：系统 Chrome 自动更新后
+// 新版在部分机器上让 Remotion 的 OffthreadVideo 卡死（delayRender 超时、
+// 渲染进程 0xC0000409，2026-10-28 实测）；指向 Playwright 自带 Chromium
+// 可恢复稳定。缺省仍是系统 Chrome（既有口径）。
+const CHROME =
+  process.env.RENDER_BROWSER_EXECUTABLE ??
+  "C:/Program Files/Google/Chrome/Application/chrome.exe";
 const FONT_REL =
   "packages/remotion-engine/src/assets/fonts/NotoSansSC-Regular.woff";
 const FPS = 24;
@@ -563,7 +569,14 @@ for (const aspect of aspects) {
     "--pixel-format=yuv420p",
     "--image-format=png",
     "--color-space=bt709",
-    "--concurrency=2",
+    // 渲染并发可调（RENDER_CONCURRENCY，默认 2）：内存紧张的机器
+    // （多 Chrome 实例并存时）用 1 换稳定——实测并发 2 在低内存下
+    // 渲染 Chrome 会在 ~100 帧处 0xC0000409 崩溃。
+    `--concurrency=${process.env.RENDER_CONCURRENCY ?? 2}`,
+    // GL 后端固定 angle（RENDER_GL 可覆写）：系统 Chrome 155→156 更新后
+    // 默认 GPU 路径让媒体镜头的 OffthreadVideo 卡死（delayRender 33000ms
+    // 超时，2026-10-28 实测；--gl=angle 恢复）。
+    `--gl=${process.env.RENDER_GL ?? "angle"}`,
   ];
   // 旁白资产来自本进程的 127.0.0.1 文件服务（跨源）：关掉渲染浏览器的同源策略
   // （Remotion 官方 CORS 出口）。只影响这次渲染的临时 Chrome，不影响别的。

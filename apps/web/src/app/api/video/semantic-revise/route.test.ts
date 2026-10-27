@@ -123,7 +123,7 @@ test("semantic-revise：合法指令+合法单镜 IR → 200 候选（含屏幕�
       assert.match(userMessages[0]!, /水循环/);
       assert.match(userMessages[0]!, /把这一镜改成凝结/);
       // provenance：修改链自己的提示词版本 + 指令快照。
-      assert.equal(data.provenance.promptVersion, "r5");
+      assert.equal(data.provenance.promptVersion, "r6");
       assert.equal(data.provenance.instruction, CONTEXT.instruction);
       assert.deepEqual(data.usage, {
         prompt_tokens: 80,

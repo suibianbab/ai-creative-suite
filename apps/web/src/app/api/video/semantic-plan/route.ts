@@ -101,7 +101,12 @@ export async function POST(request: Request) {
     );
 
   // 第二轮：IR 非法、时长偏离、编造数值或缺素材位时带原因修正重试，恰好一次。
-  if (!validation.ok || offTarget || sourcingErrors.length > 0 || missingSlots) {
+  if (
+    !validation.ok ||
+    offTarget ||
+    sourcingErrors.length > 0 ||
+    missingSlots
+  ) {
     const reasons = validation.ok ? [] : validation.errors.slice();
     if (offTarget && validation.ok)
       reasons.push(

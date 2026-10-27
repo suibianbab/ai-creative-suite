@@ -8,9 +8,10 @@
 
 // v6：措辞同步六种 intent；compare/timeline 标题上限 30（组件契约）；
 // milestone 可带 status（进度型题材不得全渲染成已完成）。
-export const SEMANTIC_PROMPT_VERSION = "8";
+// v9：数据纪律补量化类比禁令（模型爱编「相当于N棵树」，闸正确拒绝但两轮固执）。
+export const SEMANTIC_PROMPT_VERSION = "9";
 // r3：措辞同步六种 intent、compare/timeline 标题 ≤30、milestone status 说明。
-export const SEMANTIC_REVISE_PROMPT_VERSION = "r5";
+export const SEMANTIC_REVISE_PROMPT_VERSION = "r6";
 export const SEMANTIC_COMPILER_VERSION = "1";
 
 // 提示词 = 能力目录 + IR 契约 + 预算公式。模型只能在这个范围内表达；
@@ -41,7 +42,7 @@ IR 顶层：{"topic":"主题（1..40 字）","title":"片名（1..30 字）","sh
 内容纪律：旁白只陈述画面实际展示的内容；循环/流程的每个阶段都要在阶段名或旁白中如实出现。
 准确性纪律：cycle-explainer 只用于真正首尾相接、会回到起点的循环过程（水循环、碳循环、食物链循环）；单向过程（光合作用、呼吸作用、燃烧）一律用 flow-explainer，不得画成闭环误导观众。
 数据纪律（硬性）：compare 的 beforeValue/afterValue/deltaText 与 timeline 的 date 里出现的每个数字，必须原样出现在用户原话里；用户没给数字/日期时，一律用文字表述（"第一步/播种期/约一半"），绝不编造具体数值或年份；前后对比需求没给前后数值时不要用 compare-explainer，改用 flow/要点表述并说明需要数据。
-图表纪律（硬性）：bar/line/counter 的每个 value 与 label 里的数字必须原样来自用户原话；用户要求图表但没给任何数字时，绝不编造数据，改用文字/流程镜头表达并在旁白说明「需补充数据」；不得从镜头序号、片长、镜数推断指标，不做单位换算或差值计算。
+图表纪律（硬性）：bar/line/counter 的每个 value 与 label 里的数字必须原样来自用户原话；用户要求图表但没给任何数字时，绝不编造数据，改用文字/流程镜头表达并在旁白说明「需补充数据」；不得从镜头序号、片长、镜数推断指标，不做单位换算或差值计算。不得引入原话里没有的量化事实或类比（如「相当于N棵树/N个泳池」）——即便数字换算正确也算编造。
 时长纪律：用户要求约 N 秒时，Σ durationMs 必须落在 0.8N..1.2N。先按 N 估镜头数（25 秒 ≈ 6..8 镜 × 2500..5000ms），逐镜定 durationMs，输出前自己求和核对；不足就加镜头，不要把单镜拉到 6000 之上。
 典型编排：开场 title → 循环/流程/要点讲解（2..6 镜）→ 收尾 title。`;
 
@@ -69,7 +70,7 @@ const REVISE_SYSTEM_PROMPT = `你是 STEM 科普短片分镜编剧，正在修�
 
 内容纪律：只重写用户点名的这一镜；主题与措辞风格与整片一致；旁白只陈述画面实际展示的内容；cycle 仅限真正首尾相接的循环过程，单向过程用 flow；素材纪律（硬性）：用户需要真实照片/产品素材/商品图时，一律用 media-slot-explainer 素材位镜头承接（slotKind 写清素材种类、purpose 写清叙事用途），不得用图解冒充真实素材，也不得输出 URL/资产 ID/本地路径；Logo/包装文字等无法稳定重绘的内容必须是素材位（保留原图由用户绑定）。
 数据纪律（硬性）：compare 的数值字段与 timeline 的 date 里出现的每个数字，必须原样出现在用户指令里；没给数字就用文字表述，绝不编造；指令要对比但没给前后数值时不要用 compare-explainer。
-图表纪律（硬性）：bar/line/counter 的每个 value 必须原样来自用户指令或影片上下文；指令要图表但没有任何数字时，改用文字/流程镜头；不得从镜头序号/片长推断指标，不做单位换算或差值。`;
+图表纪律（硬性）：bar/line/counter 的每个 value 必须原样来自用户指令或影片上下文；指令要图表但没有任何数字时，改用文字/流程镜头；不得从镜头序号/片长推断指标，不做单位换算或差值。不得引入原话里没有的量化类比（「相当于N棵树」类一律禁止）。`;
 
 export type SemanticPlanFailureKind =
   | "timeout"
