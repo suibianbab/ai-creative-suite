@@ -2577,9 +2577,11 @@ export function ShotEditorCard({
                     setMediaError(built.error ?? "媒体字段无效");
                     return;
                   }
+                  // N5：素材位绑定完成 → 描述剥【素材位】前缀（占位语义
+                  // 结束，新版本不再是待绑定位；占位版本仍在链上可回滚）。
                   const attached = attachDescription(
                     built.patch,
-                    draft.description,
+                    draft.description.replace(/^【素材位】/, ""),
                   );
                   if ("error" in attached) {
                     setEditError(attached.error);

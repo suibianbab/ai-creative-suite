@@ -1,0 +1,271 @@
+{
+  "schemaVersion": 1,
+  "id": "344bb3fa-947a-4fe3-8c32-f161fc501032",
+  "title": "恒温随行·XX保温杯",
+  "brief": {
+    "sentence": "做一条约25秒的保温杯产品短片：整体展示、杯口细节特写、户外使用场景、三个核心卖点、品牌收尾，产品画面用真实照片",
+    "aspectTargets": [
+      "landscape",
+      "portrait"
+    ],
+    "applications": [
+      {
+        "sentence": "做一条约25秒的保温杯产品短片：整体展示、杯口细节特写、户外使用场景、三个核心卖点、品牌收尾，产品画面用真实照片",
+        "appendedShotCount": 5,
+        "appendedDurationMs": 13200,
+        "filmShotCountAfter": 5,
+        "filmTotalMsAfter": 13200,
+        "appliedAt": "2026-10-27T04:27:28.281Z"
+      }
+    ]
+  },
+  "shots": [
+    {
+      "shotId": "8928beb1-ad12-439b-a5c5-b7c62ab38d51",
+      "order": 0,
+      "locked": false,
+      "workingVersionId": "40fa5d52-2e6c-46aa-af9b-282d770d3f08",
+      "contentVersions": [
+        {
+          "versionId": "40fa5d52-2e6c-46aa-af9b-282d770d3f08",
+          "createdAt": "2026-10-27T04:27:28.281Z",
+          "durationMs": 2500,
+          "description": "【素材位】产品整体照片——开场建立产品第一印象",
+          "narrationText": "一眼识别设计感",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 2500,
+              "seed": 5000,
+              "background": "#101f34",
+              "params": {
+                "title": "素材位·产品整体照片",
+                "subtitle": "待绑定素材——开场建立产品第一印象",
+                "titleColor": "#f3f5f7",
+                "subtitleColor": "#b4d8e4",
+                "entrance": "fade-up",
+                "enterMs": 600
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-semantic",
+            "engineVersion": "qwen-plus/prompt8/compiler1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "40fa5d52-2e6c-46aa-af9b-282d770d3f08",
+          "at": "2026-10-27T04:27:28.281Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "239c7d7b-3e58-4964-b890-477cf0de27ce",
+      "order": 1,
+      "locked": false,
+      "workingVersionId": "db7450f9-a84d-43f8-93bd-2384bf09dd8b",
+      "contentVersions": [
+        {
+          "versionId": "db7450f9-a84d-43f8-93bd-2384bf09dd8b",
+          "createdAt": "2026-10-27T04:27:28.281Z",
+          "durationMs": 2500,
+          "description": "【素材位】杯口高清特写照片——突出工艺可靠性",
+          "narrationText": "精密密封结构",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 2500,
+              "seed": 5007,
+              "background": "#101f34",
+              "params": {
+                "title": "素材位·杯口高清特写照片",
+                "subtitle": "待绑定素材——突出工艺可靠性",
+                "titleColor": "#f3f5f7",
+                "subtitleColor": "#b4d8e4",
+                "entrance": "fade-up",
+                "enterMs": 600
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-semantic",
+            "engineVersion": "qwen-plus/prompt8/compiler1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "db7450f9-a84d-43f8-93bd-2384bf09dd8b",
+          "at": "2026-10-27T04:27:28.281Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "2912d3c6-d6f9-4416-b671-1bccbc7b9d80",
+      "order": 2,
+      "locked": false,
+      "workingVersionId": "58953f06-ca85-4fa3-abb2-1d29824941ab",
+      "contentVersions": [
+        {
+          "versionId": "58953f06-ca85-4fa3-abb2-1d29824941ab",
+          "createdAt": "2026-10-27T04:27:28.281Z",
+          "durationMs": 2500,
+          "description": "【素材位】户外真人使用照片——呈现真实使用环境",
+          "narrationText": "山野间随时畅饮",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 2500,
+              "seed": 5014,
+              "background": "#101f34",
+              "params": {
+                "title": "素材位·户外真人使用照片",
+                "subtitle": "待绑定素材——呈现真实使用环境",
+                "titleColor": "#f3f5f7",
+                "subtitleColor": "#b4d8e4",
+                "entrance": "fade-up",
+                "enterMs": 600
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-semantic",
+            "engineVersion": "qwen-plus/prompt8/compiler1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "58953f06-ca85-4fa3-abb2-1d29824941ab",
+          "at": "2026-10-27T04:27:28.281Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "c0863f72-7e4a-4415-a688-8bb501c2cdfc",
+      "order": 3,
+      "locked": false,
+      "workingVersionId": "9c35c2c2-169d-4858-a44e-bd2fcba71175",
+      "contentVersions": [
+        {
+          "versionId": "9c35c2c2-169d-4858-a44e-bd2fcba71175",
+          "createdAt": "2026-10-27T04:27:28.281Z",
+          "durationMs": 3200,
+          "description": "三大核心卖点（要点解说）",
+          "narrationText": "性能优势一览",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "sketch-note",
+              "componentVersion": 1,
+              "durationMs": 3200,
+              "seed": 5021,
+              "background": "#101f34",
+              "params": {
+                "title": "三大核心卖点",
+                "items": [
+                  {
+                    "text": "长效保温",
+                    "emphasis": "下划线"
+                  },
+                  {
+                    "text": "防漏密封",
+                    "emphasis": "圈"
+                  },
+                  {
+                    "text": "人体工学握感",
+                    "emphasis": "圈"
+                  }
+                ],
+                "inkColor": "#f3f5f7",
+                "accentColor": "#f5b652",
+                "writeMs": 900,
+                "drawMs": 700,
+                "staggerMs": 500
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-semantic",
+            "engineVersion": "qwen-plus/prompt8/compiler1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "9c35c2c2-169d-4858-a44e-bd2fcba71175",
+          "at": "2026-10-27T04:27:28.281Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "c4dc8b3e-393b-46f6-8c13-8fdcef3104cf",
+      "order": 4,
+      "locked": false,
+      "workingVersionId": "a8d7ba88-a173-4b01-acad-6b1c3bdc4ae6",
+      "contentVersions": [
+        {
+          "versionId": "a8d7ba88-a173-4b01-acad-6b1c3bdc4ae6",
+          "createdAt": "2026-10-27T04:27:28.281Z",
+          "durationMs": 2500,
+          "description": "【素材位】品牌LOGO与产品组合照片——强化品牌记忆",
+          "narrationText": "XX保温杯",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 2500,
+              "seed": 5028,
+              "background": "#101f34",
+              "params": {
+                "title": "素材位·品牌LOGO与产品组合照片",
+                "subtitle": "待绑定素材——强化品牌记忆",
+                "titleColor": "#f3f5f7",
+                "subtitleColor": "#b4d8e4",
+                "entrance": "fade-up",
+                "enterMs": 600
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-semantic",
+            "engineVersion": "qwen-plus/prompt8/compiler1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "a8d7ba88-a173-4b01-acad-6b1c3bdc4ae6",
+          "at": "2026-10-27T04:27:28.281Z",
+          "actor": "human"
+        }
+      ]
+    }
+  ],
+  "renderRecords": [],
+  "deliveries": [],
+  "savedVersion": 1
+}
