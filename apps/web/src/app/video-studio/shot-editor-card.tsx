@@ -223,8 +223,38 @@ export type ShotEditorCardProps = {
   onRollback: (versionId: string) => Promise<string | null>;
   onToggleLock: (locked: boolean) => void;
   redoError: string | null;
+  // N2（2026-10-27）：单镜自然语言修改。候选经服务端受限 IR 编译，预览
+  // （屏幕文字/旁白/时长/画面类型/整片影响）确认后才落版本。
+  aiRevise: AiReviseState;
+  onAiReviseGenerate: (instruction: string, allowSubstitute?: boolean) => void;
+  onAiReviseConfirm: () => void;
+  onAiReviseDiscard: () => void;
   // P2.6-T7：媒体臂在线素材面板的「下载并应用」回调（返回成功消息）。
   onImportStock: (pageTitle: string, derivativeUrl: string) => Promise<string>;
+};
+
+// N2：单镜 AI 修改的候选与瞬态（类型与 page.tsx 同源，卡片只消费）。
+export type AiReviseCandidate = {
+  label: string;
+  description: string;
+  narrationText: string;
+  durationMs: number;
+  plan: { ok: true; spec: unknown; title: string; renderHint: string };
+  baseVersionId: string;
+  totalAfterMs: number;
+  provenance: {
+    provider: string;
+    model: string;
+    promptVersion: string;
+    compilerVersion: string;
+  };
+};
+
+export type AiReviseState = {
+  busy: boolean;
+  error: string | null;
+  needsAssetsChoice: boolean;
+  candidate: AiReviseCandidate | null;
 };
 
 export function ShotEditorCard({
@@ -239,6 +269,10 @@ export function ShotEditorCard({
   onRollback,
   onToggleLock,
   redoError,
+  aiRevise,
+  onAiReviseGenerate,
+  onAiReviseConfirm,
+  onAiReviseDiscard,
   onImportStock,
 }: ShotEditorCardProps) {
   const [expanded, setExpanded] = useState(false);
@@ -281,6 +315,8 @@ export function ShotEditorCard({
   const [backgroundTouched, setBackgroundTouched] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
   const [directive, setDirective] = useState("");
+  // N2：AI 修改指令输入（与固定句式重做输入相互独立）。
+  const [aiInstruction, setAiInstruction] = useState("");
   const [selectedVersion, setSelectedVersion] = useState(shot.workingVersionId);
   // 关键镜头双候选（B）：两列对比既有内容版本；不新增文档字段与事件。
   const candidatePair = defaultCandidatePair(shot);
@@ -2892,6 +2928,87 @@ export function ShotEditorCard({
             </button>
           </div>
           {redoError ? <p className="shot-redo-error">{redoError}</p> : null}
+          {/* N2：AI 修改此镜头——自然语言指令 → 服务端受限 IR 候选 →
+              预览确认（屏幕文字/旁白/时长/画面类型/整片影响）才落版本。 */}
+          <div className="shot-redo-row shot-ai-revise-row">
+            <input
+              className="shot-redo-input"
+              placeholder="AI 修改指令：把这一镜改成凝结过程，强调水汽遇冷形成云…"
+              value={aiInstruction}
+              onChange={(event) => setAiInstruction(event.target.value)}
+              onKeyDown={(event) => {
+                if (
+                  event.key === "Enter" &&
+                  aiInstruction.trim().length > 0 &&
+                  !aiRevise.busy
+                )
+                  onAiReviseGenerate(aiInstruction.trim());
+              }}
+            />
+            <button
+              type="button"
+              className="shot-redo-button shot-ai-revise-button"
+              disabled={aiInstruction.trim().length === 0 || aiRevise.busy}
+              onClick={() => onAiReviseGenerate(aiInstruction.trim())}
+            >
+              {aiRevise.busy ? "生成中…" : "AI 修改此镜头"}
+            </button>
+          </div>
+          {aiRevise.error ? (
+            <p className="shot-redo-error">
+              {aiRevise.error}
+              {aiRevise.needsAssetsChoice ? (
+                <button
+                  type="button"
+                  className="shot-redo-button"
+                  disabled={aiRevise.busy}
+                  onClick={() => onAiReviseGenerate(aiInstruction.trim(), true)}
+                >
+                  改用图解生成
+                </button>
+              ) : null}
+            </p>
+          ) : null}
+          {aiRevise.candidate ? (
+            <div className="shot-ai-candidate">
+              <p className="shot-ai-candidate-title">
+                AI 修改候选（确认后才写入镜头）：
+              </p>
+              <ul>
+                <li>画面类型：{aiRevise.candidate.label}</li>
+                <li>屏幕文字：{aiRevise.candidate.plan.renderHint}</li>
+                <li>旁白：{aiRevise.candidate.narrationText}</li>
+                <li>时长：{aiRevise.candidate.durationMs / 1000}s</li>
+                <li>
+                  整片影响：应用后总时长{" "}
+                  {aiRevise.candidate.totalAfterMs / 1000}s
+                </li>
+                <li>
+                  引擎：{aiRevise.candidate.provenance.model} · 提示词 v
+                  {aiRevise.candidate.provenance.promptVersion}
+                </li>
+              </ul>
+              <div className="shot-redo-row">
+                <button
+                  type="button"
+                  className="shot-redo-button"
+                  onClick={onAiReviseConfirm}
+                >
+                  确认应用（新增内容版本）
+                </button>
+                <button
+                  type="button"
+                  className="shot-redo-button"
+                  onClick={() => {
+                    setAiInstruction("");
+                    onAiReviseDiscard();
+                  }}
+                >
+                  放弃
+                </button>
+              </div>
+            </div>
+          ) : null}
         </div>
       ) : null}
     </li>

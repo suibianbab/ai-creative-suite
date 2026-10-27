@@ -1849,3 +1849,23 @@
   padding: 6px 0;
   border-bottom: 1px solid #e4ece6;
 }
+
+/* N2 单镜 AI 修改：候选预览卡（与固定句式重做行并列、视觉区分）。 */
+.shot-ai-revise-row input {
+  border-color: #9db8d2;
+}
+.shot-ai-candidate {
+  border: 1px solid #b8cfe2;
+  border-radius: 10px;
+  background: #f2f7fc;
+  padding: 10px 12px;
+  margin-top: 8px;
+}
+.shot-ai-candidate-title {
+  font-weight: 600;
+  margin: 0 0 6px;
+}
+.shot-ai-candidate ul {
+  margin: 0 0 8px;
+  padding-left: 18px;
+}

@@ -159,119 +159,13 @@ export function validateSemanticDraft(raw: unknown): SemanticValidation {
     errors.push("shots 须为 3..8 镜");
   }
   const shots: SemanticDraftShot[] = [];
-  for (const [i, shot] of (
-    d.shots as Array<Record<string, unknown>>
-  ).entries()) {
-    const field = `shots[${i}]`;
-    if (typeof shot !== "object" || shot === null || Array.isArray(shot)) {
-      errors.push(`${field} 须为对象`);
+  for (const [i, rawShot] of (d.shots as unknown[]).entries()) {
+    const result = validateSemanticShot(rawShot, `shots[${i}]`);
+    if (!result.ok) {
+      errors.push(...result.errors);
       continue;
     }
-    if (typeof shot.intent !== "string" || !INTENTS.has(shot.intent)) {
-      errors.push(`${field}.intent 须为 ${[...INTENTS].join("/")}`);
-      continue;
-    }
-    const intent = shot.intent as SemanticIntent;
-    // 镜头级严格键集合（P1-2）：基础四键 + 该 intent 专属一键，其余拒绝。
-    const allowedKeys = new Set([
-      ...SHOT_BASE_KEYS,
-      ...SHOT_KEYS_BY_INTENT[intent],
-    ]);
-    for (const key of Object.keys(shot))
-      if (!allowedKeys.has(key))
-        errors.push(
-          `未知字段 ${field}.${key}${ASSET_KEYS.test(key) ? `。${ASSET_GUIDANCE}` : "（不在该 intent 的契约内）"}`,
-        );
-    // 标题上限取各目标组件契约的交集（explainer-composition ≤32）。
-    if (
-      typeof shot.title !== "string" ||
-      shot.title.length < 1 ||
-      shot.title.length > 32
-    ) {
-      errors.push(`${field}.title 须为 1..32 字`);
-    }
-    if (
-      typeof shot.narrationText !== "string" ||
-      shot.narrationText.length < 1
-    ) {
-      errors.push(`${field}.narrationText 须为非空字符串`);
-    }
-    if (
-      typeof shot.durationMs !== "number" ||
-      !Number.isInteger(shot.durationMs) ||
-      shot.durationMs < 2000 ||
-      shot.durationMs > 6000
-    ) {
-      errors.push(`${field}.durationMs 须为 2000..6000 的整数`);
-    }
-    const shaped = shot as unknown as SemanticDraftShot;
-    if (typeof shot.narrationText === "string") {
-      // 旁白硬上限 = 6000ms（IR 时长上限）的预算 floor((6000-400)/300)=18 字：
-      // 低于它的超额由编译器确定性延长吸收（durationMs 是模型的下限意图，
-      // 同旧规划器 speechAwareDurationMs 的下限语义）；超过它无论如何延长
-      // 都读不完，才是校验错误。
-      const chars = [...shot.narrationText.trim()].length;
-      const absoluteBudget = narrationCharBudget(6000);
-      if (chars > absoluteBudget) {
-        errors.push(
-          `${field} 旁白 ${chars} 字超出可读上限：单镜最长 6000ms 最多 ${absoluteBudget} 字，请精简或拆镜`,
-        );
-      }
-    }
-    if (intent === "text-explainer") {
-      if (
-        !Array.isArray(shot.bullets) ||
-        shot.bullets.length < 1 ||
-        shot.bullets.length > 3
-      ) {
-        errors.push(`${field}.bullets 须为 1..3 条`);
-      } else {
-        for (const [j, b] of (shot.bullets as unknown[]).entries()) {
-          // sketch-note item.text ≤12（按码点计数，同组件口径）。
-          if (
-            typeof b !== "string" ||
-            [...b].length < 1 ||
-            [...b].length > 12
-          ) {
-            errors.push(`${field}.bullets[${j}] 须为 1..12 字`);
-          }
-        }
-      }
-    }
-    if (intent === "cycle-explainer") {
-      // 纯字符串 label 数组（P2-3：caption 已从 IR 移除——上屏 caption 与底部
-      // 旁白注解恒碰撞，关键信息必须写进 label 或旁白，不再静默丢弃）。
-      if (
-        !Array.isArray(shot.cycleSteps) ||
-        shot.cycleSteps.length < 3 ||
-        shot.cycleSteps.length > 5
-      ) {
-        errors.push(`${field}.cycleSteps 须为 3..5 个字符串阶段名`);
-      } else {
-        for (const [j, step] of (shot.cycleSteps as unknown[]).entries()) {
-          if (typeof step !== "string" || step.length < 1 || step.length > 6) {
-            errors.push(`${field}.cycleSteps[${j}] 须为 1..6 字的字符串`);
-          }
-        }
-      }
-    }
-    if (intent === "flow-explainer") {
-      if (
-        !Array.isArray(shot.flowSteps) ||
-        shot.flowSteps.length < 2 ||
-        shot.flowSteps.length > 4
-      ) {
-        errors.push(`${field}.flowSteps 须为 2..4 步`);
-      } else {
-        for (const [j, s] of (shot.flowSteps as unknown[]).entries()) {
-          // flow-steps 契约 label ≤10（真实上限，不过度收紧）。
-          if (typeof s !== "string" || s.length < 1 || s.length > 10) {
-            errors.push(`${field}.flowSteps[${j}] 须为 1..10 字`);
-          }
-        }
-      }
-    }
-    shots.push(shot as unknown as SemanticDraftShot);
+    shots.push(result.shot);
   }
   if (errors.length > 0) return { ok: false, errors };
   return {
@@ -459,35 +353,8 @@ export function compileSemanticDraft(
   const shots: StoryboardShot[] = [];
   const errors: string[] = [];
   for (const [i, shot] of draft.shots.entries()) {
-    let spec: SceneSpec;
-    const seed = 5000 + i * 7;
     try {
-      switch (shot.intent) {
-        case "title":
-          spec = compileTitle(shot, seed);
-          break;
-        case "text-explainer":
-          spec = compileTextExplainer(shot, seed);
-          break;
-        case "cycle-explainer":
-          spec = compileCycleExplainer(shot, seed);
-          break;
-        case "flow-explainer":
-          spec = compileFlowExplainer(shot, seed);
-          break;
-      }
-      validateSceneSpec(spec, defaultRegistry);
-      shots.push({
-        label: INTENT_LABEL[shot.intent],
-        description: `${shot.title}（${INTENT_LABEL[shot.intent]}）`,
-        narrationText: shot.narrationText,
-        plan: {
-          ok: true,
-          spec,
-          title: shot.title,
-          renderHint: renderHintFor(shot),
-        },
-      });
+      shots.push(compileSemanticShot(shot, 5000 + i * 7));
     } catch (err) {
       errors.push(
         `镜 ${i + 1} 编译失败：${err instanceof Error ? err.message : String(err)}`,
@@ -509,4 +376,146 @@ export function compileSemanticDraft(
     throw error;
   }
   return { ok: true, sentence, title: draft.title, totalMs, shots };
+}
+
+// —— N2（交接单 2026-10-27）：单镜校验/编译导出 ——
+// 与整片路径同一套规则（严格键集合、旁白预算、确定性延长、renderHint），
+// 「AI 修改此镜头」候选与整片规划行为同源；field 用于错误定位前缀。
+export function validateSemanticShot(
+  raw: unknown,
+  field = "shot",
+): { ok: true; shot: SemanticDraftShot } | { ok: false; errors: string[] } {
+  if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
+    return { ok: false, errors: [`${field} 须为对象`] };
+  }
+  const shot = raw as Record<string, unknown>;
+  const errors: string[] = [];
+  if (typeof shot.intent !== "string" || !INTENTS.has(shot.intent)) {
+    return {
+      ok: false,
+      errors: [`${field}.intent 须为 ${[...INTENTS].join("/")}`],
+    };
+  }
+  const intent = shot.intent as SemanticIntent;
+  const allowedKeys = new Set([
+    ...SHOT_BASE_KEYS,
+    ...SHOT_KEYS_BY_INTENT[intent],
+  ]);
+  for (const key of Object.keys(shot))
+    if (!allowedKeys.has(key))
+      errors.push(
+        `未知字段 ${field}.${key}${ASSET_KEYS.test(key) ? `。${ASSET_GUIDANCE}` : "（不在该 intent 的契约内）"}`,
+      );
+  if (
+    typeof shot.title !== "string" ||
+    shot.title.length < 1 ||
+    shot.title.length > 32
+  ) {
+    errors.push(`${field}.title 须为 1..32 字`);
+  }
+  if (typeof shot.narrationText !== "string" || shot.narrationText.length < 1) {
+    errors.push(`${field}.narrationText 须为非空字符串`);
+  }
+  if (
+    typeof shot.durationMs !== "number" ||
+    !Number.isInteger(shot.durationMs) ||
+    shot.durationMs < 2000 ||
+    shot.durationMs > 6000
+  ) {
+    errors.push(`${field}.durationMs 须为 2000..6000 的整数`);
+  }
+  if (typeof shot.narrationText === "string") {
+    const chars = [...shot.narrationText.trim()].length;
+    const absoluteBudget = narrationCharBudget(6000);
+    if (chars > absoluteBudget) {
+      errors.push(
+        `${field} 旁白 ${chars} 字超出可读上限：单镜最长 6000ms 最多 ${absoluteBudget} 字，请精简或拆镜`,
+      );
+    }
+  }
+  if (intent === "text-explainer") {
+    if (
+      !Array.isArray(shot.bullets) ||
+      shot.bullets.length < 1 ||
+      shot.bullets.length > 3
+    ) {
+      errors.push(`${field}.bullets 须为 1..3 条`);
+    } else {
+      for (const [j, b] of (shot.bullets as unknown[]).entries()) {
+        if (
+          typeof b !== "string" ||
+          [...b].length < 1 ||
+          [...b].length > 12
+        ) {
+          errors.push(`${field}.bullets[${j}] 须为 1..12 字`);
+        }
+      }
+    }
+  }
+  if (intent === "cycle-explainer") {
+    if (
+      !Array.isArray(shot.cycleSteps) ||
+      shot.cycleSteps.length < 3 ||
+      shot.cycleSteps.length > 5
+    ) {
+      errors.push(`${field}.cycleSteps 须为 3..5 个字符串阶段名`);
+    } else {
+      for (const [j, step] of (shot.cycleSteps as unknown[]).entries()) {
+        if (typeof step !== "string" || step.length < 1 || step.length > 6) {
+          errors.push(`${field}.cycleSteps[${j}] 须为 1..6 字的字符串`);
+        }
+      }
+    }
+  }
+  if (intent === "flow-explainer") {
+    if (
+      !Array.isArray(shot.flowSteps) ||
+      shot.flowSteps.length < 2 ||
+      shot.flowSteps.length > 4
+    ) {
+      errors.push(`${field}.flowSteps 须为 2..4 步`);
+    } else {
+      for (const [j, s] of (shot.flowSteps as unknown[]).entries()) {
+        if (typeof s !== "string" || s.length < 1 || s.length > 10) {
+          errors.push(`${field}.flowSteps[${j}] 须为 1..10 字`);
+        }
+      }
+    }
+  }
+  if (errors.length > 0) return { ok: false, errors };
+  return { ok: true, shot: shot as unknown as SemanticDraftShot };
+}
+
+// 单镜编译：编译失败抛错（调用方定位镜头后转用户可见错误）。
+export function compileSemanticShot(
+  shot: SemanticDraftShot,
+  seed: number,
+): StoryboardShot {
+  let spec: SceneSpec;
+  switch (shot.intent) {
+    case "title":
+      spec = compileTitle(shot, seed);
+      break;
+    case "text-explainer":
+      spec = compileTextExplainer(shot, seed);
+      break;
+    case "cycle-explainer":
+      spec = compileCycleExplainer(shot, seed);
+      break;
+    case "flow-explainer":
+      spec = compileFlowExplainer(shot, seed);
+      break;
+  }
+  validateSceneSpec(spec, defaultRegistry);
+  return {
+    label: INTENT_LABEL[shot.intent],
+    description: `${shot.title}（${INTENT_LABEL[shot.intent]}）`,
+    narrationText: shot.narrationText,
+    plan: {
+      ok: true,
+      spec,
+      title: shot.title,
+      renderHint: renderHintFor(shot),
+    },
+  };
 }

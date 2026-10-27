@@ -58,7 +58,11 @@ import {
   TimelinePreview,
   type TimelinePreviewItem,
 } from "./scene-preview";
-import { ShotEditorCard } from "./shot-editor-card";
+import {
+  ShotEditorCard,
+  type AiReviseCandidate,
+  type AiReviseState,
+} from "./shot-editor-card";
 import { applyShotRecipe } from "./shot-recipes";
 import { shotWorkingMediaClip, shotWorkingSpec } from "./shot-specs";
 import { importStockForShot } from "./stock-apply";
@@ -118,6 +122,15 @@ type SemanticPlanState = {
   needsAssetsChoice: boolean;
 };
 
+// N2 单镜 AI 修改的候选与瞬态（类型由卡片模块定义，page 只存状态）。
+
+const AI_REVISE_IDLE: AiReviseState = {
+  busy: false,
+  error: null,
+  needsAssetsChoice: false,
+  candidate: null,
+};
+
 export default function VideoStudioPage() {
   const [projects, setProjects] = useState<VideoProjectSummary[]>([]);
   const [editor, setEditor] = useState<EditorState | null>(null);
@@ -154,6 +167,10 @@ export default function VideoStudioPage() {
     durationDeviation: null,
     needsAssetsChoice: false,
   });
+  // N2：单镜 AI 修改状态按 shotId 分片；切换项目时随编辑器重建清空。
+  const [aiReviseByShot, setAiReviseByShot] = useState<
+    Record<string, AiReviseState>
+  >({});
   // AI 请求归属守卫（I-1/I-2，2026-10-26 评审）：请求发起时的文档 id +
   // 单调序号。响应返回时若用户已切换项目（返回列表/打开/新建）或已发起
   // 更新的 AI 请求，整个响应连同 semanticPlan 状态一并丢弃——过期闭包
@@ -645,6 +662,191 @@ export default function VideoStudioPage() {
           needsAssetsChoice: false,
         });
       }
+    };
+
+    // —— N2：单镜自然语言修改（AI 修改此镜头） ——
+    // 服务端读「本镜工作版本摘要 + 相邻镜 + 整片信息 + 指令」产一个受限
+    // IR 候选；候选预览（屏幕文字/旁白/时长/画面类型/整片影响）确认后才
+    // 落新内容版本（addCandidateVersion：锁定拒绝、只追加不覆盖、
+    // parentVersionId 留链）。确认时校验 baseVersionId 防版本冲突。
+    const setShotRevise = (shotId: string, patch: Partial<AiReviseState>) => {
+      setAiReviseByShot((current) => ({
+        ...current,
+        [shotId]: { ...(current[shotId] ?? AI_REVISE_IDLE), ...patch },
+      }));
+    };
+
+    const runShotRevise = async (
+      shotId: string,
+      index: number,
+      instruction: string,
+      allowSubstitute = false,
+    ) => {
+      const shot = document.shots.find((s) => s.shotId === shotId);
+      if (!shot) return;
+      const working = shot.contentVersions.find(
+        (v) => v.versionId === shot.workingVersionId,
+      );
+      if (!working) {
+        setShotRevise(shotId, { error: "镜头没有工作版本，无法 AI 修改" });
+        return;
+      }
+      setShotRevise(shotId, {
+        busy: true,
+        error: null,
+        needsAssetsChoice: false,
+        candidate: null,
+      });
+      try {
+        const currentTotalMs = document.shots.reduce((ms, s) => {
+          const w = s.contentVersions.find(
+            (v) => v.versionId === s.workingVersionId,
+          );
+          return ms + (w?.durationMs ?? 0);
+        }, 0);
+        const response = await fetch("/api/video/semantic-revise", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            instruction,
+            ...(allowSubstitute ? { allowDiagramSubstitute: true } : {}),
+            shot: {
+              index,
+              description: working.description,
+              narrationText: working.narrationText,
+              durationMs: working.durationMs,
+              componentId:
+                working.sceneSource.type === "spec"
+                  ? (working.sceneSource.spec as { componentId?: string })
+                      .componentId ?? "spec"
+                  : working.sceneSource.type,
+            },
+            neighbors: {
+              prev: (() => {
+                const p = document.shots[index - 1];
+                if (!p) return undefined;
+                const w = p.contentVersions.find(
+                  (v) => v.versionId === p.workingVersionId,
+                );
+                return w
+                  ? { description: w.description, narrationText: w.narrationText }
+                  : undefined;
+              })(),
+              next: (() => {
+                const n = document.shots[index + 1];
+                if (!n) return undefined;
+                const w = n.contentVersions.find(
+                  (v) => v.versionId === n.workingVersionId,
+                );
+                return w
+                  ? { description: w.description, narrationText: w.narrationText }
+                  : undefined;
+              })(),
+            },
+            film: {
+              title: document.title,
+              shotCount: document.shots.length,
+              totalMs: currentTotalMs,
+            },
+          }),
+        });
+        const data = (await response.json()) as {
+          shot?: Omit<AiReviseCandidate, "baseVersionId" | "totalAfterMs">;
+          error?: string;
+          errors?: string[];
+          kind?: string;
+        };
+        if (!response.ok || !data.shot) {
+          setShotRevise(shotId, {
+            busy: false,
+            error: [
+              data.error ?? "AI 修改失败，请稍后重试或改用固定句式重做",
+              ...(data.errors ?? []),
+            ].join("；"),
+            needsAssetsChoice: data.kind === "needs-assets",
+            candidate: null,
+          });
+          return;
+        }
+        setShotRevise(shotId, {
+          busy: false,
+          error: null,
+          needsAssetsChoice: false,
+          candidate: {
+            ...data.shot,
+            baseVersionId: working.versionId,
+            totalAfterMs:
+              currentTotalMs - working.durationMs + data.shot.durationMs,
+          },
+        });
+      } catch {
+        setShotRevise(shotId, {
+          busy: false,
+          error: "AI 修改请求失败（网络或服务错误），未修改项目",
+          needsAssetsChoice: false,
+          candidate: null,
+        });
+      }
+    };
+
+    const confirmShotRevise = async (shotId: string, index: number) => {
+      const state = aiReviseByShot[shotId];
+      const candidate = state?.candidate;
+      if (!candidate) return;
+      const shot = document.shots.find((s) => s.shotId === shotId);
+      const working = shot?.contentVersions.find(
+        (v) => v.versionId === shot?.workingVersionId,
+      );
+      // 版本冲突闸：候选基于 baseVersionId 生成，镜头此后变过 → 拒绝应用。
+      if (!shot || !working || working.versionId !== candidate.baseVersionId) {
+        setShotRevise(shotId, {
+          candidate: null,
+          error: "镜头在生成候选后已被修改，请重新生成 AI 修改候选",
+        });
+        return;
+      }
+      const versionId = crypto.randomUUID();
+      try {
+        const candidateDoc = addCandidateVersion(document, shotId, {
+          versionId,
+          createdAt: new Date().toISOString(),
+          durationMs: candidate.durationMs,
+          description: candidate.description,
+          narrationText: candidate.narrationText,
+          sceneSource: { type: "spec", spec: candidate.plan.spec },
+          provenance: {
+            engineId: "planner-semantic-revise",
+            engineVersion: `${candidate.provenance.model}/prompt${candidate.provenance.promptVersion}/compiler${candidate.provenance.compilerVersion}`,
+            parentVersionId: working.versionId,
+          },
+        });
+        const next = await applyLinkedStyle(candidateDoc);
+        setAiReviseByShot((current) => ({
+          ...current,
+          [shotId]: AI_REVISE_IDLE,
+        }));
+        setEditor({
+          ...editor,
+          document: next,
+          message: `镜头 ${index + 1} 已按 AI 指令修改（${candidate.plan.title}）`,
+        });
+      } catch (error) {
+        setShotRevise(shotId, {
+          error:
+            error instanceof ShotLockedError
+              ? "镜头已锁定，先解锁再 AI 修改"
+              : error instanceof Error
+                ? error.message
+                : "AI 修改应用失败",
+        });
+      }
+    };
+
+    const discardShotRevise = (shotId: string) => {
+      setAiReviseByShot((current) => ({
+        ...current,
+        [shotId]: AI_REVISE_IDLE,
+      }));
     };
     const interactiveShotChoices = document.shots.flatMap((shot, index) => {
       const working = shot.contentVersions.find(
@@ -1404,6 +1606,17 @@ export default function VideoStudioPage() {
                         return message;
                       }
                     }}
+                    aiRevise={aiReviseByShot[shot.shotId] ?? AI_REVISE_IDLE}
+                    onAiReviseGenerate={(instruction, allowSubstitute) =>
+                      runShotRevise(
+                        shot.shotId,
+                        index,
+                        instruction,
+                        allowSubstitute,
+                      )
+                    }
+                    onAiReviseConfirm={() => confirmShotRevise(shot.shotId, index)}
+                    onAiReviseDiscard={() => discardShotRevise(shot.shotId)}
                     onToggleLock={(locked) => {
                       try {
                         const next = setLocked(document, shot.shotId, locked);
