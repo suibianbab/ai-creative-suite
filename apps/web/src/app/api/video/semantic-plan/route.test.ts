@@ -102,7 +102,7 @@ test("semantic-plan：合法 IR → 200 返回 storyboard 与 provenance", async
       assert.equal(data.storyboard.totalMs, 10500);
       assert.equal(data.provenance.provider, "qwen-chat");
       assert.equal(data.provenance.model, "qwen-plus");
-      assert.equal(data.provenance.promptVersion, "9");
+      assert.equal(data.provenance.promptVersion, "10");
       assert.equal(data.provenance.compilerVersion, "1");
       assert.equal(data.provenance.sentence, "做一条约25秒的水循环科普短片");
     });
@@ -578,6 +578,76 @@ test("semantic-plan：图表诉求无数字 → 200 + dataHint", async () => {
       const data = await response.json();
       assert.equal(data.storyboard.ok, true);
       assert.match(String(data.dataHint), /数字|数据/);
+    });
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+
+// 任务 4：图片账本摘要进规划上下文；slotKind 点名建议的图。
+const IMAGE_SLOT_IR = JSON.stringify({
+  topic: "保温杯",
+  title: "产品速览",
+  shots: [
+    { intent: "title", title: "产品速览", narrationText: "看产品", durationMs: 2500 },
+    {
+      intent: "media-slot-explainer",
+      title: "产品整体",
+      narrationText: "先看全貌",
+      durationMs: 3000,
+      slotKind: "图片：hero-front.png",
+      purpose: "开场第一印象",
+    },
+    {
+      intent: "media-slot-explainer",
+      title: "细节特写",
+      narrationText: "看细节",
+      durationMs: 3000,
+      slotKind: "图片：detail-lid.png",
+      purpose: "工艺可靠性",
+    },
+    { intent: "title", title: "谢谢观看", narrationText: "谢谢", durationMs: 2500 },
+  ],
+});
+
+test("任务4：图片摘要进 payload + 确认卡点名每镜用哪张图", async () => {
+  const originalFetch = globalThis.fetch;
+  const payloads: string[] = [];
+  globalThis.fetch = async (_input, init) => {
+    const body = JSON.parse(String(init?.body)) as {
+      messages: Array<{ role: string; content: string }>;
+    };
+    payloads.push(body.messages[1]!.content);
+    return chatResponse(IMAGE_SLOT_IR);
+  };
+  try {
+    await withEnv(WITH_KEY, async () => {
+      const response = await POST(
+        new Request("http://localhost:3000/api/video/semantic-plan", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            sentence: "用我上传的图做一条保温杯产品短片：整体展示和杯口细节",
+            imageAssets: [
+              { fileName: "hero-front.png", width: 1200, height: 900 },
+              { fileName: "detail-lid.png", width: 800, height: 800 },
+            ],
+          }),
+        }),
+      );
+      assert.equal(response.status, 200);
+      const data = await response.json();
+      assert.match(payloads[0]!, /hero-front\.png/);
+      assert.match(payloads[0]!, /detail-lid\.png/);
+      assert.match(payloads[0]!, /1200×900/);
+      const hints = (
+        data.storyboard.shots as Array<{
+          plan: { renderHint: string };
+        }>
+      ).map((s) => s.plan.renderHint);
+      assert.match(hints[1]!, /hero-front\.png/);
+      assert.match(hints[2]!, /detail-lid\.png/);
     });
   } finally {
     globalThis.fetch = originalFetch;

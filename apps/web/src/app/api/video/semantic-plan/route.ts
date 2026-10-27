@@ -29,9 +29,13 @@ function durationTargetMs(text: string): number | null {
 export async function POST(request: Request) {
   if (!isSameOriginRequest(request))
     return Response.json({ error: "跨站请求已拒绝" }, { status: 403 });
-  if (Number(request.headers.get("content-length") ?? 0) > 2048)
+  if (Number(request.headers.get("content-length") ?? 0) > 4096)
     return Response.json({ error: "请求过长" }, { status: 413 });
-  let body: { sentence?: unknown; allowDiagramSubstitute?: unknown };
+  let body: {
+    sentence?: unknown;
+    allowDiagramSubstitute?: unknown;
+    imageAssets?: unknown;
+  };
   try {
     const parsed: unknown = JSON.parse(await request.text());
     if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed))
@@ -47,6 +51,28 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   const text = sentence.trim();
+
+  // 任务 4：图片账本摘要净化（≤20 张、fileName ≤40 字裁剪）——只把
+  // 「有哪些图」给模型做镜头建议参考，绑定永远是用户动作。
+  const imageLedger: string[] = [];
+  if (Array.isArray(body.imageAssets)) {
+    for (const item of body.imageAssets.slice(0, 20)) {
+      if (typeof item !== "object" || item === null) continue;
+      const entry = item as Record<string, unknown>;
+      const fileName =
+        typeof entry.fileName === "string" ? entry.fileName.slice(0, 40) : "";
+      const width = Number(entry.width);
+      const height = Number(entry.height);
+      if (!fileName) continue;
+      imageLedger.push(
+        `${fileName}（${
+          Number.isInteger(width) && Number.isInteger(height)
+            ? `${width}×${height}`
+            : "尺寸未知"
+        }）`,
+      );
+    }
+  }
 
   // N5（2026-10-27）：素材诉求句放行——模型以 media-slot 素材位承接
   // （先规划位、再由用户绑定入库素材）；明示授权图解替代时记录标记。
@@ -64,7 +90,14 @@ export async function POST(request: Request) {
     );
 
   // 第一轮：模型直出 IR。
-  const first = await provider.plan(text);
+  const planPayload =
+    imageLedger.length > 0
+      ? `${text}
+
+【已上传图片素材（镜头可建议使用，绑定由用户完成）】
+${imageLedger.join("、")}`
+      : text;
+  const first = await provider.plan(planPayload);
   if (!first.ok)
     return Response.json(
       { error: first.message, kind: first.kind },
@@ -117,7 +150,7 @@ export async function POST(request: Request) {
         "这句明确需要真实照片/素材：请为素材需求输出 media-slot-explainer 素材位镜头（slotKind=素材种类、purpose=叙事用途），不要用图解冒充",
       );
     reasons.push(...(validation.ok ? sourcingErrors : []));
-    const retry = await provider.plan(text, reasons.join("；"));
+    const retry = await provider.plan(planPayload, reasons.join("；"));
     if (!retry.ok)
       return Response.json(
         { error: retry.message, kind: retry.kind },

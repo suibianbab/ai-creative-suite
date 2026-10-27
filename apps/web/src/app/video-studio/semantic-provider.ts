@@ -9,7 +9,8 @@
 // v6：措辞同步六种 intent；compare/timeline 标题上限 30（组件契约）；
 // milestone 可带 status（进度型题材不得全渲染成已完成）。
 // v9：数据纪律补量化类比禁令（模型爱编「相当于N棵树」，闸正确拒绝但两轮固执）。
-export const SEMANTIC_PROMPT_VERSION = "9";
+// v10：任务 4 图片素材纪律（点名已上传文件名、不虚构细节）。
+export const SEMANTIC_PROMPT_VERSION = "10";
 // r3：措辞同步六种 intent、compare/timeline 标题 ≤30、milestone status 说明。
 export const SEMANTIC_REVISE_PROMPT_VERSION = "r6";
 export const SEMANTIC_COMPILER_VERSION = "1";
@@ -69,6 +70,7 @@ const REVISE_SYSTEM_PROMPT = `你是 STEM 科普短片分镜编剧，正在修�
 - 严禁输出上述字段以外的任何字段（无 assetUrl/image/url/src 等素材引用、无 HTML/SVG/代码）。
 
 内容纪律：只重写用户点名的这一镜；主题与措辞风格与整片一致；旁白只陈述画面实际展示的内容；cycle 仅限真正首尾相接的循环过程，单向过程用 flow；素材纪律（硬性）：用户需要真实照片/产品素材/商品图时，一律用 media-slot-explainer 素材位镜头承接（slotKind 写清素材种类、purpose 写清叙事用途），不得用图解冒充真实素材，也不得输出 URL/资产 ID/本地路径；Logo/包装文字等无法稳定重绘的内容必须是素材位（保留原图由用户绑定）。
+图片素材纪律（任务 4）：输入里若附【已上传图片素材】清单，规划涉及真实画面的镜头时用 media-slot-explainer，并在 slotKind 里写「图片：<文件名>」点名建议使用的图（只可用清单里真实存在的文件名）；清单没有覆盖的诉求仍写普通素材种类。绝不虚构清单外的图片、不描述图片里看不见的细节（包装文字/图案一律不猜）。
 数据纪律（硬性）：compare 的数值字段与 timeline 的 date 里出现的每个数字，必须原样出现在用户指令里；没给数字就用文字表述，绝不编造；指令要对比但没给前后数值时不要用 compare-explainer。
 图表纪律（硬性）：bar/line/counter 的每个 value 必须原样来自用户指令或影片上下文；指令要图表但没有任何数字时，改用文字/流程镜头；不得从镜头序号/片长推断指标，不做单位换算或差值。不得引入原话里没有的量化类比（「相当于N棵树」类一律禁止）。`;
 

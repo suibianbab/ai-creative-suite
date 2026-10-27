@@ -625,6 +625,14 @@ export default function VideoStudioPage() {
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
             sentence: trimmed,
+            // 任务 4：图片账本摘要（仅 fileName/尺寸；无字节/无 ID 泄漏面）。
+            imageAssets: (document.mediaAssets ?? [])
+              .filter((a) => a.original.kind === "image")
+              .map((a) => ({
+                fileName: a.origin.kind === "local-upload" ? a.origin.fileName : "",
+                width: a.original.width,
+                height: a.original.height,
+              })),
             ...(allowSubstitute ? { allowDiagramSubstitute: true } : {}),
           }),
         });
