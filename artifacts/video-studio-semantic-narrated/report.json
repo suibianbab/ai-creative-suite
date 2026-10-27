@@ -1,0 +1,23 @@
+{
+  "projectId": "e0379a11-17b8-44eb-a184-9b7dd9406575",
+  "sentence": "做一条约25秒的水循环科普短片，讲清蒸发、凝结和降水",
+  "shotCount": 6,
+  "renderRecords": 12,
+  "files": {
+    "landscape": {
+      "sha256": "0e45c573652a7ef623230f172e4585322d8b0e150b9ff568b6f1c05218549098"
+    },
+    "portrait": {
+      "sha256": "5ce56b698831d7dbc13bf1da0be90a0e0d8575eedba77ffa617d1cc4a76a1846"
+    }
+  },
+  "narrations": [
+    "水在地球上不停循环",
+    "蒸发→凝结→降水→回归",
+    "太阳加热，液态水汽化",
+    "高空遇冷，水蒸气液化",
+    "水滴变重，降落为雨雪",
+    "一滴水，一生循环"
+  ],
+  "jobId": "a8a2c0bb-f003-4ae6-8f3d-914d2b8e6b21"
+}

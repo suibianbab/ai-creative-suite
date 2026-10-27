@@ -1,0 +1,593 @@
+{
+  "schemaVersion": 1,
+  "id": "e0379a11-17b8-44eb-a184-9b7dd9406575",
+  "title": "水的旅行：蒸发·凝结·降水",
+  "brief": {
+    "sentence": "做一条约25秒的水循环科普短片，讲清蒸发、凝结和降水",
+    "aspectTargets": [
+      "landscape",
+      "portrait"
+    ],
+    "applications": [
+      {
+        "sentence": "做一条约25秒的水循环科普短片，讲清蒸发、凝结和降水",
+        "appendedShotCount": 6,
+        "appendedDurationMs": 21100,
+        "filmShotCountAfter": 6,
+        "filmTotalMsAfter": 21100,
+        "appliedAt": "2026-10-27T00:57:35.984Z"
+      }
+    ]
+  },
+  "shots": [
+    {
+      "shotId": "1015d805-e8d0-412c-8a10-1592f5ea72af",
+      "order": 0,
+      "locked": false,
+      "workingVersionId": "552885da-455d-4d9b-a659-8498eb7bbf28",
+      "contentVersions": [
+        {
+          "versionId": "552885da-455d-4d9b-a659-8498eb7bbf28",
+          "createdAt": "2026-10-27T00:57:35.984Z",
+          "durationMs": 3100,
+          "description": "水的旅行：蒸发·凝结·降水（标题）",
+          "narrationText": "水在地球上不停循环",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 3100,
+              "seed": 5000,
+              "background": "#101f34",
+              "params": {
+                "title": "水的旅行：蒸发·凝结·降水",
+                "subtitle": "水在地球上不停循环",
+                "titleColor": "#f3f5f7",
+                "subtitleColor": "#b4d8e4",
+                "entrance": "fade-up",
+                "enterMs": 450
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-semantic",
+            "engineVersion": "qwen-plus/prompt4/compiler1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "552885da-455d-4d9b-a659-8498eb7bbf28",
+          "at": "2026-10-27T00:57:35.984Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "0a4f79ed-edce-4ac0-9058-126eeeaa2b2b",
+      "order": 1,
+      "locked": false,
+      "workingVersionId": "980b26a4-6672-48f1-a16f-daf585235f49",
+      "contentVersions": [
+        {
+          "versionId": "980b26a4-6672-48f1-a16f-daf585235f49",
+          "createdAt": "2026-10-27T00:57:35.984Z",
+          "durationMs": 5000,
+          "description": "水循环三阶段（循环图解）",
+          "narrationText": "蒸发→凝结→降水→回归",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "explainer-composition",
+              "componentVersion": 1,
+              "durationMs": 5000,
+              "seed": 5007,
+              "background": "#101f34",
+              "params": {
+                "titleColor": "#f3f5f7",
+                "textColor": "#f3f5f7",
+                "boxColor": "#dcebe1",
+                "arrowColor": "#f5b652",
+                "strokeColor": "#42a5a0",
+                "title": "水循环三阶段",
+                "titleY": 145,
+                "titleEnterMs": 0,
+                "diagramOffsetX": 0,
+                "diagramOffsetY": -60,
+                "diagramEnterMs": 450,
+                "diagram": {
+                  "kind": "cycle",
+                  "steps": [
+                    {
+                      "label": "蒸发"
+                    },
+                    {
+                      "label": "凝结"
+                    },
+                    {
+                      "label": "降水"
+                    },
+                    {
+                      "label": "汇集"
+                    }
+                  ]
+                },
+                "annotations": [
+                  {
+                    "text": "蒸发→凝结→降水→回归",
+                    "x": 500,
+                    "y": 780,
+                    "portraitY": 1340,
+                    "enterMs": 400
+                  }
+                ]
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-semantic",
+            "engineVersion": "qwen-plus/prompt4/compiler1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "980b26a4-6672-48f1-a16f-daf585235f49",
+          "at": "2026-10-27T00:57:35.984Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "8f36389a-abe2-4c87-a351-f8ec640c8388",
+      "order": 2,
+      "locked": false,
+      "workingVersionId": "a6831cb2-7892-4bce-9f88-781899f83b96",
+      "contentVersions": [
+        {
+          "versionId": "a6831cb2-7892-4bce-9f88-781899f83b96",
+          "createdAt": "2026-10-27T00:57:35.984Z",
+          "durationMs": 3400,
+          "description": "蒸发：水变水蒸气（要点解说）",
+          "narrationText": "太阳加热，液态水汽化",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "sketch-note",
+              "componentVersion": 1,
+              "durationMs": 3400,
+              "seed": 5014,
+              "background": "#101f34",
+              "params": {
+                "title": "蒸发：水变水蒸气",
+                "items": [
+                  {
+                    "text": "发生在海洋湖泊",
+                    "emphasis": "下划线"
+                  },
+                  {
+                    "text": "需吸收热量",
+                    "emphasis": "圈"
+                  },
+                  {
+                    "text": "形成水蒸气",
+                    "emphasis": "圈"
+                  }
+                ],
+                "inkColor": "#f3f5f7",
+                "accentColor": "#f5b652",
+                "writeMs": 900,
+                "drawMs": 700,
+                "staggerMs": 500
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-semantic",
+            "engineVersion": "qwen-plus/prompt4/compiler1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "a6831cb2-7892-4bce-9f88-781899f83b96",
+          "at": "2026-10-27T00:57:35.984Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "b44af48f-e75f-4d91-b62f-5bf922eaa332",
+      "order": 3,
+      "locked": false,
+      "workingVersionId": "dcc1a9c1-f185-41dd-b928-9e9cf74a2594",
+      "contentVersions": [
+        {
+          "versionId": "dcc1a9c1-f185-41dd-b928-9e9cf74a2594",
+          "createdAt": "2026-10-27T00:57:35.984Z",
+          "durationMs": 3400,
+          "description": "凝结：水蒸气变云（要点解说）",
+          "narrationText": "高空遇冷，水蒸气液化",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "sketch-note",
+              "componentVersion": 1,
+              "durationMs": 3400,
+              "seed": 5021,
+              "background": "#101f34",
+              "params": {
+                "title": "凝结：水蒸气变云",
+                "items": [
+                  {
+                    "text": "水蒸气冷却成小水滴",
+                    "emphasis": "下划线"
+                  },
+                  {
+                    "text": "聚集形成云",
+                    "emphasis": "圈"
+                  },
+                  {
+                    "text": "需凝结核",
+                    "emphasis": "圈"
+                  }
+                ],
+                "inkColor": "#f3f5f7",
+                "accentColor": "#f5b652",
+                "writeMs": 900,
+                "drawMs": 700,
+                "staggerMs": 500
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-semantic",
+            "engineVersion": "qwen-plus/prompt4/compiler1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "dcc1a9c1-f185-41dd-b928-9e9cf74a2594",
+          "at": "2026-10-27T00:57:35.984Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "930704d0-513a-4b55-86bc-ab9f5eb5c00a",
+      "order": 4,
+      "locked": false,
+      "workingVersionId": "c4b0556a-0ebc-4318-b313-5ac593779f62",
+      "contentVersions": [
+        {
+          "versionId": "c4b0556a-0ebc-4318-b313-5ac593779f62",
+          "createdAt": "2026-10-27T00:57:35.984Z",
+          "durationMs": 3400,
+          "description": "降水：云中落回地面（要点解说）",
+          "narrationText": "水滴变重，降落为雨雪",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "sketch-note",
+              "componentVersion": 1,
+              "durationMs": 3400,
+              "seed": 5028,
+              "background": "#101f34",
+              "params": {
+                "title": "降水：云中落回地面",
+                "items": [
+                  {
+                    "text": "云滴碰撞合并",
+                    "emphasis": "下划线"
+                  },
+                  {
+                    "text": "重力作用下落",
+                    "emphasis": "圈"
+                  },
+                  {
+                    "text": "形式有雨、雪、雾",
+                    "emphasis": "圈"
+                  }
+                ],
+                "inkColor": "#f3f5f7",
+                "accentColor": "#f5b652",
+                "writeMs": 900,
+                "drawMs": 700,
+                "staggerMs": 500
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-semantic",
+            "engineVersion": "qwen-plus/prompt4/compiler1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "c4b0556a-0ebc-4318-b313-5ac593779f62",
+          "at": "2026-10-27T00:57:35.984Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "cb504d56-c057-49d4-a5f3-064ff97f785b",
+      "order": 5,
+      "locked": false,
+      "workingVersionId": "c89a24aa-877d-46b9-af9e-7bebed724ae7",
+      "contentVersions": [
+        {
+          "versionId": "c89a24aa-877d-46b9-af9e-7bebed724ae7",
+          "createdAt": "2026-10-27T00:57:35.984Z",
+          "durationMs": 2800,
+          "description": "水循环永不停歇（标题）",
+          "narrationText": "一滴水，一生循环",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 2800,
+              "seed": 5035,
+              "background": "#101f34",
+              "params": {
+                "title": "水循环永不停歇",
+                "subtitle": "一滴水，一生循环",
+                "titleColor": "#f3f5f7",
+                "subtitleColor": "#b4d8e4",
+                "entrance": "fade-up",
+                "enterMs": 450
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-semantic",
+            "engineVersion": "qwen-plus/prompt4/compiler1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "c89a24aa-877d-46b9-af9e-7bebed724ae7",
+          "at": "2026-10-27T00:57:35.984Z",
+          "actor": "human"
+        }
+      ]
+    }
+  ],
+  "renderRecords": [
+    {
+      "renderId": "8820de62-3c32-4ad1-8172-a9fcc54446c3",
+      "versionId": "552885da-455d-4d9b-a659-8498eb7bbf28",
+      "contentDigest": "f1403a946d79d370a8e07fa1722bf751d0bfe97ef8730a4a441ce2d7d7af3837",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 74,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "4d8c363b-20b7-45dd-bac7-d18d51e29e55",
+      "versionId": "980b26a4-6672-48f1-a16f-daf585235f49",
+      "contentDigest": "9e98e447e2adadc775504b4cee402d831acad210fd3fbeeb85db61567cfb249b",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 120,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "abd7486f-ea50-4416-be72-b6756ced0847",
+      "versionId": "a6831cb2-7892-4bce-9f88-781899f83b96",
+      "contentDigest": "3be44df8f63fef4d3745f2acfa39147dc6c14ed38a93a3677e5b2467f5df361e",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 82,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "1024908b-4927-4367-abfc-34f97c1abd9e",
+      "versionId": "dcc1a9c1-f185-41dd-b928-9e9cf74a2594",
+      "contentDigest": "58d1c10aec4749cf19ba8e2f881c563808378dd16561e06710fcf0f674d73a86",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 82,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "5d987089-8730-4900-bb13-69a376c37d76",
+      "versionId": "c4b0556a-0ebc-4318-b313-5ac593779f62",
+      "contentDigest": "1c852e27751b1cd95396e83b938fd2142dc8ba53ef2bdac697453d16b61ed49d",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 81,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "4de57469-b6dc-41cd-a465-3a9bc8ead441",
+      "versionId": "c89a24aa-877d-46b9-af9e-7bebed724ae7",
+      "contentDigest": "a26c4df8f792ff2ffd8b48b2e458c76d37aafc61afa975331101df51609e46d1",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 67,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "f70e4a66-2027-4fa9-9e61-0cc46ee04db5",
+      "versionId": "552885da-455d-4d9b-a659-8498eb7bbf28",
+      "contentDigest": "f1403a946d79d370a8e07fa1722bf751d0bfe97ef8730a4a441ce2d7d7af3837",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 74,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    },
+    {
+      "renderId": "dcad26ab-d9e3-4eaf-96b5-16cd88c08d62",
+      "versionId": "980b26a4-6672-48f1-a16f-daf585235f49",
+      "contentDigest": "9e98e447e2adadc775504b4cee402d831acad210fd3fbeeb85db61567cfb249b",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 120,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    },
+    {
+      "renderId": "f4590438-f9ad-4a36-95b8-f76fa2521cda",
+      "versionId": "a6831cb2-7892-4bce-9f88-781899f83b96",
+      "contentDigest": "3be44df8f63fef4d3745f2acfa39147dc6c14ed38a93a3677e5b2467f5df361e",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 82,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    },
+    {
+      "renderId": "6f034878-8bcd-4de7-b113-863b0b9d7bd4",
+      "versionId": "dcc1a9c1-f185-41dd-b928-9e9cf74a2594",
+      "contentDigest": "58d1c10aec4749cf19ba8e2f881c563808378dd16561e06710fcf0f674d73a86",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 82,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    },
+    {
+      "renderId": "55cabf6b-2a9a-4f30-b952-e233e7a2953f",
+      "versionId": "c4b0556a-0ebc-4318-b313-5ac593779f62",
+      "contentDigest": "1c852e27751b1cd95396e83b938fd2142dc8ba53ef2bdac697453d16b61ed49d",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 81,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    },
+    {
+      "renderId": "7da7ea86-c1f9-4212-ac8d-def9e65de853",
+      "versionId": "c89a24aa-877d-46b9-af9e-7bebed724ae7",
+      "contentDigest": "a26c4df8f792ff2ffd8b48b2e458c76d37aafc61afa975331101df51609e46d1",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 67,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    }
+  ],
+  "deliveries": [],
+  "savedVersion": 3
+}
