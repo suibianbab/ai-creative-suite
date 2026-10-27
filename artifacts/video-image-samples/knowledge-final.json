@@ -1,0 +1,462 @@
+{
+  "schemaVersion": 1,
+  "id": "048bee33-1ca8-4d39-b7d9-7d9b9e121695",
+  "title": "共享单车：骑行与减碳",
+  "brief": {
+    "sentence": "做一条约25秒的城市共享单车科普短片：用柱状图展示骑行量——北京年骑行从120万次涨到350万次，讲三步开锁流程，最后用数字强调每年减碳80万吨",
+    "aspectTargets": [
+      "landscape",
+      "portrait"
+    ],
+    "applications": [
+      {
+        "sentence": "做一条约25秒的城市共享单车科普短片：用柱状图展示骑行量——北京年骑行从120万次涨到350万次，讲三步开锁流程，最后用数字强调每年减碳80万吨",
+        "appendedShotCount": 5,
+        "appendedDurationMs": 19000,
+        "filmShotCountAfter": 5,
+        "filmTotalMsAfter": 19000,
+        "appliedAt": "2026-10-27T19:03:00.429Z"
+      }
+    ]
+  },
+  "shots": [
+    {
+      "shotId": "d34a2084-7755-4537-8bd1-44343d968cd0",
+      "order": 0,
+      "locked": false,
+      "workingVersionId": "2c729042-17b2-47a9-bfd5-1a00e2214da3",
+      "contentVersions": [
+        {
+          "versionId": "2c729042-17b2-47a9-bfd5-1a00e2214da3",
+          "createdAt": "2026-10-27T19:03:00.429Z",
+          "durationMs": 3100,
+          "description": "共享单车：骑行与减碳（标题）",
+          "narrationText": "城市绿色出行新方式",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 3100,
+              "seed": 5000,
+              "background": "#101f34",
+              "params": {
+                "title": "共享单车：骑行与减碳",
+                "subtitle": "城市绿色出行新方式",
+                "titleColor": "#f3f5f7",
+                "subtitleColor": "#b4d8e4",
+                "entrance": "fade-up",
+                "enterMs": 450
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-semantic",
+            "engineVersion": "qwen-plus/prompt10/compiler1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "2c729042-17b2-47a9-bfd5-1a00e2214da3",
+          "at": "2026-10-27T19:03:00.429Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "c71296a2-f138-4ada-a72d-d77d5f0db25b",
+      "order": 1,
+      "locked": false,
+      "workingVersionId": "af3239bb-6962-4e18-9d4c-009833f5d58e",
+      "contentVersions": [
+        {
+          "versionId": "af3239bb-6962-4e18-9d4c-009833f5d58e",
+          "createdAt": "2026-10-27T19:03:00.429Z",
+          "durationMs": 5200,
+          "description": "年骑行量显著增长（柱状图表）",
+          "narrationText": "北京年骑行从120万到350万次",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "bar-chart",
+              "componentVersion": 1,
+              "durationMs": 5200,
+              "seed": 5007,
+              "background": "#101f34",
+              "params": {
+                "title": "年骑行量显著增长",
+                "bars": [
+                  {
+                    "label": "之前",
+                    "value": 1200000
+                  },
+                  {
+                    "label": "现在",
+                    "value": 3500000
+                  }
+                ],
+                "barColor": "#4f8fd6",
+                "accentColor": "#f5b652",
+                "textColor": "#f3f5f7",
+                "enterMs": 900,
+                "cnUnits": true
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-semantic",
+            "engineVersion": "qwen-plus/prompt10/compiler1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "af3239bb-6962-4e18-9d4c-009833f5d58e",
+          "at": "2026-10-27T19:03:00.429Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "87b1f682-85e4-4ab0-9735-1c9bf0bf130e",
+      "order": 2,
+      "locked": false,
+      "workingVersionId": "e3ee9c4e-9a27-46df-aa3d-b6056b65282e",
+      "contentVersions": [
+        {
+          "versionId": "e3ee9c4e-9a27-46df-aa3d-b6056b65282e",
+          "createdAt": "2026-10-27T19:03:00.429Z",
+          "durationMs": 3600,
+          "description": "三步轻松开锁（流程图解）",
+          "narrationText": "扫码→验证→解锁",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "flow-steps",
+              "componentVersion": 1,
+              "durationMs": 3600,
+              "seed": 5014,
+              "background": "#101f34",
+              "params": {
+                "title": "三步轻松开锁",
+                "steps": [
+                  {
+                    "label": "扫码车筐二维码"
+                  },
+                  {
+                    "label": "手机验证身份"
+                  },
+                  {
+                    "label": "自动解锁用车"
+                  }
+                ],
+                "direction": "vertical",
+                "boxColor": "#dcebe1",
+                "arrowColor": "#f5b652",
+                "textColor": "#f3f5f7",
+                "enterMs": 700
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-semantic",
+            "engineVersion": "qwen-plus/prompt10/compiler1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "e3ee9c4e-9a27-46df-aa3d-b6056b65282e",
+          "at": "2026-10-27T19:03:00.429Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "ea14bbcd-7fa6-411f-800d-5e75a71ceb69",
+      "order": 3,
+      "locked": false,
+      "workingVersionId": "526e0d2f-a7d8-4f22-9684-bdfebeed4def",
+      "contentVersions": [
+        {
+          "versionId": "526e0d2f-a7d8-4f22-9684-bdfebeed4def",
+          "createdAt": "2026-10-27T19:03:00.429Z",
+          "durationMs": 4000,
+          "description": "每年减碳80万吨（数字计数）",
+          "narrationText": "相当于少排80万吨CO₂",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "number-counter",
+              "componentVersion": 1,
+              "durationMs": 4000,
+              "seed": 5021,
+              "background": "#101f34",
+              "params": {
+                "title": "每年减碳80万吨",
+                "value": 800000,
+                "prefix": "约",
+                "suffix": "吨",
+                "decimals": 0,
+                "countMs": 2000,
+                "cnUnits": true,
+                "numberColor": "#f3f5f7",
+                "accentColor": "#f5b652"
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-semantic",
+            "engineVersion": "qwen-plus/prompt10/compiler1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "526e0d2f-a7d8-4f22-9684-bdfebeed4def",
+          "at": "2026-10-27T19:03:00.429Z",
+          "actor": "human"
+        }
+      ]
+    },
+    {
+      "shotId": "8fd6ef17-7e35-4aa3-892e-3dab3d7027f3",
+      "order": 4,
+      "locked": false,
+      "workingVersionId": "737c0c17-e54c-4348-9f58-30f4be112ed5",
+      "contentVersions": [
+        {
+          "versionId": "737c0c17-e54c-4348-9f58-30f4be112ed5",
+          "createdAt": "2026-10-27T19:03:00.429Z",
+          "durationMs": 3100,
+          "description": "绿色出行，人人可为（标题）",
+          "narrationText": "骑上单车，减碳出发",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 3100,
+              "seed": 5028,
+              "background": "#101f34",
+              "params": {
+                "title": "绿色出行，人人可为",
+                "subtitle": "骑上单车，减碳出发",
+                "titleColor": "#f3f5f7",
+                "subtitleColor": "#b4d8e4",
+                "entrance": "fade-up",
+                "enterMs": 450
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "planner-semantic",
+            "engineVersion": "qwen-plus/prompt10/compiler1"
+          }
+        }
+      ],
+      "events": [
+        {
+          "kind": "submitted",
+          "versionId": "737c0c17-e54c-4348-9f58-30f4be112ed5",
+          "at": "2026-10-27T19:03:00.429Z",
+          "actor": "human"
+        }
+      ]
+    }
+  ],
+  "renderRecords": [
+    {
+      "renderId": "5b323081-d1cf-4847-8081-74608b4e1133",
+      "versionId": "2c729042-17b2-47a9-bfd5-1a00e2214da3",
+      "contentDigest": "df98fa6a4cd45869530d69a92e11fe9abd8b3fb5fba4963564c5755290973c25",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 74,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "7034ef67-804f-4cd4-be03-3c8f69e639f6",
+      "versionId": "af3239bb-6962-4e18-9d4c-009833f5d58e",
+      "contentDigest": "f1891411b03f14ee2043615b74eb37b5667844e0bb55507d42e1db730d5b481f",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 125,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "a7efec73-9511-4725-9b33-2433a3409e22",
+      "versionId": "e3ee9c4e-9a27-46df-aa3d-b6056b65282e",
+      "contentDigest": "14919e90517775e58cda9a33dc5529c15c856c87070475ee5caa2d786d12fcee",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 87,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "072b5a1e-ffa2-4248-a545-a49b11bccda2",
+      "versionId": "526e0d2f-a7d8-4f22-9684-bdfebeed4def",
+      "contentDigest": "342c6c34e5d459cecad0aed8ac8ec217d70960b4464340f1c64352e81c73b62d",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 96,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "582c5d23-23c9-4be9-b7d9-2011f37c2b31",
+      "versionId": "737c0c17-e54c-4348-9f58-30f4be112ed5",
+      "contentDigest": "56e1dcd266b70c8e8728fdcd980089d5d7398c58e1849ea0293f7a1232526868",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 74,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "2f67601e-b757-4367-974e-7e3fbd85f2cc",
+      "versionId": "2c729042-17b2-47a9-bfd5-1a00e2214da3",
+      "contentDigest": "df98fa6a4cd45869530d69a92e11fe9abd8b3fb5fba4963564c5755290973c25",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 74,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    },
+    {
+      "renderId": "56a7d203-dae7-4ea3-a303-873d7917537b",
+      "versionId": "af3239bb-6962-4e18-9d4c-009833f5d58e",
+      "contentDigest": "f1891411b03f14ee2043615b74eb37b5667844e0bb55507d42e1db730d5b481f",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 125,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    },
+    {
+      "renderId": "e3e630ab-be46-4d3c-a538-610f72abee91",
+      "versionId": "e3ee9c4e-9a27-46df-aa3d-b6056b65282e",
+      "contentDigest": "14919e90517775e58cda9a33dc5529c15c856c87070475ee5caa2d786d12fcee",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 87,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    },
+    {
+      "renderId": "c9ba17b1-44ea-4ea5-9965-35dc6447d875",
+      "versionId": "526e0d2f-a7d8-4f22-9684-bdfebeed4def",
+      "contentDigest": "342c6c34e5d459cecad0aed8ac8ec217d70960b4464340f1c64352e81c73b62d",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 96,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    },
+    {
+      "renderId": "00e7b4a3-82bb-4e84-aefe-6229f02e1c48",
+      "versionId": "737c0c17-e54c-4348-9f58-30f4be112ed5",
+      "contentDigest": "56e1dcd266b70c8e8728fdcd980089d5d7398c58e1849ea0293f7a1232526868",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 74,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    }
+  ],
+  "deliveries": [],
+  "savedVersion": 3
+}

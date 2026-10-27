@@ -1,0 +1,96 @@
+{
+  "productAd": {
+    "totalMs": 16200,
+    "shots": [
+      {
+        "index": 1,
+        "source": "media-clip",
+        "motion": "zoom-in",
+        "overlay": "轻便保温 · 全天温暖",
+        "narration": "经典设计，一手掌握",
+        "versions": 2
+      },
+      {
+        "index": 2,
+        "source": "media-clip",
+        "motion": "pan-left",
+        "narration": "精密密封，滴水不漏",
+        "versions": 2
+      },
+      {
+        "index": 3,
+        "source": "spec",
+        "component": "sketch-note",
+        "narration": "三重优势，安心之选",
+        "versions": 1
+      },
+      {
+        "index": 4,
+        "source": "spec",
+        "component": "text-animation",
+        "narration": "温暖随行。",
+        "versions": 2
+      }
+    ],
+    "files": {
+      "landscape": {
+        "duration": 16.213,
+        "size": "1280x720",
+        "file": "D:\\codex\\animate\\.claude\\worktrees\\video-image-batch\\artifacts\\video-image-samples\\product-landscape.mp4"
+      },
+      "portrait": {
+        "duration": 16.213,
+        "size": "720x1280",
+        "file": "D:\\codex\\animate\\.claude\\worktrees\\video-image-batch\\artifacts\\video-image-samples\\product-portrait.mp4"
+      }
+    },
+    "namedImages": []
+  },
+  "knowledgeFilm": {
+    "totalMs": 19000,
+    "shots": [
+      {
+        "index": 1,
+        "source": "spec",
+        "component": "text-animation",
+        "narration": "城市绿色出行新方式"
+      },
+      {
+        "index": 2,
+        "source": "spec",
+        "component": "bar-chart",
+        "narration": "北京年骑行从120万到350万次"
+      },
+      {
+        "index": 3,
+        "source": "spec",
+        "component": "flow-steps",
+        "narration": "扫码→验证→解锁"
+      },
+      {
+        "index": 4,
+        "source": "spec",
+        "component": "number-counter",
+        "narration": "相当于少排80万吨CO₂"
+      },
+      {
+        "index": 5,
+        "source": "spec",
+        "component": "text-animation",
+        "narration": "骑上单车，减碳出发"
+      }
+    ],
+    "files": {
+      "landscape": {
+        "duration": 19.008,
+        "size": "1280x720",
+        "file": "D:\\codex\\animate\\.claude\\worktrees\\video-image-batch\\artifacts\\video-image-samples\\knowledge-landscape.mp4"
+      },
+      "portrait": {
+        "duration": 19.008,
+        "size": "720x1280",
+        "file": "D:\\codex\\animate\\.claude\\worktrees\\video-image-batch\\artifacts\\video-image-samples\\knowledge-portrait.mp4"
+      }
+    }
+  }
+}

@@ -1120,9 +1120,10 @@ export function verifySourcedNumbers(
     // 汉字数值组合：原话没出现且非结构性序数 → 拒绝（I-1）。
     for (const token of chineseNumeralsOf(claims)) {
       if (sourcedChinese.has(token)) continue;
-      // 独立单字豁免（一/二）：一天/统一/一起、二维码/二手/二氧化碳——
-      // 单字在习语里出现频率远高于事实量主张，组合（十一/二十五…）仍受闸。
-      if (token === "一" || token === "二") continue;
+      // 独立单字豁免（一/二/三）：一天/统一/一起、二维码/二手/二氧化碳、
+      // 三重保温/三角支撑——单字在习语里出现频率远高于事实量主张，
+      // 组合（十一/二十五…）仍受闸（2026-10-28 样片实测补三）。
+      if (token === "一" || token === "二" || token === "三") continue;
       errors.push(
         `数值表述「${token}」（${label}）不在你的原话里：汉字数字同样不得编造，没给就改用定性文字`,
       );
