@@ -44,6 +44,17 @@ node artifacts/video-studio-semantic-n4/check-layout.mjs
 node artifacts/video-studio-semantic-mixed/check-layout.mjs
 ```
 
+## 复核修复轮（2026-10-28，CODEX_REVIEW_ROUND 结果四项全闭合）
+
+- **P1-1 条目键白名单**：bars/points 条目未知键（含 assetUrl）校验层拒绝并给资产口径指引；编译只投影 label/value（4 个反例用例 + 投影断言）。
+- **P1-2 导出闸**：`slot-gate.ts` 纯函数逐镜点名未绑定素材位，接入工作台双画幅+有声导出（与代表帧确认闸同位）。浏览器双路径实证：`export-blocked.png`（阻断+点名）→ 全绑定后 5 镜双画幅 MP4（各 15.0s，ffprobe 核验）+ 逐镜抽帧。
+- **P2-1 范围命名**：N5 定名「视频素材位 v1」——素材账本为纯视频契约（MediaAsset 强制 durationMs/fps），图片绑定列为待办（需 media-store schema 演进，超出「不重做素材仓」边界）。
+- **P2-2 读数与字幕**：①`formatCnCount` 万/亿记法（整除性不满足回落原数字；组件参数 `cnUnits` opt-in，语义编译器开启、手工模板口径不变；bar 值 1200000 显示 120万，单测+组件级渲染断言）；②字幕带 8%→2.5%（横版字号 5%→4.5%，Remotion 出片层与预览近似层同口径）——图表轴标签最深至画面 90.1%，新字幕带顶缘 91.4%，几何分离（旧带 82.5% 起即重叠，Codex 所指 s1 帧病灶）；③bar-chart 可选 `valueSuffix`（≤6 字，校验+默认空）。
+- **P2-3 门禁**：biome 全绿（含本轮全部新文件）；VID-066/067/068 入 QA registry（120 自动用例）。
+- **本轮环境硬仗（如实记录）**：系统 Chrome 155→156 staged 更新 + 常驻内存压力，暴露两个真实缺陷并修复——①media-server 客户端中断即击杀（未接 error 的读流，Chrome 新 compositor 会中途放弃下载；回归测试）；②渲染 GL 默认路径在新 Chrome 上卡死（--gl=angle 固化，RENDER_CONCURRENCY/RENDER_BROWSER_EXECUTABLE 可覆写）。残余现象：高内存压力下 8 分钟级渲染偶发 x264 malloc 失败（重试可过，本轮样片均为重试后完整产物）；.tools 渲染作业目录在失败后会话内偶发消失（不影响成功产物）。
+- **数值闸两处收紧**：独立汉字「二」豁免（二维码等习语）；提示词 v9/r6 明令禁止原话没有的量化类比（模型「相当于1100万棵树」两轮固执实测触发）。
+- 混合样片重制：project-final（v9 编译，柱值带 cnUnits）双画幅重渲染（20.0s/6 镜）+ 逐镜抽帧 + LAYOUT OK 64 文本。
+
 ## 给 Codex 的复核重点
 
 1. 数值闸绝对值集（`absoluteNumeralsOf`）：复合 token 占位符防二次扫描的实现；小数×万（1.5万→15000）；两侧同口径比对是否有漏（负数？千分位逗号？——现按无逗号处理）。
