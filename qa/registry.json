@@ -1893,6 +1893,58 @@
       ]
     },
     {
+      "id": "VID-070",
+      "tier": "browser-video",
+      "title": "Image media round trip: upload, bind to slot, save/reopen, missing-asset error surface",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/e2e-image-media.mjs"],
+      "requiresPorts": [],
+      "checks": [
+        "Real PNG uploads into the ledger with image metadata (format × dimensions) shown in the panel",
+        "Binding an image slot enforces inMs=0/mute and lands a kind=image asset reference; save/reopen keeps the binding and the img preview",
+        "Corrupted project (mediaAssets stripped) is rejected at import naming the dangling asset id"
+      ]
+    },
+    {
+      "id": "VID-071",
+      "tier": "browser-video",
+      "title": "Image motion dual-aspect render: zoom/still/video regression with first/last frame checks",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/e2e-image-motion.mjs"],
+      "requiresPorts": [],
+      "checks": [
+        "Same ingested image renders landscape+portrait MP4s at 1280×720/720×1280 with one zoom-in shot, one still shot and one legacy video shot",
+        "Zoom shot first/last frames differ (motion applied); still shot first/last frames match at SSIM ≥ 0.995; video shot renders without regression",
+        "Motion transform is a pure function of progress (video-scene mediaMotionTransform) shared by preview and render"
+      ]
+    },
+    {
+      "id": "VID-072",
+      "tier": "browser-video",
+      "title": "Consecutive one-click dual-aspect narrated exports stay stable with appended render records",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/e2e-dual-export-stability.mjs"],
+      "requiresPorts": [],
+      "checks": [
+        "Two consecutive one-click narrated exports each produce two AAC links with equal durations across aspects and zero drift between rounds",
+        "Render records grow 6 then 12 with every record carrying an output asset reference (no half-written success records)",
+        "Workbench render runs at frame concurrency 1 (RENDER_CONCURRENCY) for memory stability"
+      ]
+    },
+    {
+      "id": "VID-073",
+      "tier": "browser-video",
+      "title": "Two experiential sample films: licensed-image product ad and sourced-number knowledge short",
+      "cwd": ".",
+      "argv": ["node", "scripts/video/e2e-image-samples.mjs"],
+      "requiresPorts": [],
+      "checks": [
+        "Product film (~16s): two self-made licensed images uploaded, planner names them per slot, user binds with zoom-in+overlay and pan-left, save/reopen, edit, narrated dual-aspect export",
+        "Knowledge film (~19s): sourced numbers (120万→350万次, 80万吨) reconcile on the confirm card; bar/flow/counter shots export narrated dual-aspect",
+        "Per-shot frames in both aspects with per-shot review.json covering source, motion, overlay and narration"
+      ]
+    },
+    {
       "id": "VID-069",
       "tier": "integration",
       "title": "Unbound media slot is rejected at the CLI render boundary",
