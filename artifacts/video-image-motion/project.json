@@ -1,0 +1,271 @@
+{
+  "schemaVersion": 1,
+  "id": "0d0e1f2a-3b4c-4d5e-8f9a-1a2b3c4d5e6f",
+  "title": "图片运动验收",
+  "brief": {
+    "sentence": "",
+    "aspectTargets": [
+      "landscape",
+      "portrait"
+    ]
+  },
+  "mediaAssets": [
+    {
+      "assetId": "9771fdd8-3598-4ca6-a602-7a9eb1547ff5",
+      "createdAt": "2026-10-27T18:07:05.901Z",
+      "origin": {
+        "kind": "local-upload",
+        "fileName": "board.png"
+      },
+      "original": {
+        "kind": "image",
+        "sha256": "90a00b720ac0a7d4eea4cdd7c586f55657c062c041d8206803add2dc181e42da",
+        "bytes": 54033,
+        "width": 800,
+        "height": 600,
+        "format": "png",
+        "storeKey": "90a00b720ac0a7d4.png"
+      }
+    },
+    {
+      "assetId": "91c61a09-5621-4748-8a82-1d44ef0ef7f4",
+      "createdAt": "2026-10-27T18:07:06.001Z",
+      "origin": {
+        "kind": "local-upload",
+        "fileName": "clip.mp4"
+      },
+      "original": {
+        "sha256": "7dcde13c91e7681764226b2e33c0b5ca8a5f006f4d96421ccfcd623f121a660a",
+        "bytes": 27917,
+        "durationMs": 4000,
+        "width": 640,
+        "height": 360,
+        "fps": 24,
+        "codec": "h264",
+        "hasAudio": false,
+        "storeKey": "7dcde13c91e76817.mp4"
+      }
+    }
+  ],
+  "shots": [
+    {
+      "shotId": "11111111-2222-4333-8444-000000000000",
+      "order": 0,
+      "locked": false,
+      "workingVersionId": "aaaaaaaa-bbbb-4ccc-8ddd-000000000000",
+      "contentVersions": [
+        {
+          "versionId": "aaaaaaaa-bbbb-4ccc-8ddd-000000000000",
+          "createdAt": "2026-10-28T00:00:00.000Z",
+          "durationMs": 3000,
+          "description": "推近图片镜",
+          "narrationText": "",
+          "sceneSource": {
+            "type": "media-clip",
+            "mediaAssetId": "9771fdd8-3598-4ca6-a602-7a9eb1547ff5",
+            "inMs": 0,
+            "outMs": 3000,
+            "fit": "cover",
+            "focalX": 0.5,
+            "audio": "mute",
+            "motion": "zoom-in"
+          },
+          "provenance": {
+            "engineId": "human-edit",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": []
+    },
+    {
+      "shotId": "11111111-2222-4333-8444-000000000001",
+      "order": 1,
+      "locked": false,
+      "workingVersionId": "aaaaaaaa-bbbb-4ccc-8ddd-000000000001",
+      "contentVersions": [
+        {
+          "versionId": "aaaaaaaa-bbbb-4ccc-8ddd-000000000001",
+          "createdAt": "2026-10-28T00:00:00.000Z",
+          "durationMs": 2500,
+          "description": "静止图片镜",
+          "narrationText": "",
+          "sceneSource": {
+            "type": "media-clip",
+            "mediaAssetId": "9771fdd8-3598-4ca6-a602-7a9eb1547ff5",
+            "inMs": 0,
+            "outMs": 2500,
+            "fit": "cover",
+            "focalX": 0.5,
+            "audio": "mute",
+            "motion": "still"
+          },
+          "provenance": {
+            "engineId": "human-edit",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": []
+    },
+    {
+      "shotId": "11111111-2222-4333-8444-000000000002",
+      "order": 2,
+      "locked": false,
+      "workingVersionId": "aaaaaaaa-bbbb-4ccc-8ddd-000000000002",
+      "contentVersions": [
+        {
+          "versionId": "aaaaaaaa-bbbb-4ccc-8ddd-000000000002",
+          "createdAt": "2026-10-28T00:00:00.000Z",
+          "durationMs": 2000,
+          "description": "推近图片镜",
+          "narrationText": "",
+          "sceneSource": {
+            "type": "media-clip",
+            "mediaAssetId": "91c61a09-5621-4748-8a82-1d44ef0ef7f4",
+            "inMs": 0,
+            "outMs": 2000,
+            "fit": "cover",
+            "focalX": 0.5,
+            "audio": "mute"
+          },
+          "provenance": {
+            "engineId": "human-edit",
+            "engineVersion": "1"
+          }
+        }
+      ],
+      "events": []
+    }
+  ],
+  "renderRecords": [
+    {
+      "renderId": "024c17ec-a8ee-4373-acd9-4daa16a615ca",
+      "versionId": "aaaaaaaa-bbbb-4ccc-8ddd-000000000000",
+      "contentDigest": "e2ed6fc76d1ff2ae6947b5cf602498631ab0c15dacfc430c430156fa38e9d839",
+      "assetDigests": {
+        "9771fdd8-3598-4ca6-a602-7a9eb1547ff5": "90a00b720ac0a7d4eea4cdd7c586f55657c062c041d8206803add2dc181e42da"
+      },
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "47f09cb2-f453-4807-afde-66b99c3d7685",
+      "versionId": "aaaaaaaa-bbbb-4ccc-8ddd-000000000001",
+      "contentDigest": "7c47e70ec107bb18454b262845457bae5d65857b1426663edf7f1bb7a9e92b58",
+      "assetDigests": {
+        "9771fdd8-3598-4ca6-a602-7a9eb1547ff5": "90a00b720ac0a7d4eea4cdd7c586f55657c062c041d8206803add2dc181e42da"
+      },
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 60,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "ad394180-fb22-47c6-9ff3-648b53e7e832",
+      "versionId": "aaaaaaaa-bbbb-4ccc-8ddd-000000000002",
+      "contentDigest": "99c475acff3678a4dcbab5058413b8e5f22a39b7f9e8a1a67b1853dfe6f26a16",
+      "assetDigests": {
+        "91c61a09-5621-4748-8a82-1d44ef0ef7f4": "7dcde13c91e7681764226b2e33c0b5ca8a5f006f4d96421ccfcd623f121a660a"
+      },
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 48,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "902ae22b-3c2b-4424-b380-cbb0faea424d",
+      "versionId": "aaaaaaaa-bbbb-4ccc-8ddd-000000000000",
+      "contentDigest": "e2ed6fc76d1ff2ae6947b5cf602498631ab0c15dacfc430c430156fa38e9d839",
+      "assetDigests": {
+        "9771fdd8-3598-4ca6-a602-7a9eb1547ff5": "90a00b720ac0a7d4eea4cdd7c586f55657c062c041d8206803add2dc181e42da"
+      },
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 72,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    },
+    {
+      "renderId": "5afacab0-573b-429a-a673-16143d6acbce",
+      "versionId": "aaaaaaaa-bbbb-4ccc-8ddd-000000000001",
+      "contentDigest": "7c47e70ec107bb18454b262845457bae5d65857b1426663edf7f1bb7a9e92b58",
+      "assetDigests": {
+        "9771fdd8-3598-4ca6-a602-7a9eb1547ff5": "90a00b720ac0a7d4eea4cdd7c586f55657c062c041d8206803add2dc181e42da"
+      },
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 60,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    },
+    {
+      "renderId": "eac22676-39f9-4224-ab03-b6219e43a015",
+      "versionId": "aaaaaaaa-bbbb-4ccc-8ddd-000000000002",
+      "contentDigest": "99c475acff3678a4dcbab5058413b8e5f22a39b7f9e8a1a67b1853dfe6f26a16",
+      "assetDigests": {
+        "91c61a09-5621-4748-8a82-1d44ef0ef7f4": "7dcde13c91e7681764226b2e33c0b5ca8a5f006f4d96421ccfcd623f121a660a"
+      },
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 48,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    }
+  ],
+  "deliveries": [],
+  "savedVersion": 2
+}

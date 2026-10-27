@@ -10,7 +10,9 @@ const { roundHalfUp } = await import(
   pathToFileURL(path.join(ROOT, "packages/video-document/dist/index.js")).href
 );
 
-const STORE_KEY_PATTERN = /^[0-9a-f]{16}\.(mp4|webm|mov)$/;
+// 任务 1：图片键位（png/jpg/webp）与视频键位并存。
+const STORE_KEY_PATTERN =
+  /^[0-9a-f]{16}\.(mp4|webm|mov|png|jpg|webp)$/;
 
 // G1：media 镜头 → entry（含账本资产快照）。问题收集不抛——调用方统一大声拒。
 export function collectMediaShots(project, mediaAssets) {

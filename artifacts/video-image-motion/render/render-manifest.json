@@ -1,0 +1,161 @@
+{
+  "generatedAt": "2026-10-27T18:07:07.021Z",
+  "projectId": "0d0e1f2a-3b4c-4d5e-8f9a-1a2b3c4d5e6f",
+  "remotion": "4.0.534",
+  "browser": "Google Chrome 155.0.8059.41",
+  "fontDigests": {
+    "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+  },
+  "aspects": {
+    "landscape": {
+      "registryVersion": 10,
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "frames": 180,
+      "output": "landscape.mp4",
+      "frameMap": [
+        {
+          "shotIndex": 0,
+          "shotId": "11111111-2222-4333-8444-000000000000",
+          "versionId": "aaaaaaaa-bbbb-4ccc-8ddd-000000000000",
+          "componentId": "media-clip",
+          "startFrame": 0,
+          "frames": 72,
+          "contentDigest": "e2ed6fc76d1ff2ae6947b5cf602498631ab0c15dacfc430c430156fa38e9d839"
+        },
+        {
+          "shotIndex": 1,
+          "shotId": "11111111-2222-4333-8444-000000000001",
+          "versionId": "aaaaaaaa-bbbb-4ccc-8ddd-000000000001",
+          "componentId": "media-clip",
+          "startFrame": 72,
+          "frames": 60,
+          "contentDigest": "7c47e70ec107bb18454b262845457bae5d65857b1426663edf7f1bb7a9e92b58"
+        },
+        {
+          "shotIndex": 2,
+          "shotId": "11111111-2222-4333-8444-000000000002",
+          "versionId": "aaaaaaaa-bbbb-4ccc-8ddd-000000000002",
+          "componentId": "media-clip",
+          "startFrame": 132,
+          "frames": 48,
+          "contentDigest": "99c475acff3678a4dcbab5058413b8e5f22a39b7f9e8a1a67b1853dfe6f26a16"
+        }
+      ],
+      "media": [
+        {
+          "shotIndex": 0,
+          "versionId": "aaaaaaaa-bbbb-4ccc-8ddd-000000000000",
+          "mediaAssetId": "9771fdd8-3598-4ca6-a602-7a9eb1547ff5",
+          "storeKey": "90a00b720ac0a7d4.png",
+          "sha256": "90a00b720ac0a7d4eea4cdd7c586f55657c062c041d8206803add2dc181e42da",
+          "inMs": 0,
+          "outMs": 3000,
+          "trimBefore": 0,
+          "frames": 72,
+          "audio": "mute"
+        },
+        {
+          "shotIndex": 1,
+          "versionId": "aaaaaaaa-bbbb-4ccc-8ddd-000000000001",
+          "mediaAssetId": "9771fdd8-3598-4ca6-a602-7a9eb1547ff5",
+          "storeKey": "90a00b720ac0a7d4.png",
+          "sha256": "90a00b720ac0a7d4eea4cdd7c586f55657c062c041d8206803add2dc181e42da",
+          "inMs": 0,
+          "outMs": 2500,
+          "trimBefore": 0,
+          "frames": 60,
+          "audio": "mute"
+        },
+        {
+          "shotIndex": 2,
+          "versionId": "aaaaaaaa-bbbb-4ccc-8ddd-000000000002",
+          "mediaAssetId": "91c61a09-5621-4748-8a82-1d44ef0ef7f4",
+          "storeKey": "7dcde13c91e76817.mp4",
+          "sha256": "7dcde13c91e7681764226b2e33c0b5ca8a5f006f4d96421ccfcd623f121a660a",
+          "inMs": 0,
+          "outMs": 2000,
+          "trimBefore": 0,
+          "frames": 48,
+          "audio": "mute"
+        }
+      ]
+    },
+    "portrait": {
+      "registryVersion": 10,
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "frames": 180,
+      "output": "portrait.mp4",
+      "frameMap": [
+        {
+          "shotIndex": 0,
+          "shotId": "11111111-2222-4333-8444-000000000000",
+          "versionId": "aaaaaaaa-bbbb-4ccc-8ddd-000000000000",
+          "componentId": "media-clip",
+          "startFrame": 0,
+          "frames": 72,
+          "contentDigest": "e2ed6fc76d1ff2ae6947b5cf602498631ab0c15dacfc430c430156fa38e9d839"
+        },
+        {
+          "shotIndex": 1,
+          "shotId": "11111111-2222-4333-8444-000000000001",
+          "versionId": "aaaaaaaa-bbbb-4ccc-8ddd-000000000001",
+          "componentId": "media-clip",
+          "startFrame": 72,
+          "frames": 60,
+          "contentDigest": "7c47e70ec107bb18454b262845457bae5d65857b1426663edf7f1bb7a9e92b58"
+        },
+        {
+          "shotIndex": 2,
+          "shotId": "11111111-2222-4333-8444-000000000002",
+          "versionId": "aaaaaaaa-bbbb-4ccc-8ddd-000000000002",
+          "componentId": "media-clip",
+          "startFrame": 132,
+          "frames": 48,
+          "contentDigest": "99c475acff3678a4dcbab5058413b8e5f22a39b7f9e8a1a67b1853dfe6f26a16"
+        }
+      ],
+      "media": [
+        {
+          "shotIndex": 0,
+          "versionId": "aaaaaaaa-bbbb-4ccc-8ddd-000000000000",
+          "mediaAssetId": "9771fdd8-3598-4ca6-a602-7a9eb1547ff5",
+          "storeKey": "90a00b720ac0a7d4.png",
+          "sha256": "90a00b720ac0a7d4eea4cdd7c586f55657c062c041d8206803add2dc181e42da",
+          "inMs": 0,
+          "outMs": 3000,
+          "trimBefore": 0,
+          "frames": 72,
+          "audio": "mute"
+        },
+        {
+          "shotIndex": 1,
+          "versionId": "aaaaaaaa-bbbb-4ccc-8ddd-000000000001",
+          "mediaAssetId": "9771fdd8-3598-4ca6-a602-7a9eb1547ff5",
+          "storeKey": "90a00b720ac0a7d4.png",
+          "sha256": "90a00b720ac0a7d4eea4cdd7c586f55657c062c041d8206803add2dc181e42da",
+          "inMs": 0,
+          "outMs": 2500,
+          "trimBefore": 0,
+          "frames": 60,
+          "audio": "mute"
+        },
+        {
+          "shotIndex": 2,
+          "versionId": "aaaaaaaa-bbbb-4ccc-8ddd-000000000002",
+          "mediaAssetId": "91c61a09-5621-4748-8a82-1d44ef0ef7f4",
+          "storeKey": "7dcde13c91e76817.mp4",
+          "sha256": "7dcde13c91e7681764226b2e33c0b5ca8a5f006f4d96421ccfcd623f121a660a",
+          "inMs": 0,
+          "outMs": 2000,
+          "trimBefore": 0,
+          "frames": 48,
+          "audio": "mute"
+        }
+      ]
+    }
+  }
+}
