@@ -73,6 +73,14 @@ function runRender(
       cwd: root,
       windowsHide: true,
       shell: false,
+      // 任务 5（2026-10-28）：一键双画幅导出的资源稳定性——工作台单请求
+      // 内渲染并发压到 1（Remotion 帧并发；两画幅本就顺序渲染）。实测并发
+      // 2 在内存紧张时 x264 malloc 失败/Chrome OOM；1 换吞吐保稳定。外部
+      // 已设 RENDER_CONCURRENCY 时尊重（调试口）。
+      env: {
+        ...process.env,
+        RENDER_CONCURRENCY: process.env.RENDER_CONCURRENCY ?? "1",
+      },
     });
     let output = "";
     const append = (chunk: Buffer) => {
