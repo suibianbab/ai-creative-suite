@@ -29,7 +29,8 @@ function fail(step, detail) {
 mkdirSync(OUT, { recursive: true });
 mkdirSync(path.join(OUT, "frames"), { recursive: true });
 
-// —— 夹具：一张有结构的图（棋盘格，缩放可测）+ 一段视频 ——
+// —— 夹具：白底 + 中心色块（四边恒亮——平移露黑条会被边缘检查直接
+// 抓到；testsrc2 自带明暗条带，边缘暗≠黑条会误报）+ 一段视频 ——
 const pngPath = path.join(OUT, "board.png");
 execFileSync(
   "ffmpeg",
@@ -40,7 +41,9 @@ execFileSync(
     "-f",
     "lavfi",
     "-i",
-    "testsrc2=duration=1:size=800x600:rate=24",
+    "color=white:s=800x600:d=1:r=24",
+    "-vf",
+    "drawbox=x=250:y=175:w=300:h=250:color=0x3f7f9f@1:t=fill",
     "-frames:v",
     "1",
     pngPath,
@@ -127,8 +130,28 @@ const project = {
   mediaAssets: [pngAsset.asset, clipAsset.asset],
   shots: [
     mediaShot(0, pngAsset.asset, 3000, "zoom-in"),
-    mediaShot(1, pngAsset.asset, 2500, "still"),
-    mediaShot(2, clipAsset.asset, 2000, undefined),
+    // P1-1：叠加放在 still 镜——静止画面上唯一的亮度变化就是药丸淡入，
+    // 不与运动缩放的亮度漂移混淆。
+    {
+      ...mediaShot(1, pngAsset.asset, 2500, "still"),
+      contentVersions: [
+        {
+          ...mediaShot(1, pngAsset.asset, 2500, "still").contentVersions[0],
+          sceneSource: {
+            ...mediaShot(1, pngAsset.asset, 2500, "still").contentVersions[0]
+              .sceneSource,
+            overlay: {
+              title: "运动验收叠加",
+              position: "bottom",
+              enterMs: 400,
+            },
+          },
+        },
+      ],
+    },
+    // P1-2：pan 放在非首镜头（全局帧 bug 的直接受害者）。
+    mediaShot(2, pngAsset.asset, 2500, "pan-left"),
+    mediaShot(3, clipAsset.asset, 2000, undefined),
   ],
   renderRecords: [],
   deliveries: [],
@@ -173,6 +196,8 @@ function ffmpegSsim(a, b) {
 // 顶层 await import 一次，避免循环依赖拼写。
 import { spawnSync as _spawnSync } from "node:child_process";
 
+const nodeSpawnSync = _spawnSync;
+
 function await_importSpawnSync() {
   return { spawnSync: _spawnSync };
 }
@@ -197,11 +222,13 @@ function frameFile(aspect, t, name) {
   );
   return out;
 }
-// 时间线：s0 0..3000（zoom-in）、s1 3000..5500（still）、s2 5500..7500（视频）。
+// 时间线：s0 0..3000（zoom-in+overlay）、s1 3000..5500（pan-left）、
+// s2 5500..7500（视频）。
 const SHOTS = [
   { name: "zoom", start: 0, end: 3.0 },
   { name: "still", start: 3.0, end: 5.5 },
-  { name: "video", start: 5.5, end: 7.5 },
+  { name: "pan", start: 5.5, end: 8.0 },
+  { name: "video", start: 8.0, end: 10.0 },
 ];
 for (const aspect of ["landscape", "portrait"]) {
   for (const shot of SHOTS) {
@@ -210,26 +237,167 @@ for (const aspect of ["landscape", "portrait"]) {
     const firstBytes = readFileSync(first);
     const lastBytes = readFileSync(last);
     if (shot.name === "zoom") {
-      // 推近：首尾帧必须不同（内容放大），且末帧中心区与首帧差异显著。
+      // 推近：首尾帧必须不同（内容放大）。
       if (
         createHash("sha256").update(firstBytes).digest("hex") ===
         createHash("sha256").update(lastBytes).digest("hex")
       )
         fail(`${aspect} zoom`, "首尾帧完全一致（未见推近运动）");
     } else if (shot.name === "still") {
-      // 静止：h264 有损编码下逐字节比较不可靠——用 SSIM 判定（≥0.995
-      // 视为同画面；推近/平移档会显著低于该值）。
-      const ssim = ffmpegSsim(first, last);
-      if (ssim < 0.995)
+      // 静止（排除药丸带）：SSIM ≥0.995。全帧比较会被叠加淡入本身
+      // 拉低（首帧 ~10% vs 末帧全不透明）——只比较药丸带以上的画面区。
+      const ssimUpper = ffmpegSsimCrop(first, last, "upper");
+      if (ssimUpper < 0.995)
         fail(
           `${aspect} still`,
-          `静止镜首尾帧差异过大（SSIM=${ssim}，疑似意外运动）`,
+          `画面区（除药丸带）SSIM=${ssimUpper} —— 静止镜出现意外运动`,
         );
+      // P1-1：药丸可见性——still 镜首帧淡入 ~10% 作基线，中段（药丸
+      // 已完全不透明）的药丸条带必须显著更暗；静止画面无运动亮度混淆。
+      const mid = frameFile(aspect, shot.start + 1.5, "still-mid");
+      const dims = probeDims(mid);
+      // 药丸文字行：实测 top≈h*0.83（字号 h*5.5% + 内边距），取窄条带
+      // h*0.82..0.875 —— 覆盖药丸主体且避开下方亮内容行。
+      const pillH = Math.max(12, Math.round(dims.h * 0.028));
+      const pillY = Math.round(dims.h * 0.83);
+      const pillW = Math.round(dims.w * 0.4);
+      const pillCrop = `${pillW}:${pillH}:${Math.round(dims.w / 2 - pillW / 2)}:${pillY}`;
+      const midY = stripYavgCrop(mid, pillCrop);
+      const firstY = stripYavgCrop(first, pillCrop);
+      if (firstY - midY < 10)
+        fail(
+          `${aspect} overlay`,
+          `药丸条带亮度 首帧${firstY.toFixed(1)} → 中段${midY.toFixed(1)}（降幅 <10）——叠加不可见或淡入口径错误（P1-1）`,
+        );
+    } else if (shot.name === "pan") {
+      // P1-2：非首镜头运动——首/中/末帧必须连续变化（全局帧 bug 会
+      // 让它一上屏就停在终点：首帧≈末帧）。
+      const mid = frameFile(aspect, shot.start + 1.25, "pan-mid");
+      const ssimFL = ffmpegSsim(first, last);
+      if (ssimFL >= 0.995)
+        fail(
+          `${aspect} pan`,
+          `首末帧几乎一致（SSIM=${ssimFL}）——非首镜头运动未按镜头时长进行（P1-2）`,
+        );
+      const ssimFM = ffmpegSsim(first, mid);
+      const ssimML = ffmpegSsim(mid, last);
+      if (ssimFM >= 0.999 || ssimML >= 0.999)
+        fail(`${aspect} pan`, `中段无连续过渡（F-M=${ssimFM} M-L=${ssimML}）`);
+      // P1-3：平移首尾帧四边不得有黑条——边缘条带亮度须接近内容亮度。
+      for (const frame of [first, last]) {
+        for (const edge of ["left", "right", "top", "bottom"]) {
+          const edgeY = stripYavg(frame, edge);
+          const centerY = stripYavg(frame, "center");
+          if (centerY - edgeY > 40)
+            fail(
+              `${aspect} pan ${edge}`,
+              `边缘亮度 ${edgeY.toFixed(1)} 远低于中心 ${centerY.toFixed(1)}——平移露黑边（P1-3）`,
+            );
+        }
+      }
     } else {
       // 视频镜：出片存在该时段帧即回归通过（内容为 testsrc 动态图）。
       if (firstBytes.length < 1000) fail(`${aspect} video`, "视频镜帧异常小");
     }
   }
+}
+
+// 条带亮度（P1-1/P1-3）：裁 8% 边条/中心块，signalstats YAVG。
+// 上 5/6 画面的 SSIM（裁掉底部药丸带再比）。
+function ffmpegSsimCrop(a, b, zone) {
+  const { spawnSync: syncSpawn } = requireNodeChildProcess();
+  const dims = probeDims(a);
+  const upperH = Math.round((dims.h * 5) / 6);
+  const crop = `crop=${dims.w}:${upperH}:0:0`;
+  const out = syncSpawn(
+    "ffmpeg",
+    [
+      "-i",
+      a,
+      "-i",
+      b,
+      "-lavfi",
+      `[0:v]${crop}[l];[1:v]${crop}[r];[l][r]ssim`,
+      "-f",
+      "null",
+      "-",
+    ],
+    { encoding: "utf8" },
+  );
+  const text = `${out.stdout ?? ""}${out.stderr ?? ""}`;
+  const m = /All:([0-9.]+|inf)/.exec(text);
+  if (!m) return 0;
+  return m[1] === "inf" ? 1 : Number(m[1]);
+}
+
+function stripYavgCrop(file, crop) {
+  const { spawnSync: syncSpawn } = requireNodeChildProcess();
+  const out = syncSpawn(
+    "ffmpeg",
+    [
+      "-i",
+      file,
+      "-vf",
+      `crop=${crop},signalstats,metadata=print`,
+      "-f",
+      "null",
+      "-",
+    ],
+    { encoding: "utf8" },
+  );
+  const text = `${out.stdout ?? ""}${out.stderr ?? ""}`;
+  const m = /signalstats\.YAVG=([0-9.]+)/.exec(text);
+  return m ? Number(m[1]) : -1;
+}
+
+function stripYavg(file, zone) {
+  const { spawnSync: syncSpawn } = requireNodeChildProcess();
+  const dims = probeDims(file);
+  const strip = Math.max(4, Math.round(Math.min(dims.w, dims.h) * 0.08));
+  const crops = {
+    left: `${strip}:${dims.h}:0:0`,
+    right: `${strip}:${dims.h}:${dims.w - strip}:0`,
+    top: `${dims.w}:${strip}:0:0`,
+    bottom: `${dims.w}:${strip}:0:${dims.h - strip}`,
+    center: `${Math.round(dims.w / 3)}:${Math.round(dims.h / 3)}:${Math.round(dims.w / 3)}:${Math.round(dims.h / 3)}`,
+  };
+  const out = syncSpawn(
+    "ffmpeg",
+    [
+      "-i",
+      file,
+      "-vf",
+      `crop=${crops[zone]},signalstats,metadata=print`,
+      "-f",
+      "null",
+      "-",
+    ],
+    { encoding: "utf8" },
+  );
+  const text = `${out.stdout ?? ""}${out.stderr ?? ""}`;
+  const m = /signalstats\.YAVG=([0-9.]+)/.exec(text);
+  return m ? Number(m[1]) : -1;
+}
+function probeDims(file) {
+  const out = execFileSync(
+    "ffprobe",
+    [
+      "-v",
+      "error",
+      "-show_entries",
+      "stream=width,height",
+      "-of",
+      "json",
+      file,
+    ],
+    { encoding: "utf8" },
+  );
+  const v = JSON.parse(out).streams[0];
+  return { w: v.width, h: v.height };
+}
+function requireNodeChildProcess() {
+  // 顶层已 import execFileSync；spawnSync 单取。
+  return { spawnSync: nodeSpawnSync };
 }
 // 尺寸核对
 for (const aspect of ["landscape", "portrait"]) {
@@ -256,5 +424,5 @@ for (const aspect of ["landscape", "portrait"]) {
     fail("尺寸", `portrait ${v.width}x${v.height}`);
 }
 console.log(
-  "[e2e-image-motion] OK: 同图双画幅 MP4；zoom 首尾帧变化、still SSIM≥0.995、视频镜回归；横竖尺寸正确",
+  "[e2e-image-motion] OK: 双画幅 MP4；zoom 运动、still（画面区 SSIM≥0.995 + 药丸条带可见 P1-1）、非首镜头 pan 连续过渡（P1-2）且四边无黑条（P1-3）、视频镜回归；横竖尺寸正确",
 );

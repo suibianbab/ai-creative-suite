@@ -187,6 +187,19 @@ export function buildMediaRevisePatch(
       warnings: [],
     };
   }
+  // P2-1（Codex 复核 2026-10-28）：运动仅图片——视频镜头预览不播运动，
+  // 编辑所见与导出会不一致；行内拒绝（schema 层同步拒）。
+  if (
+    draft.motion !== undefined &&
+    draft.motion !== "still" &&
+    asset.original.kind !== "image"
+  ) {
+    return {
+      patch: null,
+      error: "运动仅支持图片素材（视频镜头请选「静止」）",
+      warnings: [],
+    };
+  }
   // 终评 Important：素材无音轨时 keep 无意义——行内拒，避免存进文档后才在
   // 出片阶段大声失败（静默丢原声的旧路径已由渲染期 G1 兜底）。
   if (draft.audio === "keep" && !assetHasAudio(asset)) {
@@ -247,7 +260,10 @@ export function buildMediaRevisePatch(
         focalX: focalPercent / 100,
         audio: draft.audio,
         // 任务 2：运动随版本落库（缺省不写键=旧口径）。
-        ...(draft.motion !== undefined ? { motion: draft.motion } : {}),
+        ...(draft.motion !== undefined &&
+        (draft.motion === "still" || asset.original.kind === "image")
+          ? { motion: draft.motion }
+          : {}),
         ...(overlay
           ? {
               overlay: {

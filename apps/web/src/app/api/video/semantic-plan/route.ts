@@ -55,6 +55,8 @@ export async function POST(request: Request) {
   // 任务 4：图片账本摘要净化（≤20 张、fileName ≤40 字裁剪）——只把
   // 「有哪些图」给模型做镜头建议参考，绑定永远是用户动作。
   const imageLedger: string[] = [];
+  // P1-4：原始（截断后）文件名清单，供点名对账。
+  const imageAssetsRaw: Array<{ fileName: string }> = [];
   if (Array.isArray(body.imageAssets)) {
     for (const item of body.imageAssets.slice(0, 20)) {
       if (typeof item !== "object" || item === null) continue;
@@ -71,6 +73,7 @@ export async function POST(request: Request) {
             : "尺寸未知"
         }）`,
       );
+      imageAssetsRaw.push({ fileName });
     }
   }
 
@@ -119,10 +122,40 @@ ${imageLedger.join("、")}`
     targetMs !== null &&
     validation.ok &&
     !withinRange(projectedTotalMs(validation.draft), lo, hi);
+  // P1-4（Codex 复核 2026-10-28）：「图片：<名>」点名必须对应本次清单。
+  // 前缀双向匹配（长文件名可截断/省扩展名），大小写不敏感；对不上即拒，
+  // 走带因重试——不虚构「只可用清单内真实文件名」的承诺。
+  const ledgerNames = imageAssetsRaw.map((e) => e.fileName);
+  function imageNamingErrors(draft: {
+    shots: Array<{ intent: string; slotKind?: string }>;
+  }): string[] {
+    const problems: string[] = [];
+    for (const [i, shot] of draft.shots.entries()) {
+      if (shot.intent !== "media-slot-explainer") continue;
+      const kind = shot.slotKind ?? "";
+      if (!kind.startsWith("图片：")) continue;
+      const named = kind.slice("图片：".length).trim().toLowerCase();
+      const matched = ledgerNames.some((name) => {
+        const n = name.toLowerCase();
+        return n.startsWith(named) || named.startsWith(n);
+      });
+      if (!matched)
+        problems.push(
+          `shots[${i}].slotKind 点名的「${named}」不在已上传图片清单里：只能点名清单内的文件（${ledgerNames.join("、")}），或改写普通素材种类`,
+        );
+    }
+    return problems;
+  }
+
   // N3 数值/日期防伪造：compare/timeline 镜头的数字必须来自用户原话。
   const sourcingErrors = validation.ok
     ? validation.draft.shots.flatMap((shot) => verifySourcedNumbers(shot, text))
     : [];
+  // P1-4：图片点名对账（同批进重试）。
+  const namingErrors =
+    validation.ok && ledgerNames.length > 0
+      ? imageNamingErrors(validation.draft)
+      : [];
 
   // N5：素材诉求但首轮无素材位 → 并入带因重试（要求产 media-slot）。
   const missingSlots =
@@ -138,6 +171,7 @@ ${imageLedger.join("、")}`
     !validation.ok ||
     offTarget ||
     sourcingErrors.length > 0 ||
+    namingErrors.length > 0 ||
     missingSlots
   ) {
     const reasons = validation.ok ? [] : validation.errors.slice();
@@ -150,6 +184,7 @@ ${imageLedger.join("、")}`
         "这句明确需要真实照片/素材：请为素材需求输出 media-slot-explainer 素材位镜头（slotKind=素材种类、purpose=叙事用途），不要用图解冒充",
       );
     reasons.push(...(validation.ok ? sourcingErrors : []));
+    reasons.push(...(validation.ok ? namingErrors : []));
     const retry = await provider.plan(planPayload, reasons.join("；"));
     if (!retry.ok)
       return Response.json(
@@ -196,6 +231,19 @@ ${imageLedger.join("、")}`
       },
       { status: 422 },
     );
+  // P1-4 终检：重试后点名仍对不上清单 → 拒绝（提示用户换说法或描述用途）。
+  if (ledgerNames.length > 0) {
+    const finalNaming = imageNamingErrors(validation.draft);
+    if (finalNaming.length > 0)
+      return Response.json(
+        {
+          error:
+            "模型点名的图片不在已上传清单里（两轮修正未通过），请重试或在句子里明确说明每张图的用途",
+          errors: finalNaming,
+        },
+        { status: 422 },
+      );
+  }
 
   const compiled = compileSemanticDraft(validation.draft, text);
   if (!compiled.ok)

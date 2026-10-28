@@ -1,7 +1,9 @@
 // —— 任务 2（2026-10-28）：图片镜头基础运动 ——
 // 五档受控运动（无关键帧编辑器）：推近/拉远/左右平移 + 静止。变换纯函数
-// 由进度（0..1）唯一决定，预览与出片单源；幅度克制（缩放 ≤1.12、平移
-// ≤6% 配 1.06 超采）保证主体不出画。pan 档配固定超采避免边缘露底。
+// 由进度（0..1）唯一决定，预览与出片单源。
+// P1-3（Codex 复核 2026-10-28）：平移超采必须覆盖位移——scale(s) 单侧
+// 余量 (s−1)/2，平移端点 ±6% 需 s ≥ 1.12；原 1.06 只有 3% 余量，样片
+// 实测右缘露黑条。pan 档固定 scale(1.12)（与缩放档上限一致）。
 export type MediaMotion =
   | "still"
   | "zoom-in"
@@ -38,8 +40,8 @@ export function mediaMotionTransform(
     case "zoom-out":
       return `scale(${(1.12 - 0.12 * t).toFixed(4)})`;
     case "pan-left":
-      return `scale(1.06) translateX(${(6 - 12 * t).toFixed(2)}%)`;
+      return `scale(1.12) translateX(${(6 - 12 * t).toFixed(2)}%)`;
     case "pan-right":
-      return `scale(1.06) translateX(${(-6 + 12 * t).toFixed(2)}%)`;
+      return `scale(1.12) translateX(${(-6 + 12 * t).toFixed(2)}%)`;
   }
 }

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "id": "048bee33-1ca8-4d39-b7d9-7d9b9e121695",
-  "title": "共享单车：骑行与减碳",
+  "id": "aa761490-0f15-4e1b-a6a7-5eaf399d7689",
+  "title": "共享单车：骑行·解锁·减碳",
   "brief": {
     "sentence": "做一条约25秒的城市共享单车科普短片：用柱状图展示骑行量——北京年骑行从120万次涨到350万次，讲三步开锁流程，最后用数字强调每年减碳80万吨",
     "aspectTargets": [
@@ -12,38 +12,38 @@
       {
         "sentence": "做一条约25秒的城市共享单车科普短片：用柱状图展示骑行量——北京年骑行从120万次涨到350万次，讲三步开锁流程，最后用数字强调每年减碳80万吨",
         "appendedShotCount": 5,
-        "appendedDurationMs": 19000,
+        "appendedDurationMs": 16100,
         "filmShotCountAfter": 5,
-        "filmTotalMsAfter": 19000,
-        "appliedAt": "2026-10-27T19:03:00.429Z"
+        "filmTotalMsAfter": 16100,
+        "appliedAt": "2026-10-28T02:39:53.049Z"
       }
     ]
   },
   "shots": [
     {
-      "shotId": "d34a2084-7755-4537-8bd1-44343d968cd0",
+      "shotId": "e2bfc814-555d-45f1-8c00-88a00e8f6250",
       "order": 0,
       "locked": false,
-      "workingVersionId": "2c729042-17b2-47a9-bfd5-1a00e2214da3",
+      "workingVersionId": "edc9d4fb-a66e-45fe-97bb-270b32e4a4cb",
       "contentVersions": [
         {
-          "versionId": "2c729042-17b2-47a9-bfd5-1a00e2214da3",
-          "createdAt": "2026-10-27T19:03:00.429Z",
-          "durationMs": 3100,
-          "description": "共享单车：骑行与减碳（标题）",
-          "narrationText": "城市绿色出行新方式",
+          "versionId": "09f3afaa-7520-42af-9077-39c91508d73d",
+          "createdAt": "2026-10-28T02:39:53.049Z",
+          "durationMs": 2800,
+          "description": "共享单车：骑行·解锁·减碳（标题）",
+          "narrationText": "三步看懂共享骑行",
           "sceneSource": {
             "type": "spec",
             "spec": {
               "specVersion": 1,
               "componentId": "text-animation",
               "componentVersion": 1,
-              "durationMs": 3100,
+              "durationMs": 2800,
               "seed": 5000,
               "background": "#101f34",
               "params": {
-                "title": "共享单车：骑行与减碳",
-                "subtitle": "城市绿色出行新方式",
+                "title": "共享单车：骑行·解锁·减碳",
+                "subtitle": "三步看懂共享骑行",
                 "titleColor": "#f3f5f7",
                 "subtitleColor": "#b4d8e4",
                 "entrance": "fade-up",
@@ -53,38 +53,75 @@
           },
           "provenance": {
             "engineId": "planner-semantic",
-            "engineVersion": "qwen-plus/prompt10/compiler1"
+            "engineVersion": "qwen-plus/prompt13/compiler1"
+          }
+        },
+        {
+          "versionId": "edc9d4fb-a66e-45fe-97bb-270b32e4a4cb",
+          "createdAt": "2026-10-28T02:39:57.983Z",
+          "durationMs": 2850,
+          "description": "共享单车：骑行·解锁·减碳（标题）（时长对齐 2850ms）",
+          "narrationText": "三步看懂共享骑行",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 2850,
+              "seed": 5000,
+              "background": "#101f34",
+              "params": {
+                "title": "共享单车：骑行·解锁·减碳",
+                "subtitle": "三步看懂共享骑行",
+                "titleColor": "#f3f5f7",
+                "subtitleColor": "#b4d8e4",
+                "entrance": "fade-up",
+                "enterMs": 450
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "tts-duration-align",
+            "engineVersion": "1",
+            "parentVersionId": "09f3afaa-7520-42af-9077-39c91508d73d"
           }
         }
       ],
       "events": [
         {
           "kind": "submitted",
-          "versionId": "2c729042-17b2-47a9-bfd5-1a00e2214da3",
-          "at": "2026-10-27T19:03:00.429Z",
+          "versionId": "09f3afaa-7520-42af-9077-39c91508d73d",
+          "at": "2026-10-28T02:39:53.049Z",
           "actor": "human"
+        },
+        {
+          "kind": "submitted",
+          "versionId": "edc9d4fb-a66e-45fe-97bb-270b32e4a4cb",
+          "at": "2026-10-28T02:39:57.983Z",
+          "actor": "ai"
         }
       ]
     },
     {
-      "shotId": "c71296a2-f138-4ada-a72d-d77d5f0db25b",
+      "shotId": "be268dfc-6ed9-4bc0-822f-cc67ccb4584d",
       "order": 1,
       "locked": false,
-      "workingVersionId": "af3239bb-6962-4e18-9d4c-009833f5d58e",
+      "workingVersionId": "71be4680-cc95-47e7-9a02-d939a1c4b7ab",
       "contentVersions": [
         {
-          "versionId": "af3239bb-6962-4e18-9d4c-009833f5d58e",
-          "createdAt": "2026-10-27T19:03:00.429Z",
-          "durationMs": 5200,
+          "versionId": "71be4680-cc95-47e7-9a02-d939a1c4b7ab",
+          "createdAt": "2026-10-28T02:39:53.049Z",
+          "durationMs": 4000,
           "description": "年骑行量显著增长（柱状图表）",
-          "narrationText": "北京年骑行从120万到350万次",
+          "narrationText": "北京骑行量大幅上升",
           "sceneSource": {
             "type": "spec",
             "spec": {
               "specVersion": 1,
               "componentId": "bar-chart",
               "componentVersion": 1,
-              "durationMs": 5200,
+              "durationMs": 4000,
               "seed": 5007,
               "background": "#101f34",
               "params": {
@@ -109,30 +146,30 @@
           },
           "provenance": {
             "engineId": "planner-semantic",
-            "engineVersion": "qwen-plus/prompt10/compiler1"
+            "engineVersion": "qwen-plus/prompt13/compiler1"
           }
         }
       ],
       "events": [
         {
           "kind": "submitted",
-          "versionId": "af3239bb-6962-4e18-9d4c-009833f5d58e",
-          "at": "2026-10-27T19:03:00.429Z",
+          "versionId": "71be4680-cc95-47e7-9a02-d939a1c4b7ab",
+          "at": "2026-10-28T02:39:53.049Z",
           "actor": "human"
         }
       ]
     },
     {
-      "shotId": "87b1f682-85e4-4ab0-9735-1c9bf0bf130e",
+      "shotId": "3297c699-3041-482b-9fa1-91d251d84eed",
       "order": 2,
       "locked": false,
-      "workingVersionId": "e3ee9c4e-9a27-46df-aa3d-b6056b65282e",
+      "workingVersionId": "ccbe084c-bf4d-489d-ad6c-2daf3ddb296a",
       "contentVersions": [
         {
-          "versionId": "e3ee9c4e-9a27-46df-aa3d-b6056b65282e",
-          "createdAt": "2026-10-27T19:03:00.429Z",
+          "versionId": "ccbe084c-bf4d-489d-ad6c-2daf3ddb296a",
+          "createdAt": "2026-10-28T02:39:53.049Z",
           "durationMs": 3600,
-          "description": "三步轻松开锁（流程图解）",
+          "description": "三步开锁流程（流程图解）",
           "narrationText": "扫码→验证→解锁",
           "sceneSource": {
             "type": "spec",
@@ -144,16 +181,16 @@
               "seed": 5014,
               "background": "#101f34",
               "params": {
-                "title": "三步轻松开锁",
+                "title": "三步开锁流程",
                 "steps": [
                   {
-                    "label": "扫码车筐二维码"
+                    "label": "扫码车身二维码"
                   },
                   {
-                    "label": "手机验证身份"
+                    "label": "App验证身份"
                   },
                   {
-                    "label": "自动解锁用车"
+                    "label": "自动开锁"
                   }
                 ],
                 "direction": "vertical",
@@ -166,42 +203,42 @@
           },
           "provenance": {
             "engineId": "planner-semantic",
-            "engineVersion": "qwen-plus/prompt10/compiler1"
+            "engineVersion": "qwen-plus/prompt13/compiler1"
           }
         }
       ],
       "events": [
         {
           "kind": "submitted",
-          "versionId": "e3ee9c4e-9a27-46df-aa3d-b6056b65282e",
-          "at": "2026-10-27T19:03:00.429Z",
+          "versionId": "ccbe084c-bf4d-489d-ad6c-2daf3ddb296a",
+          "at": "2026-10-28T02:39:53.049Z",
           "actor": "human"
         }
       ]
     },
     {
-      "shotId": "ea14bbcd-7fa6-411f-800d-5e75a71ceb69",
+      "shotId": "e225c89e-2df5-4d88-82b8-decc057d4503",
       "order": 3,
       "locked": false,
-      "workingVersionId": "526e0d2f-a7d8-4f22-9684-bdfebeed4def",
+      "workingVersionId": "3e1b96de-eeed-4f02-90c5-db5dedc09e26",
       "contentVersions": [
         {
-          "versionId": "526e0d2f-a7d8-4f22-9684-bdfebeed4def",
-          "createdAt": "2026-10-27T19:03:00.429Z",
-          "durationMs": 4000,
-          "description": "每年减碳80万吨（数字计数）",
-          "narrationText": "相当于少排80万吨CO₂",
+          "versionId": "3e1b96de-eeed-4f02-90c5-db5dedc09e26",
+          "createdAt": "2026-10-28T02:39:53.049Z",
+          "durationMs": 3200,
+          "description": "年减碳量（数字计数）",
+          "narrationText": "每年减少80万吨碳",
           "sceneSource": {
             "type": "spec",
             "spec": {
               "specVersion": 1,
               "componentId": "number-counter",
               "componentVersion": 1,
-              "durationMs": 4000,
+              "durationMs": 3200,
               "seed": 5021,
               "background": "#101f34",
               "params": {
-                "title": "每年减碳80万吨",
+                "title": "年减碳量",
                 "value": 800000,
                 "prefix": "约",
                 "suffix": "吨",
@@ -215,43 +252,43 @@
           },
           "provenance": {
             "engineId": "planner-semantic",
-            "engineVersion": "qwen-plus/prompt10/compiler1"
+            "engineVersion": "qwen-plus/prompt13/compiler1"
           }
         }
       ],
       "events": [
         {
           "kind": "submitted",
-          "versionId": "526e0d2f-a7d8-4f22-9684-bdfebeed4def",
-          "at": "2026-10-27T19:03:00.429Z",
+          "versionId": "3e1b96de-eeed-4f02-90c5-db5dedc09e26",
+          "at": "2026-10-28T02:39:53.049Z",
           "actor": "human"
         }
       ]
     },
     {
-      "shotId": "8fd6ef17-7e35-4aa3-892e-3dab3d7027f3",
+      "shotId": "e8a94ef7-6aef-4304-a41c-89b6843f1737",
       "order": 4,
       "locked": false,
-      "workingVersionId": "737c0c17-e54c-4348-9f58-30f4be112ed5",
+      "workingVersionId": "f539ba6e-60ca-42dd-b3df-c26b71ec7074",
       "contentVersions": [
         {
-          "versionId": "737c0c17-e54c-4348-9f58-30f4be112ed5",
-          "createdAt": "2026-10-27T19:03:00.429Z",
-          "durationMs": 3100,
-          "description": "绿色出行，人人可为（标题）",
-          "narrationText": "骑上单车，减碳出发",
+          "versionId": "96f1330f-4b63-4123-b3aa-b885c3f47091",
+          "createdAt": "2026-10-28T02:39:53.049Z",
+          "durationMs": 2500,
+          "description": "绿色出行，触手可及（标题）",
+          "narrationText": "骑一程，减一点",
           "sceneSource": {
             "type": "spec",
             "spec": {
               "specVersion": 1,
               "componentId": "text-animation",
               "componentVersion": 1,
-              "durationMs": 3100,
+              "durationMs": 2500,
               "seed": 5028,
               "background": "#101f34",
               "params": {
-                "title": "绿色出行，人人可为",
-                "subtitle": "骑上单车，减碳出发",
+                "title": "绿色出行，触手可及",
+                "subtitle": "骑一程，减一点",
                 "titleColor": "#f3f5f7",
                 "subtitleColor": "#b4d8e4",
                 "entrance": "fade-up",
@@ -261,25 +298,62 @@
           },
           "provenance": {
             "engineId": "planner-semantic",
-            "engineVersion": "qwen-plus/prompt10/compiler1"
+            "engineVersion": "qwen-plus/prompt13/compiler1"
+          }
+        },
+        {
+          "versionId": "f539ba6e-60ca-42dd-b3df-c26b71ec7074",
+          "createdAt": "2026-10-28T02:39:57.983Z",
+          "durationMs": 2570,
+          "description": "绿色出行，触手可及（标题）（时长对齐 2570ms）",
+          "narrationText": "骑一程，减一点",
+          "sceneSource": {
+            "type": "spec",
+            "spec": {
+              "specVersion": 1,
+              "componentId": "text-animation",
+              "componentVersion": 1,
+              "durationMs": 2570,
+              "seed": 5028,
+              "background": "#101f34",
+              "params": {
+                "title": "绿色出行，触手可及",
+                "subtitle": "骑一程，减一点",
+                "titleColor": "#f3f5f7",
+                "subtitleColor": "#b4d8e4",
+                "entrance": "fade-up",
+                "enterMs": 450
+              }
+            }
+          },
+          "provenance": {
+            "engineId": "tts-duration-align",
+            "engineVersion": "1",
+            "parentVersionId": "96f1330f-4b63-4123-b3aa-b885c3f47091"
           }
         }
       ],
       "events": [
         {
           "kind": "submitted",
-          "versionId": "737c0c17-e54c-4348-9f58-30f4be112ed5",
-          "at": "2026-10-27T19:03:00.429Z",
+          "versionId": "96f1330f-4b63-4123-b3aa-b885c3f47091",
+          "at": "2026-10-28T02:39:53.049Z",
           "actor": "human"
+        },
+        {
+          "kind": "submitted",
+          "versionId": "f539ba6e-60ca-42dd-b3df-c26b71ec7074",
+          "at": "2026-10-28T02:39:57.983Z",
+          "actor": "ai"
         }
       ]
     }
   ],
   "renderRecords": [
     {
-      "renderId": "5b323081-d1cf-4847-8081-74608b4e1133",
-      "versionId": "2c729042-17b2-47a9-bfd5-1a00e2214da3",
-      "contentDigest": "df98fa6a4cd45869530d69a92e11fe9abd8b3fb5fba4963564c5755290973c25",
+      "renderId": "c0b10967-6b51-45e6-aa66-a077b9e69d2b",
+      "versionId": "edc9d4fb-a66e-45fe-97bb-270b32e4a4cb",
+      "contentDigest": "e8e47d04d95d276e3a5b7d35eb08187846bb05a92b668d9687f36676492b9049",
       "engineId": "remotion",
       "engineVersion": "10",
       "rendererVersion": "4.0.534",
@@ -288,52 +362,16 @@
       "width": 1280,
       "height": 720,
       "codec": "h264",
-      "frames": 74,
+      "frames": 68,
       "fontDigests": {
         "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
       },
       "outputAssetRef": "render/landscape.mp4"
     },
     {
-      "renderId": "7034ef67-804f-4cd4-be03-3c8f69e639f6",
-      "versionId": "af3239bb-6962-4e18-9d4c-009833f5d58e",
-      "contentDigest": "f1891411b03f14ee2043615b74eb37b5667844e0bb55507d42e1db730d5b481f",
-      "engineId": "remotion",
-      "engineVersion": "10",
-      "rendererVersion": "4.0.534",
-      "browser": "Google Chrome 155.0.8059.41",
-      "fps": 24,
-      "width": 1280,
-      "height": 720,
-      "codec": "h264",
-      "frames": 125,
-      "fontDigests": {
-        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
-      },
-      "outputAssetRef": "render/landscape.mp4"
-    },
-    {
-      "renderId": "a7efec73-9511-4725-9b33-2433a3409e22",
-      "versionId": "e3ee9c4e-9a27-46df-aa3d-b6056b65282e",
-      "contentDigest": "14919e90517775e58cda9a33dc5529c15c856c87070475ee5caa2d786d12fcee",
-      "engineId": "remotion",
-      "engineVersion": "10",
-      "rendererVersion": "4.0.534",
-      "browser": "Google Chrome 155.0.8059.41",
-      "fps": 24,
-      "width": 1280,
-      "height": 720,
-      "codec": "h264",
-      "frames": 87,
-      "fontDigests": {
-        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
-      },
-      "outputAssetRef": "render/landscape.mp4"
-    },
-    {
-      "renderId": "072b5a1e-ffa2-4248-a545-a49b11bccda2",
-      "versionId": "526e0d2f-a7d8-4f22-9684-bdfebeed4def",
-      "contentDigest": "342c6c34e5d459cecad0aed8ac8ec217d70960b4464340f1c64352e81c73b62d",
+      "renderId": "bf92a77a-8647-49b9-a63e-79ab99c61fe6",
+      "versionId": "71be4680-cc95-47e7-9a02-d939a1c4b7ab",
+      "contentDigest": "18400e1d548e7eafeb7cd3e10dd88b3104a8707a7569cd937b5e62806b782059",
       "engineId": "remotion",
       "engineVersion": "10",
       "rendererVersion": "4.0.534",
@@ -349,9 +387,9 @@
       "outputAssetRef": "render/landscape.mp4"
     },
     {
-      "renderId": "582c5d23-23c9-4be9-b7d9-2011f37c2b31",
-      "versionId": "737c0c17-e54c-4348-9f58-30f4be112ed5",
-      "contentDigest": "56e1dcd266b70c8e8728fdcd980089d5d7398c58e1849ea0293f7a1232526868",
+      "renderId": "6b973825-e865-4a58-9b8d-8fd590dfe410",
+      "versionId": "ccbe084c-bf4d-489d-ad6c-2daf3ddb296a",
+      "contentDigest": "28b3763b9a9d0dbe06e725416442c19b40075f32156a79509439fb5284e3e679",
       "engineId": "remotion",
       "engineVersion": "10",
       "rendererVersion": "4.0.534",
@@ -360,16 +398,52 @@
       "width": 1280,
       "height": 720,
       "codec": "h264",
-      "frames": 74,
+      "frames": 87,
       "fontDigests": {
         "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
       },
       "outputAssetRef": "render/landscape.mp4"
     },
     {
-      "renderId": "2f67601e-b757-4367-974e-7e3fbd85f2cc",
-      "versionId": "2c729042-17b2-47a9-bfd5-1a00e2214da3",
-      "contentDigest": "df98fa6a4cd45869530d69a92e11fe9abd8b3fb5fba4963564c5755290973c25",
+      "renderId": "1fbe33aa-160e-4575-ba81-56998405aaf0",
+      "versionId": "3e1b96de-eeed-4f02-90c5-db5dedc09e26",
+      "contentDigest": "2cd866a9260bfab94924ea3cdd39edb980afc254a4359961d5d1b0079f307220",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 77,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "aa89ee55-472d-4dfd-8784-967d0ee84e66",
+      "versionId": "f539ba6e-60ca-42dd-b3df-c26b71ec7074",
+      "contentDigest": "31d6f4a188867b65f42e155a6003cc94a10eff7d6f69561ed534a30248db5e26",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 1280,
+      "height": 720,
+      "codec": "h264",
+      "frames": 61,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render/landscape.mp4"
+    },
+    {
+      "renderId": "d7d435df-ea27-462b-a522-fda5d53d2c37",
+      "versionId": "edc9d4fb-a66e-45fe-97bb-270b32e4a4cb",
+      "contentDigest": "e8e47d04d95d276e3a5b7d35eb08187846bb05a92b668d9687f36676492b9049",
       "engineId": "remotion",
       "engineVersion": "10",
       "rendererVersion": "4.0.534",
@@ -378,52 +452,16 @@
       "width": 720,
       "height": 1280,
       "codec": "h264",
-      "frames": 74,
+      "frames": 68,
       "fontDigests": {
         "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
       },
       "outputAssetRef": "render/portrait.mp4"
     },
     {
-      "renderId": "56a7d203-dae7-4ea3-a303-873d7917537b",
-      "versionId": "af3239bb-6962-4e18-9d4c-009833f5d58e",
-      "contentDigest": "f1891411b03f14ee2043615b74eb37b5667844e0bb55507d42e1db730d5b481f",
-      "engineId": "remotion",
-      "engineVersion": "10",
-      "rendererVersion": "4.0.534",
-      "browser": "Google Chrome 155.0.8059.41",
-      "fps": 24,
-      "width": 720,
-      "height": 1280,
-      "codec": "h264",
-      "frames": 125,
-      "fontDigests": {
-        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
-      },
-      "outputAssetRef": "render/portrait.mp4"
-    },
-    {
-      "renderId": "e3e630ab-be46-4d3c-a538-610f72abee91",
-      "versionId": "e3ee9c4e-9a27-46df-aa3d-b6056b65282e",
-      "contentDigest": "14919e90517775e58cda9a33dc5529c15c856c87070475ee5caa2d786d12fcee",
-      "engineId": "remotion",
-      "engineVersion": "10",
-      "rendererVersion": "4.0.534",
-      "browser": "Google Chrome 155.0.8059.41",
-      "fps": 24,
-      "width": 720,
-      "height": 1280,
-      "codec": "h264",
-      "frames": 87,
-      "fontDigests": {
-        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
-      },
-      "outputAssetRef": "render/portrait.mp4"
-    },
-    {
-      "renderId": "c9ba17b1-44ea-4ea5-9965-35dc6447d875",
-      "versionId": "526e0d2f-a7d8-4f22-9684-bdfebeed4def",
-      "contentDigest": "342c6c34e5d459cecad0aed8ac8ec217d70960b4464340f1c64352e81c73b62d",
+      "renderId": "ac14840e-be7b-480d-bc97-3f81694db080",
+      "versionId": "71be4680-cc95-47e7-9a02-d939a1c4b7ab",
+      "contentDigest": "18400e1d548e7eafeb7cd3e10dd88b3104a8707a7569cd937b5e62806b782059",
       "engineId": "remotion",
       "engineVersion": "10",
       "rendererVersion": "4.0.534",
@@ -439,9 +477,9 @@
       "outputAssetRef": "render/portrait.mp4"
     },
     {
-      "renderId": "00e7b4a3-82bb-4e84-aefe-6229f02e1c48",
-      "versionId": "737c0c17-e54c-4348-9f58-30f4be112ed5",
-      "contentDigest": "56e1dcd266b70c8e8728fdcd980089d5d7398c58e1849ea0293f7a1232526868",
+      "renderId": "635f9d1e-fafd-430b-9bed-0e4c240bbaa5",
+      "versionId": "ccbe084c-bf4d-489d-ad6c-2daf3ddb296a",
+      "contentDigest": "28b3763b9a9d0dbe06e725416442c19b40075f32156a79509439fb5284e3e679",
       "engineId": "remotion",
       "engineVersion": "10",
       "rendererVersion": "4.0.534",
@@ -450,7 +488,43 @@
       "width": 720,
       "height": 1280,
       "codec": "h264",
-      "frames": 74,
+      "frames": 87,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    },
+    {
+      "renderId": "045eac82-7497-4755-87dc-16b09f4d8dbf",
+      "versionId": "3e1b96de-eeed-4f02-90c5-db5dedc09e26",
+      "contentDigest": "2cd866a9260bfab94924ea3cdd39edb980afc254a4359961d5d1b0079f307220",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 77,
+      "fontDigests": {
+        "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
+      },
+      "outputAssetRef": "render/portrait.mp4"
+    },
+    {
+      "renderId": "162fe057-ba3a-40da-8224-0641c84ed73c",
+      "versionId": "f539ba6e-60ca-42dd-b3df-c26b71ec7074",
+      "contentDigest": "31d6f4a188867b65f42e155a6003cc94a10eff7d6f69561ed534a30248db5e26",
+      "engineId": "remotion",
+      "engineVersion": "10",
+      "rendererVersion": "4.0.534",
+      "browser": "Google Chrome 155.0.8059.41",
+      "fps": 24,
+      "width": 720,
+      "height": 1280,
+      "codec": "h264",
+      "frames": 61,
       "fontDigests": {
         "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
       },
@@ -458,5 +532,5 @@
     }
   ],
   "deliveries": [],
-  "savedVersion": 3
+  "savedVersion": 4
 }

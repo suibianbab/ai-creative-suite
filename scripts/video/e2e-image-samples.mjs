@@ -174,6 +174,32 @@ async function planViaAI(sentence, imageFiles) {
       .catch(() => fail("上传", `${f} 未入账`));
   }
   await page.fill("#planner-sentence", sentence);
+  // P1-4（Codex 复核）：图片点名是硬验收——确认卡必须逐镜点名清单内的
+  // 文件（服务端对账已拒清单外点名）；三次尝试都未点名 → 测试失败，
+  // 不再以人工兜底选图冒充自动点名成功。
+  if (imageFiles.length > 0) {
+    const wanted = imageFiles.map((f) => f.replace(/\.[^.]+$/, ""));
+    let namedCount = 0;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      await page.click(".planner-ai");
+      const ok = await page
+        .locator(".storyboard-card")
+        .first()
+        .waitFor({ timeout: 120_000 })
+        .then(() => true)
+        .catch(() => false);
+      if (!ok) continue;
+      const card = await page.locator(".storyboard-card").textContent();
+      namedCount = wanted.filter((w) => card?.includes(w)).length;
+      if (namedCount >= 2) return;
+      // 未达标：放弃这张卡重新生成。
+      await page.click(".plan-discard");
+    }
+    fail(
+      "AI 规划点名",
+      `三次尝试确认卡点名上传图 ${namedCount}/2（任务 4 硬验收：点名失败即测试失败）`,
+    );
+  }
   for (let attempt = 1; attempt <= 3; attempt++) {
     await page.click(".planner-ai");
     const ok = await page
@@ -223,10 +249,15 @@ try {
       (v) => v.versionId === shot.workingVersionId,
     );
     if (!w.description.startsWith("【素材位】")) continue;
-    const fileName =
-      w.description.includes("hero") || w.description.includes("全景")
-        ? "hero-bottle.png"
-        : "detail-cap.png";
+    // P1-4：按 slotKind 点名的文件名绑定（点名已在规划层硬验收）；
+    // 点名缺失时回退账本顺序（服务端已确保点名对账，这里不再冒充）。
+    const fileName = w.description.includes("hero")
+      ? "hero-bottle.png"
+      : w.description.includes("detail")
+        ? "detail-cap.png"
+        : i % 2 === 0
+          ? "hero-bottle.png"
+          : "detail-cap.png";
     const card = page.locator(".shot-card").nth(i);
     await card.locator(".shot-edit-toggle").click();
     await card

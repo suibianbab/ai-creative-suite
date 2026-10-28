@@ -16,18 +16,24 @@ test("mediaMotionTransform：五档变换端点与钳制", () => {
   assert.equal(mediaMotionTransform("zoom-in", 1), "scale(1.1200)");
   assert.equal(mediaMotionTransform("zoom-out", 0), "scale(1.1200)");
   assert.equal(mediaMotionTransform("zoom-out", 1), "scale(1.0000)");
-  // 平移：左移从 +6% 到 -6%（配 1.06 超采不露边），右移反向。
+  // 平移：左移从 +6% 到 -6%，右移反向。P1-3：超采 1.12（单侧余量 6%
+  // 恰好覆盖端点位移，原 1.06 只有余 3% 会露黑边）。
   assert.equal(
     mediaMotionTransform("pan-left", 0),
-    "scale(1.06) translateX(6.00%)",
+    "scale(1.12) translateX(6.00%)",
   );
   assert.equal(
     mediaMotionTransform("pan-left", 1),
-    "scale(1.06) translateX(-6.00%)",
+    "scale(1.12) translateX(-6.00%)",
   );
   assert.equal(
     mediaMotionTransform("pan-right", 0),
-    "scale(1.06) translateX(-6.00%)",
+    "scale(1.12) translateX(-6.00%)",
+  );
+  // 中点位移为 0（对称），任意进度下单侧余量 ≥ 位移：scale 1.12 → 6% ≥ 6%。
+  assert.equal(
+    mediaMotionTransform("pan-left", 0.5),
+    "scale(1.12) translateX(0.00%)",
   );
   // 进度钳制到 [0,1]。
   assert.equal(

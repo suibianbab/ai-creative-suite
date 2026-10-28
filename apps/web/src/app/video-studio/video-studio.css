@@ -1895,3 +1895,11 @@
 .media-overlay-bottom {
   bottom: 8%;
 }
+
+/* P1-3：图片镜固定裁切视口（叠加层的定位父级）。 */
+.media-viewport {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "id": "0e2f5238-68ec-4977-905b-faa4c1fab7e9",
-  "title": "恒温随行·安心之选",
+  "id": "38ba7fdb-2083-47f8-8166-e47ffdd1c23b",
+  "title": "恒温随行",
   "brief": {
     "sentence": "用我上传的图做一条约18秒的保温杯产品广告：产品全景展示、杯口细节特写、核心卖点、品牌收尾",
     "aspectTargets": [
@@ -12,25 +12,25 @@
       {
         "sentence": "用我上传的图做一条约18秒的保温杯产品广告：产品全景展示、杯口细节特写、核心卖点、品牌收尾",
         "appendedShotCount": 4,
-        "appendedDurationMs": 18000,
+        "appendedDurationMs": 15200,
         "filmShotCountAfter": 4,
-        "filmTotalMsAfter": 18000,
-        "appliedAt": "2026-10-27T19:01:19.901Z"
+        "filmTotalMsAfter": 15200,
+        "appliedAt": "2026-10-28T02:38:26.538Z"
       }
     ]
   },
   "shots": [
     {
-      "shotId": "02f63cbd-20fb-48bf-9659-1f2f349470b7",
+      "shotId": "fdd07961-da94-4456-b89f-e7ae54fee96d",
       "order": 0,
       "locked": false,
-      "workingVersionId": "045d9d5b-5c39-4750-a9e6-469b180b659e",
+      "workingVersionId": "7d6c187b-d484-4e02-9837-44233a5361db",
       "contentVersions": [
         {
-          "versionId": "67172103-f582-4062-ba44-97d36e8efa92",
-          "createdAt": "2026-10-27T19:01:19.901Z",
+          "versionId": "2d6616c7-72ba-405c-b9c7-91884b444ec3",
+          "createdAt": "2026-10-28T02:38:26.538Z",
           "durationMs": 4000,
-          "description": "【素材位】产品整体照片——开场建立产品第一印象",
+          "description": "【素材位】图片：hero-bottle.png——开场建立产品第一印象",
           "narrationText": "经典设计，一手掌握",
           "sceneSource": {
             "type": "spec",
@@ -42,7 +42,7 @@
               "seed": 5000,
               "background": "#101f34",
               "params": {
-                "title": "素材位·产品整体照片",
+                "title": "素材位·图片：hero-bottle.png",
                 "subtitle": "待绑定素材——开场建立产品第一印象",
                 "titleColor": "#f3f5f7",
                 "subtitleColor": "#b4d8e4",
@@ -52,22 +52,22 @@
             }
           },
           "assetSlot": {
-            "kind": "产品整体照片"
+            "kind": "图片：hero-bottle.png"
           },
           "provenance": {
             "engineId": "planner-semantic",
-            "engineVersion": "qwen-plus/prompt10/compiler1"
+            "engineVersion": "qwen-plus/prompt13/compiler1"
           }
         },
         {
-          "versionId": "045d9d5b-5c39-4750-a9e6-469b180b659e",
-          "createdAt": "2026-10-27T19:01:20.322Z",
+          "versionId": "7d6c187b-d484-4e02-9837-44233a5361db",
+          "createdAt": "2026-10-28T02:38:26.989Z",
           "durationMs": 3100,
-          "description": "产品整体照片——开场建立产品第一印象",
+          "description": "图片：hero-bottle.png——开场建立产品第一印象",
           "narrationText": "经典设计，一手掌握",
           "sceneSource": {
             "type": "media-clip",
-            "mediaAssetId": "98b65fbc-6541-43df-b98e-0e2cc7370e2e",
+            "mediaAssetId": "526d90ed-3d76-4653-a0d7-e391740f98df",
             "inMs": 0,
             "outMs": 3100,
             "fit": "cover",
@@ -83,36 +83,36 @@
           "provenance": {
             "engineId": "human-edit",
             "engineVersion": "1",
-            "parentVersionId": "67172103-f582-4062-ba44-97d36e8efa92"
+            "parentVersionId": "2d6616c7-72ba-405c-b9c7-91884b444ec3"
           }
         }
       ],
       "events": [
         {
           "kind": "submitted",
-          "versionId": "67172103-f582-4062-ba44-97d36e8efa92",
-          "at": "2026-10-27T19:01:19.901Z",
+          "versionId": "2d6616c7-72ba-405c-b9c7-91884b444ec3",
+          "at": "2026-10-28T02:38:26.538Z",
           "actor": "human"
         },
         {
           "kind": "submitted",
-          "versionId": "045d9d5b-5c39-4750-a9e6-469b180b659e",
-          "at": "2026-10-27T19:01:20.322Z",
+          "versionId": "7d6c187b-d484-4e02-9837-44233a5361db",
+          "at": "2026-10-28T02:38:26.989Z",
           "actor": "human"
         }
       ]
     },
     {
-      "shotId": "22628997-9198-46d5-a440-99c93663a20a",
+      "shotId": "e3e9a5b4-7680-4fe2-8368-aa4660c721fc",
       "order": 1,
       "locked": false,
-      "workingVersionId": "7634c0bf-70a5-4cc3-9242-cad5dfda1ef3",
+      "workingVersionId": "736f119b-05d6-43a3-b25b-3274841b4342",
       "contentVersions": [
         {
-          "versionId": "3996a7c9-ae8e-4c1b-9d82-c009cae936dc",
-          "createdAt": "2026-10-27T19:01:19.901Z",
+          "versionId": "e1dea835-32be-453b-9522-51905a24f145",
+          "createdAt": "2026-10-28T02:38:26.538Z",
           "durationMs": 4000,
-          "description": "【素材位】产品局部特写——突出工艺与可靠性",
+          "description": "【素材位】图片：detail-cap.png——突出工艺与可靠性",
           "narrationText": "精密密封，滴水不漏",
           "sceneSource": {
             "type": "spec",
@@ -124,7 +124,7 @@
               "seed": 5007,
               "background": "#101f34",
               "params": {
-                "title": "素材位·产品局部特写",
+                "title": "素材位·图片：detail-cap.png",
                 "subtitle": "待绑定素材——突出工艺与可靠性",
                 "titleColor": "#f3f5f7",
                 "subtitleColor": "#b4d8e4",
@@ -134,22 +134,22 @@
             }
           },
           "assetSlot": {
-            "kind": "产品局部特写"
+            "kind": "图片：detail-cap.png"
           },
           "provenance": {
             "engineId": "planner-semantic",
-            "engineVersion": "qwen-plus/prompt10/compiler1"
+            "engineVersion": "qwen-plus/prompt13/compiler1"
           }
         },
         {
-          "versionId": "7634c0bf-70a5-4cc3-9242-cad5dfda1ef3",
-          "createdAt": "2026-10-27T19:01:20.517Z",
+          "versionId": "736f119b-05d6-43a3-b25b-3274841b4342",
+          "createdAt": "2026-10-28T02:38:27.205Z",
           "durationMs": 3100,
-          "description": "产品局部特写——突出工艺与可靠性",
+          "description": "图片：detail-cap.png——突出工艺与可靠性",
           "narrationText": "精密密封，滴水不漏",
           "sceneSource": {
             "type": "media-clip",
-            "mediaAssetId": "98b65fbc-6541-43df-b98e-0e2cc7370e2e",
+            "mediaAssetId": "29eb6219-367c-4dff-9221-dfeef0177c1c",
             "inMs": 0,
             "outMs": 3100,
             "fit": "cover",
@@ -160,59 +160,59 @@
           "provenance": {
             "engineId": "human-edit",
             "engineVersion": "1",
-            "parentVersionId": "3996a7c9-ae8e-4c1b-9d82-c009cae936dc"
+            "parentVersionId": "e1dea835-32be-453b-9522-51905a24f145"
           }
         }
       ],
       "events": [
         {
           "kind": "submitted",
-          "versionId": "3996a7c9-ae8e-4c1b-9d82-c009cae936dc",
-          "at": "2026-10-27T19:01:19.901Z",
+          "versionId": "e1dea835-32be-453b-9522-51905a24f145",
+          "at": "2026-10-28T02:38:26.538Z",
           "actor": "human"
         },
         {
           "kind": "submitted",
-          "versionId": "7634c0bf-70a5-4cc3-9242-cad5dfda1ef3",
-          "at": "2026-10-27T19:01:20.517Z",
+          "versionId": "736f119b-05d6-43a3-b25b-3274841b4342",
+          "at": "2026-10-28T02:38:27.205Z",
           "actor": "human"
         }
       ]
     },
     {
-      "shotId": "f5ec6d9d-6abf-4689-ae82-1949117347ed",
+      "shotId": "ca2ad8ac-854e-4c1d-b6ab-e36cc15de44a",
       "order": 2,
       "locked": false,
-      "workingVersionId": "780cb94d-e93b-4de6-9453-5e0bbebdb276",
+      "workingVersionId": "3595720f-252a-44df-8ae2-a75c951e4b46",
       "contentVersions": [
         {
-          "versionId": "780cb94d-e93b-4de6-9453-5e0bbebdb276",
-          "createdAt": "2026-10-27T19:01:19.901Z",
-          "durationMs": 5000,
+          "versionId": "3595720f-252a-44df-8ae2-a75c951e4b46",
+          "createdAt": "2026-10-28T02:38:26.538Z",
+          "durationMs": 4200,
           "description": "核心卖点（要点解说）",
-          "narrationText": "三重优势，安心之选",
+          "narrationText": "三重守护，长效保温",
           "sceneSource": {
             "type": "spec",
             "spec": {
               "specVersion": 1,
               "componentId": "sketch-note",
               "componentVersion": 1,
-              "durationMs": 5000,
+              "durationMs": 4200,
               "seed": 5014,
               "background": "#101f34",
               "params": {
                 "title": "核心卖点",
                 "items": [
                   {
-                    "text": "长效保温",
+                    "text": "真空断热层",
                     "emphasis": "下划线"
                   },
                   {
-                    "text": "安全材质",
+                    "text": "食品级内胆",
                     "emphasis": "圈"
                   },
                   {
-                    "text": "便携设计",
+                    "text": "防烫旋盖设计",
                     "emphasis": "圈"
                   }
                 ],
@@ -226,43 +226,43 @@
           },
           "provenance": {
             "engineId": "planner-semantic",
-            "engineVersion": "qwen-plus/prompt10/compiler1"
+            "engineVersion": "qwen-plus/prompt13/compiler1"
           }
         }
       ],
       "events": [
         {
           "kind": "submitted",
-          "versionId": "780cb94d-e93b-4de6-9453-5e0bbebdb276",
-          "at": "2026-10-27T19:01:19.901Z",
+          "versionId": "3595720f-252a-44df-8ae2-a75c951e4b46",
+          "at": "2026-10-28T02:38:26.538Z",
           "actor": "human"
         }
       ]
     },
     {
-      "shotId": "416e783e-09e8-41de-80ef-776d58043c41",
+      "shotId": "d1627a7e-8c2b-48f6-8b8e-4b61024f45a1",
       "order": 3,
       "locked": false,
-      "workingVersionId": "7a198d32-c127-4ea7-aeab-1ce4b883a2ce",
+      "workingVersionId": "91a1f3b1-9cf3-415f-b464-3ea793752994",
       "contentVersions": [
         {
-          "versionId": "ff5c0296-86c8-4191-b59f-30d7075cad45",
-          "createdAt": "2026-10-27T19:01:19.901Z",
-          "durationMs": 5000,
-          "description": "恒温随行·安心之选（标题）",
-          "narrationText": "XX品牌保温杯",
+          "versionId": "df2417fd-dc69-412e-b39d-3fe76f491350",
+          "createdAt": "2026-10-28T02:38:26.538Z",
+          "durationMs": 3000,
+          "description": "恒温随行（标题）",
+          "narrationText": "信赖之选",
           "sceneSource": {
             "type": "spec",
             "spec": {
               "specVersion": 1,
               "componentId": "text-animation",
               "componentVersion": 1,
-              "durationMs": 5000,
+              "durationMs": 3000,
               "seed": 5021,
               "background": "#101f34",
               "params": {
-                "title": "恒温随行·安心之选",
-                "subtitle": "XX品牌保温杯",
+                "title": "恒温随行",
+                "subtitle": "信赖之选",
                 "titleColor": "#f3f5f7",
                 "subtitleColor": "#b4d8e4",
                 "entrance": "fade-up",
@@ -272,14 +272,14 @@
           },
           "provenance": {
             "engineId": "planner-semantic",
-            "engineVersion": "qwen-plus/prompt10/compiler1"
+            "engineVersion": "qwen-plus/prompt13/compiler1"
           }
         },
         {
-          "versionId": "7a198d32-c127-4ea7-aeab-1ce4b883a2ce",
-          "createdAt": "2026-10-27T19:01:21.068Z",
-          "durationMs": 5000,
-          "description": "恒温随行·安心之选（标题）",
+          "versionId": "91a1f3b1-9cf3-415f-b464-3ea793752994",
+          "createdAt": "2026-10-28T02:38:27.773Z",
+          "durationMs": 3000,
+          "description": "恒温随行（标题）",
           "narrationText": "温暖随行。",
           "sceneSource": {
             "type": "spec",
@@ -287,37 +287,37 @@
               "specVersion": 1,
               "componentId": "text-animation",
               "componentVersion": 1,
-              "durationMs": 5000,
+              "durationMs": 3000,
               "seed": 5021,
               "background": "#101f34",
               "params": {
-                "title": "恒温随行·安心之选",
+                "title": "恒温随行",
                 "titleColor": "#f3f5f7",
                 "subtitleColor": "#b4d8e4",
                 "entrance": "fade-up",
                 "enterMs": 450,
-                "subtitle": "XX品牌保温杯"
+                "subtitle": "信赖之选"
               }
             }
           },
           "provenance": {
             "engineId": "human-edit",
             "engineVersion": "1",
-            "parentVersionId": "ff5c0296-86c8-4191-b59f-30d7075cad45"
+            "parentVersionId": "df2417fd-dc69-412e-b39d-3fe76f491350"
           }
         }
       ],
       "events": [
         {
           "kind": "submitted",
-          "versionId": "ff5c0296-86c8-4191-b59f-30d7075cad45",
-          "at": "2026-10-27T19:01:19.901Z",
+          "versionId": "df2417fd-dc69-412e-b39d-3fe76f491350",
+          "at": "2026-10-28T02:38:26.538Z",
           "actor": "human"
         },
         {
           "kind": "submitted",
-          "versionId": "7a198d32-c127-4ea7-aeab-1ce4b883a2ce",
-          "at": "2026-10-27T19:01:21.068Z",
+          "versionId": "91a1f3b1-9cf3-415f-b464-3ea793752994",
+          "at": "2026-10-28T02:38:27.773Z",
           "actor": "human"
         }
       ]
@@ -325,11 +325,11 @@
   ],
   "renderRecords": [
     {
-      "renderId": "ed04db62-5b1d-45ec-8889-cc890d869786",
-      "versionId": "045d9d5b-5c39-4750-a9e6-469b180b659e",
-      "contentDigest": "8292cc3a7e3a49799a96dc048a038e731e206d14464484be03dc936d3c5d0502",
+      "renderId": "fa986afe-72de-4845-a027-7a10c89cb76a",
+      "versionId": "7d6c187b-d484-4e02-9837-44233a5361db",
+      "contentDigest": "c1aca1f66f506b431b7c343a466af119e78ea68ba3997be3b2f3283d763f1b4a",
       "assetDigests": {
-        "98b65fbc-6541-43df-b98e-0e2cc7370e2e": "b8b8288310d0c2fba47bec6a29bf1783ceeea91a69bf8980927fea67c85b9435"
+        "526d90ed-3d76-4653-a0d7-e391740f98df": "e5fe8567b6a7b0669ab5c391d8766b1e80367917a5081f842ecb038d6d1d8cb8"
       },
       "engineId": "remotion",
       "engineVersion": "10",
@@ -346,11 +346,11 @@
       "outputAssetRef": "render/landscape.mp4"
     },
     {
-      "renderId": "7b896306-ed41-4976-85f2-7844348c6975",
-      "versionId": "7634c0bf-70a5-4cc3-9242-cad5dfda1ef3",
-      "contentDigest": "66b24c500913d6d3f2ecae625e23c8fca1bb71ceb2a249868c8463da41fad681",
+      "renderId": "e300c90e-cd0f-49a4-aa9b-488b04490712",
+      "versionId": "736f119b-05d6-43a3-b25b-3274841b4342",
+      "contentDigest": "f50d462185914d0a4f21b0851f7ae7ae13982f87bdae79f9897f9fba7052d8ba",
       "assetDigests": {
-        "98b65fbc-6541-43df-b98e-0e2cc7370e2e": "b8b8288310d0c2fba47bec6a29bf1783ceeea91a69bf8980927fea67c85b9435"
+        "29eb6219-367c-4dff-9221-dfeef0177c1c": "b8b8288310d0c2fba47bec6a29bf1783ceeea91a69bf8980927fea67c85b9435"
       },
       "engineId": "remotion",
       "engineVersion": "10",
@@ -367,9 +367,9 @@
       "outputAssetRef": "render/landscape.mp4"
     },
     {
-      "renderId": "db3a3107-1a2b-455a-8efa-fd9fbbf3d6a5",
-      "versionId": "780cb94d-e93b-4de6-9453-5e0bbebdb276",
-      "contentDigest": "820b1c5a969ceed8388ea95386dec4b06e2f936bb1932a603362ea34a0b208e4",
+      "renderId": "d5729879-321b-43cf-96c4-1e9d5a7b9614",
+      "versionId": "3595720f-252a-44df-8ae2-a75c951e4b46",
+      "contentDigest": "51bea407fef7551658ed52743625834091c45b54ea68dbe43eec02a23f37df15",
       "engineId": "remotion",
       "engineVersion": "10",
       "rendererVersion": "4.0.534",
@@ -378,16 +378,16 @@
       "width": 1280,
       "height": 720,
       "codec": "h264",
-      "frames": 120,
+      "frames": 101,
       "fontDigests": {
         "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
       },
       "outputAssetRef": "render/landscape.mp4"
     },
     {
-      "renderId": "d08847d3-6bc3-4b7c-850e-6f91c681f2a4",
-      "versionId": "7a198d32-c127-4ea7-aeab-1ce4b883a2ce",
-      "contentDigest": "3b50565ef2fc15ef753999ace2a2c03ca4f4f74908bb63c89d7ee5fb016ed079",
+      "renderId": "a4a9d038-3769-443c-81cc-faeba55a4561",
+      "versionId": "91a1f3b1-9cf3-415f-b464-3ea793752994",
+      "contentDigest": "05f7c48d754bab7784a0eaa69c97361a0c5dfac251578e962b39e64fcd0b8618",
       "engineId": "remotion",
       "engineVersion": "10",
       "rendererVersion": "4.0.534",
@@ -396,18 +396,18 @@
       "width": 1280,
       "height": 720,
       "codec": "h264",
-      "frames": 120,
+      "frames": 72,
       "fontDigests": {
         "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
       },
       "outputAssetRef": "render/landscape.mp4"
     },
     {
-      "renderId": "53168adc-c02c-45ec-b9d7-ce858c8ffaf6",
-      "versionId": "045d9d5b-5c39-4750-a9e6-469b180b659e",
-      "contentDigest": "8292cc3a7e3a49799a96dc048a038e731e206d14464484be03dc936d3c5d0502",
+      "renderId": "53c28b4e-6b66-4bdd-9cb6-3a4eb5c4bbab",
+      "versionId": "7d6c187b-d484-4e02-9837-44233a5361db",
+      "contentDigest": "c1aca1f66f506b431b7c343a466af119e78ea68ba3997be3b2f3283d763f1b4a",
       "assetDigests": {
-        "98b65fbc-6541-43df-b98e-0e2cc7370e2e": "b8b8288310d0c2fba47bec6a29bf1783ceeea91a69bf8980927fea67c85b9435"
+        "526d90ed-3d76-4653-a0d7-e391740f98df": "e5fe8567b6a7b0669ab5c391d8766b1e80367917a5081f842ecb038d6d1d8cb8"
       },
       "engineId": "remotion",
       "engineVersion": "10",
@@ -424,11 +424,11 @@
       "outputAssetRef": "render/portrait.mp4"
     },
     {
-      "renderId": "4eb20b77-6c33-4c94-95c5-08a86a28aa66",
-      "versionId": "7634c0bf-70a5-4cc3-9242-cad5dfda1ef3",
-      "contentDigest": "66b24c500913d6d3f2ecae625e23c8fca1bb71ceb2a249868c8463da41fad681",
+      "renderId": "6dc15cbf-157d-440b-8193-ff0c64fa29bd",
+      "versionId": "736f119b-05d6-43a3-b25b-3274841b4342",
+      "contentDigest": "f50d462185914d0a4f21b0851f7ae7ae13982f87bdae79f9897f9fba7052d8ba",
       "assetDigests": {
-        "98b65fbc-6541-43df-b98e-0e2cc7370e2e": "b8b8288310d0c2fba47bec6a29bf1783ceeea91a69bf8980927fea67c85b9435"
+        "29eb6219-367c-4dff-9221-dfeef0177c1c": "b8b8288310d0c2fba47bec6a29bf1783ceeea91a69bf8980927fea67c85b9435"
       },
       "engineId": "remotion",
       "engineVersion": "10",
@@ -445,9 +445,9 @@
       "outputAssetRef": "render/portrait.mp4"
     },
     {
-      "renderId": "9250035b-b7b3-407e-9f2e-e069738223c7",
-      "versionId": "780cb94d-e93b-4de6-9453-5e0bbebdb276",
-      "contentDigest": "820b1c5a969ceed8388ea95386dec4b06e2f936bb1932a603362ea34a0b208e4",
+      "renderId": "9115cbf8-1302-44db-8437-9782a1a1a2c2",
+      "versionId": "3595720f-252a-44df-8ae2-a75c951e4b46",
+      "contentDigest": "51bea407fef7551658ed52743625834091c45b54ea68dbe43eec02a23f37df15",
       "engineId": "remotion",
       "engineVersion": "10",
       "rendererVersion": "4.0.534",
@@ -456,16 +456,16 @@
       "width": 720,
       "height": 1280,
       "codec": "h264",
-      "frames": 120,
+      "frames": 101,
       "fontDigests": {
         "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
       },
       "outputAssetRef": "render/portrait.mp4"
     },
     {
-      "renderId": "a297518d-8900-4768-8612-7c4a63348eff",
-      "versionId": "7a198d32-c127-4ea7-aeab-1ce4b883a2ce",
-      "contentDigest": "3b50565ef2fc15ef753999ace2a2c03ca4f4f74908bb63c89d7ee5fb016ed079",
+      "renderId": "62541975-7347-4d98-a486-1ec20cc266f5",
+      "versionId": "91a1f3b1-9cf3-415f-b464-3ea793752994",
+      "contentDigest": "05f7c48d754bab7784a0eaa69c97361a0c5dfac251578e962b39e64fcd0b8618",
       "engineId": "remotion",
       "engineVersion": "10",
       "rendererVersion": "4.0.534",
@@ -474,7 +474,7 @@
       "width": 720,
       "height": 1280,
       "codec": "h264",
-      "frames": 120,
+      "frames": 72,
       "fontDigests": {
         "NotoSansSC-Regular.woff": "1c1e8136d03758ce881ca9004151a624082cf33cf1775da54411704747aaaf7a"
       },
@@ -485,8 +485,8 @@
   "savedVersion": 6,
   "mediaAssets": [
     {
-      "assetId": "86a2a999-8a3b-4d3c-8b43-cb91bb5c1cc3",
-      "createdAt": "2026-10-27T18:59:05.004Z",
+      "assetId": "526d90ed-3d76-4653-a0d7-e391740f98df",
+      "createdAt": "2026-10-28T02:38:11.677Z",
       "origin": {
         "kind": "local-upload",
         "fileName": "hero-bottle.png"
@@ -502,8 +502,8 @@
       }
     },
     {
-      "assetId": "98b65fbc-6541-43df-b98e-0e2cc7370e2e",
-      "createdAt": "2026-10-27T18:59:05.235Z",
+      "assetId": "29eb6219-367c-4dff-9221-dfeef0177c1c",
+      "createdAt": "2026-10-28T02:38:11.897Z",
       "origin": {
         "kind": "local-upload",
         "fileName": "detail-cap.png"

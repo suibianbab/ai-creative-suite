@@ -89,6 +89,16 @@ const IMG_CLIP = {
   audio: "mute",
 };
 
+// 视频夹具的出点（视频资产 30000ms）。
+const VID_CLIP = {
+  mediaAssetId: ASSET_ID,
+  inMs: 0,
+  outMs: 3000,
+  fit: "cover",
+  focalX: 0.5,
+  audio: "mute",
+};
+
 test("图片资产通过校验（kind=image，无视频字段）", () => {
   assert.doesNotThrow(() => validateVideoProject(projectWith([imageAsset()])));
 });
@@ -291,5 +301,27 @@ test("overlay：合法通过、越界拒绝并点名", () => {
         ),
       ),
     /overlay.enterMs/,
+  );
+});
+
+// P2-1（Codex 复核 2026-10-28）：运动仅支持图片素材——视频镜头 motion 拒。
+test("motion 限图片：视频资产带非 still 运动 → 拒绝", () => {
+  assert.doesNotThrow(() =>
+    validateVideoProject(
+      projectWith(
+        [videoAsset()],
+        [{ source: { type: "media-clip", ...VID_CLIP, motion: "still" } }],
+      ),
+    ),
+  );
+  assert.throws(
+    () =>
+      validateVideoProject(
+        projectWith(
+          [videoAsset()],
+          [{ source: { type: "media-clip", ...VID_CLIP, motion: "zoom-in" } }],
+        ),
+      ),
+    /运动仅支持图片/,
   );
 });

@@ -10,7 +10,9 @@
 // milestone 可带 status（进度型题材不得全渲染成已完成）。
 // v9：数据纪律补量化类比禁令（模型爱编「相当于N棵树」，闸正确拒绝但两轮固执）。
 // v10：任务 4 图片素材纪律（点名已上传文件名、不虚构细节）。
-export const SEMANTIC_PROMPT_VERSION = "10";
+// v11（P1-4）：点名前缀匹配口径写明（截断/省扩展名合法、对不上整单拒）。
+// v12（P1-4 实测）：点名规则内嵌 intent 10 示例 + 段落改硬性默认。
+export const SEMANTIC_PROMPT_VERSION = "13";
 // r3：措辞同步六种 intent、compare/timeline 标题 ≤30、milestone status 说明。
 export const SEMANTIC_REVISE_PROMPT_VERSION = "r6";
 export const SEMANTIC_COMPILER_VERSION = "1";
@@ -32,7 +34,7 @@ IR 顶层：{"topic":"主题（1..40 字）","title":"片名（1..30 字）","sh
 7. 柱状图表：{"intent":"bar-explainer","title":"标题","narrationText":"旁白（≤16 字）","durationMs":4000,"bars":[{"label":"北京","value":530},{"label":"上海","value":1170}]}（bars 1..8 条，label 1..12 字，value 为 0..1e12 的数；durationMs ≥ 1600+90×(条数-1)）
 8. 折线图表：{"intent":"line-explainer","title":"标题","narrationText":"旁白（≤16 字）","durationMs":4000,"points":[{"label":"一月","value":2},{"label":"七月","value":28}]}（points 2..12 个，label ≤12 字可省，value 为 0..1e12 的数）
 9. 数字计数：{"intent":"counter-explainer","title":"标题","narrationText":"旁白（≤12 字）","durationMs":3000,"value":1500,"prefix":"约","suffix":"毫升","decimals":0}（value 0..1e12；prefix/suffix 各 ≤6 字可省；decimals 0..2 可省）
-10. 素材位：{"intent":"media-slot-explainer","title":"镜头标题","narrationText":"旁白（≤14 字）","durationMs":3000,"slotKind":"产品整体照片","purpose":"开场建立产品第一印象"}（slotKind 1..20 字的素材种类、purpose 1..60 字的叙事用途；这是占位镜头，用户稍后在编辑器绑定已导入的真实素材；严禁 assetUrl/assetId 等 URL 或资产 ID 字段）
+10. 素材位：{"intent":"media-slot-explainer","title":"镜头标题","narrationText":"旁白（≤14 字）","durationMs":3000,"slotKind":"图片：hero.png","purpose":"开场建立产品第一印象"}（slotKind 写素材种类或「图片：<文件名>」——凡输入附【已上传图片素材】清单且镜头要用真实画面，slotKind 必须写「图片：<清单内文件名>」点名建议（文件名可截前段/省扩展名），不得写泛称；purpose 1..60 字；占位镜头由用户绑定，严禁 assetUrl/assetId 等 URL 或资产 ID 字段）
 
 硬性规则（违反任何一条整个输出会被拒绝）：
 - durationMs 必须是 2000..6000 的整数；绝不超过 6000。
@@ -43,7 +45,7 @@ IR 顶层：{"topic":"主题（1..40 字）","title":"片名（1..30 字）","sh
 内容纪律：旁白只陈述画面实际展示的内容；循环/流程的每个阶段都要在阶段名或旁白中如实出现。
 准确性纪律：cycle-explainer 只用于真正首尾相接、会回到起点的循环过程（水循环、碳循环、食物链循环）；单向过程（光合作用、呼吸作用、燃烧）一律用 flow-explainer，不得画成闭环误导观众。
 数据纪律（硬性）：compare 的 beforeValue/afterValue/deltaText 与 timeline 的 date 里出现的每个数字，必须原样出现在用户原话里；用户没给数字/日期时，一律用文字表述（"第一步/播种期/约一半"），绝不编造具体数值或年份；前后对比需求没给前后数值时不要用 compare-explainer，改用 flow/要点表述并说明需要数据。
-图表纪律（硬性）：bar/line/counter 的每个 value 与 label 里的数字必须原样来自用户原话；用户要求图表但没给任何数字时，绝不编造数据，改用文字/流程镜头表达并在旁白说明「需补充数据」；不得从镜头序号、片长、镜数推断指标，不做单位换算或差值计算。不得引入原话里没有的量化事实或类比（如「相当于N棵树/N个泳池」）——即便数字换算正确也算编造。
+图表纪律（硬性）：bar/line/counter 的每个 value 与 label 里的数字必须原样来自用户原话，且 value 必须写换算后的绝对数值（用户说「120万次」→ value 填 1200000，不是 120；服务端按绝对值对账，「120万」与 1200000 互通，但 120 ≠ 120万）；用户要求图表但没给任何数字时，绝不编造数据，改用文字/流程镜头表达并在旁白说明「需补充数据」；不得从镜头序号、片长、镜数推断指标，不做差值计算。不得引入原话里没有的量化事实或类比（如「相当于N棵树/N个泳池」）——即便数字换算正确也算编造。
 时长纪律：用户要求约 N 秒时，Σ durationMs 必须落在 0.8N..1.2N。先按 N 估镜头数（25 秒 ≈ 6..8 镜 × 2500..5000ms），逐镜定 durationMs，输出前自己求和核对；不足就加镜头，不要把单镜拉到 6000 之上。
 典型编排：开场 title → 循环/流程/要点讲解（2..6 镜）→ 收尾 title。`;
 
@@ -70,7 +72,7 @@ const REVISE_SYSTEM_PROMPT = `你是 STEM 科普短片分镜编剧，正在修�
 - 严禁输出上述字段以外的任何字段（无 assetUrl/image/url/src 等素材引用、无 HTML/SVG/代码）。
 
 内容纪律：只重写用户点名的这一镜；主题与措辞风格与整片一致；旁白只陈述画面实际展示的内容；cycle 仅限真正首尾相接的循环过程，单向过程用 flow；素材纪律（硬性）：用户需要真实照片/产品素材/商品图时，一律用 media-slot-explainer 素材位镜头承接（slotKind 写清素材种类、purpose 写清叙事用途），不得用图解冒充真实素材，也不得输出 URL/资产 ID/本地路径；Logo/包装文字等无法稳定重绘的内容必须是素材位（保留原图由用户绑定）。
-图片素材纪律（任务 4）：输入里若附【已上传图片素材】清单，规划涉及真实画面的镜头时用 media-slot-explainer，并在 slotKind 里写「图片：<文件名>」点名建议使用的图（只可用清单里真实存在的文件名）；清单没有覆盖的诉求仍写普通素材种类。绝不虚构清单外的图片、不描述图片里看不见的细节（包装文字/图案一律不猜）。
+图片素材纪律（任务 4，硬性）：输入附【已上传图片素材】清单时，每个需要真实画面的镜头必须用 media-slot-explainer 且 slotKind 必须写「图片：<清单内文件名>」——这是默认动作不是可选项；只有清单没覆盖的诉求才写普通素材种类。只可点名清单内真实存在的文件名（过长可截前段/省扩展名，服务端前缀匹配核对；对不上整单拒绝）。绝不虚构清单外的图片、不描述图片里看不见的细节（包装文字/图案一律不猜）。
 数据纪律（硬性）：compare 的数值字段与 timeline 的 date 里出现的每个数字，必须原样出现在用户指令里；没给数字就用文字表述，绝不编造；指令要对比但没给前后数值时不要用 compare-explainer。
 图表纪律（硬性）：bar/line/counter 的每个 value 必须原样来自用户指令或影片上下文；指令要图表但没有任何数字时，改用文字/流程镜头；不得从镜头序号/片长推断指标，不做单位换算或差值。不得引入原话里没有的量化类比（「相当于N棵树」类一律禁止）。`;
 

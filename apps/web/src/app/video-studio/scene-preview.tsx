@@ -481,18 +481,22 @@ function MediaStage({
     const overlayOpacity = item.overlay
       ? Math.min(1, overlayMs / Math.max(item.overlay.enterMs, 1))
       : 0;
+    // P1-3 同口径三层：固定视口 > 运动层（只包图）> 叠加层（视口内
+    // 绝对定位兄弟，不随运动缩放/平移）。
     return (
-      <div
-        className="media-motion"
-        style={{ transform, transformOrigin: "center" }}
-      >
-        <img
-          className="media-stage"
-          src={mediaSrcUrl(asset)}
-          style={css}
-          alt=""
-          onError={() => setFailed(true)}
-        />
+      <div className="media-viewport">
+        <div
+          className="media-motion"
+          style={{ transform, transformOrigin: "center" }}
+        >
+          <img
+            className="media-stage"
+            src={mediaSrcUrl(asset)}
+            style={css}
+            alt=""
+            onError={() => setFailed(true)}
+          />
+        </div>
         {item.overlay ? (
           <span
             className={

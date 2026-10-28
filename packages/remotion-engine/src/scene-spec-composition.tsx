@@ -157,12 +157,39 @@ export type TimelineProps = {
 // 画幅宽高 useVideoConfig 现算——两画幅共用同一份 props。
 const MediaClipLayer: FC<{ shot: TimelineShotProps }> = ({ shot }) => {
   const media = shot.media!;
-  const { width, height, fps: FPS } = useVideoConfig();
-  // 任务 2：Sequence 内取本地帧 → 运动进度（0..1，末帧=1）。变换来自
-  // video-scene 单源 mediaMotionTransform，预览与出片同一份。
+  return (
+    <Sequence from={shot.startFrame} durationInFrames={shot.frames}>
+      {/*
+        P1-1/P1-2/P1-3（Codex 复核 2026-10-28）重构：
+        - useCurrentFrame 必须在 Sequence 子组件里读——在父组件读到的
+          是整片全局帧，后续镜头一上屏运动就停在终点（P1-2）。
+        - 三层结构：固定裁切视口（overflow hidden、不变换）> 运动层
+          （只包图片，transform 单源 mediaMotionTransform）> 叠加层
+          （视口的绝对定位兄弟，不随运动抖动/缩放，P1-3）。
+        - 叠加淡入用毫秒口径（本地帧/fps*1000 / enterMs）；原实现
+          秒除毫秒把 400ms 淡入拉成 400s（P1-1）。
+      */}
+      <MediaClipStage media={media} frames={shot.frames} />
+    </Sequence>
+  );
+};
+
+// Sequence 内的镜头本地舞台：这里读到的 useCurrentFrame 才是本地帧。
+const MediaClipStage: FC<{
+  media: NonNullable<TimelineShotProps["media"]>;
+  frames: number;
+}> = ({ media, frames }) => {
+  const { width, height, fps } = useVideoConfig();
   const localFrame = useCurrentFrame();
-  const progress = shot.frames > 1 ? localFrame / (shot.frames - 1) : 1;
-  const transform = mediaMotionTransform(media.motion, progress);
+  // P2-1（Codex 复核）：运动是图片镜头能力——schema 层已拒视频 motion，
+  // 渲染侧同口径只对图片施加（视频走原始口径，所见即所得）。
+  const transform =
+    media.isImage === true
+      ? mediaMotionTransform(
+          media.motion,
+          frames > 1 ? localFrame / (frames - 1) : 1,
+        )
+      : "none";
   const crop = mediaClipCss(
     media.assetWidth,
     media.assetHeight,
@@ -177,13 +204,26 @@ const MediaClipLayer: FC<{ shot: TimelineShotProps }> = ({ shot }) => {
     objectFit: crop.objectFit,
     objectPosition: crop.objectPosition,
   } as const;
+  // P1-1：毫秒口径淡入（enterMs 后恒 1）。
+  const overlayOpacity = media.overlay
+    ? Math.min(
+        1,
+        ((localFrame / fps) * 1000) / Math.max(media.overlay.enterMs, 1),
+      )
+    : 0;
   return (
-    <Sequence from={shot.startFrame} durationInFrames={shot.frames}>
+    <div
+      style={{
+        position: "relative",
+        width: "100%",
+        height: "100%",
+        overflow: "hidden",
+      }}
+    >
       <div
         style={{
           width: "100%",
           height: "100%",
-          overflow: "hidden",
           transform,
           transformOrigin: "center",
         }}
@@ -198,21 +238,17 @@ const MediaClipLayer: FC<{ shot: TimelineShotProps }> = ({ shot }) => {
             style={stageStyle}
           />
         )}
-        {media.overlay ? (
-          <MediaOverlay
-            title={media.overlay.title}
-            position={media.overlay.position}
-            // 本地帧毫秒 → 淡入进度（enterMs 后恒 1）。
-            opacity={Math.min(
-              1,
-              localFrame / FPS / Math.max(media.overlay.enterMs, 1),
-            )}
-            width={width}
-            height={height}
-          />
-        ) : null}
       </div>
-    </Sequence>
+      {media.overlay ? (
+        <MediaOverlay
+          title={media.overlay.title}
+          position={media.overlay.position}
+          opacity={overlayOpacity}
+          width={width}
+          height={height}
+        />
+      ) : null}
+    </div>
   );
 };
 

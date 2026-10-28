@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "id": "7ebc4586-ecb9-4dc1-affe-b57d8d550e01",
+  "id": "f9a671e4-0338-42f7-b9b9-35258840cb0f",
   "title": "水循环",
   "brief": {
     "sentence": "做一个8秒的STEM解说视频，主题是水循环，分3个镜头",
@@ -15,20 +15,20 @@
         "appendedDurationMs": 8434,
         "filmShotCountAfter": 3,
         "filmTotalMsAfter": 8434,
-        "appliedAt": "2026-10-27T17:28:39.472Z"
+        "appliedAt": "2026-10-28T02:17:19.353Z"
       }
     ]
   },
   "shots": [
     {
-      "shotId": "4ea406d9-fb11-4c6e-9802-04ad2a26edda",
+      "shotId": "5b9b451e-ab76-4722-b33e-c2b74c7ca302",
       "order": 0,
       "locked": false,
-      "workingVersionId": "d1d32d61-174c-4256-a662-0c05620ef2c6",
+      "workingVersionId": "947a2c2f-027d-4a61-8b1f-f1c2f56606ab",
       "contentVersions": [
         {
-          "versionId": "d1d32d61-174c-4256-a662-0c05620ef2c6",
-          "createdAt": "2026-10-27T17:28:39.472Z",
+          "versionId": "947a2c2f-027d-4a61-8b1f-f1c2f56606ab",
+          "createdAt": "2026-10-28T02:17:19.353Z",
           "durationMs": 2666,
           "description": "开场（文字动画）：标题「水循环」进入画面",
           "narrationText": "水循环。",
@@ -59,21 +59,21 @@
       "events": [
         {
           "kind": "submitted",
-          "versionId": "d1d32d61-174c-4256-a662-0c05620ef2c6",
-          "at": "2026-10-27T17:28:39.472Z",
+          "versionId": "947a2c2f-027d-4a61-8b1f-f1c2f56606ab",
+          "at": "2026-10-28T02:17:19.353Z",
           "actor": "human"
         }
       ]
     },
     {
-      "shotId": "b717a0d5-4296-4b87-854c-7d301d7348a3",
+      "shotId": "4dcc6654-d24e-4ce0-8bd1-abd36ac03cee",
       "order": 1,
       "locked": false,
-      "workingVersionId": "21b0a530-70a0-4f1d-9c33-76915ba0c276",
+      "workingVersionId": "8cc2bbff-edea-4267-b726-eb92094741ab",
       "contentVersions": [
         {
-          "versionId": "bf441896-f6a8-4a33-a9d5-93951e6c2d38",
-          "createdAt": "2026-10-27T17:28:39.472Z",
+          "versionId": "a70c6ae8-b4de-4b4d-a454-600d4dfcfb2d",
+          "createdAt": "2026-10-28T02:17:19.353Z",
           "durationMs": 3100,
           "description": "要点 1（文字动画）：标题「水循环」与副标题「要点 1」进入画面",
           "narrationText": "水循环，要点 1。",
@@ -102,51 +102,52 @@
           }
         },
         {
-          "versionId": "21b0a530-70a0-4f1d-9c33-76915ba0c276",
-          "createdAt": "2026-10-27T17:28:39.975Z",
+          "versionId": "8cc2bbff-edea-4267-b726-eb92094741ab",
+          "createdAt": "2026-10-28T02:17:19.856Z",
           "durationMs": 3100,
           "description": "要点 1（文字动画）：标题「水循环」与副标题「要点 1」进入画面",
           "narrationText": "水循环，要点 1。",
           "sceneSource": {
             "type": "media-clip",
-            "mediaAssetId": "19605ddc-ccd4-40f6-88bb-931fc564dd3b",
+            "mediaAssetId": "650469dc-2ede-4543-8352-8906bd815cd3",
             "inMs": 0,
             "outMs": 3100,
             "fit": "cover",
             "focalX": 0.5,
-            "audio": "mute"
+            "audio": "mute",
+            "motion": "still"
           },
           "provenance": {
             "engineId": "human-edit",
             "engineVersion": "1",
-            "parentVersionId": "bf441896-f6a8-4a33-a9d5-93951e6c2d38"
+            "parentVersionId": "a70c6ae8-b4de-4b4d-a454-600d4dfcfb2d"
           }
         }
       ],
       "events": [
         {
           "kind": "submitted",
-          "versionId": "bf441896-f6a8-4a33-a9d5-93951e6c2d38",
-          "at": "2026-10-27T17:28:39.472Z",
+          "versionId": "a70c6ae8-b4de-4b4d-a454-600d4dfcfb2d",
+          "at": "2026-10-28T02:17:19.353Z",
           "actor": "human"
         },
         {
           "kind": "submitted",
-          "versionId": "21b0a530-70a0-4f1d-9c33-76915ba0c276",
-          "at": "2026-10-27T17:28:39.975Z",
+          "versionId": "8cc2bbff-edea-4267-b726-eb92094741ab",
+          "at": "2026-10-28T02:17:19.856Z",
           "actor": "human"
         }
       ]
     },
     {
-      "shotId": "0ac8b028-dc1e-4d51-b4ff-75709f64ad0f",
+      "shotId": "c913d9f8-062f-4d95-b111-1e70f9a27422",
       "order": 2,
       "locked": false,
-      "workingVersionId": "5ec66ba3-b7f1-4c60-8556-422699aa2997",
+      "workingVersionId": "ad90548a-89a2-4263-b6a4-b72a355b83c0",
       "contentVersions": [
         {
-          "versionId": "5ec66ba3-b7f1-4c60-8556-422699aa2997",
-          "createdAt": "2026-10-27T17:28:39.472Z",
+          "versionId": "ad90548a-89a2-4263-b6a4-b72a355b83c0",
+          "createdAt": "2026-10-28T02:17:19.353Z",
           "durationMs": 2668,
           "description": "结语（文字动画）：标题「水循环」与副标题「谢谢观看」进入画面",
           "narrationText": "谢谢观看。",
@@ -178,8 +179,8 @@
       "events": [
         {
           "kind": "submitted",
-          "versionId": "5ec66ba3-b7f1-4c60-8556-422699aa2997",
-          "at": "2026-10-27T17:28:39.472Z",
+          "versionId": "ad90548a-89a2-4263-b6a4-b72a355b83c0",
+          "at": "2026-10-28T02:17:19.353Z",
           "actor": "human"
         }
       ]
@@ -190,8 +191,8 @@
   "savedVersion": 3,
   "mediaAssets": [
     {
-      "assetId": "19605ddc-ccd4-40f6-88bb-931fc564dd3b",
-      "createdAt": "2026-10-27T17:28:39.673Z",
+      "assetId": "650469dc-2ede-4543-8352-8906bd815cd3",
+      "createdAt": "2026-10-28T02:17:19.540Z",
       "origin": {
         "kind": "local-upload",
         "fileName": "product-real.png"

@@ -289,6 +289,18 @@ function validateSceneSource(
         `${field}.sceneSource.motion 须为 still/zoom-in/zoom-out/pan-left/pan-right`,
       );
     }
+    // P2-1（Codex 复核 2026-10-28）：运动是图片镜头能力——视频镜头
+    // 预览不播运动，编辑所见与导出会不一致；schema 层直接拒（视频口径
+    // 回到任务 2 之前的原始行为，零迁移）。
+    if (
+      value.motion !== undefined &&
+      value.motion !== "still" &&
+      mediaAssets.get(value.mediaAssetId as string)?.isImage !== true
+    ) {
+      fail(
+        `${field}.sceneSource.motion：运动仅支持图片素材（视频镜头请移除 motion）`,
+      );
+    }
     // 任务 3：图片镜文字叠加（受控位置/时段；缺省无叠加=旧口径）。
     if (value.overlay !== undefined) {
       const ov = value.overlay;

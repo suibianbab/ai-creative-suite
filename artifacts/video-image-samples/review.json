@@ -1,6 +1,6 @@
 {
   "productAd": {
-    "totalMs": 16200,
+    "totalMs": 13400,
     "shots": [
       {
         "index": 1,
@@ -21,7 +21,7 @@
         "index": 3,
         "source": "spec",
         "component": "sketch-note",
-        "narration": "三重优势，安心之选",
+        "narration": "三重守护，长效保温",
         "versions": 1
       },
       {
@@ -34,32 +34,35 @@
     ],
     "files": {
       "landscape": {
-        "duration": 16.213,
+        "duration": 13.419,
         "size": "1280x720",
         "file": "D:\\codex\\animate\\.claude\\worktrees\\video-image-batch\\artifacts\\video-image-samples\\product-landscape.mp4"
       },
       "portrait": {
-        "duration": 16.213,
+        "duration": 13.419,
         "size": "720x1280",
         "file": "D:\\codex\\animate\\.claude\\worktrees\\video-image-batch\\artifacts\\video-image-samples\\product-portrait.mp4"
       }
     },
-    "namedImages": []
+    "namedImages": [
+      "hero-bottle",
+      "detail-cap"
+    ]
   },
   "knowledgeFilm": {
-    "totalMs": 19000,
+    "totalMs": 16220,
     "shots": [
       {
         "index": 1,
         "source": "spec",
         "component": "text-animation",
-        "narration": "城市绿色出行新方式"
+        "narration": "三步看懂共享骑行"
       },
       {
         "index": 2,
         "source": "spec",
         "component": "bar-chart",
-        "narration": "北京年骑行从120万到350万次"
+        "narration": "北京骑行量大幅上升"
       },
       {
         "index": 3,
@@ -71,23 +74,23 @@
         "index": 4,
         "source": "spec",
         "component": "number-counter",
-        "narration": "相当于少排80万吨CO₂"
+        "narration": "每年减少80万吨碳"
       },
       {
         "index": 5,
         "source": "spec",
         "component": "text-animation",
-        "narration": "骑上单车，减碳出发"
+        "narration": "骑一程，减一点"
       }
     ],
     "files": {
       "landscape": {
-        "duration": 19.008,
+        "duration": 16.213,
         "size": "1280x720",
         "file": "D:\\codex\\animate\\.claude\\worktrees\\video-image-batch\\artifacts\\video-image-samples\\knowledge-landscape.mp4"
       },
       "portrait": {
-        "duration": 19.008,
+        "duration": 16.213,
         "size": "720x1280",
         "file": "D:\\codex\\animate\\.claude\\worktrees\\video-image-batch\\artifacts\\video-image-samples\\knowledge-portrait.mp4"
       }

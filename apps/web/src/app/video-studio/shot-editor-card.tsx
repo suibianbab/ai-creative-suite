@@ -443,6 +443,11 @@ export function ShotEditorCard({
     // 按旁白预算扩（mediaDraftForAsset），长旁白不再默认 2000ms 埋雷。
     () => draftMediaFromVersion(working, mediaAssets).draft,
   );
+  // P2-1：当前草稿选中的资产是否图片（运动选择器渲染条件；依赖
+  // mediaDraft，须在其声明后）。
+  const selectedAssetIsImage =
+    mediaAssets.find((a) => a.assetId === mediaDraft?.assetId)?.original
+      .kind === "image";
   const [mediaError, setMediaError] = useState<string | null>(null);
   const [mediaWarnings, setMediaWarnings] = useState<string[]>([]);
 
@@ -2553,36 +2558,40 @@ export function ShotEditorCard({
                   <option value="keep">保留（出片与旁白混音，T4 兑现）</option>
                 </select>
               </label>
-              <label className="shot-edit-field">
-                运动
-                <select
-                  className="media-motion-select"
-                  value={mediaDraft?.motion ?? "still"}
-                  onChange={(event) => {
-                    const value = event.target.value;
-                    setMediaDraft({
-                      ...(mediaDraft ?? EMPTY_MEDIA_DRAFT),
-                      motion: (
-                        [
-                          "still",
-                          "zoom-in",
-                          "zoom-out",
-                          "pan-left",
-                          "pan-right",
-                        ] as const
-                      ).includes(value as never)
-                        ? (value as MediaEditDraft["motion"])
-                        : "still",
-                    });
-                  }}
-                >
-                  <option value="still">静止</option>
-                  <option value="zoom-in">缓慢推近</option>
-                  <option value="zoom-out">缓慢拉远</option>
-                  <option value="pan-left">向左平移</option>
-                  <option value="pan-right">向右平移</option>
-                </select>
-              </label>
+              {/* P2-1（Codex 复核 2026-10-28）：运动仅图片素材——视频镜头
+                  预览不播运动，编辑所见即导出所得；不渲染选择器。 */}
+              {selectedAssetIsImage ? (
+                <label className="shot-edit-field">
+                  运动
+                  <select
+                    className="media-motion-select"
+                    value={mediaDraft?.motion ?? "still"}
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      setMediaDraft({
+                        ...(mediaDraft ?? EMPTY_MEDIA_DRAFT),
+                        motion: (
+                          [
+                            "still",
+                            "zoom-in",
+                            "zoom-out",
+                            "pan-left",
+                            "pan-right",
+                          ] as const
+                        ).includes(value as never)
+                          ? (value as MediaEditDraft["motion"])
+                          : "still",
+                      });
+                    }}
+                  >
+                    <option value="still">静止</option>
+                    <option value="zoom-in">缓慢推近</option>
+                    <option value="zoom-out">缓慢拉远</option>
+                    <option value="pan-left">向左平移</option>
+                    <option value="pan-right">向右平移</option>
+                  </select>
+                </label>
+              ) : null}
               <label className="shot-edit-field">
                 叠加标题
                 <input

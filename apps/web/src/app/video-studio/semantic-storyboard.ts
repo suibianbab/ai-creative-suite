@@ -912,12 +912,20 @@ export function validateSemanticShot(
   // N5 素材位：种类/用途是全部输入；URL/资产 ID 类字段按资产口径拒绝并
   // 给绑定指引（素材位只描述需要什么，绑定在编辑器媒体臂完成）。
   if (intent === "media-slot-explainer") {
+    // P1-4（Codex 复核 2026-10-28）：「图片：<文件名>」点名形态放宽到
+    // 46 字——规划请求的账本文件名最长 40 字 + 3 字前缀；普通素材种类
+    // 仍 ≤20。
+    const isImageNaming =
+      typeof shot.slotKind === "string" && shot.slotKind.startsWith("图片：");
+    const slotKindMax = isImageNaming ? 46 : 20;
     if (
       typeof shot.slotKind !== "string" ||
       shot.slotKind.length < 1 ||
-      shot.slotKind.length > 20
+      shot.slotKind.length > slotKindMax
     )
-      errors.push(`${field}.slotKind 须为 1..20 字的素材种类`);
+      errors.push(
+        `${field}.slotKind 须为 1..${slotKindMax} 字${isImageNaming ? "（图片点名可带文件名）" : "的素材种类"}`,
+      );
     if (
       typeof shot.purpose !== "string" ||
       shot.purpose.length < 1 ||
