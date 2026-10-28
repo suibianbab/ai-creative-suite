@@ -54,6 +54,16 @@ e2e-image-samples（真实千问+TTS；图=ffmpeg 自制，许可干净）：
 
 `pnpm --filter @acs/web test` 398/398；typecheck 通过；biome 全绿；`qa:validate` 125 自动/56 手工（VID-070..073 新登记）。
 
+## 复核修复轮（2026-10-28，codex-video-image-batch-review-result 四项全闭合）
+
+- **P1-1 叠加透明**：渲染层淡入改毫秒口径（原秒除毫秒）。证据：still 镜药丸条带亮度 首帧 127.9 → 中段 97.9（e2e 断言降幅≥10，实测 30）；样片 A s0 药丸带 94 vs 上方 124（差 +30）。
+- **P1-2 运动全局帧**：取帧移入 Sequence 子组件。证据：非首镜头 pan 首/中/末 SSIM 两两 <0.999 且首≠末（连续过渡）；白底夹具。
+- **P1-3 平移露黑边**：pan 超采 1.06→1.12 + 三层结构（固定视口>运动层>叠加兄弟层）。证据：pan 首尾帧四边条带亮度与中心差 <40（白底夹具，横竖双画幅）；叠加不再被运动变换。
+- **P1-4 图片点名未成立**：slotKind「图片：」46 字 + 服务端前缀对账（清单外带因重试→整单拒）+ 提示词 v13（点名内嵌 intent 10 示例、图表 value 绝对数值口径）。证据：e2e 硬断言两图点名（v10-v12 实测 0/2 → v13 2/2）；namedImages=['hero-bottle','detail-cap']；绑定按点名匹配。
+- **P2-1 视频运动预览不一致**：运动限图片（schema 拒视频 motion / patch 行内拒 / UI 仅图片渲染选择器 / 渲染仅图片施加）。
+- 顺带：shot-editor-card TDZ 修复（selectedAssetIsImage 移到 mediaDraft 后）。
+- 门禁：398/398、typecheck、biome、motion/media/samples 三条 e2e 重跑全绿。
+
 ## 已知限制
 
 - 样片 B 时长概率性偏低（19s vs 20-30s 带）；重试可落带内，未固化重试到带内的强制（时长是透明标注不是硬失败——沿用 N4 裁定）。
